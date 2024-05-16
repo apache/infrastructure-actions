@@ -1,0 +1,128 @@
+[# TEMPLATE for dynamic construction of a settings file for Pelican. ]
+
+# Basic information about the site.
+SITENAME = '[name]'
+SITEDESC = '[description]'
+SITEDOMAIN = '[domain]'
+SITEURL = 'https://[domain]'
+SITELOGO = 'https://[domain]/[logo]'
+SITEREPOSITORY = '[repository]'
+CURRENTYEAR = [year]
+TRADEMARKS = '[trademarks]'
+
+TIMEZONE = 'UTC'
+
+# Theme includes templates and possibly static files
+THEME = '[theme]'
+
+# Specify location of plugins, and which to use
+PLUGIN_PATHS = [ [for p_paths]'[p_paths]', [end] ]
+PLUGINS = [ [for use]'[use]', [end] ]
+
+# All content is located at '.' (aka content/ )
+PAGE_PATHS = [ '[if-any pages][pages][else].[end]' ]
+STATIC_PATHS = [ [for static]'[static]', [end] ]
+
+# Where to place/link generated pages
+[if-any pages]
+PATH_METADATA = '[pages]/(?P<path_no_ext>.*)\\..*'
+[else]
+PATH_METADATA = '(?P<path_no_ext>.*)\\..*'
+[end]
+
+PAGE_SAVE_AS = '{path_no_ext}.html'
+
+# Don't try to translate
+PAGE_TRANSLATION_ID = None
+
+# Disable unused Pelican features
+# N.B. These features are currently unsupported, see https://github.com/apache/infrastructure-pelican/issues/49
+FEED_ALL_ATOM = None
+INDEX_SAVE_AS = ''
+TAGS_SAVE_AS = ''
+CATEGORIES_SAVE_AS = ''
+AUTHORS_SAVE_AS = ''
+ARCHIVES_SAVE_AS = ''
+
+# Disable articles by pointing to a (should-be-absent) subdir
+ARTICLE_PATHS = [ 'blog' ]
+
+# needed to create blogs page
+ARTICLE_URL = 'blog/{slug}.html'
+ARTICLE_SAVE_AS = 'blog/{slug}.html'
+
+# Disable all processing of .html files
+READERS = { 'html': None, }
+
+[if-any uses_genid]
+# Configure the asfgenid plugin
+ASF_GENID = {
+    'unsafe_tags': [genid.unsafe],
+    'metadata': [genid.metadata],
+    'elements': [genid.elements],
+    'permalinks': [genid.permalinks],
+    'tables': [genid.tables],
+[if-any genid.headings_depth]
+    'headings': True,
+    'headings_re': '^h[[]1-[genid.headings_depth]]',
+[else]
+    'headings': False,
+[end]
+[if-any genid.toc_depth]
+    'toc': True,
+    'toc_headers': '^h[[]1-[genid.toc_depth]]',
+[else]
+    'toc': False,
+[end]
+    'debug': [debug],
+}
+[end]
+
+[if-any uses_sitemap]
+SITEMAP = {
+    "exclude": [sitemap.exclude],
+    "format": "[sitemap.format]",
+    "priorities": {
+        "articles": [sitemap.priorities.articles],
+        "indexes": [sitemap.priorities.indexes],
+        "pages": [sitemap.priorities.pages]
+    },
+    "changefreqs": {
+        "articles": "[sitemap.changefreqs.articles]",
+        "indexes": "[sitemap.changefreqs.indexes]",
+        "pages": "[sitemap.changefreqs.pages]"
+    }
+}
+[end]
+
+[if-any uses_data]
+# Configure the asfdata plugin
+ASF_DATA = {
+    'data': '[asfdata]',
+    'metadata': {
+        'site_url': SITEURL
+    },
+    'debug': [debug],
+}
+[end]
+[if-any uses_run]
+# Configure the asfrun plugin (initialization)
+ASF_RUN = [ [for run]'[run]', [end] ]
+[end]
+[if-any uses_postrun]
+# Configure the asfrun plugin (finalization)
+ASF_POSTRUN = [ [for postrun]'[postrun]', [end] ]
+[end]
+[if-any uses_ignore]
+# Configure ignore files
+IGNORE_FILES = [ [for ignore]'[ignore]', [end] ]
+[end]
+[if-any uses_copy]
+ASF_COPY = [ [for copy]'[copy]', [end] ]
+[end]
+[if-any uses_index]
+# Configure the asfindex plugin
+ASF_INDEX = {
+    'index': '[index]',
+}
+[end]

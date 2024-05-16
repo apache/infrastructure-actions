@@ -1,0 +1,30 @@
+name: Build a Pelican Website
+on:
+  push:
+    branches: [ "dfoulks/pelican_gha" ]
+  pull_request:
+    branches: [ "dfoulks/pelican_gha" ]
+
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ''
+          ref: 'dfoulks/pelican_gha'
+      - name: Install Pelican
+        run: pip3 install pelican markdown ghp-import
+      - name: Generate website from markdown
+        run: python3 -m pelican content -o output
+        working-directory: '/home/runner/work/infrastructure-website/infrastructure-website'
+      - name: Open a PR against the staging branch
+        uses: peter-evans/create-pull-request@v6.0.5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: GitHub Actions Generated Pelican Build
+          title: Generated Pelican Output
+          body: output generated
+          branch: dfoulks/gha-site
