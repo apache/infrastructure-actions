@@ -74,8 +74,9 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     tdata["uses_sitemap"] = None
     if "plugins" in ydata:
         if "paths" in ydata["plugins"]:
+            tdata["p_paths"] = []
             for p in ydata["plugins"]["paths"]:
-                tdata["p_paths"].append(os.path.join(sourcepath, p))
+                tdata["p_paths"].append(os.path.join(p))
         else:
             tdata["p_paths"] = ["plugins"]
 
@@ -133,6 +134,8 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
         tdata["uses_copy"] = None
     if "setup" in ydata:
         sdata = ydata["setup"]
+    else:
+        sdata = {}
 
     # Load data structures into the pelican METADATA.
     if "data" in sdata:
@@ -168,14 +171,14 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
 
     print(f"Writing converted settings to {os.path.join(THIS_DIR, AUTO_SETTINGS)})")
     if len(tdata["use"]) > 0:
-        if not os.path.isdir("./plugins"):
-            os.mkdir("./plugins")
+        if not os.path.isdir(tdata["p_paths"][0]):
+            os.mkdir(tdata["p_paths"][0])
         else:
             print("Plugins directory found!")
 
         for plugin in tdata["use"]:
             src = os.path.join(os.path.abspath(os.path.join(THIS_DIR, os.pardir)), f"plugins/{plugin}.py")
-            dest = "./plugins"
+            dest = tdata["p_paths"][0]
             shutil.copy(src, dest)
     if not os.path.isdir("./.github/workflows"):
         os.mkdir("./.github/workflows")
