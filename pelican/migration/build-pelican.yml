@@ -23,10 +23,10 @@ jobs:
       #########################
       # START BUILD GFM BLOCK #
       #########################
-      - name: fetch libcmark-gfm.so buildscript
-        run: wget https://raw.githubusercontent.com/apache/infrastructure-pelican/master/bin/build-cmark.sh
-      - name: build libcmark-gfm.so
-        run: /bin/bash ./build-cmark.sh
+#      - name: fetch libcmark-gfm.so buildscript
+#        run: wget https://raw.githubusercontent.com/apache/infrastructure-pelican/master/bin/build-cmark.sh
+#      - name: build libcmark-gfm.so
+#        run: /bin/bash ./build-cmark.sh
       #######################
       # END BUILD GFM BLOCK #
       #######################
@@ -36,8 +36,8 @@ jobs:
       ###########################
       # START GFM CLEANUP BLOCK #
       ###########################
-      - name: Clean up libcmark-gfm artifacts
-        run: rm -rf $(dirname $(echo $LIBCMARKDIR)) build-cmark.sh "$(dirname $(echo $LIBCMARKDIR)).orig.tar.gz"
+#      - name: Clean up libcmark-gfm artifacts
+#        run: rm -rf $(dirname $(echo $LIBCMARKDIR)) build-cmark.sh "$(dirname $(echo $LIBCMARKDIR)).orig.tar.gz"
       #########################
       # END GFM CLEANUP BLOCK #
       #########################
