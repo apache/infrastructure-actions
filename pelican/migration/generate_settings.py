@@ -180,7 +180,9 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
             src = os.path.join(os.path.abspath(os.path.join(THIS_DIR, os.pardir)), f"plugins/{plugin}.py")
             dest = tdata["p_paths"][0]
             shutil.copy(src, dest)
-    if not os.path.isdir("./.github/workflows"):
+    if not os.path.isdir(".github/workflows"):
+        if not os.path.isdir(".github"):
+            os.mkdir(".github")
         os.mkdir("./.github/workflows")
     shutil.copy(os.path.join(THIS_DIR, "build-pelican.yml"), "./.github/workflows/")
 
