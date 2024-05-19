@@ -14,7 +14,7 @@
 #
 #   Put the PAT into the environment variable GITHUB_TOKEN:
 #
-#   $ read GItHUB_TOKEN
+#   $ read GITHUB_TOKEN
 #   <paste>
 #
 #   Using read will ensure the PAT does not appear in your
