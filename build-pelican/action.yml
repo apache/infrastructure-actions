@@ -19,10 +19,11 @@ runs:
       run: pip3 install pelican markdown ghp-import bs4 ezt
       shell: bash
 
+    # If the site uses Github Flavored Markdown, use this build branch
     - name: fetch libcmark-gfm.so buildscript
-      run: wget https://raw.githubusercontent.com/apache/infrastructure-pelican/master/bin/build-cmark.sh
+      run: wget https://raw.githubusercontent.com/apache/infrastructure-pelican/master/bin/build-cmark.sh -O ./build-cmark.sh
       shell: bash
-      if: ${{ github.event.inputs.uses-gfm }}
+      if: ${{ github.event.inputs.uses-gfm }} == true
 
     - name: build libcmark-gfm.so
       run: /bin/bash ./build-cmark.sh
@@ -36,6 +37,7 @@ runs:
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
       if: ${{ github.event.inputs.uses-gfm }} == true
 
+    # Alternatively, use regular pelican
     - name: Generate website from markdown
       run: /usr/bin/env python3 -m pelican content -o output
       shell: bash
