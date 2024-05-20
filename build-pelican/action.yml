@@ -18,24 +18,29 @@ runs:
     - name: Install Pelican
       run: pip3 install pelican markdown ghp-import bs4 ezt
       shell: bash
+
     - name: fetch libcmark-gfm.so buildscript
       run: wget https://raw.githubusercontent.com/apache/infrastructure-pelican/master/bin/build-cmark.sh
       shell: bash
       if: ${{ github.event.inputs.uses-gfm }}
+
     - name: build libcmark-gfm.so
       run: /bin/bash ./build-cmark.sh
       shell: bash
-      if: ${{ github.event.inputs.uses-gfm }}
+      if: ${{ github.event.inputs.uses-gfm }} == true
+
     - name: Generate website from markdown
       run: /usr/bin/env python3 -m pelican content -o output
       shell: bash
       env:
-        LIBCMARKDIR: cmark-gfm-0.28.3.gfm.12/lib
-      if: ${{ github.event.inputs.uses-gfm }}
+        LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
+      if: ${{ github.event.inputs.uses-gfm }} == true
+
     - name: Generate website from markdown
       run: /usr/bin/env python3 -m pelican content -o output
       shell: bash
       if: ${{ github.event.inputs.uses-gfm }} == false
+
     - name: Open a PR against the staging branch
       uses: peter-evans/create-pull-request@v6.0.5
       with:
