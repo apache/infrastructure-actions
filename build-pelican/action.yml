@@ -41,7 +41,7 @@ runs:
     - name: Generate website from markdown
       run: /usr/bin/env python3 -m pelican content -o output
       shell: bash
-      if: ${{ github.event.inputs.uses-gfm }} == false
+      if: ${{ github.event.inputs.uses-gfm }} != true
 
     - name: Open a PR against the staging branch
       uses: peter-evans/create-pull-request@v6.0.5
