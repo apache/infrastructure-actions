@@ -35,7 +35,7 @@ runs:
     - name: Open a PR against the staging branch
       uses: peter-evans/create-pull-request@v6.0.5
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ github.event.inputs.token }}
         commit-message: GitHub Actions Generated Pelican Build
         title: Generated Pelican Output
         body: output generated
