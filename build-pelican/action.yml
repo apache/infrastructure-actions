@@ -31,7 +31,7 @@ runs:
       if: ${{ inputs.gfm == 'true' }}
 
     - name: Generate website from markdown
-      run: /usr/bin/env python3 -m pelican content -o output
+      run: /usr/bin/env python3 -m pelican content -o output -D
       shell: bash
       env:
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
