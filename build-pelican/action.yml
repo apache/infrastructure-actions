@@ -2,7 +2,7 @@ name: Build a Pelican Website
 description: "Generate a Pelican website from Markdown"    
 inputs:
   token:
-    description: 'Set to ${{ secrets\.GITHUB_TOKEN }} in the workflow'
+    description: 'Set to secrets.GITHUB_TOKEN in the workflow'
     required: true
   dest-branch:
     description: "Pelican Output branch"
