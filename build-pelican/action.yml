@@ -1,6 +1,9 @@
 name: Build a Pelican Website
 description: "Generate a Pelican website from Markdown"    
 inputs:
+  token: "GitHub Token"
+    description: "Set to ${{ secrets.GITHUB_TOKEN }} in the workflow"
+    required: true
   dest-branch:
     description: "Pelican Output branch"
     required: true
@@ -16,18 +19,19 @@ runs:
       run: pip3 install pelican markdown ghp-import bs4 ezt
     - name: fetch libcmark-gfm.so buildscript
       run: wget https://raw.githubusercontent.com/apache/infrastructure-pelican/master/bin/build-cmark.sh
-      if: ${{ uses-gfm }}
+      if: ${{ github.event.inputs.uses-gfm }}
     - name: build libcmark-gfm.so
       run: /bin/bash ./build-cmark.sh
-      if: ${{ uses-gfm }}
+      if: ${{ github.event.inputs.uses-gfm }}
     - name: Generate website from markdown
       run: /usr/bin/env python3 -m pelican content -o output
       env:
         LIBCMARKDIR: cmark-gfm-0.28.3.gfm.12/lib
+      if: ${{ github.event.inputs.uses-gfm }}
       if: ${{ uses-gfm }}
     - name: Generate website from markdown
       run: /usr/bin/env python3 -m pelican content -o output
-      if: vars.uses_gfm == false
+      if: ${{ github.event.inputs.uses-gfm }} == false
     - name: Open a PR against the staging branch
       uses: peter-evans/create-pull-request@v6.0.5
       with:
@@ -37,4 +41,4 @@ runs:
         body: output generated
         add-paths: |
           output/
-        base: ${{ dest-branch }}
+        base: ${{ github.event.inputs.dest-branch }}
