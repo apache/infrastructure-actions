@@ -9,32 +9,32 @@ inputs:
     description: "Uses GitHub Flavored Markdown"
     required: false
     default: false
-  runs:
-    using: "composite"
-    steps:
-      - name: Install Pelican
-        run: pip3 install pelican markdown ghp-import bs4 ezt
-      - name: fetch libcmark-gfm.so buildscript
-        run: wget https://raw.githubusercontent.com/apache/infrastructure-pelican/master/bin/build-cmark.sh
-        if: ${{ inputs.uses-gfm }}
-      - name: build libcmark-gfm.so
-        run: /bin/bash ./build-cmark.sh
-        if: ${{ inputs.uses-gfm }}
-      - name: Generate website from markdown
-        run: /usr/bin/env python3 -m pelican content -o output
-        env:
-          LIBCMARKDIR: cmark-gfm-0.28.3.gfm.12/lib
-        if: ${{ inputs.uses-gfm }}
-      - name: Generate website from markdown
-        run: /usr/bin/env python3 -m pelican content -o output
-        if: vars.uses_gfm == false
-      - name: Open a PR against the staging branch
-        uses: peter-evans/create-pull-request@v6.0.5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: GitHub Actions Generated Pelican Build
-          title: Generated Pelican Output
-          body: output generated
-          add-paths: |
-            output/
-          base: ${{ inputs.dest-branch }}
+runs:
+  using: "composite"
+  steps:
+    - name: Install Pelican
+      run: pip3 install pelican markdown ghp-import bs4 ezt
+    - name: fetch libcmark-gfm.so buildscript
+      run: wget https://raw.githubusercontent.com/apache/infrastructure-pelican/master/bin/build-cmark.sh
+      if: ${{ uses-gfm }}
+    - name: build libcmark-gfm.so
+      run: /bin/bash ./build-cmark.sh
+      if: ${{ uses-gfm }}
+    - name: Generate website from markdown
+      run: /usr/bin/env python3 -m pelican content -o output
+      env:
+        LIBCMARKDIR: cmark-gfm-0.28.3.gfm.12/lib
+      if: ${{ uses-gfm }}
+    - name: Generate website from markdown
+      run: /usr/bin/env python3 -m pelican content -o output
+      if: vars.uses_gfm == false
+    - name: Open a PR against the staging branch
+      uses: peter-evans/create-pull-request@v6.0.5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: GitHub Actions Generated Pelican Build
+        title: Generated Pelican Output
+        body: output generated
+        add-paths: |
+          output/
+        base: ${{ dest-branch }}
