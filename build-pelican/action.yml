@@ -33,15 +33,8 @@ runs:
     - name: Generate website from markdown
       run: /usr/bin/env python3 -m pelican content -o output -D
       shell: bash
-      env:
+      env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
-      if: ${{ inputs.gfm == 'true' }}
-
-    # Alternatively, use regular pelican
-    - name: Generate website from markdown
-      run: /usr/bin/env python3 -m pelican content -o output
-      shell: bash
-      if: ${{ inputs.gfm == 'false' }}
 
     - name: Open a PR against the staging branch
       uses: peter-evans/create-pull-request@v6.0.5
