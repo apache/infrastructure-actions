@@ -9,10 +9,6 @@ inputs:
     description: "Output directory"
     required: false
     default: 'output'
-  gfm:
-    description: "Uses GitHub Flavored Markdown"
-    required: false
-    default: 'false'
   image:
     description: "Docker Image"
     required: false
