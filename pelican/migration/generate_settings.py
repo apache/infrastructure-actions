@@ -24,12 +24,6 @@ THIS_DIR = os.path.abspath(os.path.dirname(__file__))
 AUTO_SETTINGS_YAML = "pelicanconf.yaml"
 AUTO_SETTINGS_TEMPLATE = "pelican.auto.ezt"
 AUTO_SETTINGS = "pelicanconf.py"
-AUTO_SETTINGS_HELP = (
-    "https://github.com/apache/infrastructure-pelican/blob/master/pelicanconf.md"
-)
-
-# default config file name
-PELICAN_CONF = "pelicanconf.py"
 
 class _helper:
     def __init__(self, **kw):
