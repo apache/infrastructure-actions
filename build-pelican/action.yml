@@ -1,55 +1,70 @@
 name: Build a Pelican Website
 description: "Generate a Pelican website from Markdown"    
 inputs:
-  token:
-    description: 'Set to secrets.GITHUB_TOKEN in the workflow'
-    required: true
   destination:
     description: "Pelican Output branch"
     required: true
-    default: "asf-site"
+    default: 'asf-site'
+  output:
+    description: "Output directory"
+    required: false
+    default: 'output'
   gfm:
     description: "Uses GitHub Flavored Markdown"
     required: false
     default: 'false'
+  image:
+    description: "Docker Image"
+    required: false
+    default: 'ghcr.io/apache/infrastructure-pelican:latest'
 runs:
   using: "composite"
   steps:
-    - name: Install Pelican
-      run: pip3 install pelican markdown ghp-import bs4 ezt
-      shell: bash
-
-    # If the site uses Github Flavored Markdown, use this build branch
-    - name: fetch libcmark-gfm.so buildscript
-      run: wget https://raw.githubusercontent.com/apache/infrastructure-pelican/master/bin/build-cmark.sh -O ./build-cmark.sh
-      shell: bash
-      if: ${{ inputs.gfm == 'true' }}
-
-    - name: build libcmark-gfm.so
-      run: /bin/bash ./build-cmark.sh
-      shell: bash
-      if: ${{ inputs.gfm == 'true' }}
-
-    - name: Generate website from markdown
-      run: /usr/bin/env python3 -m pelican content -o output -D
-      shell: bash
-      env:
-        LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
-      if: ${{ inputs.gfm == 'true' }}
-
-    # Alternatively, use regular pelican
-    - name: Generate website from markdown
-      run: /usr/bin/env python3 -m pelican content -o output
-      shell: bash
-      if: ${{ inputs.gfm == 'false' }}
-
-    - name: Open a PR against the staging branch
-      uses: peter-evans/create-pull-request@v6.0.5
+    - uses: actions/checkout@v4
       with:
-        token: ${{ inputs.token }}
-        commit-message: GitHub Actions Generated Pelican Build
-        title: Generated Pelican Output
-        body: output generated
-        add-paths: |
-          output/
-        base: ${{ inputs.destination }}
+        filter: tree:0
+        fetch-depth: 0
+    - name: Identify Committer
+      shell: bash
+      run: |
+        git config --global user.email "users@infra.apache.org"
+        git config --global user.name "Build Pelican (action)"
+    - name: Run Pelican
+      shell: bash
+      run: |
+        docker run -v /tmp:/out -v $PWD:/site --entrypoint bash ${{ inputs.image }} \
+          -c "source /tmp/pelican-asf/LIBCMARKDIR.sh && python3 -m pelican content -o /out/output"
+    - name: Checkout site deploy branch
+      shell: bash
+      run: |
+        if git checkout ${{ inputs.destination }}
+        then
+          git pull origin ${{ inputs.destination }}
+        else
+          echo "branch ${{ inputs.destination }} is new; create basic site"
+          git config --global --add --bool push.autoSetupRemote true
+          git checkout --orphan ${{ inputs.destination }} -f
+          git rm -rf .
+          # TODO: does it make sense to copy the source version of the file?
+          # What is actually needed by the site branch?
+          # assume we have an asf.yaml file
+          git checkout origin/${{ github.ref_name }} -- .asf.yaml
+          git add .asf.yaml -f
+        fi
+    - name: Commit change
+      shell: bash
+      run: |
+        # Remove all existing output so deletions will be captured
+        rm -rf output
+        git rm -r --ignore-unmatch --cached output/*
+        cp -rT /tmp/output ${{ inputs.output }}
+        git diff # Show changes
+        git add ${{ inputs.output }}
+        git status
+        if git commit -m "Commit build products"
+        then
+          git push
+        else
+          echo "No change"
+          true # ensure step is successful
+        fi
