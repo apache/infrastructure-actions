@@ -126,35 +126,32 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     tdata["uses_copy"] = None
     if "setup" in ydata:
         sdata = ydata["setup"]
-    else:
-        sdata = {}
-
-    # Load data structures into the pelican METADATA.
-    if "data" in sdata:
-        tdata["uses_data"] = "yes"  # ezt.boolean()
-        tdata["asfdata"] = sdata["data"]
-        tdata["use"].append("asfdata")  # add the plugin
-    # Run the included scripts with the asfrun plugin during initialize
-    if "run" in sdata:
-        tdata["uses_run"] = "yes"  # ezt.boolean
-        tdata["run"] = sdata["run"]
-        tdata["use"].append("asfrun")  # add the plugin
-    # Run the included scripts with the asfrun plugin during finalize
-    if "postrun" in sdata:
-        tdata["uses_postrun"] = "yes"  # ezt.boolean
-        tdata["postrun"] = sdata["postrun"]
-        if not "run" in sdata:
-            tdata["use"].append("asfrun")  # add the plugin (if not already added)
-    # Ignore files avoids copying these files to output.
-    if "ignore" in sdata:
-        tdata["uses_ignore"] = "yes"  # ezt.boolean
-        tdata["ignore"] = sdata["ignore"]
-        # No plugin needed.
-    # Copy directories to output.
-    if "copy" in sdata:
-        tdata["uses_copy"] = "yes"  # ezt.boolean
-        tdata["copy"] = sdata["copy"]
-        tdata["use"].append("asfcopy")  # add the plugin
+        # Load data structures into the pelican METADATA.
+        if "data" in sdata:
+            tdata["uses_data"] = "yes"  # ezt.boolean()
+            tdata["asfdata"] = sdata["data"]
+            tdata["use"].append("asfdata")  # add the plugin
+        # Run the included scripts with the asfrun plugin during initialize
+        if "run" in sdata:
+            tdata["uses_run"] = "yes"  # ezt.boolean
+            tdata["run"] = sdata["run"]
+            tdata["use"].append("asfrun")  # add the plugin
+        # Run the included scripts with the asfrun plugin during finalize
+        if "postrun" in sdata:
+            tdata["uses_postrun"] = "yes"  # ezt.boolean
+            tdata["postrun"] = sdata["postrun"]
+            if not "run" in sdata:
+                tdata["use"].append("asfrun")  # add the plugin (if not already added)
+        # Ignore files avoids copying these files to output.
+        if "ignore" in sdata:
+            tdata["uses_ignore"] = "yes"  # ezt.boolean
+            tdata["ignore"] = sdata["ignore"]
+            # No plugin needed.
+        # Copy directories to output.
+        if "copy" in sdata:
+            tdata["uses_copy"] = "yes"  # ezt.boolean
+            tdata["copy"] = sdata["copy"]
+            tdata["use"].append("asfcopy")  # add the plugin
 
     # if ezmd files are present then use the asfreader plugin
     if find('*.ezmd', sourcepath):
