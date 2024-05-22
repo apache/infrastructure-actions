@@ -53,7 +53,7 @@ runs:
         done
       env:
         plugins: ${{ steps.plugins-used.outputs.plugins }}
-        plugdir: ${{ steps.plugin-paths.outputs.plutpaths }}
+        plugdir: ${{ steps.plugin-paths.outputs.plugpaths }}
     
     - name: Generate website from markdown
       run: /usr/bin/env python3 -m pelican content -o output -D
