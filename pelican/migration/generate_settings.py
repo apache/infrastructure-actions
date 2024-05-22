@@ -72,31 +72,31 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
         else:
             tdata["p_paths"] = ["plugins"]
 
-    if "use" in ydata["plugins"]:
-        tdata["use"] = ydata["plugins"]["use"]
-    else:
-        tdata["use"] = []
+        if "use" in ydata["plugins"]:
+            tdata["use"] = ydata["plugins"]["use"]
+        else:
+            tdata["use"] = []
 
-    if "sitemap" in ydata["plugins"]:
-        sm = ydata["plugins"]["sitemap"]
-        sitemap_params = _helper(
-            exclude=str(sm["exclude"]),
-            format=sm["format"],
-            priorities=_helper(
-                articles=sm["priorities"]["articles"],
-                indexes=sm["priorities"]["indexes"],
-                pages=sm["priorities"]["pages"],
-            ),
-            changefreqs=_helper(
-                articles=sm["changefreqs"]["articles"],
-                indexes=sm["changefreqs"]["indexes"],
-                pages=sm["changefreqs"]["pages"],
-            ),
-        )
+        if "sitemap" in ydata["plugins"]:
+            sm = ydata["plugins"]["sitemap"]
+            sitemap_params = _helper(
+                exclude=str(sm["exclude"]),
+                format=sm["format"],
+                priorities=_helper(
+                    articles=sm["priorities"]["articles"],
+                    indexes=sm["priorities"]["indexes"],
+                    pages=sm["priorities"]["pages"],
+                ),
+                changefreqs=_helper(
+                    articles=sm["changefreqs"]["articles"],
+                    indexes=sm["changefreqs"]["indexes"],
+                    pages=sm["changefreqs"]["pages"],
+                ),
+            )
 
-        tdata["uses_sitemap"] = "yes"  # ezt.boolean
-        tdata["sitemap"] = sitemap_params
-        tdata["use"].append("sitemap")  # add the plugin
+            tdata["uses_sitemap"] = "yes"  # ezt.boolean
+            tdata["sitemap"] = sitemap_params
+            tdata["use"].append("sitemap")  # add the plugin
 
     tdata["uses_index"] = None
     if "index" in tdata:
