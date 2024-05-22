@@ -46,11 +46,13 @@ runs:
 
     - name: Fetch plugins for site generation
       shell: bash
-      run: | #echo ${{ steps.plugins-used.outputs.plugins }}
-        for plugin in ${{ steps.plugins-used.outputs.plugins }}
-        do
+      run: |
+        for plugin in $plugins
+        do 
           echo $plugin
         done
+      env:
+        plugins: ${{ steps.plugins-used.outputs.plugins }}
         #wget https://raw.githubusercontent.com/apache/infrastructure-pelican/main/pelican/plugins/${{ plugin }} -O ${{ steps.plugin-paths.outputs.PLUGIN_PATHS }}/${{  
     
     - name: Generate website from markdown
