@@ -30,6 +30,29 @@ runs:
       shell: bash
       if: ${{ inputs.gfm == 'true' }}
 
+    - name: Fetch plugin directory from pelicanconf.py
+      id: plugin-paths
+      run: /usr/bin/env python3 -m pelican --print-settings PLUGIN_PATHS
+      shell: bash
+      env: # in case we are using GFM (otherwise ignored)
+        LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
+
+    - name: Fetch plugin list from pelicanconf.py
+      id: plugins-used
+      run: /usr/bin/env python3 -m pelican --print-settings PLUGINS
+      shell: bash
+      env: # in case we are using GFM (otherwise ignored)
+        LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
+
+    - name: Fetch plugins for site generation
+      shell: bash
+      run: |
+        for plugin in ${{ steps.plugins.outputs.PLUGINS }}
+        do
+          exho $plugin
+        done
+        #wget https://raw.githubusercontent.com/apache/infrastructure-pelican/main/pelican/plugins/${{ plugin }} -O ${{ steps.plugin-paths.outputs.PLUGIN_PATHS }}/${{  
+    
     - name: Generate website from markdown
       run: /usr/bin/env python3 -m pelican content -o output -D
       shell: bash
