@@ -60,8 +60,8 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
 
     if builtin_p_paths is None:
         builtin_p_paths = []
-        tdata["p_paths"] = builtin_p_paths
-        tdata["use"] = ["gfm"]
+    tdata["p_paths"] = builtin_p_paths
+    tdata["use"] = ["gfm"]
 
     tdata["uses_sitemap"] = None
     if "plugins" in ydata:
@@ -74,8 +74,6 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
 
         if "use" in ydata["plugins"]:
             tdata["use"] = ydata["plugins"]["use"]
-        else:
-            tdata["use"] = []
 
         if "sitemap" in ydata["plugins"]:
             sm = ydata["plugins"]["sitemap"]
