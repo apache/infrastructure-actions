@@ -32,21 +32,21 @@ runs:
 
     - name: Fetch plugin directory from pelicanconf.py
       id: plugin-paths
-      run: echo "plugpaths=`/usr/bin/env python3 -m pelican --print-settings | grep PLUGIN_PATHS | awk -F'\: ' '{print $NF}'`" >> "$GITHUB_OUTPUT"
+      run: echo "plugpaths=`python3 -m pelican --print-settings PLUGIN_PATHS`" >> "$GITHUB_OUTPUT"
       shell: bash
       env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
 
     - name: Fetch plugin list from pelicanconf.py
       id: plugins-used
-      run: echo "plugins=`/usr/bin/env python3 -m pelican --print-settings | grep PLUGINS | awk -F'\: ' '{print $NF}'`" >> "$GITHUB_OUTPUT"
+      run: echo "plugins=`python3 -m pelican --print-settings PLUGINS`" >> "$GITHUB_OUTPUT"
       shell: bash
       env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
 
     - name: Fetch plugins for site generation
       shell: bash
-      run: echo ${{ steps.plugins.outputs.PLUGINS }}
+      run: echo ${{ steps.plugins.outputs.plugins }}
         #wget https://raw.githubusercontent.com/apache/infrastructure-pelican/main/pelican/plugins/${{ plugin }} -O ${{ steps.plugin-paths.outputs.PLUGIN_PATHS }}/${{  
     
     - name: Generate website from markdown
