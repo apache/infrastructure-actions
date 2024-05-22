@@ -163,11 +163,7 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
             os.mkdir(tdata["p_paths"][0])
         else:
             print("Plugins directory found!")
-
-        for plugin in tdata["use"]:
-            src = os.path.join(os.path.abspath(os.path.join(THIS_DIR, os.pardir)), f"plugins/{plugin}.py")
-            dest = tdata["p_paths"][0]
-            shutil.copy(src, dest)
+    
     if not os.path.isdir(".github/workflows"):
         if not os.path.isdir(".github"):
             os.mkdir(".github")
