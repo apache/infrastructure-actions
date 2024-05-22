@@ -8,12 +8,7 @@ import yaml
 import ezt
 
 
-# Command definitions - put into a conf later on?
-GIT = "/usr/bin/git"
-SVN = "/usr/bin/svn"
-BASH = "/bin/bash"
 SCRATCH_DIR = "/tmp"
-PLUGINS = "/opt/infrastructure-pelican/plugins"
 THIS_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # Automatic settings filenames
