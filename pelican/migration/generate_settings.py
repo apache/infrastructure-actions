@@ -167,7 +167,7 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert pelicanconf.yaml to pelicanconf.py")
-    parser.add_argument('-p', '--project', required=True, help="Owning Project")
+    parser.add_argument('-p', '--project', required=False, help="Owning Project") # ignored,can be deleted
     parser.add_argument('-y', '--yaml', required=True, help="Pelicanconf YAML file")
     args = parser.parse_args()
 
@@ -175,8 +175,6 @@ if __name__ == "__main__":
     sourcepath = os.path.dirname(os.path.realpath(pelconf_yaml))
     tool_dir = THIS_DIR
 
-    path = os.path.join(SCRATCH_DIR, args.project)
-    content_dir = os.path.join(sourcepath, "content")
     #pelconf_yaml = os.path.join(sourcepath, AUTO_SETTINGS_YAML)
 
     if os.path.exists(pelconf_yaml):
