@@ -1,7 +1,7 @@
 import argparse
 import os
 import shutil
-import glob
+import fnmatch
 import datetime
 
 import yaml
@@ -20,6 +20,13 @@ class _helper:
     def __init__(self, **kw):
         vars(self).update(kw)
 
+def find(pattern, path):
+    for _root, _dirs, files in os.walk(path):
+        for name in files:
+            if fnmatch.fnmatch(name, pattern):
+                return True
+    return False
+
 def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepath="."):
     """Generate the Pelican settings file
 
@@ -29,7 +36,7 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     :param sourcepath: path to source (defaults to '.')
 
     """
-    print(f"Reading {source_yaml}")
+    print(f"Reading {source_yaml} in {sourcepath}")
     ydata = yaml.safe_load(open(source_yaml))
 
     print(f"converting to pelican.auto.py...")
@@ -150,8 +157,7 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
         tdata["use"].append("asfcopy")  # add the plugin
 
     # if ezmd files are present then use the asfreader plugin
-    ezmd_count = len(glob.glob(f"{sourcepath}/**/*.ezmd", recursive=True))
-    if ezmd_count > 0:
+    if find('*.ezmd', sourcepath):
         tdata["use"].append("asfreader")  # add the plugin
 
     print(f"Writing converted settings to {os.path.join(THIS_DIR, AUTO_SETTINGS)})")
@@ -180,17 +186,16 @@ if __name__ == "__main__":
     parser.add_argument('-y', '--yaml', required=True, help="Pelicanconf YAML file")
     args = parser.parse_args()
 
-    sourcepath = THIS_DIR
+    pelconf_yaml = args.yaml
+    sourcepath = os.path.dirname(os.path.realpath(pelconf_yaml))
     tool_dir = THIS_DIR
 
     path = os.path.join(SCRATCH_DIR, args.project)
     content_dir = os.path.join(sourcepath, "content")
-    settings_dir = sourcepath
-    pelconf_yaml = args.yaml
     #pelconf_yaml = os.path.join(sourcepath, AUTO_SETTINGS_YAML)
 
     if os.path.exists(pelconf_yaml):
         print(f"found {pelconf_yaml}")
         settings_path = os.path.join(path, AUTO_SETTINGS)
         builtin_plugins = os.path.join(tool_dir, os.pardir, "plugins")
-        generate_settings(pelconf_yaml, settings_path, [builtin_plugins], settings_dir)
+        generate_settings(pelconf_yaml, settings_path, [builtin_plugins], sourcepath)
