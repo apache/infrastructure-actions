@@ -157,7 +157,6 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     if find('*.ezmd', sourcepath):
         tdata["use"].append("asfreader")  # add the plugin
 
-    print(f"Writing converted settings to {os.path.join(THIS_DIR, AUTO_SETTINGS)})")
     if len(tdata["use"]) > 0:
         if not os.path.isdir(tdata["p_paths"][0]):
             os.mkdir(tdata["p_paths"][0])
@@ -170,8 +169,10 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
         os.mkdir("./.github/workflows")
     shutil.copy(os.path.join(THIS_DIR, "build-pelican.yml"), "./.github/workflows/")
 
+    auto_settings = os.path.join(".", AUTO_SETTINGS)
+    print(f"Writing converted settings to {auto_settings}")
     t = ezt.Template(os.path.join(THIS_DIR, AUTO_SETTINGS_TEMPLATE))
-    t.generate(open(os.path.join(".", AUTO_SETTINGS), "w+"), tdata)
+    t.generate(open(auto_settings, "w+"), tdata)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert pelicanconf.yaml to pelicanconf.py")
