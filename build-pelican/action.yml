@@ -32,7 +32,7 @@ runs:
 
     - name: Fetch plugin directory from pelicanconf.py
       id: plugin-paths
-      run: echo "PLUGIN_PATHS=`/usr/bin/env python3 -m pelican --print-settings PLUGIN_PATHS`" >> "$GITHUB_OUTPUT"
+      run: echo "PLUGPATHS=`/usr/bin/env python3 -m pelican --print-settings PLUGIN_PATHS`" >> "$GITHUB_OUTPUT"
       shell: bash
       env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
