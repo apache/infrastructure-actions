@@ -157,12 +157,6 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     if find('*.ezmd', sourcepath):
         tdata["use"].append("asfreader")  # add the plugin
 
-    if len(tdata["use"]) > 0:
-        if not os.path.isdir(tdata["p_paths"][0]):
-            os.mkdir(tdata["p_paths"][0])
-        else:
-            print("Plugins directory found!")
-    
     if not os.path.isdir(".github/workflows"):
         if not os.path.isdir(".github"):
             os.mkdir(".github")
