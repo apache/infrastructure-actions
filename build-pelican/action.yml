@@ -49,7 +49,7 @@ runs:
       run: |
         for plugin in ${{ steps.plugins.outputs.PLUGINS }}
         do
-          exho $plugin
+          echo $plugin
         done
         #wget https://raw.githubusercontent.com/apache/infrastructure-pelican/main/pelican/plugins/${{ plugin }} -O ${{ steps.plugin-paths.outputs.PLUGIN_PATHS }}/${{  
     
