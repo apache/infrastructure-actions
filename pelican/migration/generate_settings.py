@@ -161,10 +161,9 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
         os.mkdir("./.github/workflows")
     shutil.copy(os.path.join(THIS_DIR, "build-pelican.yml"), "./.github/workflows/")
 
-    auto_settings = os.path.join(".", AUTO_SETTINGS)
-    print(f"Writing converted settings to {auto_settings}")
+    print(f"Writing converted settings to {settings_path}")
     t = ezt.Template(os.path.join(THIS_DIR, AUTO_SETTINGS_TEMPLATE))
-    t.generate(open(auto_settings, "w+"), tdata)
+    t.generate(open(settings_path, "w+"), tdata)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert pelicanconf.yaml to pelicanconf.py")
@@ -182,6 +181,6 @@ if __name__ == "__main__":
 
     if os.path.exists(pelconf_yaml):
         print(f"found {pelconf_yaml}")
-        settings_path = os.path.join(path, AUTO_SETTINGS)
+        settings_path = os.path.join(sourcepath, AUTO_SETTINGS)
         builtin_plugins = os.path.join(tool_dir, os.pardir, "plugins")
         generate_settings(pelconf_yaml, settings_path, [builtin_plugins], sourcepath)
