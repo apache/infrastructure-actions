@@ -30,12 +30,12 @@ runs:
       shell: bash
       if: ${{ inputs.gfm == 'true' }}
 
-    - name: Fetch plugin directory from pelicanconf.py
-      id: plugin-paths
-      run: echo "PLUGPATHS=`/usr/bin/env python3 -m pelican --print-settings PLUGIN_PATHS`" >> "$GITHUB_OUTPUT"
-      shell: bash
-      env: # in case we are using GFM (otherwise ignored)
-        LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
+#    - name: Fetch plugin directory from pelicanconf.py
+#      id: plugin-paths
+#      run: echo "PLUGPATHS=`/usr/bin/env python3 -m pelican --print-settings PLUGIN\_PATHS`" >> "$GITHUB_OUTPUT"
+#      shell: bash
+#      env: # in case we are using GFM (otherwise ignored)
+#        LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
 
     - name: Fetch plugin list from pelicanconf.py
       id: plugins-used
