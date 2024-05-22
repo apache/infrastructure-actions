@@ -32,14 +32,14 @@ runs:
 
     - name: Fetch plugin directory from pelicanconf.py
       id: plugin-paths
-      run: echo "::set-output name=plugpaths::`python3 -m pelican --print-settings PLUGIN_PATHS`"
+      run: echo "::set-output name=plugpaths::`python3 -m pelican --print-settings PLUGIN_PATHS | tail -n 1 | sed \"s[][',]##g\"`"
       shell: bash
       env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
 
     - name: Fetch plugin list from pelicanconf.py
       id: plugins-used
-      run: echo "::set-output name=plugins::`python3 -m pelican --print-settings PLUGINS`"
+      run: echo "::set-output name=plugins::`python3 -m pelican --print-settings PLUGINS | tail -n 1 | sed \"s#[][',]##g\"`"
       shell: bash
       env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
