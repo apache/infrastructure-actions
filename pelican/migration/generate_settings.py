@@ -112,11 +112,11 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     else:
         tdata["uses_genid"] = None
 
-        tdata["uses_data"] = None
-        tdata["uses_run"] = None
-        tdata["uses_postrun"] = None
-        tdata["uses_ignore"] = None
-        tdata["uses_copy"] = None
+    tdata["uses_data"] = None
+    tdata["uses_run"] = None
+    tdata["uses_postrun"] = None
+    tdata["uses_ignore"] = None
+    tdata["uses_copy"] = None
     if "setup" in ydata:
         sdata = ydata["setup"]
     else:
