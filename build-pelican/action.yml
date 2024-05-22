@@ -49,11 +49,11 @@ runs:
       run: |
         for plugin in $plugins
         do 
-          echo $plugin
+          wget https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/plugins/$plugin.py -O $plugdir/$plugin.py
         done
       env:
         plugins: ${{ steps.plugins-used.outputs.plugins }}
-        #wget https://raw.githubusercontent.com/apache/infrastructure-pelican/main/pelican/plugins/${{ plugin }} -O ${{ steps.plugin-paths.outputs.PLUGIN_PATHS }}/${{  
+        plugdir: ${{ steps.plugin-paths.outputs.plutpaths }}
     
     - name: Generate website from markdown
       run: /usr/bin/env python3 -m pelican content -o output -D
