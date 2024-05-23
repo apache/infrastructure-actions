@@ -39,7 +39,7 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     print(f"Reading {source_yaml} in {sourcepath}")
     ydata = yaml.safe_load(open(source_yaml))
 
-    print(f"converting to pelican.auto.py...")
+    print(f"Converting to {settings_path}...")
     tdata = ydata["site"]  # Easy to copy these simple values.
     tdata.update(
         {
