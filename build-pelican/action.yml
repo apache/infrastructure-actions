@@ -20,6 +20,7 @@ runs:
       with:
         filter: tree:0
         fetch-depth: 0
+        show-progress: false # does not yet work for checkout unfortunately
     - name: Identify Committer
       shell: bash
       run: |
@@ -28,7 +29,7 @@ runs:
     - name: Run Pelican
       shell: bash
       run: |
-        docker run -v /tmp:/out -v $PWD:/site --entrypoint bash ${{ inputs.image }} \
+        time docker run --quiet -v /tmp:/out -v $PWD:/site --entrypoint bash ${{ inputs.image }} \
           -c "source /tmp/pelican-asf/LIBCMARKDIR.sh && python3 -m pelican content -o /out/output"
     - name: Checkout site deploy branch
       shell: bash
