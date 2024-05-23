@@ -66,11 +66,8 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     tdata["uses_sitemap"] = None
     if "plugins" in ydata:
         if "paths" in ydata["plugins"]:
-            tdata["p_paths"] = []
             for p in ydata["plugins"]["paths"]:
                 tdata["p_paths"].append(os.path.join(p))
-        else:
-            tdata["p_paths"] = ["plugins"]
 
         if "use" in ydata["plugins"]:
             tdata["use"] = ydata["plugins"]["use"]
@@ -183,6 +180,8 @@ def main():
 
     pelconf_yaml = args.yaml
     sourcepath = os.path.dirname(pelconf_yaml)
+    if sourcepath == '':
+        sourcepath = '.' # Needed for find
 
     if os.path.exists(pelconf_yaml):
         print(f"found {pelconf_yaml}")
