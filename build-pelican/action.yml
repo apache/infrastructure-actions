@@ -53,7 +53,7 @@ runs:
       run: |
         # Remove all existing output so deletions will be captured
         rm -rf output
-        git rm -r --ignore-unmatch --cached output/*
+        git rm --quiet -r --ignore-unmatch --cached output/*
         cp -rT /tmp/output ${{ inputs.output }}
         git diff # Show changes
         git add ${{ inputs.output }}
