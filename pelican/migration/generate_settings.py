@@ -1,6 +1,5 @@
 import argparse
 import os
-import shutil
 import fnmatch
 import datetime
 
@@ -15,6 +14,7 @@ THIS_DIR = os.path.abspath(os.path.dirname(__file__))
 AUTO_SETTINGS_YAML = "pelicanconf.yaml"
 AUTO_SETTINGS_TEMPLATE = "pelican.auto.ezt"
 AUTO_SETTINGS = "pelicanconf.py"
+BUILD_PELICAN_TEMPLATE = "build-pelican.ezt"
 
 class _helper:
     def __init__(self, **kw):
@@ -37,9 +37,9 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
 
     """
     print(f"Reading {source_yaml} in {sourcepath}")
-    ydata = yaml.safe_load(open(source_yaml))
+    ydata = yaml.safe_load(open(source_yaml, encoding='utf-8'))
 
-    print(f"converting to pelican.auto.py...")
+    print(f"Converting to {settings_path}...")
     tdata = ydata["site"]  # Easy to copy these simple values.
     tdata.update(
         {
@@ -155,30 +155,42 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     if find('*.ezmd', sourcepath):
         tdata["use"].append("asfreader")  # add the plugin
 
-    if not os.path.isdir(".github/workflows"):
-        if not os.path.isdir(".github"):
-            os.mkdir(".github")
-        os.mkdir("./.github/workflows")
-    shutil.copy(os.path.join(THIS_DIR, "build-pelican.yml"), "./.github/workflows/")
+    # We assume that pelicanconf.yaml is at the top level of the repo
+    # so .asf.yaml amd .github/workflow are located under sourcepath
+    workflows = os.path.join(sourcepath, ".github/workflows")
+    if not os.path.isdir(workflows):
+        print(f"Creating directory {workflows}")
+        os.makedirs(workflows)
+    workfile = f"{workflows}/build-pelican.yml"
+    print(f"Creating workfile {workfile} from .asf.yaml")
+    workfiletemplate = ezt.Template(os.path.join(THIS_DIR, BUILD_PELICAN_TEMPLATE), 0)
+    asfyaml = os.path.join(sourcepath,'.asf.yaml')
+    with open(workfile, "w", encoding='utf-8') as w:
+        workfiletemplate.generate(w, {
+            'destination': yaml.safe_load(open(asfyaml, encoding='utf-8'))['pelican']['target']
+        })
 
     print(f"Writing converted settings to {settings_path}")
     t = ezt.Template(os.path.join(THIS_DIR, AUTO_SETTINGS_TEMPLATE))
-    t.generate(open(settings_path, "w+"), tdata)
+    with open(settings_path, "w", encoding='utf-8') as w:
+        t.generate(w, tdata)
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description="Convert pelicanconf.yaml to pelicanconf.py")
     parser.add_argument('-p', '--project', required=False, help="Owning Project") # ignored,can be deleted
     parser.add_argument('-y', '--yaml', required=True, help="Pelicanconf YAML file")
     args = parser.parse_args()
 
     pelconf_yaml = args.yaml
-    sourcepath = os.path.dirname(os.path.realpath(pelconf_yaml))
-    tool_dir = THIS_DIR
-
-    #pelconf_yaml = os.path.join(sourcepath, AUTO_SETTINGS_YAML)
+    sourcepath = os.path.dirname(pelconf_yaml)
 
     if os.path.exists(pelconf_yaml):
         print(f"found {pelconf_yaml}")
         settings_path = os.path.join(sourcepath, AUTO_SETTINGS)
-        builtin_plugins = os.path.join(tool_dir, os.pardir, "plugins")
+        builtin_plugins = '/tmp/pelican-asf/plugins' # Where the Docker plugins are currently
         generate_settings(pelconf_yaml, settings_path, [builtin_plugins], sourcepath)
+    else:
+        print(f"Unable to find {pelconf_yaml}")
+
+if __name__ == "__main__":
+    main()

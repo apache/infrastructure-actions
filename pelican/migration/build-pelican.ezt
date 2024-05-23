@@ -1,0 +1,18 @@
+[# TEMPLATE for the workflow file build-pelican.yml. Must be generated with compress-whitespace off.]
+name: Build a Pelican Website
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'content/**' # can this vary?
+
+permissions:
+  contents: write # needed to commit updates to the output branch
+
+jobs:
+  build-pelican:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: 'apache/infrastructure-actions/build-pelican@main'
+        with:
+          destination: '[destination]'
