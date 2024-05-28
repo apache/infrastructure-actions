@@ -43,7 +43,7 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     tdata = ydata["site"]  # Easy to copy these simple values.
     tdata.update(
         {
-            "year": datetime.date.today().year,
+            "year": 'datetime.date.today().year', # generate this at run-time
             "theme": ydata.get("theme", "theme/apache"),
             "debug": str(ydata.get("debug", False)),
         }
