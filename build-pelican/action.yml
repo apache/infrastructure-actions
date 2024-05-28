@@ -72,7 +72,7 @@ runs:
         git config --global user.email "private@infra.apache.org"
         git config --global user.name "Build Pelican (action)"
         # Check for destination branch
-        if [[ "$(git checkout ${{ inputs.destination }}; echo $?)" == "0"]]
+        if [[ "$(git checkout ${{ inputs.destination }} &>2; echo $?)" == "0" ]]
         then 
           git pull origin ${{ inputs.destination }}
         else
