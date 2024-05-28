@@ -12,6 +12,10 @@ inputs:
   output:
     description: "Pelican generated output directory"
     required: false
+    default: 'output'
+  tmpdir:
+    description: "Temporary Directory name"
+    required: false
     default: 'output.tmp'
 runs:
   using: "composite"
@@ -22,7 +26,7 @@ runs:
 
     # If the site uses Github Flavored Markdown, use this build branch
     - name: fetch libcmark-gfm.so buildscript
-      run: wget https://raw.githubusercontent.com/apache/infrastructure-action/main/pelican/build-cmark.sh -O ./build-cmark.sh
+      run: wget https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/build-cmark.sh -O ./build-cmark.sh
       shell: bash
       if: ${{ inputs.gfm == 'true' }}
 
@@ -57,18 +61,25 @@ runs:
         plugdir: ${{ steps.plugin-paths.outputs.plugpaths }}
     
     - name: Generate website from markdown
-      run: /usr/bin/env python3 -m pelican content -o output -D
+      run: /usr/bin/env python3 -m pelican content -o ${{ inputs.tempdir }} -D
       shell: bash
       env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
 
     - name: Commit Directly to the branch
-      with:
-        token: ${{ inputs.token }}
-        commit-message: GitHub Actions Generated Pelican Build
-        title: Generated Pelican Output
-        body: output generated
-        add-paths: |
-          output/
-        base: ${{ inputs.destination }}
-        run: 
+      run: |
+        # Remove all existing output so deletions will be captured
+        rm -rf ${{ inputs.output }}
+        git rm --quiet -r --ignore-unmatch --cached ${{ inputs.output }}/*
+        # replace with generated output
+        mv ${{ inputs.tempdir }} ${{ inputs.output }}
+        git diff # Show changes
+        git add ${{ inputs.output }}
+        git status
+        if git commit -m "Commit build products"
+          then
+              git push
+        else
+          echo "No change"
+          true # ensure step is successful
+        fi
