@@ -45,6 +45,7 @@ runs:
     - name: Fetch plugins for site generation
       shell: bash
       run: |
+        [-d $plugdir ] || mkdir $plugdir
         for plugin in $(grep PLUGINS pelicanconf.py | awk -F"'" '{for (i=2; i<=NF; i+=2) printf ($i" ");}')
         do 
           wget https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/plugins/$plugin.py -O $plugdir/$plugin.py
