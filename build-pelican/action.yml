@@ -67,6 +67,7 @@ runs:
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
 
     - name: Commit Directly to the branch
+      shell: bash
       run: |
         # Remove all existing output so deletions will be captured
         rm -rf ${{ inputs.output }}
