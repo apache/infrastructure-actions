@@ -127,8 +127,10 @@ def show_pages(generators):
     print(asf_index)
     # Not currently interested in menus this way as it is not generalizable
     # set_context(generators, 'SITE_MENU', get_menu(site_index, asf_index['menus']))
-    set_context(generators, 'SITE_INDEX', get_index(site_index, asf_index['index']))
-
+    try:
+        set_context(generators, 'SITE_INDEX', get_index(site_index, asf_index['index']))
+    except TypeError as e:
+        print(e)
 
 def tb_finalized(generators):
     """ Print any exception, before Pelican chews it into nothingness."""
