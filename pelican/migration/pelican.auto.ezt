@@ -1,5 +1,7 @@
 [# TEMPLATE for dynamic construction of a settings file for Pelican. ]
 
+import datetime
+
 # Basic information about the site.
 SITENAME = '[name]'
 SITEDESC = '[description]'
