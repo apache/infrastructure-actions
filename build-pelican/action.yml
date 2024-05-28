@@ -1,9 +1,6 @@
 name: Build a Pelican Website
 description: "Generate a Pelican website from Markdown"    
 inputs:
-  token:
-    description: 'Set to secrets.GITHUB_TOKEN in the workflow'
-    required: true
   destination:
     description: "Pelican Output branch"
     required: true
@@ -12,6 +9,10 @@ inputs:
     description: "Uses GitHub Flavored Markdown"
     required: false
     default: 'false'
+  output:
+    description: "Pelican generated output directory"
+    required: false
+    default: 'output.tmp'
 runs:
   using: "composite"
   steps:
@@ -21,7 +22,7 @@ runs:
 
     # If the site uses Github Flavored Markdown, use this build branch
     - name: fetch libcmark-gfm.so buildscript
-      run: wget https://raw.githubusercontent.com/apache/infrastructure-pelican/master/bin/build-cmark.sh -O ./build-cmark.sh
+      run: wget https://raw.githubusercontent.com/apache/infrastructure-action/main/pelican/build-cmark.sh -O ./build-cmark.sh
       shell: bash
       if: ${{ inputs.gfm == 'true' }}
 
@@ -61,8 +62,7 @@ runs:
       env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
 
-    - name: Open a PR against the staging branch
-      uses: peter-evans/create-pull-request@v6.0.5
+    - name: Commit Directly to the branch
       with:
         token: ${{ inputs.token }}
         commit-message: GitHub Actions Generated Pelican Build
@@ -71,3 +71,4 @@ runs:
         add-paths: |
           output/
         base: ${{ inputs.destination }}
+        run: 
