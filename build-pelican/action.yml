@@ -68,6 +68,7 @@ runs:
 
     - name: Check out previous branch
       shell: bash
+      continue-on-error: true
       run: | 
         git config --global user.email "private@infra.apache.org"
         git config --global user.name "Build Pelican (action)"
