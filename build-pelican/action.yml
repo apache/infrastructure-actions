@@ -44,7 +44,7 @@ runs:
 
     - name: Fetch plugin list from pelicanconf.py
       id: plugins-used
-      run: echo "plugins=`python3 -m pelican --print-settings PLUGINS | tail -n 1 | sed \"s#[][',]##g\"`" >> $GITHUB_OUTPUT
+      run: echo "plugins=`python3 -m pelican --print-settings PLUGINS | tail -n 1 | sed \"s#[][',]##g\"`" >> "$GITHUB_OUTPUT"
       shell: bash
       env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
