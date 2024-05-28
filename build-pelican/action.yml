@@ -66,15 +66,13 @@ runs:
       env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
 
-    - name: Commit Directly to the branch
+    - name: Check out previous branch
       shell: bash
-      continue-on-error: true
-      run: |
-        git config --global user.email "users@infra.apache.org"
+      run: | 
+        git config --global user.email "private@infra.apache.org"
         git config --global user.name "Build Pelican (action)"
         # Check for destination branch
-        git checkout ${{ inputs.destination }}
-        if [[ "$?" == "0" ]]
+        if [[ "$(git checkout ${{ inputs.destination }}; echo $?)" == "0"]]
         then 
           git pull origin ${{ inputs.destination }}
         else
@@ -86,6 +84,10 @@ runs:
           git checkout origin/${{ github.ref_name }} -- .asf.yaml
           git add .asf.yaml -f
         fi
+
+    - name: Commit Directly to the branch
+      shell: bash
+      run: |
         # Remove all existing output so deletions will be captured
         rm -rf ${{ inputs.output }}
         git rm --quiet -r --ignore-unmatch --cached ${{ inputs.output }}/*
