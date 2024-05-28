@@ -69,8 +69,8 @@ runs:
     - name: Commit Directly to the branch
       shell: bash
       run: |
-        git.config --global user.email "users@infra.apache.org"
-        git.config --global user.name "Build Pelican (action)"
+        git config --global user.email "users@infra.apache.org"
+        git config --global user.name "Build Pelican (action)"
         # Check for destination branch
         if git checkout ${{ inputs.destination }}
         then 
