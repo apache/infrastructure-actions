@@ -13,7 +13,7 @@ inputs:
     description: "Pelican generated output directory"
     required: false
     default: 'output'
-  tmpdir:
+  tempdir:
     description: "Temporary Directory name"
     required: false
     default: 'output.tmp'
