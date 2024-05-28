@@ -42,22 +42,14 @@ runs:
       env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
 
-    - name: Fetch plugin list from pelicanconf.py
-      id: plugins-used
-      run: echo "plugins=`python3 -m pelican --print-settings PLUGINS | tail -n 1 | sed \"s#[][',]##g\"`" >> "$GITHUB_OUTPUT"
-      shell: bash
-      env: # in case we are using GFM (otherwise ignored)
-        LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
-
     - name: Fetch plugins for site generation
       shell: bash
       run: |
-        for plugin in $plugins
+        for plugin in $(grep PLUGINS pelicanconf.py | awk -F"'" '{for (i=2; i<=NF; i+=2) printf ($i" ");}')
         do 
           wget https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/plugins/$plugin.py -O $plugdir/$plugin.py
         done
       env:
-        plugins: ${{ steps.plugins-used.outputs.plugins }}
         plugdir: ${{ steps.plugin-paths.outputs.plugpaths }}
     
     - name: Generate website from markdown
