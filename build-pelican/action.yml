@@ -72,6 +72,7 @@ runs:
       run: | 
         git config --global user.email "private@infra.apache.org"
         git config --global user.name "Build Pelican (action)"
+        git remote update
         if git checkout ${{ inputs.destination }}
         then
           git pull origin ${{ inputs.destination }}
