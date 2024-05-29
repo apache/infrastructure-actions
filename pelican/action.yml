@@ -36,7 +36,7 @@ runs:
       if: ${{ inputs.gfm == 'true' }}
 
     - name: Fetch plugin directory from pelicanconf.py
-      run: curt https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/fetch_plugins.py | python3
+      run: curl https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/fetch_plugins.py | python3
       shell: bash
 
     - name: Generate website from markdown
