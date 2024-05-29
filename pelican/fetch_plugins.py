@@ -32,14 +32,13 @@
 # ### pelicanconf.py. If the values do not exist, then "no plugins"
 # ### (the empty set) is given, and "." is used for the plugins.
 #
-
+import os
 import sys
-
-#import requests  ### future: fetch the plugins
+import requests
 
 DEFAULT_PELCONF = 'pelicanconf.py'  # in current dir
 DEFAULT_PLUGINS = set()
-DEFAULT_PLUGDIR = '.'  ### is this correct?
+DEFAULT_PLUGDIR = 'plugins'  # default is /plugins
 
 
 def extract_values(pelconf):
@@ -63,9 +62,16 @@ def extract_values(pelconf):
 
 def main(pelconf):
     plugins, plugdir = extract_values(pelconf)
-    print('PLUGINS:', plugins)
-    print('PLUGDIR:', plugdir)
+    if not os.path.isdir(plugdir):
+        os.mkdir(plugdir)
 
+    ghurl = "https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/plugins/"
+    for plugin in plugins:
+        purl = f"{ghurl}/{plugin}.py"
+        r = requests.get(purl)
+        if r.status_code == 200:
+            open(f"{plugdir}/{plugin}.py", "wb").write(r.content)
+            print(f"Successfully Fetched {plugin}")
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
