@@ -25,13 +25,8 @@ runs:
       shell: bash
 
     # If the site uses Github Flavored Markdown, use this build branch
-    - name: fetch libcmark-gfm.so buildscript
-      run: wget https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/build-cmark.sh -O ./build-cmark.sh
-      shell: bash
-      if: ${{ inputs.gfm == 'true' }}
-
-    - name: build libcmark-gfm.so
-      run: /bin/bash ./build-cmark.sh
+    - name: fetch and build libcmark-gfm.so
+      run: curl https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/build-cmark.sh | bash
       shell: bash
       if: ${{ inputs.gfm == 'true' }}
 
