@@ -32,7 +32,7 @@ if [ -f "$LOCAL" ]; then
     echo "Using cached tarball: ${LOCAL}"
 else
     echo "Fetching from cmark archives"
-    curl -L -o "$LOCAL" "$ARCHIVES/$VERSION.tar.gz" || exit 1
+    curl -sSL -o "$LOCAL" "$ARCHIVES/$VERSION.tar.gz" || exit 1
 fi
 
 # Clean anything old, then extract and build.
