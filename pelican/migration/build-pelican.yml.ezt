@@ -1,0 +1,16 @@
+name: Build a Pelican Website
+on:
+  push:
+    branches: [ '[whoami]' ]
+  workflow_dispatch:
+jobs:
+  build-pelican:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '[whoami]'
+      - uses: apache/infrastructure-actions/pelican@main
+        with:
+          destination: '[target]'
+          gfm: 'true'
