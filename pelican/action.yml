@@ -39,18 +39,17 @@ runs:
       shell: bash
 
     - name: Generate website from markdown
-      run: /usr/bin/env python3 -m pelican content -o ${{ inputs.tempdir }} -D
+      run: |
+        if [ "${{ inputs.debug }}" == 'true' ]
+        then
+          OPTS='-D'
+        else
+          OPTS=''
+        fi
+        /usr/bin/env python3 -m pelican content -o ${{ inputs.tempdir }} $OPTS
       shell: bash
       env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
-      if: ${{ inputs.debug == 'true' }}
-
-    - name: Generate website from markdown
-      run: /usr/bin/env python3 -m pelican content -o ${{ inputs.tempdir }}
-      shell: bash
-      env: # in case we are using GFM (otherwise ignored)
-        LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
-      if: ${{ inputs.debug == 'false' }}
 
     - name: Check out previous branch
       shell: bash
