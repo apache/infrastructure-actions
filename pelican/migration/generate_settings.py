@@ -1,8 +1,10 @@
 import argparse
 import os
+import pathlib
 import shutil
 import fnmatch
 import datetime
+import sys
 
 import yaml
 import ezt
@@ -15,7 +17,7 @@ THIS_DIR = os.path.abspath(os.path.dirname(__file__))
 AUTO_SETTINGS_YAML = "pelicanconf.yaml"
 AUTO_SETTINGS_TEMPLATE = "pelican.auto.ezt"
 AUTO_SETTINGS = "pelicanconf.py"
-
+WORKFLOW_TEMPLATE = "build-pelican.yml.ezt"
 class _helper:
     def __init__(self, **kw):
         vars(self).update(kw)
@@ -36,6 +38,12 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     :param sourcepath: path to source (defaults to '.')
 
     """
+    print(pathlib.Path(os.path.abspath(source_yaml)).parent.absolute().joinpath(".asf.yaml"))
+    asfyaml = pathlib.Path(os.path.abspath(source_yaml)).parent.absolute().joinpath(".asf.yaml")
+    if os.path.isfile(asfyaml):
+            print(f".asf.yaml detected, reading...")
+            adata = yaml.safe_load(open(asfyaml))
+
     print(f"Reading {source_yaml} in {sourcepath}")
     ydata = yaml.safe_load(open(source_yaml))
 
@@ -159,7 +167,9 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
         if not os.path.isdir(".github"):
             os.mkdir(".github")
         os.mkdir("./.github/workflows")
-    shutil.copy(os.path.join(THIS_DIR, "build-pelican.yml"), "./.github/workflows/")
+    print("Writing GitHub Actions file")
+    g = ezt.Template(os.path.join(THIS_DIR, WORKFLOW_TEMPLATE))
+    g.generate(open(".github/workflows/build-pelican.yml", "w+"), adata['pelican'])
 
     print(f"Writing converted settings to {settings_path}")
     t = ezt.Template(os.path.join(THIS_DIR, AUTO_SETTINGS_TEMPLATE))
@@ -167,15 +177,12 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert pelicanconf.yaml to pelicanconf.py")
-    parser.add_argument('-p', '--project', required=False, help="Owning Project") # ignored,can be deleted
     parser.add_argument('-y', '--yaml', required=True, help="Pelicanconf YAML file")
     args = parser.parse_args()
 
     pelconf_yaml = args.yaml
     sourcepath = os.path.dirname(os.path.realpath(pelconf_yaml))
     tool_dir = THIS_DIR
-
-    #pelconf_yaml = os.path.join(sourcepath, AUTO_SETTINGS_YAML)
 
     if os.path.exists(pelconf_yaml):
         print(f"found {pelconf_yaml}")

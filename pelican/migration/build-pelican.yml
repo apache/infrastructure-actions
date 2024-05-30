@@ -1,7 +1,7 @@
 name: Build a Pelican Website
 on:
   push:
-    branches: [ "dfoulks/pelican_gha" ]
+    branches: [ "SOURCE_BRANCH" ]
   workflow_dispatch:
 jobs:
   build-pelican:
@@ -10,8 +10,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 'dfoulks/pelican_gha'
+          ref: 'SOURCE_BRANCH'
       - uses: apache/infrastructure-actions/pelican@main
         with:
-          destination: 'dfoulks/gha-site'
+          destination: 'DESTINATION_BRANCH'
           gfm: 'true'
