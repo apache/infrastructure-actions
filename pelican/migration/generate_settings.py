@@ -168,7 +168,7 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
             os.mkdir(".github")
         os.mkdir("./.github/workflows")
     print("Writing GitHub Actions file")
-    g = ezt.Template(os.path.join(THIS_DIR, WORKFLOW_TEMPLATE))
+    g = ezt.Template(os.path.join(THIS_DIR, WORKFLOW_TEMPLATE), 0) # don't compress whitespace
     g.generate(open(".github/workflows/build-pelican.yml", "w+"), adata['pelican'])
 
     print(f"Writing converted settings to {settings_path}")
