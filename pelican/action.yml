@@ -30,12 +30,12 @@ runs:
 
     # If the site uses Github Flavored Markdown, use this build branch
     - name: fetch and build libcmark-gfm.so
-      run: curl https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/build-cmark.sh | bash
+      run: curl -sSL https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/build-cmark.sh | bash
       shell: bash
       if: ${{ inputs.gfm == 'true' }}
 
     - name: Fetch plugin directory from pelicanconf.py
-      run: curl https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/fetch_plugins.py | python3
+      run: curl -sSL https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/fetch_plugins.py | python3
       shell: bash
 
     - name: Generate website from markdown
