@@ -25,7 +25,7 @@ runs:
   using: "composite"
   steps:
     - name: Install Pelican
-      run: pip3 install --force-reinstall pelican==4.8.0 markdown ghp-import bs4 ezt request
+      run: pip3 install --force-reinstall pelican==4.8.0 markdown ghp-import bs4 ezt requests
       shell: bash
 
     # If the site uses Github Flavored Markdown, use this build branch
