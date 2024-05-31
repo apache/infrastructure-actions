@@ -22,15 +22,22 @@ inputs:
     required: false
     default: 'false'
   version:
-    # Temporarily revert to 4.8.0; earlier version now fails
-    description: "Pelican Version (default 4.8.0)"
+    description: "Pelican Version (default 4.5.4)"
     required: false
-    default: '4.8.0'
+    default: '4.5.4'
 runs:
   using: "composite"
   steps:
     - name: Install Pelican
-      run: pip3 install --force-reinstall pelican==${{ inputs.version }} markdown ghp-import bs4 ezt requests
+      run: |
+        pip3 install pelican==${{ inputs.version }} markdown ghp-import bs4 ezt requests
+        python3 -V
+        echo "Pelican version:"
+        pelican --version
+        if [ "${{ inputs.debug }}" == 'true' ]
+        then
+          pip3 list # This a long list
+        fi
       shell: bash
 
     # If the site uses Github Flavored Markdown, use this build branch
