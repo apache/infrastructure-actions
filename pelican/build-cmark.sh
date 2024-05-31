@@ -10,8 +10,8 @@
 #           code, or where to place a tarball
 #
 
-# Echo all of our steps
-set -x
+# Echo all of our steps if DEBUG_STEPS is set
+test -n "$DEBUG_STEPS" && set -x
 
 #VERSION=0.28.3.gfm.20  ### not yet
 VERSION=0.28.3.gfm.12

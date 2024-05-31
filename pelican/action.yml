@@ -29,8 +29,12 @@ runs:
   using: "composite"
   steps:
     - name: Install Pelican
+      # Install needs to run in separate shell so stdout is restored
       run: |
-        pip3 install pelican==${{ inputs.version }} markdown ghp-import bs4 ezt requests
+        (
+          test "${{ inputs.debug }}" == 'true' || exec >/dev/null
+          pip3 install pelican==${{ inputs.version }} markdown ghp-import bs4 ezt requests
+        )
         python3 -V
         echo "Pelican version:"
         pelican --version
@@ -42,7 +46,18 @@ runs:
 
     # If the site uses Github Flavored Markdown, use this build branch
     - name: fetch and build libcmark-gfm.so
-      run: curl -sSL https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/build-cmark.sh | bash
+      run: |
+        {
+          cmake --version
+          # disable stdout unless debug is on
+          if [ "${{ inputs.debug }}" == 'true' ]
+          then
+            DEBUG_STEPS=1; export DEBUG_STEPS
+          else
+            exec >/dev/null
+          fi
+          curl -sSL https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/build-cmark.sh | bash
+        }
       shell: bash
       if: ${{ inputs.gfm == 'true' }}
 
