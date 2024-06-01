@@ -63,10 +63,6 @@ runs:
       shell: bash
       if: ${{ inputs.gfm == 'true' }}
 
-    - name: Fetch plugin directory from pelicanconf.py
-      run: curl -sSL https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/fetch_plugins.py | python3
-      shell: bash
-
     - name: Generate website from markdown
       run: |
         if [ "${{ inputs.debug }}" == 'true' ]
@@ -75,7 +71,9 @@ runs:
         else
           OPTS=''
         fi
-        /usr/bin/env python3 -m pelican content -o ${{ inputs.tempdir }} $OPTS
+        echo "Getting plugins from action location: ${{ github.action_path }}"
+        PP=$(python3 ${{ github.action_path }}/plugin_paths.py '${{ github.action_path }}/plugins')
+        /usr/bin/env python3 -m pelican content -e "$PP" -o ${{ inputs.tempdir }} $OPTS
       shell: bash
       env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "../cmark-gfm-0.28.3.gfm.12/lib"
