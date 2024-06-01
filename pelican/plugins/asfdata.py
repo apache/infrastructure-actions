@@ -390,6 +390,7 @@ def process_distributions(project, src, sort_revision, debug):
     dtms = {}
     versions = {}
     revisions = {}
+    keys = None # ensure defined before use
 
     # read the output from svn ls -Rv
     url = f'https://dist.apache.org/repos/dist/release/{project}'
@@ -579,7 +580,8 @@ def twitter_auth():
 def connect_to_endpoint(url, headers):
     response = requests.request('GET', url, headers=headers, timeout=REQUESTS_TIMEOUT)
     if response.status_code != 200:
-        raise Exception(response.status_code, response.text)
+        # TODO: choose better exception
+        raise Exception(response.status_code, response.text) # pylint: disable=broad-exception-raised
     return response.json()
 
 
