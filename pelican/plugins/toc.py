@@ -56,8 +56,8 @@ class HtmlTreeNode(object):
 
         if not new_string:
             new_string = new_header.find_all(
-                    text=lambda t: not isinstance(t, Comment),
-                    recursive=True)
+                text=lambda t: not isinstance(t, Comment),
+                recursive=True)
             new_string = "".join(new_string)
 
         if not new_id:
@@ -80,11 +80,11 @@ class HtmlTreeNode(object):
         ret = ""
         if self.parent:
             ret = "<a class='toc-href' href='#{0}' title='{1}'>{1}</a>".format(
-                    self.id, self.header)
+                self.id, self.header)
 
         if self.children:
-            ret += "<ul>{}</ul>".format('{}'*len(self.children)).format(
-                    *self.children)
+            ret += "<ul>{}</ul>".format('{}' * len(self.children)).format(
+                *self.children)
 
         if self.parent:
             ret = "<li>{}</li>".format(ret)
