@@ -48,6 +48,8 @@ runs:
     - name: fetch and build libcmark-gfm.so
       run: |
         {
+          # Don't pollute site checkout
+          cd ..
           cmake --version
           # disable stdout unless debug is on
           if [ "${{ inputs.debug }}" == 'true' ]
@@ -76,7 +78,7 @@ runs:
         /usr/bin/env python3 -m pelican content -o ${{ inputs.tempdir }} $OPTS
       shell: bash
       env: # in case we are using GFM (otherwise ignored)
-        LIBCMARKDIR: "cmark-gfm-0.28.3.gfm.12/lib"
+        LIBCMARKDIR: "../cmark-gfm-0.28.3.gfm.12/lib"
 
     - name: Check out previous branch
       shell: bash
