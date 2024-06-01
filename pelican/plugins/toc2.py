@@ -125,7 +125,7 @@ def generate_toc(content):
         header_re = re.compile(content.metadata.get(
             'toc_headers', content.settings['TOC']['TOC_HEADERS']))
     except re.error as e:
-        logger.error("TOC_HEADERS '%s' is not a valid re\n%s",
+        logger.error("TOC_HEADERS '%s' is not a valid re\n",
                      content.settings['TOC']['TOC_HEADERS'])
         raise e
 
