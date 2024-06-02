@@ -1,0 +1,69 @@
+name: Build a Pelican Website
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build-pelican:
+    env: # source and target branches
+      SOURCE: testsite
+      TARGET: testsite-output
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the test site
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE }}
+      - name: Ignore the action checkout
+        run: |
+          echo "self/" >> .git/info/exclude
+      - name: Checkout self
+        uses: actions/checkout@v4
+        with:
+          path: self
+      - name: Reset output directory ${{ env.TARGET }}
+        run: |
+          set +e
+          echo $TARGET
+          git branch -D $TARGET
+          git push origin --delete $TARGET
+          git branch -a | grep ${{ env.TARGET }}
+          true
+      - name: Should create ${{ env.TARGET }}
+        uses: ./self/pelican
+        with:
+          destination: ${{ env.TARGET }}
+          gfm: 'true'
+        env:
+          UNIT_TEST_A: This is UNIT_TEST_A
+      - name: Check ${{ env.TARGET }} was created
+        run: |
+          git checkout ${{ env.TARGET }}
+          {
+            echo "Commit build products"
+            echo -n "Initialise empty site"
+          }  >/tmp/expected
+          cat <<EOD
+          Commit build products
+          Initialise empty site
+          EOD
+          diff <(git log --pretty="format:%s") /tmp/expected
+      - name: Reset workspace for next test
+        run: |
+          git checkout ${{ env.SOURCE }}
+          git status
+      - name: Should update ${{ env.TARGET }} again
+        uses: ./self/pelican
+        with:
+          destination: ${{ env.TARGET }}
+          gfm: 'true'
+        env: # This is a different value
+          UNIT_TEST_A: This is UNIT_TEST_A updated
+      - name: Check ${{ env.TARGET }} is present and has been updated
+        run: |
+          git checkout ${{ env.TARGET }}
+          {
+            echo "Commit build products"
+            echo "Commit build products"
+            echo -n "Initialise empty site"
+          }  >/tmp/expected
+          diff <(git log --pretty="format:%s") /tmp/expected
