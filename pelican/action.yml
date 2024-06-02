@@ -58,7 +58,7 @@ runs:
           else
             exec >/dev/null
           fi
-          curl -sSL https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/build-cmark.sh | bash
+          bash ${{ github.action_path }}/build-cmark.sh
         }
       shell: bash
       if: ${{ inputs.gfm == 'true' }}
