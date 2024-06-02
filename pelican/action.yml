@@ -90,12 +90,12 @@ runs:
           git pull origin ${{ inputs.destination }}
         else
           # if none, create it.
-          echo "branch ${{ inputs.destination }} is new; create basic site"
-          git config --global --add --bool push.autoSetupRemote true
-          git checkout --orphan ${{ inputs.destination }} -f
-          git rm -rf .
+          echo "branch ${{ inputs.destination }} is new; create empty site"
+          git switch --orphan ${{ inputs.destination }}
           git checkout origin/${{ github.ref_name }} -- .asf.yaml
           git add .asf.yaml -f
+          git commit -m "Initialise empty site"
+          git push -u origin ${{ inputs.destination }}
         fi
 
     - name: Commit Directly to the branch
