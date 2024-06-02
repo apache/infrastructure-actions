@@ -1,0 +1,21 @@
+name: Build a Pelican Website
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build-pelican:
+    env:
+      TARGET: testsite-unittest
+      UNIT_TEST_A: This is a test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the test site
+        uses: actions/checkout@v4
+      - name: Should create/update ${{ env.TARGET }}
+        uses: apache/infrastructure-actions/pelican@main
+        with:
+          destination: ${{ env.TARGET }}
+          gfm: 'true'
+      - name: Test output
+        run: |
+          git checkout ${{ env.TARGET }}
