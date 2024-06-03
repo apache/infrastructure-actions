@@ -58,14 +58,10 @@ runs:
           else
             exec >/dev/null
           fi
-          curl -sSL https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/build-cmark.sh | bash
+          bash ${{ github.action_path }}/build-cmark.sh
         }
       shell: bash
       if: ${{ inputs.gfm == 'true' }}
-
-    - name: Fetch plugin directory from pelicanconf.py
-      run: curl -sSL https://raw.githubusercontent.com/apache/infrastructure-actions/main/pelican/fetch_plugins.py | python3
-      shell: bash
 
     - name: Generate website from markdown
       run: |
@@ -75,7 +71,9 @@ runs:
         else
           OPTS=''
         fi
-        /usr/bin/env python3 -m pelican content -o ${{ inputs.tempdir }} $OPTS
+        echo "Getting plugins from action location: ${{ github.action_path }}"
+        PP=$(python3 ${{ github.action_path }}/plugin_paths.py '${{ github.action_path }}/plugins')
+        /usr/bin/env python3 -B -m pelican content -e "$PP" -o ${{ inputs.tempdir }} $OPTS
       shell: bash
       env: # in case we are using GFM (otherwise ignored)
         LIBCMARKDIR: "../cmark-gfm-0.28.3.gfm.12/lib"
@@ -92,12 +90,12 @@ runs:
           git pull origin ${{ inputs.destination }}
         else
           # if none, create it.
-          echo "branch ${{ inputs.destination }} is new; create basic site"
-          git config --global --add --bool push.autoSetupRemote true
-          git checkout --orphan ${{ inputs.destination }} -f
-          git rm -rf .
+          echo "branch ${{ inputs.destination }} is new; create empty site"
+          git switch --orphan ${{ inputs.destination }}
           git checkout origin/${{ github.ref_name }} -- .asf.yaml
           git add .asf.yaml -f
+          git commit -m "Initialise empty site"
+          git push -u origin ${{ inputs.destination }}
         fi
 
     - name: Commit Directly to the branch
