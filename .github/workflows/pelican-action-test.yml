@@ -67,6 +67,10 @@ jobs:
             echo -n "Initialise empty site"
           }  >/tmp/expected
           diff <(git log --pretty="format:%s") /tmp/expected
+      - name: Reset workspace for next test
+        run: |
+          git checkout ${{ env.SOURCE }}
+          git status
       - name: Should not update ${{ env.TARGET }} this time
         uses: ./self/pelican
         with:
