@@ -1,9 +1,9 @@
-name: Build a Pelican Website
+name: Test the Pelican build action
 on:
   push:
   workflow_dispatch:
 jobs:
-  build-pelican:
+  pelican-test:
     env: # source and target branches
       SOURCE: testsite
       TARGET: testsite-output
@@ -59,6 +59,22 @@ jobs:
         env: # This is a different value
           UNIT_TEST_A: This is UNIT_TEST_A updated
       - name: Check ${{ env.TARGET }} is present and has been updated
+        run: |
+          git checkout ${{ env.TARGET }}
+          {
+            echo "Commit build products"
+            echo "Commit build products"
+            echo -n "Initialise empty site"
+          }  >/tmp/expected
+          diff <(git log --pretty="format:%s") /tmp/expected
+      - name: Should not update ${{ env.TARGET }} this time
+        uses: ./self/pelican
+        with:
+          destination: ${{ env.TARGET }}
+          gfm: 'true'
+        env: # This is the same value
+          UNIT_TEST_A: This is UNIT_TEST_A updated
+      - name: Check ${{ env.TARGET }} is present and has not been updated
         run: |
           git checkout ${{ env.TARGET }}
           {
