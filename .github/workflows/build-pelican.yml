@@ -19,3 +19,5 @@ jobs:
       - name: Test output
         run: |
           git checkout ${{ env.TARGET }}
+          # Check that GFM was used
+          grep '<p><del>Hi</del> Hello, <del>there</del> world!</p>' output/index.html
