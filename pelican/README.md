@@ -23,3 +23,15 @@ jobs:
           destination: master
           gfm: 'true'
 ```
+
+# Pelican Migration Scripts
+
+The generate_settings.py script is designed to facilitate migrating away from the
+infra built pelican site generator via .asf.yaml to GitHub Actions.
+
+The script itself takes one argument: the path to the pelicanconf.yaml file.
+Additionally, the script will look for an .asf.yaml file in the same directory.
+If an .asf.yaml file is found, the script will generate a GitHub Action workflow file.
+
+## generate_settings.py usage
+* [Infrastructure-pelican to GitHub Actions documentation](https://cwiki.apache.org/confluence/display/INFRA/Moving+from+Infrastructure-pelican+to+GitHub+Actions)
