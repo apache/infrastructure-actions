@@ -47,6 +47,8 @@ jobs:
           Initialise empty site
           EOD
           diff <(git log --pretty="format:%s") /tmp/expected
+          # Check that GFM was used
+          grep '<p><del>Hi</del> Hello, <del>there</del> world!</p>' output/index.html
       - name: Reset workspace for next test
         run: |
           git checkout ${{ env.SOURCE }}
@@ -67,6 +69,8 @@ jobs:
             echo -n "Initialise empty site"
           }  >/tmp/expected
           diff <(git log --pretty="format:%s") /tmp/expected
+          # Check that GFM was used
+          grep '<p><del>Hi</del> Hello, <del>there</del> world!</p>' output/index.html
       - name: Reset workspace for next test
         run: |
           git checkout ${{ env.SOURCE }}
