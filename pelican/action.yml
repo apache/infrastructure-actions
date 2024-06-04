@@ -16,7 +16,7 @@ inputs:
   tempdir:
     description: "Temporary Directory name"
     required: false
-    default: '.output.tmp'
+    default: '../output.tmp'
   debug:
     description: "Pelican Debug mode"
     required: false
