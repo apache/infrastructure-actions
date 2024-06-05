@@ -6,10 +6,10 @@ jobs:
   pelican-test:
     env: # source and target branches
       SOURCE: testsite
-      TARGET: testsite-output
+      TARGET: testsite-${{ github.ref }} # each branch has own test output
     runs-on: ubuntu-latest
     concurrency: # target must not be updated by two jobs at once
-      group: ${{ env.TARGET }}
+      group: testsite-${{ github.ref }}
     steps:
       - name: Checkout the test site
         uses: actions/checkout@v4
