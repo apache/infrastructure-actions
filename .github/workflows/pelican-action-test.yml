@@ -7,6 +7,8 @@ jobs:
     env: # source and target branches
       SOURCE: testsite
       TARGET: testsite-output
+    concurrency: # target must not be updated by two jobs
+      group: ${{ env.TARGET }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the test site
