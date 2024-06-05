@@ -33,7 +33,7 @@ runs:
       run: |
         (
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
-          pip3 install pelican==${{ inputs.version }} markdown ghp-import bs4 ezt requests
+          pip3 install pelican==${{ inputs.version }} markdown bs4 ezt
         )
         python3 -V
         echo "Pelican version:"
