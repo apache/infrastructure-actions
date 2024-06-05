@@ -19,7 +19,7 @@ THEME = '[theme]'
 
 # Specify location of plugins, and which to use
 PLUGIN_PATHS = [ [for p_paths]'[p_paths]', [end] ]
-# If the website uses any *.ezmd files, include the 'asfreader' plugin
+# If the website uses any *.ezmd files, include the 'asfreader' and 'gfm' plugins
 PLUGINS = [ [for use]'[use]', [end] ]
 
 # All content is located at '.' (aka content/ )
