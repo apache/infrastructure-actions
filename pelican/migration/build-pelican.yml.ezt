@@ -12,8 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # This must equal the push/branches list above, and be appropriate for the destination below
           ref: '[whoami]'
       - uses: apache/infrastructure-actions/pelican@main
         with:
+          # This must be appropriate for the branch being built
           destination: '[target]'
           gfm: 'true'
