@@ -59,7 +59,7 @@ jobs:
         env:
           GH_TOKEN: "${{ github.token }}"
         run: |
-          cd restore
+          cd stash/restore
           python3 test_get_stash.py
 
       - name: Test Save
