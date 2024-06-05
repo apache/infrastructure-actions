@@ -8,7 +8,7 @@ inputs:
   gfm:
     description: "Uses GitHub Flavored Markdown"
     required: false
-    default: 'false'
+    default: 'true'
   output:
     description: "Pelican generated output directory"
     required: false

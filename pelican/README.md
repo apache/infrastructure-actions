@@ -2,7 +2,7 @@
 
 ## Inputs
 destination 	Pelican Output branch (required) 	 	default: asf-site
-gfm 	 	Uses GitHub Flavored Markdown (optional) 	default: false
+gfm 	 	Uses GitHub Flavored Markdown (optional) 	default: true
 output 	 	Pelican generated output directory (optional) 	default: output
 tempdir 	Temporary Directory name (optional) 	 	default: .output.tmp
 debug 	 	Pelican Debug mode (optional) 	 		default: false
