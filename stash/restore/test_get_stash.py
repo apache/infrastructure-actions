@@ -32,7 +32,7 @@ class TestGetStash(unittest.TestCase):
     def test_gh_api(self):
         self.assertEqual(
             gh_api("rate_limit", options=["-q", ".resources.core.limit"]).stdout,
-            "5000\n",
+            "15000\n",
         )
 
     def test_ensure_json(self):
