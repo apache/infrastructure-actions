@@ -6,7 +6,6 @@ Extends Pelican's Markdown module
 and allows for customized inline HTML
 """
 
-import os
 import sys
 
 from pelican import signals

@@ -1,10 +1,7 @@
 import argparse
 import os
 import pathlib
-import shutil
 import fnmatch
-import datetime
-import sys
 
 import yaml
 import ezt
@@ -41,8 +38,8 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     print(pathlib.Path(os.path.abspath(source_yaml)).parent.absolute().joinpath(".asf.yaml"))
     asfyaml = pathlib.Path(os.path.abspath(source_yaml)).parent.absolute().joinpath(".asf.yaml")
     if os.path.isfile(asfyaml):
-            print(f".asf.yaml detected, reading...")
-            adata = yaml.safe_load(open(asfyaml))
+        print(".asf.yaml detected, reading...")
+        adata = yaml.safe_load(open(asfyaml))
 
     print(f"Reading {source_yaml} in {sourcepath}")
     ydata = yaml.safe_load(open(source_yaml))

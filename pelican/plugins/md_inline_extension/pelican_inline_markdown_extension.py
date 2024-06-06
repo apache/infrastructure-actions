@@ -9,9 +9,6 @@ the Pelican Python static site generator to add inline patterns.
 import markdown
 import re
 
-from markdown.util import etree
-from markdown.util import AtomicString
-
 class PelicanInlineMarkdownExtensionPattern(markdown.inlinepatterns.Pattern):
     """Inline Markdown processing"""
 
