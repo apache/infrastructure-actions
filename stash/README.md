@@ -16,11 +16,14 @@
 
 # Stash GitHub Action
 
-`Stash` provides a solution for managing large build caches in your workflows, that doesn't require any secrets and can be used in fork PRs. It's designed as an alternative to `actions/cache` which struggles with big build caches such as `.ccache` directories. This action is split into two distinct operations: `assign/user/restore` for fetching a previously stored stash, and `assignUser/stash/save` for storing a new stash after a build has been completed.
+`Stash` provides a solution for managing large build caches in your workflows, that doesn't require any secrets and can be used in fork PRs.
+It's designed as an alternative to `actions/cache` which struggles with big build caches such as `.ccache` directories.
+This action is lit into two distinct operations: `assign/user/restore` for fetching a previously stored stash,
+and `infrastructure-actions/stash/save` for storing a new stash after a build has been completed.
 
 ## Features
 
-- No repository wide size limit of 10GB each stash is uploaded as a workflow artifact.
+- No repository wide size limit. Each stash is uploaded as a workflow artifact.
     - This means there will be no cache evicition leading to cache misses and increased build times. Stashes will expire after 5 days by default.
 - Artifact storage is free for public repositories and much cheaper than CI minutes (~ 1 Cent/1GB/day) for private repositories.
 - No secrets required, stash can be used in fork PRs.
@@ -29,33 +32,44 @@
 ## Usage
 
 > [!IMPORTANT]
-> You have to explicitly save your stash by using `assignUser/stash/save` action, it will not be saved automatically by using `assignUser/stash/restore`.
+> You have to explicitly save your stash by using `infrastructure-actions/stash/save` action,
+> it will not be saved automatically by using `infrastructure-actions/stash/restore`.
 
-To restore a stash before your build process, use the `assignUser/stash/restore` action in your workflow:
+To restore a stash before your build process, use the `infrastructure-actions/stash/restore` action in your workflow:
 
 
 ```yaml
 steps:
 - uses: actions/checkout@v2
-- uses: assignUser/stash/restore@v1
+- uses: infrastructure-actions/stash/restore@v1
   with:
     key: 'cache-key'
     path: 'path/to/cache'
 ```
 
-After your build completes, save the stash using the `assignUser/stash/save` action:
+After your build completes, save the stash using the `infrastructure-actions/stash/save` action:
 
 ```yaml
 steps:
-- uses: assignUser/stash/save@v1
+- uses: infrastructure-actions/stash/save@v1
   with:
     key: 'cache-key'
     path: 'path/to/cache'
 ```
-Stashes will expire after 5 days by default. You can set this from 1-90 days with the `retention-days` input. Using the `save` action again in the same workflow run will overwrite the existing cache with the same key. If you want to keep the old cache, you can use a different key or set `overwrite` to `false`.
+Stashes will expire after 5 days by default.
+You can set this from 1-90 days with the `retention-days` input.
+Using the `save` action again in the same workflow run will overwrite the existing cache with the same key.
+This does apply to each invocation in a matrix job as well!
+If you want to keep the old cache, you can use a different key or set `overwrite` to `false`.
 
 ### Inputs and Outputs
 
-Each action (restore and save) has specific inputs tailored to its functionality, they are specifically modeled after `actions/cache` and `actions/upload-artifact` to provide a drop in replacement. Please refer to the action metadata (`action.yml`) for a comprehensive list of inputs, including descriptions and default values.
+Each action (restore and save) has specific inputs tailored to its functionality,
+they are specifically modeled after `actions/cache` and `actions/upload-artifact` to provide a drop in replacement.
+Please refer to the action metadata (`action.yml`) for a comprehensive list of inputs, including descriptions and default values.
 
-Additionally the `restore` action has an output `stash-hit` which is set to `true` (as a **string** so use `if: ${{ steps.restore-stash.outputs.stash-hit == 'true' }}`!) if the cache was restored successfully, `false` if no cache was restored and '' if the action failed (an error will be thrown unless `continue-on-error` is set).
+Additionally the `restore` action has an output `stash-hit` which is set to `true` if the cache was restored successfully,
+`false` if no cache was restored and '' if the action failed (an error will be thrown unless `continue-on-error` is set). 
+A technical limitation of composite actions like `Stash` is that all outputs are **strings**. 
+Therefor an explicit comparison has to be used when using the output:
+`if: ${{ steps.restore-stash.outputs.stash-hit == 'true' }}` 
