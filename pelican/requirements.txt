@@ -1,0 +1,12 @@
+pelican #
+markdown #
+pelican-sitemap # pelican plugin offering
+soupsieve # needed by BeautifulSoup4
+BeautifulSoup4 # needed by several plugins
+ezt # needed by several plugins
+PyYAML # needed by asfdata.py
+certifi # needed by requests
+idna # needed by requests
+charset-normalizer # needed by requests
+urllib3 # needed by requests
+requests # needed by asfdata.py
