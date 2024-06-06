@@ -29,6 +29,7 @@ runs:
   using: "composite"
   steps:
     - name: Install Pelican
+      shell: bash
       # Install needs to run in separate shell so stdout is restored
       run: |
         (
@@ -42,10 +43,11 @@ runs:
         then
           pip3 list # This a long list
         fi
-      shell: bash
 
     # If the site uses Github Flavored Markdown, use this build branch
     - name: fetch and build libcmark-gfm.so
+      if: ${{ inputs.gfm == 'true' }}
+      shell: bash
       run: |
         {
           # Don't pollute site checkout
@@ -60,10 +62,11 @@ runs:
           fi
           bash ${{ github.action_path }}/build-cmark.sh
         }
-      shell: bash
-      if: ${{ inputs.gfm == 'true' }}
 
     - name: Generate website from markdown
+      shell: bash
+      env: # in case we are using GFM (otherwise ignored)
+        LIBCMARKDIR: "../cmark-gfm-0.28.3.gfm.12/lib"
       run: |
         if [ "${{ inputs.debug }}" == 'true' ]
         then
@@ -74,9 +77,6 @@ runs:
         echo "Getting plugins from action location: ${{ github.action_path }}"
         PP=$(python3 ${{ github.action_path }}/plugin_paths.py '${{ github.action_path }}/plugins')
         /usr/bin/env python3 -B -m pelican content -e "$PP" -o ${{ inputs.tempdir }} $OPTS
-      shell: bash
-      env: # in case we are using GFM (otherwise ignored)
-        LIBCMARKDIR: "../cmark-gfm-0.28.3.gfm.12/lib"
 
     - name: Check out previous branch
       shell: bash
