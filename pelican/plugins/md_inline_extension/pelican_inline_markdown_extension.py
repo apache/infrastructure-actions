@@ -51,7 +51,7 @@ class PelicanInlineMarkdownExtension(markdown.Extension):
             config['config'] = [config['config'], 'config for markdown extension']
             super(PelicanInlineMarkdownExtension, self).__init__(config)
 
-    def extendMarkdown(self, md, md_globals):
+    def extendMarkdown(self, md, _md_globals):
         # Regex to detect mathjax
         config = self.getConfig('config')
         patterns = []

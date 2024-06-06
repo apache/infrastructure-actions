@@ -18,7 +18,7 @@ def extract_toc(content):
     if isinstance(content, contents.Static):
         return
 
-    soup = BeautifulSoup(content._content, 'html.parser')
+    soup = BeautifulSoup(content._content, 'html.parser')  # pylint: disable=protected-access
     filename = content.source_path
     extension = path.splitext(filename)[1][1:]
     toc = None
@@ -55,7 +55,7 @@ def extract_toc(content):
 
     if toc:
         toc.extract()
-        content._content = soup.decode()
+        content._content = soup.decode()  # pylint: disable=protected-access
         content.toc = toc.decode()
         if content.toc.startswith('<html>'):
             content.toc = content.toc[12:-14]
