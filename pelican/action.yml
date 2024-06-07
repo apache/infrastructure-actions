@@ -76,7 +76,7 @@ runs:
         fi
         echo "Getting plugins from action location: ${{ github.action_path }}"
         PP=$(python3 ${{ github.action_path }}/plugin_paths.py '${{ github.action_path }}/plugins')
-        /usr/bin/env python3 -B -m pelican content -e "$PP" -o ${{ inputs.tempdir }} $OPTS
+        python3 -B -m pelican content -e "$PP" -o ${{ inputs.tempdir }} $OPTS
 
     - name: Check out previous branch
       shell: bash
