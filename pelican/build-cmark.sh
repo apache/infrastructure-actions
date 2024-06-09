@@ -13,6 +13,8 @@
 # Echo all of our steps if DEBUG_STEPS is set
 test -n "$DEBUG_STEPS" && set -x
 
+set -e # early exit if any step fails
+
 #VERSION=0.28.3.gfm.20  ### not yet
 VERSION=0.28.3.gfm.12
 if [ "$1" != "" ]; then VERSION="$1"; fi
@@ -29,10 +31,10 @@ EXTRACTED_AS="cmark-gfm-$VERSION"
 
 # Follow redirects, and place the result into known name $LOCAL
 if [ -f "$LOCAL" ]; then
-    echo "Using cached tarball: ${LOCAL}"
+    echo "Using cached tarball: ${LOCAL}" >&2
 else
-    echo "Fetching from cmark archives"
-    curl -sSL -o "$LOCAL" "$ARCHIVES/$VERSION.tar.gz" || exit 1
+    echo "Fetching $VERSION from cmark archives" >&2
+    curl -sSL --fail -o "$LOCAL" "$ARCHIVES/$VERSION.tar.gz"
 fi
 
 # Clean anything old, then extract and build.
