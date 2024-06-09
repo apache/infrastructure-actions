@@ -40,6 +40,8 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     if os.path.isfile(asfyaml):
         print(".asf.yaml detected, reading...")
         adata = yaml.safe_load(open(asfyaml))
+    else:
+        adata = None # ensure the variable is defined
 
     print(f"Reading {source_yaml} in {sourcepath}")
     ydata = yaml.safe_load(open(source_yaml))
@@ -172,7 +174,7 @@ def generate_settings(source_yaml, settings_path, builtin_p_paths=None, sourcepa
     t = ezt.Template(os.path.join(THIS_DIR, AUTO_SETTINGS_TEMPLATE))
     t.generate(open(settings_path, "w+"), tdata)
 
-if __name__ == "__main__":
+def main():    
     parser = argparse.ArgumentParser(description="Convert pelicanconf.yaml to pelicanconf.py")
     parser.add_argument('-y', '--yaml', required=True, help="Pelicanconf YAML file")
     args = parser.parse_args()
@@ -186,3 +188,6 @@ if __name__ == "__main__":
         settings_path = os.path.join(sourcepath, AUTO_SETTINGS)
         builtin_plugins = os.path.join(tool_dir, os.pardir, "plugins")
         generate_settings(pelconf_yaml, settings_path, [builtin_plugins], sourcepath)
+
+if __name__ == "__main__":
+    main()
