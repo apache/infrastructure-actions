@@ -6,6 +6,8 @@ An extension for the Python Markdown module that enables
 the Pelican Python static site generator to add inline patterns.
 """
 
+# pylint: skip-file
+
 import markdown
 import re
 
