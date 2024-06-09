@@ -10,13 +10,24 @@ on:
       - '.github/workflows/pelican-action-test.yml'
   workflow_dispatch:
 jobs:
+  job1: # massage ref_name to replace '/'
+    runs-on: ubuntu-latest
+    # Map a step output to a job output
+    outputs:
+      refname: ${{ steps.step1.outputs.refname }}
+    steps:
+      - id: step1
+        run: |
+          echo ${{ github.ref_name }}
+          echo "refname=$(echo ${{ github.ref_name }} | tr / -)" >> "$GITHUB_OUTPUT"
   pelican-test:
+    needs: job1
     env: # source and target branches
       SOURCE: testsite
-      TARGET: testsite-${{ github.ref_name }} # each branch has own test output
+      TARGET: testsite-${{needs.job1.outputs.refname}} # each branch has own test output
     runs-on: ubuntu-latest
     concurrency: # target must not be updated by two jobs at once
-      group: testsite-${{ github.ref_name }} # must agree with TARGET
+      group: testsite-${{needs.job1.outputs.refname}} # must agree with TARGET
     steps:
       - name: Checkout the test site
         uses: actions/checkout@v4
