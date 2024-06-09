@@ -1,8 +1,13 @@
 name: Test the Pelican build action
 on:
   push:
-    paths-ignore:
-      - '**/linting.yml'
+    paths:
+      - 'pelican/**'
+      - '.github/workflows/pelican-action-test.yml'
+  pull:
+    paths:
+      - 'pelican/**'
+      - '.github/workflows/pelican-action-test.yml'
   workflow_dispatch:
 jobs:
   pelican-test:
