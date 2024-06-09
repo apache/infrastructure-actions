@@ -22,7 +22,7 @@ Running the image
 
 $ cd <website checkout containing pelicanconf.py>
 
-$ docker run -it -p8000:8000 -v $PWD:/site IMAGENAME
+$ docker run --rm -it -p8000:8000 -v $PWD:/site IMAGENAME
 
 This will start the Docker container.
 The website files are mapped to /site.
@@ -36,7 +36,7 @@ Running the image interactively
 
 $ cd WEBSITE # directory must contain pelicanconf.py
 
-$ docker run -it -p8000:8000 -v $PWD:/site --entrypoint bash IMAGENAME
+$ docker run --rm -it -p8000:8000 -v $PWD:/site --entrypoint bash IMAGENAME
 
 This will start a shell in the container.
 Use the `pelicanasf` wrapper command to run Pelican as it automatically adds
