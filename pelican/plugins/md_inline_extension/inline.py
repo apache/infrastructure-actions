@@ -6,6 +6,8 @@ Extends Pelican's Markdown module
 and allows for customized inline HTML
 """
 
+# mypy: ignore-errors
+
 import sys
 
 from pelican import signals
