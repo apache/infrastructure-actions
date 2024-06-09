@@ -118,6 +118,7 @@ ASF_POSTRUN = [ [for postrun]'[postrun]', [end] ]
 [end]
 [if-any uses_ignore]
 # Configure ignore files
+# File and directory basenames matching any of these patterns will be ignored by the processor.
 IGNORE_FILES = [ [for ignore]'[ignore]', [end] ]
 [end]
 [if-any uses_copy]
