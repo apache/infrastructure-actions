@@ -4,10 +4,7 @@ on:
     paths:
       - 'pelican/**'
       - '.github/workflows/pelican-action-test.yml'
-  pull_request:
-    paths:
-      - 'pelican/**'
-      - '.github/workflows/pelican-action-test.yml'
+    # N.B. Cannot easily test pull_request: because the source may not have rights to create/update the test-site
   workflow_dispatch:
 jobs:
   pelican-test:
