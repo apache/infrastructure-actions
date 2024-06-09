@@ -42,6 +42,7 @@ jobs:
         with:
           destination: ${{ env.TARGET }}
           gfm: 'true'
+          # fatal: 'errors' (default)
         env:
           UNIT_TEST_A: This is UNIT_TEST_A
       - name: Check ${{ env.TARGET }} was created
@@ -67,6 +68,7 @@ jobs:
         with:
           destination: ${{ env.TARGET }}
           gfm: 'true'
+          fatal: 'warnings'
         env: # This is a different value
           UNIT_TEST_A: This is UNIT_TEST_A updated
       - name: Check ${{ env.TARGET }} is present and has been updated
@@ -89,6 +91,7 @@ jobs:
         with:
           destination: ${{ env.TARGET }}
           gfm: 'true'
+          fatal: '' # should ignore it
         env: # This is the same value
           UNIT_TEST_A: This is UNIT_TEST_A updated
       - name: Check ${{ env.TARGET }} is present and has not been updated
