@@ -4,7 +4,7 @@ on:
     paths:
       - 'pelican/**'
       - '.github/workflows/pelican-action-test.yml'
-  pull:
+  pull_request:
     paths:
       - 'pelican/**'
       - '.github/workflows/pelican-action-test.yml'
