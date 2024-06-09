@@ -1,8 +1,10 @@
 name: Linting and MyPy (Pelican)
 on:
   push:
-    paths-ignore:
-      - '**/pelican-action-test.yml'
+    paths:
+      - '**.py'
+      - '**/linting.yml'
+      - '**/pylintrc'
   workflow_dispatch:
 
 jobs:
