@@ -71,4 +71,5 @@ RUN { echo '#!/usr/bin/env bash' >/usr/local/bin/pelicanasf; chmod +x /usr/local
 # The -b (bind) is needed to allow connections from the host
 RUN echo 'SRC=${1:?source}; shift; python3 -B -m pelican $SRC -b 0.0.0.0 -e "$(python3 $WORKDIR/plugin_paths.py $WORKDIR/plugins)" "$@"' >>/usr/local/bin/pelicanasf;
 
-ENTRYPOINT [ "pelicanasf", "content", "--listen"]
+# --autoreload (-r) and --listen (-l)
+ENTRYPOINT [ "pelicanasf", "content", "-rl"]
