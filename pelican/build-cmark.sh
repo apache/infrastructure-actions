@@ -1,7 +1,9 @@
 #!/bin/bash
 #
 # Build the cmark-gfm library and extensions within CURRENT DIRECTORY.
-#
+# 
+# The binary output will be under: cmark-gfm-$VERSION/lib
+# 
 # USAGE:
 #   $ build-cmark.sh [ VERSION [ TARDIR ] ]
 #
