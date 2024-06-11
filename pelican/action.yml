@@ -54,8 +54,6 @@ runs:
       shell: bash
       run: |
         {
-          # Don't pollute site checkout
-          cd ..
           # disable stdout unless debug is on
           if [ "${{ inputs.debug }}" == 'true' ]
           then
@@ -63,7 +61,10 @@ runs:
           else
             exec >/dev/null
           fi
-          bash ${{ github.action_path }}/build-cmark.sh
+          # Don't pollute site checkout
+          pushd .. # .. must agree with LIBCMARKDIR
+            bash ${{ github.action_path }}/build-cmark.sh
+          popd
         }
 
     - name: Generate website from markdown
