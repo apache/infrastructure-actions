@@ -56,6 +56,12 @@ runs:
         WORKDIR: /opt/pelican-asf # where to build GFM
         GFM_VERSION: '0.28.3.gfm.12' # ensure we agree with build-cmark.sh script
       run: |
+        # Does the GFM build already exist?
+        if [[ -n $LIBCMARKDIR -a -d $LIBCMARKDIR ]]
+        then
+          echo "Already have GFM binary at $LIBCMARKDIR, skipping build"
+          exit 0 # nothing more to do in this step
+        fi
         {
           # disable stdout unless debug is on
           if [ "${{ inputs.debug }}" == 'true' ]
