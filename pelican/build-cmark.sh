@@ -44,6 +44,7 @@ tar xzf "$LOCAL"
 pushd "$EXTRACTED_AS"
   mkdir build
   pushd build
+    cmake --version >&2
     cmake -DCMARK_TESTS=OFF -DCMARK_STATIC=OFF ..
     make
   popd

@@ -56,7 +56,6 @@ runs:
         {
           # Don't pollute site checkout
           cd ..
-          cmake --version
           # disable stdout unless debug is on
           if [ "${{ inputs.debug }}" == 'true' ]
           then
