@@ -57,7 +57,7 @@ runs:
         GFM_VERSION: '0.28.3.gfm.12' # ensure we agree with build-cmark.sh script
       run: |
         # Does the GFM build already exist?
-        if [[ -n $LIBCMARKDIR -a -d $LIBCMARKDIR ]]
+        if [[ -n $LIBCMARKDIR && -d $LIBCMARKDIR ]]
         then
           echo "Already have GFM binary at $LIBCMARKDIR, skipping build"
           exit 0 # nothing more to do in this step
