@@ -54,6 +54,7 @@ runs:
       shell: bash
       env:
         WORKDIR: /opt/pelican-asf # where to build GFM
+        GFM_VERSION: '0.28.3.gfm.12' # ensure we agree with build-cmark.sh script
       run: |
         {
           # disable stdout unless debug is on
@@ -66,10 +67,10 @@ runs:
           # Don't pollute site checkout
           mkdir -p $WORKDIR
           pushd $WORKDIR
-            bash ${{ github.action_path }}/build-cmark.sh
+            bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION
           popd
           # ensure LIBCMARKDIR is defined for subsequent steps
-          echo "LIBCMARKDIR=${WORKDIR}/cmark-gfm-0.28.3.gfm.12/lib"  >> $GITHUB_ENV
+          echo "LIBCMARKDIR=${WORKDIR}/cmark-gfm-${GFM_VERSION}/lib"  >> $GITHUB_ENV
         }
 
     - name: Generate website from markdown
