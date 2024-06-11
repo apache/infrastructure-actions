@@ -43,22 +43,24 @@ fi
 ### somebody smart could peek into the .tgz. ... MEH
 if [ -d "$EXTRACTED_AS" ]; then rm -r "$EXTRACTED_AS"; fi
 tar xzf "$LOCAL"
-pushd "$EXTRACTED_AS"
+pushd "$EXTRACTED_AS" >/dev/null
   mkdir build
-  pushd build
+  pushd build >/dev/null
     cmake --version >&2
-    cmake -DCMARK_TESTS=OFF -DCMARK_STATIC=OFF ..
-    make
-  popd
+    {
+      cmake -DCMARK_TESTS=OFF -DCMARK_STATIC=OFF ..
+      make
+    } > build.log
+  popd >/dev/null
 
   mkdir lib
   cp -Pp build/src/lib* lib/
   cp -Pp build/extensions/lib* lib/
-popd
+popd >/dev/null
 
 # These files/dir may need a reference with LD_LIBRARY_PATH.
 # gfm.py wants this lib/ in LIBCMARKDIR.
-ls -laF "$EXTRACTED_AS/lib/"
+# ls -laF "$EXTRACTED_AS/lib/"
 
 # Provide a handy line for copy/paste.
 echo "export LIBCMARKDIR='$(pwd)/$EXTRACTED_AS/lib'"
