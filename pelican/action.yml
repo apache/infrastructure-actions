@@ -52,6 +52,8 @@ runs:
     - name: fetch and build libcmark-gfm.so
       if: ${{ inputs.gfm == 'true' }}
       shell: bash
+      env:
+        WORKDIR: /opt/pelican-asf # where to build GFM
       run: |
         {
           # disable stdout unless debug is on
@@ -62,15 +64,16 @@ runs:
             exec >/dev/null
           fi
           # Don't pollute site checkout
-          pushd .. # .. must agree with LIBCMARKDIR
+          mkdir -p $WORKDIR
+          pushd $WORKDIR
             bash ${{ github.action_path }}/build-cmark.sh
           popd
+          # ensure LIBCMARKDIR is defined for subsequent steps
+          echo "LIBCMARKDIR=${WORKDIR}/cmark-gfm-0.28.3.gfm.12/lib"  >> $GITHUB_ENV
         }
 
     - name: Generate website from markdown
       shell: bash
-      env: # in case we are using GFM (otherwise ignored)
-        LIBCMARKDIR: "../cmark-gfm-0.28.3.gfm.12/lib"
       run: |
         if [ "${{ inputs.debug }}" == 'true' ]
         then
