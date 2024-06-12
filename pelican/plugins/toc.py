@@ -2,9 +2,15 @@
 toc
 ===================================
 Generates Table of Contents for markdown.
-Only generates a ToC for the headers FOLLOWING th [TOC] tag,
+Only generates a ToC for the headers FOLLOWING the [TOC] tag,
 so you can insert it after a specific section that need not be
-include in the ToC.
+included in the ToC.
+
+The default container format (which includes a 'Table of Contents' heading )
+can be overridden by providing something like the following entry in pelicanconf.py:
+ASF_TOC = {
+    'CONTAINER_FORMAT': "<div id='toc'>{}</div>"
+}
 '''
 
 from __future__ import unicode_literals
@@ -42,12 +48,13 @@ end
 
 
 class HtmlTreeNode(object):
-    def __init__(self, parent, header, level, id_):
+    def __init__(self, parent, header, level, id_, content):
         self.children = []
         self.parent = parent
         self.header = header
         self.level = level
         self.id = id_
+        self.content = content
 
     def add(self, new_header, ids):
         new_level = new_header.name
@@ -66,11 +73,11 @@ class HtmlTreeNode(object):
         new_id = unique(new_id, ids)  # make sure id is unique
         new_header.attrs['id'] = new_id
         if(self.level < new_level):
-            new_node = HtmlTreeNode(self, new_string, new_level, new_id)
+            new_node = HtmlTreeNode(self, new_string, new_level, new_id, self.content)
             self.children += [new_node]
             return new_node, new_header
         elif(self.level == new_level):
-            new_node = HtmlTreeNode(self.parent, new_string, new_level, new_id)
+            new_node = HtmlTreeNode(self.parent, new_string, new_level, new_id, self.content)
             self.parent.children += [new_node]
             return new_node, new_header
         elif(self.level > new_level):
@@ -90,7 +97,12 @@ class HtmlTreeNode(object):
             ret = "<li>{}</li>".format(ret)
 
         if not self.parent:
-            ret = "<div id='toc' style='border-radius: 3px; border: 1px solid #999; background-color: #EEE; padding: 4px;'><h4>Table of Contents:</h4><ul>{}</ul></div>".format(ret)
+            fmt = self.content.settings.get('ASF_TOC',{}).get('CONTAINER_FORMAT')
+            if fmt:
+                print(f"Overriding TOC CONTAINER_FORMAT: {fmt}")
+            else:
+                fmt = "<div id='toc' style='border-radius: 3px; border: 1px solid #999; background-color: #EEE; padding: 4px;'><h4>Table of Contents:</h4><ul>{}</ul></div>"
+            ret = fmt.format(ret)
 
         return ret
 
@@ -114,7 +126,7 @@ def generate_toc(content):
 
     all_ids = set()
     title = content.metadata.get('title', 'Title')
-    tree = node = HtmlTreeNode(None, title, 'h0', '')
+    tree = node = HtmlTreeNode(None, title, 'h0', '', content)
     soup = BeautifulSoup(content._content, 'html.parser') # pylint: disable=protected-access
     settoc = False
 
