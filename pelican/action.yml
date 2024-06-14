@@ -111,10 +111,14 @@ runs:
           # Don't pollute site checkout
           mkdir -p $WORKDIR
           pushd $WORKDIR
-            bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION
+            # build the code and define LIBCMARKDIR
+            bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION | grep "export LIBCMARKDIR" >/tmp/libcmarkdir.$$
+            source /tmp/libcmarkdir.$$
             # Message to upload step
             echo "created=${LIBCMARKDIR}" >> $GITHUB_OUTPUT
           popd
+          # ensure LIBCMARKDIR is defined for subsequent steps
+          echo "LIBCMARKDIR=${LIBCMARKDIR}"  >> $GITHUB_ENV
         }
     - name: Save the GFM build
       if: ${{ steps.build_gfm.outputs.created }}
