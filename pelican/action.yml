@@ -59,13 +59,15 @@ runs:
         GITHUB_ACTION_REPO: ${{ github.action_repository }} # only works in the env context; empty for local action call
         GH_TOKEN: ${{ github.token }} # needed by gh
       run: |
+        export GFM_ARTIFACT_KEY=cmark-gfm-${GFM_VERSION}
         # Needs to be available to a subsequent step
         echo  "GFM_VERSION=${GFM_VERSION}" >>$GITHUB_ENV
+        echo  "GFM_ARTIFACT_KEY=${GFM_ARTIFACT_KEY}" >>$GITHUB_ENV
         if [[ -z $LIBCMARKDIR ]] # don't overwrite LIBCMARKDIR if it exists
         then
           # set up the GFM environment
           export LIBCMARKDIR=${WORKDIR}/cmark-gfm-${GFM_VERSION}/lib
-          echo  "LIBCMARKDIR=${WORKDIR}/cmark-gfm-${GFM_VERSION}/lib" >>$GITHUB_ENV
+          echo  "LIBCMARKDIR=${LIBCMARKDIR}" >>$GITHUB_ENV
         fi
         # Does the GFM build already exist?
         if [[ -d $LIBCMARKDIR ]]
@@ -77,7 +79,7 @@ runs:
 
         REPO=${{ github.repository }} # Check calling repo for artifact
         echo "Check for GFM build artifact in current repo: $REPO"
-        gh run download --dir ${LIBCMARKDIR} --name cmark-gfm-${GFM_VERSION} --repo $REPO || true
+        gh run download --dir ${LIBCMARKDIR} --name ${GFM_ARTIFACT_KEY} --repo $REPO || true
         if [[ -d $LIBCMARKDIR ]]
         then
           echo "Found ${LIBCMARKDIR} in $REPO, nothing more to do!"
@@ -87,7 +89,7 @@ runs:
         if [[ -n $GITHUB_ACTION_REPO ]]  # Check action repo for artifact
         then
           echo "Check for GFM build artifact in action repo: $GITHUB_ACTION_REPO"
-          gh run download --dir ${LIBCMARKDIR} --name cmark-gfm-${GFM_VERSION} --repo $GITHUB_ACTION_REPO || true
+          gh run download --dir ${LIBCMARKDIR} --name ${GFM_ARTIFACT_KEY} --repo $GITHUB_ACTION_REPO || true
           if [[ -d $LIBCMARKDIR ]]
           then
             echo "Found ${LIBCMARKDIR} in $GITHUB_ACTION_REPO, nothing more to do!"
@@ -117,7 +119,7 @@ runs:
       if: ${{ steps.build_gfm.outputs.created }}
       uses: actions/upload-artifact@v4
       with:
-        name: cmark-gfm-${{ env.GFM_VERSION}}
+        name: ${{ env.GFM_ARTIFACT_KEY }}
         path: ${{ steps.build_gfm.outputs.created }}
 
     - name: Generate website from markdown
