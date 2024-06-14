@@ -59,7 +59,8 @@ runs:
         GITHUB_ACTION_REPO: ${{ github.action_repository }} # only works in the env context; empty for local action call
         GH_TOKEN: ${{ github.token }} # needed by gh
       run: |
-        export GFM_ARTIFACT_KEY=cmark-gfm-${GFM_VERSION}
+        # The key needs to include the GFM version, but does not have to be the same as the directory name
+        export GFM_ARTIFACT_KEY=gfm-lib-${GFM_VERSION}
         # Needs to be available to a subsequent step
         echo  "GFM_VERSION=${GFM_VERSION}" >>$GITHUB_ENV
         echo  "GFM_ARTIFACT_KEY=${GFM_ARTIFACT_KEY}" >>$GITHUB_ENV
