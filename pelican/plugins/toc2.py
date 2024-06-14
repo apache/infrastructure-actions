@@ -138,7 +138,7 @@ def generate_toc(content):
         if settoc:
             print("Generating ToC for %s" % content.slug)
             tree_string = '{}'.format(tree)
-            print("ToC: %s" % tree_string)
+            # print("ToC: %s" % tree_string)
             tree_soup = BeautifulSoup(tree_string, 'html.parser')
             content.toc = tree_soup.decode(formatter='html')
             itoc = soup.find('p', text='[TOC]')
