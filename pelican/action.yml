@@ -67,7 +67,8 @@ runs:
         if [[ -z $LIBCMARKDIR ]] # don't overwrite LIBCMARKDIR if it exists
         then
           # set up the GFM environment
-          export LIBCMARKDIR=${WORKDIR}/cmark-gfm-${GFM_VERSION}/lib
+          NOBUILD=1 bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION | grep "export LIBCMARKDIR" >/tmp/libcmarkdir1.$$
+          source /tmp/libcmarkdir1.$$
           echo  "LIBCMARKDIR=${LIBCMARKDIR}" >>$GITHUB_ENV
         fi
         # Does the GFM build already exist?

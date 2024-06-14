@@ -30,6 +30,13 @@ LOCAL="${TARDIR}/cmark-gfm.$VERSION.orig.tar.gz"
 
 # WARNING: this must agree with the parent directory in the tar file or the build will fail
 EXTRACTED_AS="cmark-gfm-$VERSION"
+LIBCMARKDIR="$(pwd)/$EXTRACTED_AS/lib"
+
+# Allow caller to find out library directory without needing to build first
+if [[ -n $NOBUILD ]]
+then
+  echo "export LIBCMARKDIR='$LIBCMARKDIR'"
+fi
 
 # Follow redirects, and place the result into known name $LOCAL
 if [ -f "$LOCAL" ]; then
@@ -63,4 +70,4 @@ popd >/dev/null
 # ls -laF "$EXTRACTED_AS/lib/"
 
 # Provide a handy line for copy/paste.
-echo "export LIBCMARKDIR='$(pwd)/$EXTRACTED_AS/lib'"
+echo "export LIBCMARKDIR='$LIBCMARKDIR'"
