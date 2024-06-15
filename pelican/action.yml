@@ -62,7 +62,7 @@ runs:
       run: |
         # The key needs to include the GFM version, but is otherwise arbitrary.
         # It must agree with the definition in build-actions.yml
-        export GFM_ARTIFACT_KEY=gfm-lib-${GFM_VERSION}-HACK
+        export GFM_ARTIFACT_KEY=gfm-lib-${GFM_VERSION}
 
         if [[ -z $LIBCMARKDIR ]] # define LIBCMARKDIR if it is not already
         then
