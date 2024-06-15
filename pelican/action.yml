@@ -71,8 +71,9 @@ runs:
           mkdir -p $LIBCMARKDIR
           echo  "LIBCMARKDIR=${LIBCMARKDIR}" >>$GITHUB_ENV # needed for the build step
         fi
+        ls -l $LIBCMARKDIR
         # Does the GFM build already exist?
-        if [[ -d $LIBCMARKDIR ]]
+        if [[ -f $LIBCMARKDIR/libcmark-gfm.so ]]
         then
           echo "Already have GFM binary at $LIBCMARKDIR, skipping build"
           exit 0 # nothing more to do in this step
@@ -81,7 +82,8 @@ runs:
         # Is there a saved artifact for the GFM build?
         echo "Check for GFM build artifact in action repo: $GITHUB_ACTION_REPO"
         gh run download --dir ${LIBCMARKDIR} --name ${GFM_ARTIFACT_KEY} --repo $GITHUB_ACTION_REPO || true
-        if [[ -d $LIBCMARKDIR ]]
+        ls -l $LIBCMARKDIR
+        if [[ -f $LIBCMARKDIR/libcmark-gfm.so ]]
         then
           echo "Downloaded to ${LIBCMARKDIR} from $GITHUB_ACTION_REPO, nothing more to do!"
           exit 0 # nothing more to do in this step
@@ -100,6 +102,7 @@ runs:
           # build the code and define LIBCMARKDIR under $WORKDIR
           bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION $LIBCMARKDIR
         }
+        ls -l $LIBCMARKDIR
 
     - name: Generate website from markdown
       shell: bash
