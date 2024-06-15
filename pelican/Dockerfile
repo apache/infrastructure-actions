@@ -1,11 +1,16 @@
 # Settings
 # ========
 # Use the Python version as installed on CI pelican builders (2023-06-02)
-ARG PYTHON_VERSION=3.8.10
-ARG GFM_VERSION=0.28.3.gfm.12 # must agree with copy below
+ARG PYTHON_VERSION=3.8.10 # must agree with the copy below
+
+# Note: ARG scope ends at the FROM statement, so must be repeated if necessary
 
 # Build cmake-gfm
 FROM python:${PYTHON_VERSION}-slim-buster as pelican-asf
+#=======================================================
+
+ARG PYTHON_VERSION=3.8.10 # must agree with the copy above
+ARG GFM_VERSION=0.28.3.gfm.12 # must agree with copy below
 
 RUN apt update && apt upgrade -y
 RUN apt install curl cmake build-essential -y
@@ -15,11 +20,15 @@ WORKDIR /opt/pelican-asf
 # Copy only what we need to build cmark-gfm
 COPY build-cmark.sh bin/build-cmark.sh
 
-# build it
-RUN bash bin/build-cmark.sh ${GFM_VERSION}
+# build GFM
+# Must agree with definition below
+ENV LIBCMARKDIR /opt/gfm-${GFM_VERSION}/lib
+RUN mkdir -p ${LIBCMARKDIR}
+RUN bash bin/build-cmark.sh ${GFM_VERSION} ${LIBCMARKDIR}
 
 # rebase the image to save on image size
 FROM python:${PYTHON_VERSION}-slim-buster
+#=======================================================
 
 # Use the Pelican version as installed on CI pelican builders (2023-06-02)
 ARG PELICAN_VERSION=4.5.4
@@ -27,7 +36,8 @@ ARG GFM_VERSION=0.28.3.gfm.12 # must agree with copy above
 
 # Where we put GFM and the plugins
 ENV WORKDIR /opt/pelican-asf
-ENV LIBCMARKDIR ${WORKDIR}/cmark-gfm-${GFM_VERSION}/lib
+# Must agree with definition above
+ENV LIBCMARKDIR /opt/gfm-${GFM_VERSION}/lib
 
 RUN apt update && apt upgrade -y
 
