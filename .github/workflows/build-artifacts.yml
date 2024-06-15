@@ -37,6 +37,7 @@ jobs:
         # N.B. This must agree with the definition in pelican/action.yml
         export GFM_ARTIFACT_KEY=gfm-lib-${{ matrix.gfm_version }}
         echo "GFM_ARTIFACT_KEY=${GFM_ARTIFACT_KEY}" >> $GITHUB_ENV
+
         # Check if artifact is present (list all)
         curl -sS https://api.github.com/repos/sebbASF/infra-actions/actions/artifacts?name=${GFM_ARTIFACT_KEY} >/tmp/artifact.json
         # when does last one expire?
@@ -48,12 +49,13 @@ jobs:
           echo "Found a valid artifact for ${{ matrix.gfm_version }} (expires $OUT)"
           exit 0 # No more to do
         fi
+
         echo "Could not find a valid artifact for ${{ matrix.gfm_version }}; building another"
-        mkdir -p $WORKDIR
-        cd $WORKDIR
-        # build GFM and set up LIBCMARKDIR
-        bash $GITHUB_WORKSPACE/pelican/build-cmark.sh ${{ matrix.gfm_version }} | grep "export LIBCMARKDIR" >/tmp/libcmarkdir.$$
+        # build GFM and set up LIBCMARKDIR in $WORDIR
+        bash $GITHUB_WORKSPACE/pelican/build-cmark.sh ${{ matrix.gfm_version }} $WORKDIR $WORKDIR |\
+          grep "export LIBCMARKDIR" >/tmp/libcmarkdir.$$
         source /tmp/libcmarkdir.$$
+
         # Tell the save step what to save
         echo "created=${LIBCMARKDIR}" | tee -a $GITHUB_OUTPUT
     - name: Save the GFM build ${{ matrix.gfm_version}}
