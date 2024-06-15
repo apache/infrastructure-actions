@@ -36,6 +36,7 @@ LIBCMARKDIR="$(pwd)/$EXTRACTED_AS/lib"
 if [[ -n $NOBUILD ]]
 then
   echo "export LIBCMARKDIR='$LIBCMARKDIR'"
+  exit # skip the build
 fi
 
 # Follow redirects, and place the result into known name $LOCAL
