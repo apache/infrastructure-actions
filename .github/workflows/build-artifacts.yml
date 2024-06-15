@@ -1,0 +1,64 @@
+name: Build GFM artifacts
+
+# Builds the GFM library as artifacts that can be used by other workflows
+#
+# It checks for any existing artifacts with an expiry date at least 10 days after today
+# If none are found, the library is built and uploaded.
+
+# This workflow can be run on demand, but is intended to be run on a weekly schedule
+# This should ensure that there is always at least one artifact available but no more than 2
+
+on:
+  # Schedule once a week
+  schedule:
+    - cron: '11 12 * * 0'
+  push:
+    paths:
+      - '**/build-artifact.yml'
+      - 'pelican/build-cmark.sh'
+  workflow_dispatch:
+
+env:
+    WORKDIR: /opt/pelican-asf # where to build GFM
+jobs:
+  build-artifact:
+    runs-on: ubuntu-latest
+    strategy:
+      # Allow for multiple versions to be maintained
+      matrix:
+        gfm_version: ['0.28.3.gfm.12']
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+    - name: Fetch and build version ${{ matrix.gfm_version }}
+      id: build_gfm
+      run: |
+        # N.B. This must agree with the definition in pelican/action.yml
+        export GFM_ARTIFACT_KEY=gfm-lib-${{ matrix.gfm_version }}
+        echo "GFM_ARTIFACT_KEY=${GFM_ARTIFACT_KEY}" >> $GITHUB_ENV
+        # Check if artifact is present (list all)
+        curl -sS https://api.github.com/repos/sebbASF/infra-actions/actions/artifacts?name=${GFM_ARTIFACT_KEY} >/tmp/artifact.json
+        # when does last one expire?
+        jq </tmp/artifact.json '[.artifacts[]|select(.expired==false)|.expires_at]|max' >/tmp/max.txt
+        # is that more than 10 days away? (86400*10 seconds)
+        OUT=$(jq </tmp/max.txt 'select(.>(now+864000|strftime("%FT%TZ")))')
+        if [[ -n $OUT ]]
+        then
+          echo "Found a valid artifact for ${{ matrix.gfm_version }} (expires $OUT)"
+          exit 0 # No more to do
+        fi
+        echo "Could not find a valid artifact for ${{ matrix.gfm_version }}; building another"
+        mkdir -p $WORKDIR
+        cd $WORKDIR
+        # build GFM and set up LIBCMARKDIR
+        bash $GITHUB_WORKSPACE/pelican/build-cmark.sh ${{ matrix.gfm_version }} | grep "export LIBCMARKDIR" >/tmp/libcmarkdir.$$
+        source /tmp/libcmarkdir.$$
+        # Tell the save step what to save
+        echo "created=${LIBCMARKDIR}" | tee -a $GITHUB_OUTPUT
+    - name: Save the GFM build ${{ matrix.gfm_version}}
+      if: ${{ steps.build_gfm.outputs.created }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.GFM_ARTIFACT_KEY}}
+        path: ${{ steps.build_gfm.outputs.created }}
