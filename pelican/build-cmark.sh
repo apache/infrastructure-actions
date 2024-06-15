@@ -5,11 +5,13 @@
 # The binary output will be under: cmark-gfm-$VERSION/lib
 # 
 # USAGE:
-#   $ build-cmark.sh [ VERSION [ TARDIR ] ]
+#   $ build-cmark.sh [ VERSION [ TARDIR [WORKDIR] ] ]
 #
 #   VERSION: defaults to 0.28.3.gfm.12
 #   TARDIR: where to find a downloaded/cached tarball of the cmark
-#           code, or where to place a tarball
+#           code, or where to place a tarball (defaults to .)
+#   WORKDIR: where to extract the source and build the code (defaults to .)
+#            If specified, the directory will be created if necessary.
 #
 
 # Echo all of our steps if DEBUG_STEPS is set
@@ -24,6 +26,12 @@ if [ "$1" != "" ]; then VERSION="$1"; fi
 # The tarball exists here, or will be downloaded here.
 TARDIR="."
 if [ "$2" != "" ]; then TARDIR="$2"; fi
+
+if [[ -n $3 ]]
+then 
+  mkdir -p $3
+  cd $3
+fi
 
 ARCHIVES="https://github.com/github/cmark-gfm/archive/refs/tags"
 LOCAL="${TARDIR}/cmark-gfm.$VERSION.orig.tar.gz"
