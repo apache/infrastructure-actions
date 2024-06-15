@@ -54,29 +54,22 @@ runs:
       id: build_gfm
       shell: bash
       env:
-        WORKDIR: /opt/pelican-asf # where to build GFM
         GFM_VERSION: '0.28.3.gfm.12' # ensure we agree with build-cmark.sh script
         # action_repository only works in the env context; empty for local action call
         # it is always empty for local invocation, in which case use the current repo
         GITHUB_ACTION_REPO: ${{ github.action_repository || github.repository }}
         GH_TOKEN: ${{ github.token }} # needed by gh
       run: |
-        # The key needs to include the GFM version, but does not have to be the same as the directory name
-        # must agree with the definition in build-actions.yml
+        # The key needs to include the GFM version, but is otherwise arbitrary.
+        # It must agree with the definition in build-actions.yml
         export GFM_ARTIFACT_KEY=gfm-lib-${GFM_VERSION}
-        # Needs to be available to a subsequent step
-        echo  "GFM_VERSION=${GFM_VERSION}" >>$GITHUB_ENV
-        echo  "GFM_ARTIFACT_KEY=${GFM_ARTIFACT_KEY}" >>$GITHUB_ENV
-        if [[ -z $LIBCMARKDIR ]] # don't overwrite LIBCMARKDIR if it exists
+
+        if [[ -z $LIBCMARKDIR ]] # define LIBCMARKDIR if it is not already
         then
           # set up the GFM environment
-          # Don't pollute site checkout
-          mkdir -p $WORKDIR
-          # ensure LIBCMARKDIR is under WORKDIR
-          NOBUILD=1 bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION $WORKDIR $WORKDIR |\
-            grep "export LIBCMARKDIR" >/tmp/libcmarkdir1.$$
-          source /tmp/libcmarkdir1.$$
-          echo  "LIBCMARKDIR=${LIBCMARKDIR}" >>$GITHUB_ENV
+          export LIBCMARKDIR=/opt/pelican-asf/gfm-${GFM_VERSION} # arbitrary, but should contain version
+          mkdir -p $LIBCMARKDIR
+          echo  "LIBCMARKDIR=${LIBCMARKDIR}" >>$GITHUB_ENV # needed for the build step
         fi
         # Does the GFM build already exist?
         if [[ -d $LIBCMARKDIR ]]
@@ -105,11 +98,7 @@ runs:
             exec >/dev/null
           fi
           # build the code and define LIBCMARKDIR under $WORKDIR
-          bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION $WORKDIR $WORKDIR |\
-            grep "export LIBCMARKDIR" >/tmp/libcmarkdir.$$
-          source /tmp/libcmarkdir.$$
-          # ensure LIBCMARKDIR is defined for subsequent steps
-          echo "LIBCMARKDIR=${LIBCMARKDIR}"  >> $GITHUB_ENV
+          bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION $LIBCMARKDIR
         }
 
     - name: Generate website from markdown
