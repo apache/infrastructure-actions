@@ -56,10 +56,13 @@ runs:
       env:
         WORKDIR: /opt/pelican-asf # where to build GFM
         GFM_VERSION: '0.28.3.gfm.12' # ensure we agree with build-cmark.sh script
-        GITHUB_ACTION_REPO: ${{ github.action_repository }} # only works in the env context; empty for local action call
+        # action_repository only works in the env context; empty for local action call
+        # it is always empty for local invocation, in which case use the current repo
+        GITHUB_ACTION_REPO: ${{ github.action_repository || github.repository }}
         GH_TOKEN: ${{ github.token }} # needed by gh
       run: |
         # The key needs to include the GFM version, but does not have to be the same as the directory name
+        # must agree with the definition in build-actions.yml
         export GFM_ARTIFACT_KEY=gfm-lib-${GFM_VERSION}
         # Needs to be available to a subsequent step
         echo  "GFM_VERSION=${GFM_VERSION}" >>$GITHUB_ENV
@@ -77,26 +80,14 @@ runs:
           echo "Already have GFM binary at $LIBCMARKDIR, skipping build"
           exit 0 # nothing more to do in this step
         fi
-        # Is there a saved artifact for the GFM build?
 
-        REPO=${{ github.repository }} # Check calling repo for artifact
-        echo "Check for GFM build artifact in current repo: $REPO"
-        gh run download --dir ${LIBCMARKDIR} --name ${GFM_ARTIFACT_KEY} --repo $REPO || true
+        # Is there a saved artifact for the GFM build?
+        echo "Check for GFM build artifact in action repo: $GITHUB_ACTION_REPO"
+        gh run download --dir ${LIBCMARKDIR} --name ${GFM_ARTIFACT_KEY} --repo $GITHUB_ACTION_REPO || true
         if [[ -d $LIBCMARKDIR ]]
         then
-          echo "Found ${LIBCMARKDIR} in $REPO, nothing more to do!"
+          echo "Downloaded to ${LIBCMARKDIR} from $GITHUB_ACTION_REPO, nothing more to do!"
           exit 0 # nothing more to do in this step
-        fi
-
-        if [[ -n $GITHUB_ACTION_REPO ]]  # Check action repo for artifact
-        then
-          echo "Check for GFM build artifact in action repo: $GITHUB_ACTION_REPO"
-          gh run download --dir ${LIBCMARKDIR} --name ${GFM_ARTIFACT_KEY} --repo $GITHUB_ACTION_REPO || true
-          if [[ -d $LIBCMARKDIR ]]
-          then
-            echo "Found ${LIBCMARKDIR} in $GITHUB_ACTION_REPO, nothing more to do!"
-            exit 0 # nothing more to do in this step
-          fi
         fi
 
         # GFM binary not found, need to build it
@@ -115,18 +106,10 @@ runs:
             # build the code and define LIBCMARKDIR
             bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION | grep "export LIBCMARKDIR" >/tmp/libcmarkdir.$$
             source /tmp/libcmarkdir.$$
-            # Message to upload step
-            echo "created=${LIBCMARKDIR}" >> $GITHUB_OUTPUT
           popd
           # ensure LIBCMARKDIR is defined for subsequent steps
           echo "LIBCMARKDIR=${LIBCMARKDIR}"  >> $GITHUB_ENV
         }
-    - name: Save the GFM build
-      if: ${{ steps.build_gfm.outputs.created }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.GFM_ARTIFACT_KEY }}
-        path: ${{ steps.build_gfm.outputs.created }}
 
     - name: Generate website from markdown
       shell: bash
