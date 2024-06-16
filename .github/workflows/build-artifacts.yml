@@ -33,7 +33,7 @@ jobs:
       id: build_gfm
       run: |
         # N.B. This must agree with the definition in pelican/action.yml
-        export GFM_ARTIFACT_KEY=gfm-lib-${{ matrix.gfm_version }}-HACK
+        export GFM_ARTIFACT_KEY=gfm-lib-${{ matrix.gfm_version }}
         echo "GFM_ARTIFACT_KEY=${GFM_ARTIFACT_KEY}" >> $GITHUB_ENV
 
         # Check if artifact is present (list all)
