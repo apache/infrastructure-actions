@@ -51,18 +51,46 @@ runs:
     # If the site uses Github Flavored Markdown, use this build branch
     - name: fetch and build libcmark-gfm.so
       if: ${{ inputs.gfm == 'true' }}
+      id: build_gfm
       shell: bash
       env:
-        WORKDIR: /opt/pelican-asf # where to build GFM
         GFM_VERSION: '0.28.3.gfm.12' # ensure we agree with build-cmark.sh script
+        # action_repository only works in the env context; empty for local action call
+        # it is always empty for local invocation, in which case use the current repo
+        GITHUB_ACTION_REPO: ${{ github.action_repository || github.repository }}
+        GH_TOKEN: ${{ github.token }} # needed by gh
       run: |
+        # The key needs to include the GFM version, but is otherwise arbitrary.
+        # It must agree with the definition in build-actions.yml
+        export GFM_ARTIFACT_KEY=gfm-lib-${GFM_VERSION}
+
+        if [[ -z $LIBCMARKDIR ]] # define LIBCMARKDIR if it is not already
+        then
+          # set up the GFM environment
+          export LIBCMARKDIR=/opt/pelican-asf/gfm-${GFM_VERSION} # arbitrary, but should contain version
+          mkdir -p $LIBCMARKDIR
+          echo  "LIBCMARKDIR=${LIBCMARKDIR}" >>$GITHUB_ENV # needed for the build step
+        fi
+
         # Does the GFM build already exist?
-        if [[ -n $LIBCMARKDIR && -d $LIBCMARKDIR ]]
+        if [[ -f $LIBCMARKDIR/libcmark-gfm.so ]]
         then
           echo "Already have GFM binary at $LIBCMARKDIR, skipping build"
           exit 0 # nothing more to do in this step
         fi
+
+        # Is there a saved artifact for the GFM build?
+        echo "Check for GFM build artifact in action repo: $GITHUB_ACTION_REPO"
+        gh run download --dir ${LIBCMARKDIR} --name ${GFM_ARTIFACT_KEY} --repo $GITHUB_ACTION_REPO || true
+        if [[ -f $LIBCMARKDIR/libcmark-gfm.so ]]
+        then
+          echo "Downloaded to ${LIBCMARKDIR} from $GITHUB_ACTION_REPO, nothing more to do!"
+          exit 0 # nothing more to do in this step
+        fi
+
+        # GFM binary not found, need to build it
         {
+          echo "Creating GFM binary in ${LIBCMARKDIR}"
           # disable stdout unless debug is on
           if [ "${{ inputs.debug }}" == 'true' ]
           then
@@ -70,15 +98,8 @@ runs:
           else
             exec >/dev/null
           fi
-          # Don't pollute site checkout
-          mkdir -p $WORKDIR
-          pushd $WORKDIR
-            # build the code and define LIBCMARKDIR
-            bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION | grep "export LIBCMARKDIR" >/tmp/libcmarkdir.$$
-            source /tmp/libcmarkdir.$$
-          popd
-          # ensure LIBCMARKDIR is defined for subsequent steps
-          echo "LIBCMARKDIR=${LIBCMARKDIR}"  >> $GITHUB_ENV
+          # build the code and define LIBCMARKDIR under $WORKDIR
+          bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION $LIBCMARKDIR
         }
 
     - name: Generate website from markdown
