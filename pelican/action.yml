@@ -105,6 +105,8 @@ runs:
         then
           echo "Installing python requirements from ${{ inputs.requirements }}"
           pip3 install -r ${{ inputs.requirements }}
+        else
+          echo "Requirements file ${{ inputs.requirements }} does not exist"
         fi
         python3 -B -m pelican content -e "$PP" -o ${{ inputs.tempdir }} $OPTS
 
