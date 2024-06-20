@@ -25,6 +25,10 @@ inputs:
     description: "Pelican Version (default 4.5.4)"
     required: false
     default: '4.5.4'
+  requirements:
+    description: "Python requirements file name to install. Default=requirements.txt"
+    required: false
+    default: 'requirements.txt'
   fatal:
     description: "Value for --fatal option [errors|warnings] - sets exit code to error (default: errors)"
     required: false
@@ -97,6 +101,11 @@ runs:
         echo "Getting plugins from action location: ${{ github.action_path }}"
         PP=$(python3 ${{ github.action_path }}/plugin_paths.py '${{ github.action_path }}/plugins')
         set -x # Show the expanded variables
+        if [ -f "${{ inputs.requirements }}" ]
+        then
+          echo "Installing python requirements from ${{ inputs.requirements }}"
+          pip3 install -r ${{ inputs.requirements }}
+        fi
         python3 -B -m pelican content -e "$PP" -o ${{ inputs.tempdir }} $OPTS
 
     - name: Check out previous branch

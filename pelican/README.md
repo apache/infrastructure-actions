@@ -7,6 +7,7 @@
 * tempdir 	Temporary Directory name (optional) 	 	default: ../output
 * debug 	 	Pelican Debug mode (optional) 	 		default: false
 * version 	Pelican Version (default 4.5.4) (optional) 	default: 4.5.4
+* requirements	Python Requirements file (optional) 	default: requirements.txt
 
 ## Example Workflow Usage:
 
