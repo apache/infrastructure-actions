@@ -22,7 +22,25 @@ jobs:
         with:
           destination: master
           gfm: 'true'
+          publish: 'true'
 ```
+
+Example workflow for only building the site, not publishing. Useful for PR tests:
+
+```
+...
+jobs:
+  build-pelican:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+      - uses: apache/infrastructure-actions/pelican@main
+        with:
+          gfm: 'true'
+          publish: 'false'
+```
+
 
 # Pelican Migration Scripts
 

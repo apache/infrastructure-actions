@@ -3,8 +3,12 @@ description: "Generate a Pelican website from Markdown"
 inputs:
   destination:
     description: "Pelican Output branch"
-    required: true
+    required: false
     default: "asf-site"
+  publish:
+    description: "Publish the site to the destination branch. If false, the site is built but not published."
+    required: false
+    default: "true"
   gfm:
     description: "Uses GitHub Flavored Markdown"
     required: false
@@ -100,6 +104,7 @@ runs:
         python3 -B -m pelican content -e "$PP" -o ${{ inputs.tempdir }} $OPTS
 
     - name: Check out previous branch
+      if: ${{ inputs.publish == 'true' }}
       shell: bash
       run: | 
         git config --global user.email "private@infra.apache.org"
@@ -119,6 +124,7 @@ runs:
         fi
 
     - name: Commit Directly to the branch
+      if: ${{ inputs.publish == 'true' }}
       shell: bash
       run: |
         # Remove all existing output so deletions will be captured
