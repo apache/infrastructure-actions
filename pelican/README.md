@@ -1,7 +1,8 @@
 # ASF Infrastructure Pelican Action
 
 ## Inputs
-* destination 	Pelican Output branch (required) 	 	default: asf-site
+* destination 	Pelican Output branch (optional) 	 	default: asf-site
+* publish 	Publish to destination branch (optional) 	default: true
 * gfm 	 	Uses GitHub Flavored Markdown (optional) 	default: true
 * output 	 	Pelican generated output directory (optional) 	default: output
 * tempdir 	Temporary Directory name (optional) 	 	default: ../output
@@ -23,6 +24,22 @@ jobs:
           destination: master
           gfm: 'true'
 ```
+
+Example workflow for only building the site, not publishing. Useful for PR tests:
+
+```
+...
+jobs:
+  build-pelican:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+      - uses: apache/infrastructure-actions/pelican@main
+        with:
+          publish: 'false'
+```
+
 
 # Pelican Migration Scripts
 
