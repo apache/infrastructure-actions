@@ -92,6 +92,13 @@ runs:
     - name: Generate website from markdown
       shell: bash
       run: |
+        if [ -f "${{ inputs.requirements }}" ]
+        then
+          echo "Installing python requirements from ${{ inputs.requirements }}"
+          pip3 install -r ${{ inputs.requirements }}
+        else
+          echo "Requirements file ${{ inputs.requirements }} does not exist"
+        fi
         if [ "${{ inputs.debug }}" == 'true' ]
         then
           OPTS='-D'
@@ -105,13 +112,6 @@ runs:
         echo "Getting plugins from action location: ${{ github.action_path }}"
         PP=$(python3 ${{ github.action_path }}/plugin_paths.py '${{ github.action_path }}/plugins')
         set -x # Show the expanded variables
-        if [ -f "${{ inputs.requirements }}" ]
-        then
-          echo "Installing python requirements from ${{ inputs.requirements }}"
-          pip3 install -r ${{ inputs.requirements }}
-        else
-          echo "Requirements file ${{ inputs.requirements }} does not exist"
-        fi
         python3 -B -m pelican content -e "$PP" -o ${{ inputs.tempdir }} $OPTS
 
     - name: Check out previous branch
