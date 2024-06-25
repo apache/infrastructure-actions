@@ -74,6 +74,7 @@ runs:
           # disable stdout unless debug is on
           if [ "${{ inputs.debug }}" == 'true' ]
           then
+            # This envvar is used within build-cmark.sh
             DEBUG_STEPS=1; export DEBUG_STEPS
           else
             exec >/dev/null
