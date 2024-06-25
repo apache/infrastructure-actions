@@ -1,0 +1,156 @@
+# Copyright (c) The stash contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+name: "Stash - Restore"
+description: "Restore you build cache stash."
+author: assignUser
+
+inputs:
+  key:
+    description: >
+      Name of the artifact the stash is stored as. There is no `restore-key`
+      functionality as there is no eviction (only expiry).
+
+      The action checks the current branch for a stash, if there is no match,
+      the base branch(PRs)/default branch is searched. If there is more than one
+      match for any branch the most recently updated stash takes precedent.
+
+      To reduce amount of api calls (1000/h/repo limit) the name of the
+      current branch will be appended to the key. Key and branchname will be normalized.
+    required: true
+
+  path:
+    description: 'A file, directory or wildcard pattern that describes what to upload'
+    required: true
+    default: ${{ github.workspace }}
+
+  token:
+    description: 'GITHUB_TOKEN to use to authenticate against the artifacts api.'
+    default: ${{ github.token }}
+    required: true
+outputs:
+  stash-hit:
+    description: >
+      A string ('true' or 'false') that indicates if a stash was restored or not. It is not
+      possible to make this a boolean, as composite-action outputs are always strings. Sorry.
+    value: ${{ steps.output.outputs.stash-hit }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Check for dependencies
+      id: check-deps
+      shell: bash
+      run: |
+        function check_dep() {
+          local cmd=$1
+          $(type -P $cmd > /dev/null 2>&1) || { echo "::error ::$cmd is required for this action"; missing_dep=true; }
+        }
+
+        check_dep python3
+        check_dep gh
+        check_dep jq
+
+        if [ "$missing_dep" == "true" ]; then
+          exit 1
+        fi
+
+    - name: Mung Artifact Name
+      id: mung
+      shell: python3 {0}
+      env:
+        PYTHONPATH: "${{ github.action_path }}/../shared/"
+        stash_key: "${{ inputs.key }}"
+        stash_path: "${{ inputs.path }}"
+        ref_name: "${{ github.ref_name }}"
+        base_ref: "${{ github.base_ref || github.event.repository.default_branch }}"
+      run: |
+        import os
+        import mung as m
+        m.output_munged_name(output = 'stash_head')
+        m.output_munged_name(ref = 'base_ref', output = 'stash_base')
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+          f.write(f'stash_path={os.path.abspath(os.environ["stash_path"])}' + '\n')
+
+    - name: Check for stash artifact
+      id: check-stash
+      env:
+        PYTHONPATH: "${{ github.action_path }}"
+        GH_TOKEN: "${{ inputs.token }}"
+        base_repo: "${{ github.repository }}"
+        base_repo_id: "${{ github.repository_id }}"
+        head_repo_id: "${{ github.event.pull_request.head.repo.id || github.repository_id }}"
+        base_ref: "${{ github.base_ref || github.event.repository.default_branch }}"
+        head_ref: "${{ github.head_ref || github.ref_name }}"
+        base_name: "${{ steps.mung.outputs.stash_base }}"
+        head_name: "${{ steps.mung.outputs.stash_head }}"
+        run_id: "${{ github.run_id }}"
+        stash_key: "${{ inputs.key }}"
+
+      shell: python3 {0}
+      run: |
+        import get_stash as gs
+
+        env = gs.ensure_env_var
+        repo = env("base_repo")
+        head_name = env("head_name")
+        base_name = env("base_name")
+
+
+        stash = gs.get_workflow_stash(repo, env("run_id"), head_name)
+
+        if not stash:
+            gs.print_debug(f"Looking for stash {head_name} on current branch.")
+            stash = gs.get_branch_stash(repo, head_name, env("head_ref"), env("head_repo_id"))
+
+        if not stash:
+            gs.print_debug(f"Looking for stash {base_name} on base branch.")
+            stash = gs.get_branch_stash(repo, base_name, env("base_ref"), env("base_repo_id"))
+
+        gs.print_debug(f"Stash: {stash}")
+        if not stash:
+            print(f"Stash not found for key: {env('stash_key')}")
+            gs.set_output("stash_found", "false")
+        else:
+            gs.set_output("stash_name", stash["name"])
+            gs.set_output("stash_run_id", stash["workflow_run"]["id"])
+            print(
+                f"Restoring {stash['name']} from branch {stash['workflow_run']['head_branch']}."
+            )
+
+    - name: Download Stash
+      shell: bash
+      if: steps.check-stash.outputs.stash_found != 'false'
+      id: download
+      env:
+        GH_TOKEN: "${{ inputs.token }}"
+        STASH_NAME: "${{ steps.check-stash.outputs.stash_name }}"
+        STASH_RUN_ID: "${{ steps.check-stash.outputs.stash_run_id }}"
+        REPO: "${{ github.repository }}"
+        STASH_DIR: "${{ steps.mung.outputs.stash_path }}"
+      run: |
+        gh run download $STASH_RUN_ID --name $STASH_NAME --dir "$STASH_DIR" -R "$REPO"
+        echo "Succesfully restored stash $STASH_NAME."
+
+
+    - name: Set stash-hit Output
+      id: output
+      if: ${{ ! cancelled() && steps.check-deps.conclusion == 'success' }}
+      shell: bash
+      run: |
+        if [ "${{ steps.download.conclusion }}" == "success" ]; then
+          echo "stash-hit=true" >> $GITHUB_OUTPUT
+        else
+          echo "stash-hit=false" >> $GITHUB_OUTPUT
+          echo "No stash found for keys ${{ steps.mung.outputs.stash_head }} or ${{ steps.mung.outputs.stash_base }}."
+        fi
