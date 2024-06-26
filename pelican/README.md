@@ -1,5 +1,7 @@
 # ASF Infrastructure Pelican Action
 
+**Note** This Action simplifies managing a project website. More information is available at <a href="https://infra.apache.org/asf-pelican.html" targeet="_blank">infra.apache.org/asf-pelican.html</a>.
+
 ## Inputs
 * destination 	Pelican Output branch (optional) 	 	default: asf-site
 * publish 	Publish to destination branch (optional) 	default: true
