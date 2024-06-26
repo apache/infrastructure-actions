@@ -30,9 +30,8 @@ inputs:
     required: false
     default: '4.5.4'
   requirements:
-    description: "Python requirements file name to install. Default=requirements.txt"
+    description: "Python requirements file name to install (default: None)"
     required: false
-    default: 'requirements.txt'
   fatal:
     description: "Value for --fatal option [errors|warnings] - sets exit code to error (default: errors)"
     required: false
@@ -93,12 +92,10 @@ runs:
     - name: Generate website from markdown
       shell: bash
       run: |
-        if [ -f "${{ inputs.requirements }}" ]
+        if [ -n "${{ inputs.requirements }}" ]
         then
           echo "Installing python requirements from ${{ inputs.requirements }}"
           pip3 install -r ${{ inputs.requirements }}
-        else
-          echo "Requirements file ${{ inputs.requirements }} does not exist"
         fi
         if [ "${{ inputs.debug }}" == 'true' ]
         then
