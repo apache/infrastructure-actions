@@ -4,7 +4,7 @@ All of these plugins are ALv2 except for **asfgenid** and **toc** which may be A
 
 ## asfcopy
 
-Copies a directory trees to output outside of the Pelican processing of content and static files.
+Copies a directory tree to output outside of the Pelican processing of content and static files.
 
 ## asfdata
 
@@ -32,4 +32,4 @@ Pelican plugin that processes Github Flavored Markdown(**GFM**) using the cmark 
 Generates Table of Contents for markdown.
 Only generates a ToC for the headers FOLLOWING the [TOC] tag,
 so you can insert it after a specific section that need not be
-include in the ToC.
+included in the ToC.
