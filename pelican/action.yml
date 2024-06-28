@@ -29,6 +29,10 @@ inputs:
     description: "Pelican Version (default 4.5.4)"
     required: false
     default: '4.5.4'
+  gfm_version:
+    description: "GFM Version (default 0.28.3.gfm.12)"
+    required: false
+    default: '0.28.3.gfm.12'
   requirements:
     description: "Python requirements file name to install (default: None)"
     required: false
@@ -61,7 +65,7 @@ runs:
       shell: bash
       env:
         WORKDIR: /opt/pelican-asf # where to build GFM
-        GFM_VERSION: '0.28.3.gfm.12' # ensure we agree with build-cmark.sh script
+        GFM_VERSION: ${{ inputs.gfm_version }}
       run: |
         # Does the GFM build already exist?
         if [[ -n $LIBCMARKDIR && -d $LIBCMARKDIR ]]
