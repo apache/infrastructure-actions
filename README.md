@@ -12,4 +12,4 @@ Once everything seems in order, Infra will approve the pull request and add the 
 
 ### GH Actions available
 
-  - [ASF Infrastructure Pelican Action](/pelican/README.txt)
+  - [ASF Infrastructure Pelican Action](/pelican/README.md)
