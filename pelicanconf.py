@@ -16,7 +16,7 @@ THEME = 'simple' # a built-in theme
 # Specify location of plugins, and which to use
 PLUGIN_PATHS = [ 'plugins' ] # For local plugins
 # If the website uses any *.ezmd files, include the 'asfreader' plugin
-PLUGINS = [ 'test', 'gfm', 'asfgenid', 'asfrun' ] # asfsignals
+PLUGINS = [ 'test', 'asfgenid', 'asfrun' ] # asfsignals
 ASF_RUN = [ '/bin/bash show_environ.sh start' ]
 ASF_POSTRUN = [ '/bin/bash show_environ.sh end' ]
 

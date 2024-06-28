@@ -5,7 +5,7 @@ on:
 jobs:
   build-pelican:
     env:
-      TARGET: testsite-unittest
+      TARGET: testsitenogfm-unittest
       UNIT_TEST_A: This is a test
     runs-on: ubuntu-latest
     steps:
@@ -15,9 +15,9 @@ jobs:
         uses: apache/infrastructure-actions/pelican@main
         with:
           destination: ${{ env.TARGET }}
-          gfm: 'true'
+          gfm: 'false'
       - name: Test output
         run: |
           git checkout ${{ env.TARGET }}
-          # Check that GFM was used
-          grep '<p><del>Hi</del> Hello, <del>there</del> world!</p>' output/index.html
+          # Check that GFM was not used
+          ! grep '<p><del>Hi</del> Hello, <del>there</del> world!</p>' output/index.html
