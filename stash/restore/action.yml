@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 name: "Stash - Restore"
-description: "Restore you build cache stash."
+description: "Restore your build cache stash."
 author: assignUser
 
 inputs:

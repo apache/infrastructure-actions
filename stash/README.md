@@ -16,18 +16,22 @@
 
 # Stash GitHub Action
 
-`Stash` provides a solution for managing large build caches in your workflows, that doesn't require any secrets and can be used in fork PRs.
-It's designed as an alternative to `actions/cache` which struggles with big build caches such as `.ccache` directories.
-This action is lit into two distinct operations: `assign/user/restore` for fetching a previously stored stash,
-and `infrastructure-actions/stash/save` for storing a new stash after a build has been completed.
+`Stash` provides a solution for managing large build caches in your workflows, that doesn't require any secrets and can therefore be used in fork PRs.
+It's designed as an alternative to `actions/cache` which struggles with big build caches such as `.ccache` directories due to it's repository wide [size limit](https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#usage-limits-and-eviction-policy) of 10GB and the fact that caches are [immutable](https://github.com/actions/toolkit/issues/505).
+With workflows running multiple configurations across PRs and merge commits this limit is quickly reached, leading to cache evicitions, causing CI times to increase.
+
+This action is split into two distinct operations:
+- `infrastructure-actions/stash/restore` for fetching a previously stored stash
+- `infrastructure-actions/stash/save` for storing a new stash after a build has been completed.
 
 ## Features
 
-- No repository wide size limit. Each stash is uploaded as a workflow artifact.
-    - This means there will be no cache evicition leading to cache misses and increased build times. Stashes will expire after 5 days by default.
+- Each stash is uploaded as a workflow artifact, in contrasts to `actions/cache` there is no repository wide size limit for artifacts.
+    - There is no cache eviction, stashes will expire after 5 days by default.
 - Artifact storage is free for public repositories and much cheaper than CI minutes (~ 1 Cent/1GB/day) for private repositories.
 - No secrets required, stash can be used in fork PRs.
 - Follows the same search scope as `actions/cache`: will look for the cache in the current workflow, current branch and finally the base branch of a PR.
+This prevents untrusted user caches (e.g. from fork PR CI runs) from being used on the default branch (where actions have elevated permissions by default) or other repo or PR branches.
 
 ## Usage
 
@@ -69,7 +73,7 @@ they are specifically modeled after `actions/cache` and `actions/upload-artifact
 Please refer to the action metadata (`action.yml`) for a comprehensive list of inputs, including descriptions and default values.
 
 Additionally the `restore` action has an output `stash-hit` which is set to `true` if the cache was restored successfully,
-`false` if no cache was restored and '' if the action failed (an error will be thrown unless `continue-on-error` is set). 
-A technical limitation of composite actions like `Stash` is that all outputs are **strings**. 
-Therefor an explicit comparison has to be used when using the output:
-`if: ${{ steps.restore-stash.outputs.stash-hit == 'true' }}` 
+`false` if no cache was restored and '' if the action failed (an error will be thrown unless `continue-on-error` is set).
+A technical limitation of composite actions like `Stash` is that all outputs are **strings**.
+Therefore an explicit comparison has to be used when using the output:
+`if: ${{ steps.restore-stash.outputs.stash-hit == 'true' }}`
