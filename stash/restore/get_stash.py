@@ -13,21 +13,23 @@
 # limitations under the License.
 import json
 import os
-import re
 import subprocess
 from typing import List
 
 
 def print_debug(msg: str):
+    """Print a message that is only visible when the GHA debug flag is set."""
     print(f"::debug::{msg}")
 
 
 def set_output(name: str, value: str):
+    """Set a GHA output variable."""
     with open(ensure_env_var("GITHUB_OUTPUT"), "a") as f:
         f.write(f"{name}={value}\n")
 
 
 def ensure_env_var(var: str) -> str:
+    """Return value of envvar `var`, throw if it's not set."""
     value = os.environ.get(var)
     if value is None or len(value) == 0:
         raise ValueError(f"Environment variable {var} is not set")
@@ -35,11 +37,13 @@ def ensure_env_var(var: str) -> str:
 
 
 def run_checked(args, **kwargs):
+    """Run command and caputre it's output and check that it exists succesfully."""
     result = subprocess.run(args, **kwargs, capture_output=True, check=True, text=True)
     return result
 
 
 def jq(file: str, query: str, args: List[str] = []):
+    """Wrapper to run `jq` query on a file on disk or on a JSON string."""
     if os.path.isfile(file):
         result = run_checked(["jq", *args, query, file])
     elif file.startswith("{"):
@@ -51,6 +55,7 @@ def jq(file: str, query: str, args: List[str] = []):
 
 
 def gh_api(endpoint: str, method: str = "get", options: List[str] = []):
+    """Wrapper to run `gh` REST API calls."""
     args = [
         "gh",
         "api",
@@ -67,6 +72,7 @@ def gh_api(endpoint: str, method: str = "get", options: List[str] = []):
 
 
 def ensure_json(output: str):
+    """Always return valid JSON."""
     if output.isspace():
         return json.loads("{}")
     else:
