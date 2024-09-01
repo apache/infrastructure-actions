@@ -37,7 +37,7 @@ def ensure_env_var(var: str) -> str:
 
 
 def run_checked(args, **kwargs):
-    """Run command and caputre it's output and check that it exists succesfully."""
+    """Run command and capture it's output and check that it exits successfully."""
     result = subprocess.run(args, **kwargs, capture_output=True, check=True, text=True)
     return result
 

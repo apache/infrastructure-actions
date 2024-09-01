@@ -17,8 +17,8 @@
 # Stash GitHub Action
 
 `Stash` provides a solution for managing large build caches in your workflows, that doesn't require any secrets and can therefore be used in fork PRs.
-It's designed as an alternative to `actions/cache` which struggles with big build caches such as `.ccache` directories due to it's repository wide [size limit](https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#usage-limits-and-eviction-policy) of 10GB and the fact that caches are [immutable](https://github.com/actions/toolkit/issues/505).
-With workflows running multiple configurations across PRs and merge commits this limit is quickly reached, leading to cache evicitions, causing CI times to increase.
+It's designed as an alternative to `actions/cache` which struggles with big build caches such as `.ccache` directories due to the repository wide [size limit](https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#usage-limits-and-eviction-policy) of 10GB and the fact that caches are [immutable](https://github.com/actions/toolkit/issues/505).
+With workflows running multiple configurations across PRs and merge commits this limit is quickly reached, leading to cache evictions, causing CI times to increase.
 
 This action is split into two distinct operations:
 - `infrastructure-actions/stash/restore` for fetching a previously stored stash
@@ -26,7 +26,7 @@ This action is split into two distinct operations:
 
 ## Features
 
-- Each stash is uploaded as a workflow artifact, in contrasts to `actions/cache` there is no repository wide size limit for artifacts.
+- Each stash is uploaded as a workflow artifact. In contrasts to `actions/cache` there is no repository wide size limit for artifacts.
     - There is no cache eviction, stashes will expire after 5 days by default.
 - Artifact storage is free for public repositories and much cheaper than CI minutes (~ 1 Cent/1GB/day) for private repositories.
 - No secrets required, stash can be used in fork PRs.
