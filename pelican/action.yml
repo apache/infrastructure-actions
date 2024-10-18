@@ -95,7 +95,7 @@ runs:
         if [ -n "${{ inputs.requirements }}" ]
         then
           echo "Installing python requirements from ${{ inputs.requirements }}"
-          pip3 install --break-system-packages -r ${{ inputs.requirements }}
+          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install -r ${{ inputs.requirements }}
         fi
         if [ "${{ inputs.debug }}" == 'true' ]
         then
