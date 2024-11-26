@@ -42,7 +42,7 @@ runs:
       shell: bash
       run: |
         for file in `ls ${{ inputs.srcdir }}`; do
-          node convert-slides.js $file
+          node ${{ github.action_path }}/convert-slides.js $file
         done
 
     - name: Check out previous branch
