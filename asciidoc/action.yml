@@ -41,8 +41,8 @@ runs:
     - name: Generate slide decks from markdown
       shell: bash
       run: |
-        cd "${{ inputs.drcdir }}"
-        ln -s "${{ github.action_path }}"/convert-slides.js .
+        cd "${{ inputs.srcdir }}"
+        ln -s "${{ github.action_path }}/convert-slides.js" .
         for file in `ls`; do
           node convert-slides.js $file
         done
