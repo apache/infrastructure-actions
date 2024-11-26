@@ -66,17 +66,17 @@ runs:
         git config --global user.email "dfoulks@apache.org"
         git config --global user.name "AsciiDcotor (action)"
         git remote update
-        if git checkout "${{ inputs.destination }}"
+        if git checkout "${{ inputs.dest_branch }}"
         then
-          git pull origin "${{ inputs.destination }}"
+          git pull origin "${{ inputs.dest_branch }}"
         else
           # if none, create it.
-          echo "branch ${{ inputs.destination }} is new; create empty site"
-          git switch --orphan "${{ inputs.destination }}"
+          echo "branch ${{ inputs.dest_branch }} is new; create empty site"
+          git switch --orphan "${{ inputs.dest_branch }}"
           git checkout "origin/${{ github.ref_name }}" -- .asf.yaml
           git add .asf.yaml -f
           git commit -m "Initialise empty site"
-          git push -u origin "${{ inputs.destination }}"
+          git push -u origin "${{ inputs.dest_branch }}"
         fi
 
     - name: Commit Directly to the branch
