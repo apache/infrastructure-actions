@@ -99,5 +99,5 @@ runs:
           echo "No change"
           true # ensure step is successful
         fi
-      working-directory: "${{ inputs.srcdir }}"
+        #      working-directory: "${{ inputs.srcdir }}"
 
