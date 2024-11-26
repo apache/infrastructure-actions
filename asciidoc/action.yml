@@ -42,7 +42,7 @@ runs:
       shell: bash
       run: |
         ln -s "${{ github.action_path }}/convert-slides.js" .
-      working-dir: "${{ inputs.srcfile }}"
+      working-directory: "${{ inputs.srcfile }}"
     - name: 
       shell: bash
       run: |
@@ -50,7 +50,7 @@ runs:
         for file in $(ls .); do
           node convert-slides.js $file
         done
-      working-dir: "${{ inputs.srcfile }}"
+      working-directory: "${{ inputs.srcfile }}"
 
     - name: Check out previous branch
       if: ${{ inputs.publish == 'true' }}
