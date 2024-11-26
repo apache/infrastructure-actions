@@ -50,12 +50,12 @@ runs:
         mkdir "${{ inputs.tempdir }}"
         echo $(ls -al)
         for file in `ls`; do
-          if [[ "$(echo $file | awk -F. '{print $NF}')" != ".adoc" ]]; then
+          if [[ "$(echo $file | awk -F. '{print $NF}')" != "adoc" ]]; then
             continue
           fi
           echo $file
           node convert-slides.js $file
-          mv $(basename $file .adoc).html "${{ inputs.tempdir }}" 
+          mv $(basename $file .adoc).html "${{ inputs.tempdir }}"/ 
         done
       working-directory: "${{ inputs.srcdir }}"
 
