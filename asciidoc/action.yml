@@ -16,7 +16,7 @@ inputs:
   output:
     description: "AsciiDoc output directory"
     required: false
-    default: '.'
+    default: 'output'
   tempdir:
     description: "Temporary Directory name"
     required: false
@@ -48,9 +48,11 @@ runs:
       shell: bash
       run: |
         echo $(ls -al)
+        mkdir "${{ inputs.tempdir }}"
         for file in `ls`; do
           echo $file
           node convert-slides.js $file
+          mv $(basename $file .adoc).html "${{ inputs.tempdir }}" 
         done
       working-directory: "${{ inputs.srcdir }}"
 
