@@ -1,0 +1,87 @@
+name: Build Presentations with AsciiDoc
+description: "Generate a Slidedeck from AsciiDoc Markdown"    
+inputs:
+  destination:
+    description: "Slidedeck Output branch"
+    required: false
+    default: "presentations"
+  publish:
+    description: "Publish the site to the destination branch. If false, the site is built but not published."
+    required: false
+    default: "true"
+  output:
+    description: "AsciiDoc generated output directory"
+    required: false
+    default: '.'
+  tempdir:
+    description: "Temporary Directory name"
+    required: false
+    default: '../output.tmp'
+  debug:
+    description: "AsciiDoc Debug mode"
+    required: false
+    default: 'false'
+  fatal:
+    description: "Value for --fatal option [errors|warnings] - sets exit code to error (default: errors)"
+    required: false
+    default: 'errors'
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+    - name: Install AsciiDoc
+      shell: bash
+      # Install needs to run in separate shell so stdout is restored
+      run: |
+        (
+          test "${{ inputs.debug }}" == 'true' || exec >/dev/null
+          apt install npm -y
+        )
+    
+    - name: Generate slide decks from markdown
+      shell: bash
+      run: |
+        for file in ${{ inputs.srcdir }}; do
+          node convert-slides.js $file
+        done
+
+    - name: Check out previous branch
+      if: ${{ inputs.publish == 'true' }}
+      shell: bash
+      run: | 
+        git config --global user.email "dfoulks@apache.org"
+        git config --global user.name "AsciiDcotor (action)"
+        git remote update
+        if git checkout ${{ inputs.destination }}
+        then
+          git pull origin ${{ inputs.destination }}
+        else
+          # if none, create it.
+          echo "branch ${{ inputs.destination }} is new; create empty site"
+          git switch --orphan ${{ inputs.destination }}
+          git checkout origin/${{ github.ref_name }} -- .asf.yaml
+          git add .asf.yaml -f
+          git commit -m "Initialise empty site"
+          git push -u origin ${{ inputs.destination }}
+        fi
+
+    - name: Commit Directly to the branch
+      if: ${{ inputs.publish == 'true' }}
+      shell: bash
+      run: |
+        # Remove all existing output so deletions will be captured
+        rm -rf ${{ inputs.output }}
+        git rm --quiet -r --ignore-unmatch --cached ${{ inputs.output }}/*
+        # replace with generated output
+        mv ${{ inputs.tempdir }} ${{ inputs.output }}
+        git diff # Show changes
+        git add ${{ inputs.output }}
+        git status
+        if git commit -m "Commit build products"
+          then
+              git push
+        else
+          echo "No change"
+          true # ensure step is successful
+        fi
