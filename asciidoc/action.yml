@@ -41,6 +41,7 @@ runs:
     - name: Set up Asciidoc environment
       shell: bash
       run: |
+        echo $(ls -al)
         cd "${{ inputs.srcdir }}"
         ln -s "${{ github.action_path }}/convert-slides.js" .
 
@@ -48,7 +49,7 @@ runs:
       shell: bash
       run: |
         echo $(ls -al)
-        
+        cd "${{ inputs.srcdir }}"
         for file in $(ls .); do
           node convert-slides.js $file
         done
