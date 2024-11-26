@@ -1,7 +1,11 @@
 name: Build Presentations with AsciiDoc
 description: "Generate a Slidedeck from AsciiDoc Markdown"    
 inputs:
-  destination:
+  srcdir:
+    description: "AsciiDoc sourcefile directory"
+    required: false
+    default: "."
+  dest_branch:
     description: "Slidedeck Output branch"
     required: false
     default: "presentations"
@@ -10,7 +14,7 @@ inputs:
     required: false
     default: "true"
   output:
-    description: "AsciiDoc generated output directory"
+    description: "AsciiDoc output directory"
     required: false
     default: '.'
   tempdir:
@@ -21,11 +25,6 @@ inputs:
     description: "AsciiDoc Debug mode"
     required: false
     default: 'false'
-  fatal:
-    description: "Value for --fatal option [errors|warnings] - sets exit code to error (default: errors)"
-    required: false
-    default: 'errors'
-
 runs:
   using: "composite"
   steps:
@@ -36,7 +35,7 @@ runs:
       run: |
         (
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
-          apt install npm -y
+          npm install
         )
     
     - name: Generate slide decks from markdown
