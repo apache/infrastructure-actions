@@ -88,6 +88,7 @@ runs:
         rm -rf "${{ inputs.output }}"
         git rm --quiet -r --ignore-unmatch --cached "${{ inputs.output }}"/*
         # replace with generated output
+        ls "${{ inputs.srcdir }}/${{ inputs.tempdir }}"
         mv "${{ inputs.srcdir }}/${{ inputs.tempdir }}" "${{ inputs.output }}"
         git diff # Show changes
         git add "${{ inputs.output }}"
@@ -99,5 +100,4 @@ runs:
           echo "No change"
           true # ensure step is successful
         fi
-        #      working-directory: "${{ inputs.srcdir }}"
 
