@@ -4,7 +4,7 @@ inputs:
   srcdir:
     description: "AsciiDoc sourcefile directory"
     required: false
-    default: "."
+    default: "srcfiles"
   dest_branch:
     description: "Slidedeck Output branch"
     required: false
