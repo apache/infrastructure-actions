@@ -50,7 +50,7 @@ runs:
         echo $(ls -al)
         mkdir "${{ inputs.tempdir }}"
         for file in `ls`; do
-          if $(echo $file | awk -F. '{print $NF}') != ".adoc"); then
+          if [[ "$(echo $file | awk -F. '{print $NF}')" != ".adoc" ]]; then
             continue
           fi
           echo $file
