@@ -66,17 +66,17 @@ runs:
         git config --global user.email "dfoulks@apache.org"
         git config --global user.name "AsciiDcotor (action)"
         git remote update
-        if git checkout ${{ inputs.destination }}
+        if git checkout "${{ inputs.destination }}"
         then
-          git pull origin ${{ inputs.destination }}
+          git pull origin "${{ inputs.destination }}"
         else
           # if none, create it.
           echo "branch ${{ inputs.destination }} is new; create empty site"
-          git switch --orphan ${{ inputs.destination }}
-          git checkout origin/${{ github.ref_name }} -- .asf.yaml
+          git switch --orphan "${{ inputs.destination }}"
+          git checkout "origin/${{ github.ref_name }}" -- .asf.yaml
           git add .asf.yaml -f
           git commit -m "Initialise empty site"
-          git push -u origin ${{ inputs.destination }}
+          git push -u origin "${{ inputs.destination }}"
         fi
 
     - name: Commit Directly to the branch
@@ -84,12 +84,12 @@ runs:
       shell: bash
       run: |
         # Remove all existing output so deletions will be captured
-        rm -rf ${{ inputs.output }}
-        git rm --quiet -r --ignore-unmatch --cached ${{ inputs.output }}/*
+        rm -rf "${{ inputs.output }}"
+        git rm --quiet -r --ignore-unmatch --cached "${{ inputs.output }}"/*
         # replace with generated output
-        mv ${{ inputs.tempdir }} ${{ inputs.output }}
+        mv "${{ inputs.tempdir }}" "${{ inputs.output }}"
         git diff # Show changes
-        git add ${{ inputs.output }}
+        git add "${{ inputs.output }}"
         git status
         if git commit -m "Commit build products"
           then
