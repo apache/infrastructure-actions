@@ -35,7 +35,7 @@ runs:
       run: |
         (
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
-          npm install @asciidoctor/core @asciidoctor/reveal.js
+          npm install asciidoctor @asciidoctor/core @asciidoctor/reveal.js
         )
     
     - name: Generate slide decks from markdown
