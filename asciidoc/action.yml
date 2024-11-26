@@ -35,12 +35,12 @@ runs:
       run: |
         (
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
-          npm install asciidoctor @asciidoctor/core @asciidoctor/reveal.js
         )
     
     - name: Set up Asciidoc environment
       shell: bash
       run: |
+        npm install asciidoctor @asciidoctor/reveal.js
         ln -s "${{ github.action_path }}/convert-slides.js" .
       working-directory: "${{ inputs.srcdir }}"
     - name: 
