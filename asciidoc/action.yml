@@ -78,6 +78,7 @@ runs:
           git commit -m "Initialise empty site"
           git push -u origin "${{ inputs.dest_branch }}"
         fi
+      working-directory: "${{ inputs.srcdir }}"
 
     - name: Commit Directly to the branch
       if: ${{ inputs.publish == 'true' }}
@@ -98,3 +99,5 @@ runs:
           echo "No change"
           true # ensure step is successful
         fi
+      working-directory: "${{ inputs.srcdir }}"
+
