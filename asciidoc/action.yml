@@ -46,7 +46,9 @@ runs:
     - name: 
       shell: bash
       run: |
-        for file in $(ls .); do
+        echo $(ls -al)
+        for file in `ls`; do
+          echo $file
           node convert-slides.js $file
         done
       working-directory: "${{ inputs.srcdir }}"
