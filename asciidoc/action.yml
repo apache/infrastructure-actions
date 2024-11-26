@@ -38,12 +38,18 @@ runs:
           npm install asciidoctor @asciidoctor/core @asciidoctor/reveal.js
         )
     
-    - name: Generate slide decks from markdown
+    - name: Set up Asciidoc environment
       shell: bash
       run: |
         cd "${{ inputs.srcdir }}"
         ln -s "${{ github.action_path }}/convert-slides.js" .
-        for file in `ls`; do
+
+    - name: 
+      shell: bash
+      run: |
+        echo $(ls -al)
+        
+        for file in $(ls .); do
           node convert-slides.js $file
         done
 
