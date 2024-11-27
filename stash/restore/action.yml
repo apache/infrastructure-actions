@@ -137,16 +137,21 @@ runs:
         REPO: "${{ github.repository }}"
         STASH_DIR: "${{ steps.mung.outputs.stash_path }}"
       run: |
-        gh run download $STASH_RUN_ID --name $STASH_NAME --dir "$STASH_DIR" -R "$REPO"
-        echo "Succesfully restored stash $STASH_NAME."
+        # Catch errors in the download with || to avoid the whole workflow failing
+        # when the download times out
+        gh run download "$STASH_RUN_ID" \
+                        --name "$STASH_NAME" \
+                        --dir "$STASH_DIR" \
+                        -R "$REPO" || download="failed" && download="success"
 
+        echo "download=$download" >> "$GITHUB_OUTPUT"
 
     - name: Set stash-hit Output
       id: output
-      if: ${{ ! cancelled() && steps.check-deps.conclusion == 'success' }}
+      if: ${{ ! cancelled() && steps.check-deps.conclusion == 'success'}}
       shell: bash
       run: |
-        if [ "${{ steps.download.conclusion }}" == "success" ]; then
+        if [ "${{ steps.download.outputs.download }}" == "success" ]; then
           echo "stash-hit=true" >> $GITHUB_OUTPUT
         else
           echo "stash-hit=false" >> $GITHUB_OUTPUT
