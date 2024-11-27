@@ -91,8 +91,9 @@ runs:
         rm -rf "${{ inputs.output }}"
         git rm --quiet -r --ignore-unmatch --cached "${{ inputs.output }}"/*
         # replace with generated output
-        ls "${{ inputs.srcdir }}/${{ inputs.tempdir }}"
+        #        ls "${{ inputs.srcdir }}/${{ inputs.tempdir }}"
         mv "${{ inputs.srcdir }}/${{ inputs.tempdir }}" "${{ inputs.output }}"
+        cp -r "${{ github.action_path }}/static" "${{ inputs.output }}"
         git diff # Show changes
         git add "${{ inputs.output }}"
         git status
