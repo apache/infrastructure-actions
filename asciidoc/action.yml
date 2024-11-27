@@ -64,7 +64,7 @@ runs:
           mv $(basename $file .adoc).html "${{ inputs.tempdir }}"/ 
         done
         cp "${{ github.action_path }}/package.json" "${{ inputs.tempdir }}"
-        cp -r "../${{ inputs.assets }}" "${{ inputs.output }}"
+        [ -d "${{ github.workspace }}/${{ inputs.assets }}" ] && cp -r "${{ github.workspace }}/${{ inputs.assets }}" "${{ inputs.output }}" || echo "No ${{ inputs.assets }} found!"
       working-directory: "${{ inputs.srcdir }}"
 
     - name: Check out previous branch
