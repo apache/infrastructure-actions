@@ -39,8 +39,8 @@ runs:
       run: |
         (
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
-          #          cp "${{ github.action_path }}/package.json" .
           npm install
+          echo $(ls)
         )
         #      working-directory: "${{ inputs.srcdir }}"
       working-directory: "${{ github.action_path }}"
