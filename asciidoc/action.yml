@@ -59,7 +59,7 @@ runs:
           node convert-slides.js $file
           mv $(basename $file .adoc).html "${{ inputs.tempdir }}"/ 
         done
-        mv package.json "${{ inputs.tempdir }}"
+        cp "${{ github.action_path }}/package.json" "${{ inputs.tempdir }}"
       working-directory: "${{ inputs.srcdir }}"
 
     - name: Check out previous branch
