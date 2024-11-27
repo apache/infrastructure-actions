@@ -65,7 +65,7 @@ runs:
     - name: Copy Assets
       shell: bash
       run: |
-        cp -r "${{ inputs.assets }}" "${{ inputs.srcdir }}/S{{ inputs.output }}"
+        cp -r "${{ inputs.assets }}" "${{ inputs.srcdir }}/S{{ inputs.tempdir }}"
 
     - name: Check out previous branch
       if: ${{ inputs.publish == 'true' }}
