@@ -5,6 +5,10 @@ inputs:
     description: "AsciiDoc sourcefile directory"
     required: false
     default: "srcfiles"
+  assets:
+    description: "Site assets directory"
+    required: false
+    default: "static"
   dest_branch:
     description: "Slidedeck Output branch"
     required: false
@@ -93,7 +97,7 @@ runs:
         # replace with generated output
         #        ls "${{ inputs.srcdir }}/${{ inputs.tempdir }}"
         mv "${{ inputs.srcdir }}/${{ inputs.tempdir }}" "${{ inputs.output }}"
-        cp -r "${{ github.action_path }}/static" "${{ inputs.output }}"
+        cp -r "${{ inputs.assets }}" "${{ inputs.output }}"
         git diff # Show changes
         git add "${{ inputs.output }}"
         git status
