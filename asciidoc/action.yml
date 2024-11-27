@@ -39,7 +39,7 @@ runs:
           npm install
         )
         #      working-directory: "${{ inputs.srcdir }}"
-        working-directory: "${{ github.action_path }}"
+      working-directory: "${{ github.action_path }}"
     
     - name: Set up Asciidoc environment
       shell: bash
