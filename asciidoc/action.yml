@@ -64,6 +64,7 @@ runs:
           mv $(basename $file .adoc).html "${{ inputs.tempdir }}"/ 
         done
         cp "${{ github.action_path }}/package.json" "${{ inputs.tempdir }}"
+        cp -r "../${{ inputs.assets }}" "${{ inputs.output }}"
       working-directory: "${{ inputs.srcdir }}"
 
     - name: Check out previous branch
@@ -97,7 +98,6 @@ runs:
         # replace with generated output
         #        ls "${{ inputs.srcdir }}/${{ inputs.tempdir }}"
         mv "${{ inputs.srcdir }}/${{ inputs.tempdir }}" "${{ inputs.output }}"
-        cp -r "../${{ inputs.assets }}" "${{ inputs.output }}"
         git diff # Show changes
         git add "${{ inputs.output }}"
         git status
