@@ -35,7 +35,8 @@ runs:
       run: |
         (
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
-          npm install asciidoc reveal
+          cp "${{ github.action_path }}/package.json" .
+          npm install
         )
       working-directory: "${{ inputs.srcdir }}"
     
