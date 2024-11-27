@@ -41,19 +41,14 @@ runs:
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
           npm install
         )
-        echo $(ls)
         #      working-directory: "${{ inputs.srcdir }}"
       working-directory: "${{ github.action_path }}"
     
-    - name: Set up Asciidoc environment
-      shell: bash
-      run: |
-        ln -s "${{ github.action_path }}/convert-slides.js" .
-      working-directory: "${{ inputs.srcdir }}"
     - name: 
       shell: bash
       run: |
         mkdir "${{ inputs.tempdir }}"
+        ln -s "${{ github.action_path }}/convert-slides.js" .
         echo $(ls -al)
         for file in `ls`; do
           if [[ "$(echo $file | awk -F. '{print $NF}')" != "adoc" ]]; then
@@ -66,6 +61,11 @@ runs:
         cp "${{ github.action_path }}/package.json" "${{ inputs.tempdir }}"
         [ -d "${{ github.workspace }}/${{ inputs.assets }}" ] && cp -r "${{ github.workspace }}/${{ inputs.assets }}" "${{ inputs.output }}" || echo "No ${{ inputs.assets }} found!"
       working-directory: "${{ inputs.srcdir }}"
+    
+    - name: Copy Assets
+      shell: bash
+      run: |
+        cp -r "${{ inputs.assets }}" "${{ inputs.srcdir }}/S{{ inputs.outputs }}"
 
     - name: Check out previous branch
       if: ${{ inputs.publish == 'true' }}
