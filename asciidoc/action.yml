@@ -35,7 +35,7 @@ runs:
       run: |
         (
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
-          npm install asciidoc @asciidoc/reveal.js
+          npm install asciidoc reveal
         )
       working-directory: "${{ inputs.srcdir }}"
     
