@@ -40,8 +40,8 @@ runs:
         (
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
           npm install
-          echo $(ls)
         )
+        echo $(ls)
         #      working-directory: "${{ inputs.srcdir }}"
       working-directory: "${{ github.action_path }}"
     
