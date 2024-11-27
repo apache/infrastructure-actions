@@ -35,9 +35,9 @@ runs:
       run: |
         (
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
-          npm install
+          npm install "${{ github.action_path }}/package.json"
         )
-      working-directory: "${{ github.action_path }}"
+      working-directory: "${{ inputs.srcdir }}"
     
     - name: Set up Asciidoc environment
       shell: bash
