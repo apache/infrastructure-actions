@@ -1,0 +1,93 @@
+name: Test GFM version option
+on:
+  push:
+    paths:
+      - 'pelican/action.yml'
+      - 'pelican/build-cmark.sh'
+      - '.github/workflows/pelican-version-test.yml'
+  workflow_dispatch:
+jobs:
+  version-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - gfm: 'true'
+            testbranch: testsite
+            buildshouldfail: false
+          - gfm: 'true'
+            testbranch: testsite
+            gfm_version: '0.28.3.gfm.12' # This is the earliest that will build
+            buildshouldfail: false
+          - gfm: 'true'
+            testbranch: testsite
+            gfm_version: '0.29.0.gfm.13' # latest
+            buildshouldfail: false
+          - gfm: 'false'
+            testbranch: testsitenogfm
+            buildshouldfail: false
+          - gfm: 'false'
+            testbranch: testsitenogfm
+            gfm_version: 'not-a-version'
+            buildshouldfail: false
+          - gfm: 'true'
+            testbranch: testsite
+            gfm_version: 'not-a-version'
+            buildshouldfail: true # Try to build a non-existent version
+          - gfm: 'true'
+            testbranch: testsite
+            gfm_version: '0.28.0.gfm.11'
+            buildshouldfail: true # Try to build an obsolete version
+    steps:
+      - name: Checkout the test site
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.testbranch }}
+      - name: Ignore the action checkout
+        run: |
+          echo "self/" >> .git/info/exclude
+      - name: Checkout self
+        uses: actions/checkout@v4
+        with:
+          path: self
+
+      - name: Build (no publish)
+        id: build
+        continue-on-error: ${{ matrix.buildshouldfail }}
+        uses: ./self/pelican
+        with:
+          destination: output
+          publish: 'false'
+          tempdir: output
+          gfm: ${{ matrix.gfm }}
+          gfm_version: ${{ matrix.gfm_version }}
+        env:
+          UNIT_TEST_A: This is UNIT_TEST_A
+
+      - name: Check build failed when expected
+        if:  ${{ matrix.buildshouldfail }}
+        run: |
+          echo "${{ toJSON(steps.build) }}"
+          test '${{ steps.build.outcome }}' != 'success'
+
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output-${{ matrix.gfm }}-${{ matrix.gfm_version }}
+          path: output
+          retention-days: 1
+
+      - name: Check output
+        if: ${{ steps.build.outcome == 'success' }}
+        run: |
+          test -f output/index.html # check output was created
+          if [ '${{ matrix.gfm }}' == 'true' ]
+          then
+            # Check that GFM was used
+            grep '<p><del>Hi</del> Hello, <del>there</del> world!</p>' output/index.html
+          else
+            # Check that GFM was NOT used
+            ! grep '<p><del>Hi</del> Hello, <del>there</del> world!</p>' output/index.html
+          fi
+  
