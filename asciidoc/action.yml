@@ -49,7 +49,6 @@ runs:
       run: |
         mkdir "${{ inputs.tempdir }}"
         ln -s "${{ github.action_path }}/convert-slides.js" .
-        echo $(ls -al)
         for file in `ls`; do
           if [[ "$(echo $file | awk -F. '{print $NF}')" != "adoc" ]]; then
             continue
@@ -60,7 +59,6 @@ runs:
         done
         cp "${{ github.action_path }}/package.json" "${{ inputs.tempdir }}"
         [ -d "${{ github.workspace }}/${{ inputs.assets }}" ] && cp -r "${{ github.workspace }}/${{ inputs.assets }}" "${{ inputs.tempdir }}" || echo "No ${{ inputs.assets }} found!"
-        echo $(ls -al "${{ inputs.output }}")
       working-directory: "${{ inputs.srcdir }}"
     
     - name: Check out previous branch
@@ -91,8 +89,6 @@ runs:
         # Remove all existing output so deletions will be captured
         rm -rf "${{ inputs.output }}"
         git rm --quiet -r --ignore-unmatch --cached "${{ inputs.output }}"/*
-        # replace with generated output
-        #        ls "${{ inputs.srcdir }}/${{ inputs.tempdir }}"
         mv "${{ inputs.srcdir }}/${{ inputs.tempdir }}" "${{ inputs.output }}"
         git diff # Show changes
         git add "${{ inputs.output }}"
