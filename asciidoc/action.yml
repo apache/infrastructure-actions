@@ -59,6 +59,7 @@ runs:
           mv $(basename $file .adoc).html "${{ inputs.tempdir }}"/ 
         done
         cp "${{ github.action_path }}/package.json" "${{ inputs.tempdir }}"
+        echo $(ls -al "${{ github.workspace }}")
         [ -d "${{ github.workspace }}/${{ inputs.assets }}" ] && cp -r "${{ github.workspace }}/${{ inputs.assets }}" "${{ inputs.output }}" || echo "No ${{ inputs.assets }} found!"
       working-directory: "${{ inputs.srcdir }}"
     
