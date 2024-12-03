@@ -59,15 +59,10 @@ runs:
           mv $(basename $file .adoc).html "${{ inputs.tempdir }}"/ 
         done
         cp "${{ github.action_path }}/package.json" "${{ inputs.tempdir }}"
-        echo $(ls -al "${{ github.workspace }}")
         [ -d "${{ github.workspace }}/${{ inputs.assets }}" ] && cp -r "${{ github.workspace }}/${{ inputs.assets }}" "${{ inputs.output }}" || echo "No ${{ inputs.assets }} found!"
+        echo $(ls -al "${{ inputs.output }}")
       working-directory: "${{ inputs.srcdir }}"
     
-    - name: Copy Assets
-      shell: bash
-      run: |
-        cp -r "${{ inputs.assets }}" "${{ inputs.srcdir }}/${{ inputs.tempdir }}"
-
     - name: Check out previous branch
       if: ${{ inputs.publish == 'true' }}
       shell: bash
