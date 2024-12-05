@@ -15,9 +15,15 @@ name: Test Stash Action
 
 on:
   pull_request:
+    paths:
+      - ".github/workflows/stash-action-test.yml"
+      - "stash/**"
   push:
     branches:
       - main
+    paths:
+      - ".github/workflows/stash-action-test.yml"
+      - "stash/**"
 
 permissions:
   contents: read
