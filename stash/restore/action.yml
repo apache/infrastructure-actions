@@ -22,8 +22,8 @@ inputs:
       functionality as there is no eviction (only expiry).
 
       The action checks the current branch for a stash, if there is no match,
-      the base branch(PRs)/default branch is searched. If there is more than one
-      match for any branch the most recently updated stash takes precedent.
+      the base branch(PRs)/default branch is searched unless it's specified not to.
+      If there is more than one match for any branch the most recently updated stash takes precedent.
 
       To reduce amount of api calls (1000/h/repo limit) the name of the
       current branch will be appended to the key. Key and branchname will be normalized.
@@ -36,6 +36,12 @@ inputs:
   token:
     description: 'GITHUB_TOKEN to use to authenticate against the artifacts api.'
     default: ${{ github.token }}
+
+  only-current-branch:
+    description: >
+        If true, only the current branch will be searched for the stash.
+        If false, the base branch(PRs)/default branch branch will be searched as well.
+    default: "false"
 outputs:
   stash-hit:
     description: >
@@ -94,6 +100,7 @@ runs:
         head_name: "${{ steps.mung.outputs.stash_head }}"
         run_id: "${{ github.run_id }}"
         stash_key: "${{ inputs.key }}"
+        only_current_branch: "${{ inputs.only-current-branch }}"
 
       shell: python3 {0}
       run: |
@@ -112,9 +119,11 @@ runs:
             stash = gs.get_branch_stash(repo, head_name, env("head_ref"), env("head_repo_id"))
 
         if not stash:
-            gs.print_debug(f"Looking for stash {base_name} on base branch.")
-            stash = gs.get_branch_stash(repo, base_name, env("base_ref"), env("base_repo_id"))
-
+            if env("only_current_branch") == "true":
+                print("Skipping base branch search as only-current-branch was set to true.")
+            else:
+                gs.print_debug(f"Looking for stash {base_name} on base branch.")
+                stash = gs.get_branch_stash(repo, base_name, env("base_ref"), env("base_repo_id"))
         gs.print_debug(f"Stash: {stash}")
         if not stash:
             print(f"Stash not found for key: {env('stash_key')}")
