@@ -1,0 +1,17 @@
+name: Dummy Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dummy:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v5
+      - uses: geekyeggo/delete-artifact@v5
+      - uses: mozilla-actions/sccache-action@v0.0.3
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+      - uses: seanmiddleditch/gha-setup-ninja@v5
+      - uses: r-lib/actions@v2
+      - uses: r-lib/actions@v1
