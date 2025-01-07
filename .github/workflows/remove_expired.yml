@@ -23,7 +23,7 @@ jobs:
         with:
           persist-credentials: true
           # Use PAT so the commit triggers other actions
-          token: ${{ secrets.WORKFLOW_TOKEN }}
+          token: ${{ secrets.WORKFLOW_TOKEN || github.token }}
 
       - name: Clean actions.yml
         shell: python

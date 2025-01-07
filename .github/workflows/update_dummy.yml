@@ -26,7 +26,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: true
-          token: ${{ secrets.WORKFLOW_TOKEN }}
+          # We have to use a PAT to commit the workflow file
+          token: ${{ secrets.WORKFLOW_TOKEN || github.token }}
 
       - name: Update Workflow 
         shell: python
