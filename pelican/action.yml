@@ -60,16 +60,24 @@ runs:
       if: ${{ inputs.gfm == 'true' }}
       shell: bash
       env:
-        WORKDIR: /opt/pelican-asf # where to build GFM
         GFM_VERSION: '0.28.3.gfm.12' # ensure we agree with build-cmark.sh script
       run: |
+        if [[ -z $LIBCMARKDIR ]] # define LIBCMARKDIR if it is not already
+        then
+          # set up the GFM environment
+          export LIBCMARKDIR=/opt/pelican-asf/gfm-${GFM_VERSION} # arbitrary, but should contain version
+          mkdir -p $LIBCMARKDIR
+          echo  "LIBCMARKDIR=${LIBCMARKDIR}" >>$GITHUB_ENV # needed for the build step
+        fi
+
         # Does the GFM build already exist?
-        if [[ -n $LIBCMARKDIR && -d $LIBCMARKDIR ]]
+        if [[ -f $LIBCMARKDIR/libcmark-gfm.so ]]
         then
           echo "Already have GFM binary at $LIBCMARKDIR, skipping build"
           exit 0 # nothing more to do in this step
         fi
         {
+          echo "Creating GFM binary in ${LIBCMARKDIR}"
           # disable stdout unless debug is on
           if [ "${{ inputs.debug }}" == 'true' ]
           then
@@ -78,15 +86,8 @@ runs:
           else
             exec >/dev/null
           fi
-          # Don't pollute site checkout
-          mkdir -p $WORKDIR
-          pushd $WORKDIR
-            # build the code and define LIBCMARKDIR
-            bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION | grep "export LIBCMARKDIR" >/tmp/libcmarkdir.$$
-            source /tmp/libcmarkdir.$$
-          popd
-          # ensure LIBCMARKDIR is defined for subsequent steps
-          echo "LIBCMARKDIR=${LIBCMARKDIR}"  >> $GITHUB_ENV
+          # build the code and define LIBCMARKDIR under $WORKDIR
+          bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION $LIBCMARKDIR
         }
 
     - name: Generate website from markdown
