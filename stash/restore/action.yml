@@ -84,7 +84,7 @@ runs:
         m.output_munged_name(output = 'stash_head')
         m.output_munged_name(ref = 'base_ref', output = 'stash_base')
         with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-          f.write(f'stash_path={os.path.abspath(os.environ["stash_path"])}' + '\n')
+          f.write(f'stash_path={os.path.abspath(os.path.expanduser(os.environ["stash_path"]))}' + '\n')
 
     - name: Check for stash artifact
       id: check-stash
