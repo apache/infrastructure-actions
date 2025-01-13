@@ -28,7 +28,6 @@ inputs:
       To reduce amount of api calls (1000/h/repo limit) the name of the
       current branch will be appended to the key. Key and branchname will be normalized.
     required: true
-
   path:
     description: 'The directory the stash will be restored in.'
     default: ${{ github.workspace }}
@@ -36,6 +35,10 @@ inputs:
   token:
     description: 'GITHUB_TOKEN to use to authenticate against the artifacts api.'
     default: ${{ github.token }}
+
+  clean:
+    description: 'Whether the stash_directory should be removed before downloading the stash.'
+    default: 'false'
 
   only-current-branch:
     description: >
@@ -148,6 +151,12 @@ runs:
       run: |
         # Catch errors in the download with || to avoid the whole workflow failing
         # when the download times out
+        if [[ "${{ inputs.clean }}" == "true" ]]; then
+            if [[ -d "$STASH_DIR" ]]; then
+                echo "Removing existing stash directory: $STASH_DIR"
+                rm -rf "$STASH_DIR"
+            fi
+        fi
         gh run download "$STASH_RUN_ID" \
                         --name "$STASH_NAME" \
                         --dir "$STASH_DIR" \
