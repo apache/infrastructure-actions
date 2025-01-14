@@ -1,12 +1,12 @@
-pelican #
-markdown #
-pelican-sitemap # pelican plugin offering
-soupsieve # needed by BeautifulSoup4
-BeautifulSoup4 # needed by several plugins
-ezt # needed by several plugins
-PyYAML # needed by asfdata.py
-certifi # needed by requests
-idna # needed by requests
-charset-normalizer # needed by requests
-urllib3 # needed by requests
-requests # needed by asfdata.py
+pelican==4.5.0
+markdown==3.1.1
+pelican-sitemap==1.1.0
+soupsieve==2.0
+beautifulsoup4==4.9.3
+ezt==1.1
+PyYAML==5.3.1
+certifi==2020.12.5
+idna==2.10
+charset-normalizer==2.0.4
+urllib3==2.1.0
+requests==2.31.0
