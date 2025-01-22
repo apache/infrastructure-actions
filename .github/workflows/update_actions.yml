@@ -1,0 +1,48 @@
+name: Handle Dependabot update 
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/dummy.yml"
+  pull_request:
+    paths:
+      - ".github/workflows/update_actions.yml"
+      - ".github/workflows/dummy.yml"
+
+permissions:
+  contents: read
+
+# We want workflows on main to run in order to avoid losing data through race conditions
+concurrency: "${{ github.ref }}-${{ github.workflow }}"
+
+jobs:
+  update_actions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Update actions.yml
+        shell: python
+        run: |
+          import sys
+          sys.path.append(".")
+
+          import gateway as g
+          g.update_actions(".github/workflows/dummy.yml", "actions.yml")
+          g.update_patterns("approved_patterns.yml", "actions.yml")
+
+      - name: Commit and push changes
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git add -f actions.yml approved_patterns.yml
+          git commit -m "Update Actions" || echo "No changes"
+          git push origin
