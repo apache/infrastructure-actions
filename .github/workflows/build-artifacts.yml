@@ -24,7 +24,8 @@ jobs:
     strategy:
       # Allow for multiple versions to be maintained
       matrix:
-        gfm_version: ['0.28.3.gfm.12']
+        gfm_version:
+        - '0.28.3.gfm.12'
     steps:
     - uses: actions/checkout@v4
       with:
