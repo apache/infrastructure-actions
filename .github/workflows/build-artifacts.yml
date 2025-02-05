@@ -60,5 +60,5 @@ jobs:
       if: ${{ steps.build_gfm.outputs.created }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.GFM_ARTIFACT_KEY}}
+        name: ${{ env.GFM_ARTIFACT_KEY }}
         path: ${{ steps.build_gfm.outputs.created }}
