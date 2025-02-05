@@ -12,9 +12,6 @@ permissions:
 
 jobs:
   pelican-test:
-    # do not run the pelican test if the PR was triggered / created by dependabot as the workflow
-    # will not be granted write permissions to contents to successfully run the job
-    if: github.actor != 'dependabot[bot]'
     env: # source and target branches
       SOURCE: testsite
       TARGET: testsite-${{ github.ref_name }} # each branch has own test output
