@@ -102,7 +102,7 @@ def get_index(site_index, scope):
 
 # get site menu
 # def get_menu(site_index, menus):
-#     currrent_menu = None
+#     current_menu = None
 #     site_menu = ''
 #     if menus:
 #         for f in menus:
