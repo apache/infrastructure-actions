@@ -18,6 +18,9 @@ on:
       - 'pelican/build-cmark.sh'
   workflow_dispatch:
 
+permissions:
+  content: read
+
 jobs:
   build-artifact:
     runs-on: ubuntu-latest
