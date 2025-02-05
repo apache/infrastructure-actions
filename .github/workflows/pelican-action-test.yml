@@ -6,6 +6,10 @@ on:
       - '.github/workflows/pelican-action-test.yml'
     # N.B. Cannot easily test pull_request: because the source may not have rights to create/update the test-site
   workflow_dispatch:
+
+permissions:
+  contents: write
+
 jobs:
   pelican-test:
     # do not run the pelican test if the PR was triggered / created by dependabot as the workflow
