@@ -1,7 +1,7 @@
 # Plugin Architecture
 
 The plugins used operate at various points in a pelican build.
-Pelican uses signals at various points. These are documented [here](https://docs.getpelican.com/en/latest/plugins.html#list-of-signals).
+Pelican uses [signals](https://docs.getpelican.com/en/latest/plugins.html#list-of-signals) at various points.
 At a high level consider the following sequence of events:
 
 1. Pelican Settings. Settings for a Pelican Build are in your Pelican Configuration
