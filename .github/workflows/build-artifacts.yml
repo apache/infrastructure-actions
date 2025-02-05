@@ -56,7 +56,7 @@ jobs:
 
         # Tell the save step what to save
         echo "created=${LIBCMARKDIR}" | tee -a $GITHUB_OUTPUT
-    - name: Save the GFM build ${{ matrix.gfm_version}}
+    - name: Save the GFM build ${{ matrix.gfm_version }}
       if: ${{ steps.build_gfm.outputs.created }}
       uses: actions/upload-artifact@v4
       with:
