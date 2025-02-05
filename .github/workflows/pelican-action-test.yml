@@ -10,7 +10,7 @@ jobs:
   pelican-test:
     env: # source and target branches
       SOURCE: testsite
-      TARGET: testsite-${{ github.ref_name }} # each branch has own test output
+      TARGET: testsite-${{ github.ref_name }} # each branch has its own test output
     runs-on: ubuntu-latest
     concurrency: # target must not be updated by two jobs at once
       group: testsite-${{ github.ref_name }} # must agree with TARGET
