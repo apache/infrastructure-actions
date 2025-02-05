@@ -6,6 +6,8 @@ on:
       - 'pelican/build-cmark.sh'
       - '.github/workflows/pelican-version-test.yml'
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   version-test:
     runs-on: ubuntu-latest
