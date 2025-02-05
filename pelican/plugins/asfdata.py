@@ -113,7 +113,7 @@ def where_parts(reference, part):
         del reference[refs]
 
 
-# perform alphabetation. HTTP Server is special and is put before 'A'
+# perform alphabetization. HTTP Server is special and is put before 'A'
 def alpha_part(reference, part):
     for refs in reference:
         name = reference[refs][part]
