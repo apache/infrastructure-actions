@@ -90,3 +90,4 @@ jobs:
             # Check that GFM was NOT used
             ! grep '<p><del>Hi</del> Hello, <del>there</del> world!</p>' output/index.html
           fi
+  
