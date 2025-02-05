@@ -38,7 +38,7 @@ jobs:
         echo "GFM_ARTIFACT_KEY=${GFM_ARTIFACT_KEY}" >> $GITHUB_ENV
 
         # Check if artifact is present (list all)
-        curl -sS https://api.github.com/repos/sebbASF/infra-actions/actions/artifacts?name=${GFM_ARTIFACT_KEY} >/tmp/artifact.json
+        curl -sS https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts?name=${GFM_ARTIFACT_KEY} >/tmp/artifact.json
         # when does last one expire?
         jq </tmp/artifact.json '[.artifacts[]|select(.expired==false)|.expires_at]|max' >/tmp/max.txt
         # is that more than 10 days away? (86400*10 seconds)
