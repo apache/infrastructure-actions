@@ -7,10 +7,11 @@
 * publish 	Publish to destination branch (optional) 	default: true
 * gfm 	 	Uses GitHub Flavored Markdown (optional) 	default: true
 * output 	 	Pelican generated output directory (optional) 	default: output
-* tempdir 	Temporary Directory name (optional) 	 	default: ../output
+* tempdir 	Temporary Directory name (optional) 	 	default: ../output.tmp
 * debug 	 	Pelican Debug mode (optional) 	 		default: false
 * version 	Pelican Version (default 4.5.4) (optional) 	default: 4.5.4
-* requirements	Python Requirements file (optional) 	default: requirements.txt
+* requirements	Python Requirements file (optional) 	default: None
+* fatal  Value for --fatal option [errors|warnings] - sets exit code to error (default: errors)
 
 ## Example Workflow Usage:
 

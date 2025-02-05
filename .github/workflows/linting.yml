@@ -1,4 +1,5 @@
 name: Linting and MyPy (Pelican)
+
 on:
   push:
     paths:
@@ -8,31 +9,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        persist-credentials: false
-    - name: Install dependencies
-      run: |
-        pip list
-        cd pelican
-        pip install -r requirements.txt --no-deps # explicit only
-        pip install mypy
-        pip install types-PyYAML
-        pip install types-requests
-        pip install types-beautifulsoup4
-        pip install types-markdown
-        pip install pylint
-        pip list
-    - name: Type testing with mypy
-      run: |
-        cd pelican
-        mypy --cache-dir /tmp/ --install-types
-        mypy --cache-dir /tmp/ --ignore-missing-imports .
-    - name: Testing with pylint
-      if: always()
-      run: |
-        cd pelican
-        pylint *.py */*.py */*/*.py
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip list
+          cd pelican
+          pip install -r requirements.txt --no-deps  # Explicit dependency-only installation
+          pip install mypy types-PyYAML types-requests types-beautifulsoup4 types-markdown pylint
+          pip list
+
+      - name: Type testing with mypy
+        run: |
+          cd pelican
+          mypy --cache-dir /tmp/ --install-types --non-interactive
+          mypy --cache-dir /tmp/ --ignore-missing-imports .
+
+      - name: Code linting with pylint
+        run: |
+          cd pelican
+          pylint **/*.py

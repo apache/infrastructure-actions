@@ -45,7 +45,7 @@ runs:
       run: |
         (
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
-          pip3 install pelican==${{ inputs.version }} markdown bs4 ezt requests
+          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install pelican==${{ inputs.version }} markdown bs4 ezt requests markupsafe==2.0.1
         )
         python3 -V
         echo "Pelican version:"
@@ -96,7 +96,7 @@ runs:
         if [ -n "${{ inputs.requirements }}" ]
         then
           echo "Installing python requirements from ${{ inputs.requirements }}"
-          pip3 install -r ${{ inputs.requirements }}
+          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install -r ${{ inputs.requirements }}
         fi
         if [ "${{ inputs.debug }}" == 'true' ]
         then
