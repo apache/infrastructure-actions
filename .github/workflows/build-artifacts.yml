@@ -32,9 +32,11 @@ jobs:
         persist-credentials: false
     - name: Fetch and build version ${{ matrix.gfm_version }}
       id: build_gfm
+      env:
+        gfm_version: ${{ matrix.gfm_version }}
       run: |
         # N.B. This must agree with the definition in pelican/action.yml
-        export GFM_ARTIFACT_KEY=gfm-lib-${{ matrix.gfm_version }}
+        export GFM_ARTIFACT_KEY=gfm-lib-${gfm_version}
         echo "GFM_ARTIFACT_KEY=${GFM_ARTIFACT_KEY}" >> $GITHUB_ENV
 
         # Check if artifact is present (list all)
@@ -45,15 +47,15 @@ jobs:
         OUT=$(jq </tmp/max.txt 'select(.>(now+864000|strftime("%FT%TZ")))')
         if [[ -n $OUT ]]
         then
-          echo "Found a valid artifact for ${{ matrix.gfm_version }} (expires $OUT)"
+          echo "Found a valid artifact for ${gfm_version} (expires $OUT)"
           exit 0 # No more to do
         fi
 
-        echo "Could not find a valid artifact for ${{ matrix.gfm_version }}; building another"
+        echo "Could not find a valid artifact for ${gfm_version}; building another"
         # build GFM and set up LIBCMARKDIR
-        export LIBCMARKDIR=/tmp/gfm-${{ matrix.gfm_version }}
+        export LIBCMARKDIR=/tmp/gfm-${gfm_version}
         mkdir -p ${LIBCMARKDIR}
-        bash $GITHUB_WORKSPACE/pelican/build-cmark.sh ${{ matrix.gfm_version }} ${LIBCMARKDIR}
+        bash $GITHUB_WORKSPACE/pelican/build-cmark.sh ${gfm_version} ${LIBCMARKDIR}
 
         # Tell the save step what to save
         echo "created=${LIBCMARKDIR}" | tee -a $GITHUB_OUTPUT
