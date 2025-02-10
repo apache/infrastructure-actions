@@ -47,7 +47,7 @@ runs:
     - name: 
       shell: bash
       run: |
-        mkdir "${{ inputs.tempdir }}"
+        mkdir "${{ inputs.output }}"
         ln -s "${{ github.action_path }}/convert-slides.js" .
         for file in `ls`; do
           if [[ "$(echo $file | awk -F. '{print $NF}')" != "adoc" ]]; then
@@ -55,10 +55,10 @@ runs:
           fi
           echo $file
           node convert-slides.js $file
-          mv $(basename $file .adoc).html "${{ inputs.tempdir }}"/ 
+          mv $(basename $file .adoc).html "${{ inputs.output }}"/ 
         done
-        cp "${{ github.action_path }}/package.json" "${{ inputs.tempdir }}"
-        [ -d "${{ github.workspace }}/${{ inputs.assets }}" ] && cp -r "${{ github.workspace }}/${{ inputs.assets }}" "${{ inputs.tempdir }}" || echo "No ${{ inputs.assets }} found!"
+        cp "${{ github.action_path }}/package.json" "${{ inputs.output }}"
+        [ -d "${{ github.workspace }}/${{ inputs.assets }}" ] && cp -r "${{ github.workspace }}/${{ inputs.assets }}" "${{ inputs.output }}" || echo "No ${{ inputs.assets }} found!"
       working-directory: "${{ inputs.srcdir }}"
     
 #    - name: Check out previous branch
