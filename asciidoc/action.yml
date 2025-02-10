@@ -16,19 +16,20 @@ inputs:
   publish:
     description: "Publish the site to the destination branch. If false, the site is built but not published."
     required: false
-    default: "true"
+    type: boolean
+    default: false
   output:
     description: "AsciiDoc output directory"
     required: false
-    default: 'output'
+    default: "output"
   tempdir:
     description: "Temporary Directory name"
     required: false
-    default: 'output.tmp'
+    default: "output.tmp"
   debug:
     description: "AsciiDoc Debug mode"
     required: false
-    default: 'false'
+    default: "false"
 runs:
   using: "composite"
   steps:
@@ -41,7 +42,6 @@ runs:
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
           npm install
         )
-        #      working-directory: "${{ inputs.srcdir }}"
       working-directory: "${{ github.action_path }}"
     
     - name: 
