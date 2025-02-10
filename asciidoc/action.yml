@@ -101,8 +101,9 @@ runs:
 #          true # ensure step is successful
 #        fi
 #
-    - run: cd "${{ inputs.output }}" && npm install
+    - run: npm install
       shell: bash
+      working-directory: "${{ inputs.output }}"
     - name: Setup Pages
       uses: actions/configure-pages@v5
     - name: Upload artifact
