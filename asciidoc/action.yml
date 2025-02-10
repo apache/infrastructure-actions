@@ -1,7 +1,4 @@
 name: Build Presentations with AsciiDoc
-permissions:
-  contents: read
-  pages: write
 description: "Generate a Slidedeck from AsciiDoc Markdown"    
 inputs:
   srcdir:
