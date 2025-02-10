@@ -102,6 +102,7 @@ runs:
 #        fi
 #
     - run: cd "${{ inputs.output }}" && npm install
+      shell: bash
     - name: Setup Pages
       uses: actions/configure-pages@v5
     - name: Upload artifact
