@@ -161,3 +161,5 @@
 - crate-ci/typos@*
 - jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
 - easimon/maximize-build-space@*
+- VirtusLab/scala-cli-setup@ebb311c7c5c3a4e7b93d16ef6144e71cc737e42c
+- snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a
