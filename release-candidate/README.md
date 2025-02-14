@@ -11,7 +11,7 @@ is not intended to be used by all projects.
   and INFRA has set secrets for the repository, including a GPG signing key,
   SVN username/password, and nexus username/password.
 * The `runs-on` workflow setting should be Linux based (e.g. `ubuntu-latest`)
-* The repository must be checked out using `github/checkout` action prior to
+* The repository must be checked out using `actions/checkout` action prior to
   triggering this action
 * The repository must have a `VERSION` file containing the current version of the
   project (e.g. `1.0.0`)
@@ -26,7 +26,7 @@ Below are the operations this action does to setup the environment for a
 release candidate workflow:
 
 * Checkout the project's `dist/dev/` directory and create a directory for
-  release artifacts in `https://dist.apache.org/repos/dist/dev/<tlp_dir>/<projet_dir>/<version-rcX>`.
+  release artifacts in `https://dist.apache.org/repos/dist/dev/<tlp_dir>/<project_dir>/<version>-rcX`.
   The `artifact_dir` output is set to this directory. Note that `<project_dir>`
   is optional if the artifact directory should be in the root of the
   `<tlp_dir>`
