@@ -163,4 +163,5 @@
 - easimon/maximize-build-space@*
 - VirtusLab/scala-cli-setup@ef3764b372549ee60cce795f98da0df46e2567ff
 - VirtusLab/scala-cli-setup@2203916b75d15293db29f4bcbd7ff082a27fe6ef
+- VirtusLab/scala-cli-setup@cafdb148305f582fe7017dbe02bbec29ce217b74
 - snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a
