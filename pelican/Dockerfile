@@ -50,7 +50,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-deps
 
 # Could perhaps be added to requirements.txt but that would affect other uses
-RUN pip install 'MarkupSafe<2.1.0' # needed for Pelican 4.5.4
+RUN pip install 'MarkupSafe==2.0.1' # needed for Pelican 4.5.4
 
 # Now add the local code; do this last to avoid unnecessary rebuilds
 COPY plugin_paths.py .
