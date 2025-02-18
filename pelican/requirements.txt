@@ -5,7 +5,7 @@ soupsieve==2.0
 beautifulsoup4==4.9.3
 ezt==1.1
 PyYAML==5.3.1
-certifi==2020.12.5
+certifi==2024.7.4
 idna==2.10
 charset-normalizer==2.0.4
 urllib3==2.1.0
