@@ -122,11 +122,3 @@ existing/action:
 
 The infrastructure team will prioritize these removal requests and may take additional steps to notify affected projects if necessary.
 
-### Expiration and Maintenance
-
-All approved actions have an expiration date to ensure regular security reviews. Actions marked with `keep: true` will not be automatically removed but will still undergo periodic reviews.
-
-The infrastructure team maintains automation that:
-- Notifies projects of upcoming expirations
-- Removes expired actions after the grace period
-- Updates the allow list based on security advisories
