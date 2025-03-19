@@ -33,7 +33,7 @@ jobs:
         shell: python
         run: |
           import sys
-          sys.path.append(".")
+          sys.path.append("./gateway/")
 
           import gateway as g
           g.update_workflow(".github/workflows/dummy.yml", "actions.yml")
