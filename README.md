@@ -1,19 +1,43 @@
+# ASF GitHub Actions Repository
+
 This repository hosts GitHub Actions developed by the ASF community and approved for any ASF top level project to use. It also manages the organization wide allow list of Github Actions via 'Configuration as Code'.
 
-### Submitting an Action
-  - Create a branch of the repository
-  - In the branch, create a subdirectory for your proposed GHA (at the top level, select 'add file' and provide `/NameOfAction`)
-  - In the subdirectory, add all the required files for your proposed GHA. Make sure to add a README file that says what the Action does, and any particular configurations or considerations a user would find helpful.
-  - Create a pull request to merge the branch you created into the trunk of the repository.
+- [Submitting an Action](#submitting-an-action)
+- [Available GitHub Actions](#available-github-actions)
+- [Organization-wide GitHub Actions Allow List](#management-of-organization-wide-github-actions-allow-list)
+  - [Adding a New Action](#adding-a-new-action-to-the-allow-list)
+  - [Adding a New Version](#adding-a-new-version-to-the-allow-list)
+  - [Manual Version Addition](#manual-addition-of-specific-versions)
+  - [Removing a Version](#removing-a-version-manually)
+  - [Expiration and Maintenance](#expiration-and-maintenance)
 
-Infra will review each proposed Action for usefulness to the community and an estimate of difficulty of maintenance. Infra may raise questions in pull request comments.
+## Submitting an Action
 
-Once everything seems in order, Infra will approve the pull request and add the new Action to the list of available Actions.
+To contribute a GitHub Action to this repository:
 
-### GH Actions available
+1. **Fork** this repository
+2. **Add your action code**:
+   - Create a subdirectory for your proposed GHA at the root level (e.g., `/MyNewAction`)
+   - Add all required files for your action in this subdirectory
+   - Include a comprehensive README.md that explains:
+     - What the action does
+     - Required inputs and available outputs
+     - Example usage configurations
+     - Any special considerations or limitations
+3. **Create a pull request** to merge your branch into the main branch
 
-  - [ASF Infrastructure Pelican Action](/pelican/README.md)
+The Infrastructure team will review each proposed Action based on:
+- Overall usefulness to the ASF community
+- Maintenance complexity
+- Security considerations
+- Code quality
 
+Once approved, the Infrastructure team will merge the pull request and add the new Action to the list of available Actions for all ASF projects.
+
+## Available GitHub Actions
+
+  - [ASF Infrastructure Pelican Action](/pelican/README.md): Generate and publish project websites with GitHub Actions
+  - [Stash Action](/stash/README.md): Manage large build caches
 
 ## Management of Organization-wide GitHub Actions Allow List
 
@@ -83,8 +107,6 @@ existing/action:
 
 ### Removing a version manually
 
-If a version or entire action has to be removed immediately, e.g. due to a CVE, remove the relevant entry from `actions.yaml### Removing a version manually.
-
 > [!IMPORTANT]
 > If a version or entire action needs to be removed immediately due to a security vulnerability:
 
@@ -108,4 +130,3 @@ The infrastructure team maintains automation that:
 - Notifies projects of upcoming expirations
 - Removes expired actions after the grace period
 - Updates the allow list based on security advisories
-
