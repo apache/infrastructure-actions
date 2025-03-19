@@ -45,7 +45,8 @@ repo/owner:
 
 5. **Wait for review** by the infrastructure team
 
-> **Important**: Always pin actions to exact commit SHAs, never use tags or branch references.
+> [!NOTE]
+> Always pin actions to exact commit SHAs, never use tags or branch references.
 
 The infrastructure team will review your request and either approve, request changes, or provide feedback on alternatives.
 
@@ -77,13 +78,15 @@ existing/action:
    - Risk assessment for using an older version
    - Expected timeline for migration to newer versions (if applicable)
 
-> **Note**: Older versions may contain security vulnerabilities or performance issues. Always evaluate if using the latest version is possible before requesting older versions.
+> [!WARNING]
+> Older versions may contain security vulnerabilities or performance issues. Always evaluate if using the latest version is possible before requesting older versions.
 
 ### Removing a version manually
 
 If a version or entire action has to be removed immediately, e.g. due to a CVE, remove the relevant entry from `actions.yaml### Removing a version manually.
 
-> **Important**: If a version or entire action needs to be removed immediately due to a security vulnerability:
+> [!IMPORTANT]
+> If a version or entire action needs to be removed immediately due to a security vulnerability:
 
 1. **Fork** this repository
 2. **Remove** the relevant entry from `actions.yaml`
