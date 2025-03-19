@@ -9,7 +9,6 @@ This repository hosts GitHub Actions developed by the ASF community and approved
   - [Adding a New Version](#adding-a-new-version-to-the-allow-list)
   - [Manual Version Addition](#manual-addition-of-specific-versions)
   - [Removing a Version](#removing-a-version-manually)
-  - [Expiration and Maintenance](#expiration-and-maintenance)
 
 ## Submitting an Action
 
