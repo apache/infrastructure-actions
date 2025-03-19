@@ -3,6 +3,9 @@ name: Dummy Workflow
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   dummy:
     if: false
