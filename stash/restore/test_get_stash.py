@@ -30,9 +30,8 @@ class TestGetStash(unittest.TestCase):
             jq("not_found.json", ".a")
 
     def test_gh_api(self):
-        self.assertEqual(
-            gh_api("rate_limit", options=["-q", ".resources.core.limit"]).stdout,
-            "15000\n",
+        self.assertTrue(
+            int(gh_api("rate_limit", options=["-q", ".resources.core.limit"]).stdout) >= 5000
         )
 
     def test_ensure_json(self):

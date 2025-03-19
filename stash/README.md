@@ -72,8 +72,11 @@ Each action (restore and save) has specific inputs tailored to its functionality
 they are specifically modeled after `actions/cache` and `actions/upload-artifact` to provide a drop in replacement.
 Please refer to the action metadata (`action.yml`) for a comprehensive list of inputs, including descriptions and default values.
 
-Additionally the `restore` action has an output `stash-hit` which is set to `true` if the cache was restored successfully,
+The `restore` action has an optional "overwrite" input which defaults to `false` - when set to "true", it
+will delete the existing contents of the target directory before restoring the stash.
+
+Additionally, the `restore` action has an output `stash-hit` which is set to `true` if the cache was restored successfully,
 `false` if no cache was restored and '' if the action failed (an error will be thrown unless `continue-on-error` is set).
 A technical limitation of composite actions like `Stash` is that all outputs are **strings**.
-Therefore an explicit comparison has to be used when using the output:
+Therefore, an explicit comparison has to be used when using the output:
 `if: ${{ steps.restore-stash.outputs.stash-hit == 'true' }}`
