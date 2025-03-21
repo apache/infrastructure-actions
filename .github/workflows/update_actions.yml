@@ -12,7 +12,7 @@ on:
       - ".github/workflows/dummy.yml"
 
 permissions:
-  contents: write
+  contents: read
 
 # We want workflows on main to run in order to avoid losing data through race conditions
 concurrency: "${{ github.ref }}-${{ github.workflow }}"
