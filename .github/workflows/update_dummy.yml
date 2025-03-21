@@ -13,7 +13,7 @@ on:
 
 permissions:
   contents: write
-  workflows: write
+  actions: write
 
 # We want workflows on main to run in order to avoid losing data through race conditions
 concurrency: "${{ github.ref }}-${{ github.workflow }}"
