@@ -3,7 +3,7 @@
     expires_at: 2025-06-13
     keep: true
   7c9f4da4a32930337a02d32ded1a7e7779841024:
-    expires_at: 2100-01-01
+    expires_at: 2025-06-13
     keep: false
 AdoptOpenJDK/install-jdk:
   '*':
