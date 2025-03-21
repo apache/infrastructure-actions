@@ -10,7 +10,7 @@ AdoptOpenJDK/install-jdk:
     expires_at: 2025-06-13
     keep: true
   2f15d3f82051aa50984186fc1184467d0d9f87d0:
-    expires_at: 2100-01-01
+    expires_at: 2025-06-13
     keep: false
 Ana06/get-changed-files:
   '*':
