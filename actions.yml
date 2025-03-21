@@ -17,7 +17,7 @@ Ana06/get-changed-files:
     expires_at: 2025-06-13
     keep: true
   25f79e676e7ea1868813e21465014798211fad8c:
-    expires_at: 2100-01-01
+    expires_at: 2025-06-13
     keep: false
 BobAnkh/auto-generate-changelog:
   '*':
