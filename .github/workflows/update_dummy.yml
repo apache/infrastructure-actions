@@ -12,7 +12,8 @@ on:
       - "actions.yml"
 
 permissions:
-  contents: workflows
+  contents: write
+  workflows: write
 
 # We want workflows on main to run in order to avoid losing data through race conditions
 concurrency: "${{ github.ref }}-${{ github.workflow }}"
