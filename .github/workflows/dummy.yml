@@ -25,7 +25,7 @@ jobs:
       - uses: actions-cool/check-user-permission@7b90a27f92f3961b368376107661682c441f6103
       - uses: actions-cool/issues-helper@a610082f8ac0cf03e357eb8dd0d5e2ba075e017e
       - uses: actions-cool/maintain-one-comment@4b2dbf086015f892dcb5e8c1106f5fccd6c1476b
-      - uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34
+      - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b
       - uses: al-cheb/configure-pagefile-action@a3b6ebd6b634da88790d9c58d4b37a7f4a7b8708
       - uses: amannn/action-semantic-pull-request@0723387faaf9b38adef4775cd42cfd5155ed6017
       - uses: amondnet/vercel-action@225d234cfe5340ca1f9a6cd158338126b5b6845f
