@@ -83,7 +83,7 @@ jobs:
       - uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992
       - uses: helm/kind-action@0025e74a8c7512023d06dc019c617aa3cf561fde
       - uses: ilammy/msvc-dev-cmd@c1ed231f339aec74961130db0459823a08f1b215
-      - uses: ilammy/setup-nasm@13cbeb366c45c4379d3478cdcbadd8295feb5028
+      - uses: ilammy/setup-nasm@72793074d3c8cdda771dba85f6deafe00623038b
       - uses: jidicula/clang-format-action@4bb67b12614177e8c869e0e66b47aaa79b3b253b
       - uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
       - uses: jrouly/scalafmt-native-action@4babdb31ad32d30fa1e7857264da984f30893f48
