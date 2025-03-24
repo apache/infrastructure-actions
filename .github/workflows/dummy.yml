@@ -79,7 +79,7 @@ jobs:
       - uses: gradle/wrapper-validation-action@f9c9c575b8b21b6485636a91ffecd10e558c62f6
       - uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
-      - uses: helm/chart-releaser-action@fc23f249f75decd5edf254c6b4401532cef093c3
+      - uses: helm/chart-releaser-action@a3454e46a6f5ac4811069a381e646961dda2e1bf
       - uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992
       - uses: helm/kind-action@0025e74a8c7512023d06dc019c617aa3cf561fde
       - uses: ilammy/msvc-dev-cmd@c1ed231f339aec74961130db0459823a08f1b215
