@@ -49,7 +49,7 @@ jobs:
       - uses: cicirello/javadoc-cleanup@3a003a6c9039fa9ec01186dc1aad43f357085347
       - uses: codecov/codecov-action@cb6530fbecd68d5f1ee7a3dcd113450ea8d5d6d4
       - uses: codelytv/pr-size-labeler@f2aafc4d8735009c6de18acefe15eecbfbfae56f
-      - uses: codspeedhq/action@294e5a7b35f2b70e40e2a0b8575ff47cb23d9c33
+      - uses: codspeedhq/action@513a19673a831f139e8717bf45ead67e47f00044
       - uses: commit-check/commit-check-action@8d507e12899a9feb405c3ed546252ff9508724e0
       - uses: conda-incubator/setup-miniconda@505e6394dae86d6a5c7fbb6e3fb8938e3e863830
       - uses: container-tools/kind-action@0ad70e2299366b0e1552c7240f4e4567148f723e
