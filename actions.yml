@@ -294,7 +294,7 @@ gradle/wrapper-validation-action:
     expires_at: 2025-08-01
     keep: true
   v3.5.0:
-    expires_at: 2025-08-01
+    expires_at: 2025-01-01
 gsactions/commit-message-checker:
   '*':
     expires_at: 2025-08-01
