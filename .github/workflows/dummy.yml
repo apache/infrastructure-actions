@@ -184,7 +184,7 @@ jobs:
       - uses: pypa/cibuildwheel@0f04e96e2f58e63b8b03886c1db16a507f2199bf
       - uses: pypa/cibuildwheel@v2.12.0
       - uses: pytooling/actions@679ec24c80c6736efa7099a11c19086263a6beba
-      - uses: quarto-dev/quarto-actions@8776aaf3ebefdda84c7654715823a205d047802a
+      - uses: quarto-dev/quarto-actions@9e48da27e184aa238fcb49f5db75469626d43adb
       - uses: r-lib/actions@929c772977a3a13c8733b363bf5a2f685c25dd91
       - uses: reactivecircus/android-emulator-runner@31f424d05a8bea0229d0feab746260472ef8e34d
       - uses: readthedocs/actions@cc0920454cf03ca8a3fbd3cbaa2ce2e509e70636
