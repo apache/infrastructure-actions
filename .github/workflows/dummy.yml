@@ -135,7 +135,7 @@ jobs:
       - uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
       - uses: ludeeus/action-shellcheck@1.1.0
       - uses: ludeeus/action-shellcheck@94e0aab03ca135d11a35e5bfc14e6746dc56e7e9
-      - uses: manusa/actions-setup-minikube@3856c6fa039819f1c8e7e248b1fc5a8564e354c9
+      - uses: manusa/actions-setup-minikube@5d9440a1b535e8b4f541eaac559681a9022df29d
       - uses: marcospereira/action-surefire-report@a915ba6359417544044fb06093a6c75097fe2a2b
       - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd
       - uses: medyagh/setup-minikube@697f2b7aaed5f70bf2a94ee21a4ec3dde7b12f92
