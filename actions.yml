@@ -1,31 +1,15 @@
 1Password/load-secrets-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  7c9f4da4a32930337a02d32ded1a7e7779841024:
-    expires_at: 2025-06-13
-    keep: false
 AdoptOpenJDK/install-jdk:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  2f15d3f82051aa50984186fc1184467d0d9f87d0:
-    expires_at: 2025-06-13
-    keep: false
-Ana06/get-changed-files:
-  '*':
-    expires_at: 2025-06-13
-    keep: true
-  25f79e676e7ea1868813e21465014798211fad8c:
-    expires_at: 2025-06-13
-    keep: false
 BobAnkh/auto-generate-changelog:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  b8e208489ce4f71adc3b6467020dd276f1445e8a:
-    expires_at: 2100-01-01
-    keep: false
 DavidAnson/markdownlint-cli2-action:
   b4c9feab76d8025d1e83c653fa3990936df0e6c8:
     expires_at: 2050-01-01
@@ -33,11 +17,8 @@ DavidAnson/markdownlint-cli2-action:
     expires_at: 2025-08-01
 EnricoMi/publish-unit-test-result-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  283dea176069279a9076e77b548668a8e4f0c31b:
-    expires_at: 2025-06-13
-    keep: false
 JamesIves/github-pages-deploy-action:
   881db5376404c5c8d621010bcbec0310b58d5e29:
     expires_at: 2050-01-01
@@ -56,44 +37,29 @@ Madrapps/jacoco-report:
     expires_at: 2050-01-01
 PyO3/maturin-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  fdd104694b233054d6e985e29b3af9f126af7ac6:
-    expires_at: 2100-01-01
-    keep: false
 TobKed/label-when-approved-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  0058d0094da27e116fad6e0da516ebe1107f26de:
-    expires_at: 2100-01-01
-    keep: false
 VirtusLab/scala-cli-setup:
-  2203916b75d15293db29f4bcbd7ff082a27fe6ef:
+  ef3764b372549ee60cce795f98da0df46e2567ff:
     expires_at: 2050-01-01
 actions-cool/check-user-permission:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  7b90a27f92f3961b368376107661682c441f6103:
-    expires_at: 2100-01-01
-    keep: false
 actions-cool/issues-helper:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  a610082f8ac0cf03e357eb8dd0d5e2ba075e017e:
-    expires_at: 2100-01-01
-    keep: false
 actions-cool/maintain-one-comment:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  4b2dbf086015f892dcb5e8c1106f5fccd6c1476b:
-    expires_at: 2100-01-01
-    keep: false
 actions/setup-go:
-  f111f3307d8850f501ac008e886eec1fd1932a34:
+  0aaccfd150d50ccaeb58ebd88d36e91967a5f35b:
     expires_at: 2050-01-01
   v5:
     expires_at: 2025-08-01
@@ -104,18 +70,12 @@ addnab/docker-run-action:
     expires_at: 2025-08-01
 al-cheb/configure-pagefile-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  a3b6ebd6b634da88790d9c58d4b37a7f4a7b8708:
-    expires_at: 2100-01-01
-    keep: false
 amannn/action-semantic-pull-request:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  0723387faaf9b38adef4775cd42cfd5155ed6017:
-    expires_at: 2100-01-01
-    keep: false
 amondnet/vercel-action:
   225d234cfe5340ca1f9a6cd158338126b5b6845f:
     expires_at: 2050-01-01
@@ -123,18 +83,12 @@ amondnet/vercel-action:
     expires_at: 2025-08-01
 arduino/setup-protoc:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  f4d5893b897028ff5739576ea0409746887fa536:
-    expires_at: 2100-01-01
-    keep: false
 awalsh128/cache-apt-pkgs-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  5902b33ae29014e6ca012c5d8025d4346556bd40:
-    expires_at: 2100-01-01
-    keep: false
 aws-actions/configure-aws-credentials:
   6a64f289c4a4b67a1e2c44cc4bd9d6f7bc59b156:
     expires_at: 2050-01-01
@@ -157,39 +111,24 @@ bnjbvr/cargo-machete:
     expires_at: 2025-08-01
 browser-actions/setup-firefox:
   5b19b18df8c293aae9e77f0a936e9fdc358f543a:
-    expires_at: 2025-06-13
+    expires_at: 2050-01-01
   v1:
-    expires_at: 2025-06-13
-  1b45bf54025f6152e6e695a9a8f18d0fb9c17d2f:
-    expires_at: 2100-01-01
-    keep: false
+    expires_at: 2025-08-01
 browser-actions/setup-geckodriver:
   5ef1526ed36211ab6cb531ec1cfb11f924ca2dee:
-    expires_at: 2025-06-13
-  43a66ae697b28edeb8c6fa3995fad360713e6ef6:
-    expires_at: 2100-01-01
-    keep: false
+    expires_at: 2050-01-01
 bufbuild/buf-breaking-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  c57b3d842a5c3f3b454756ef65305a50a587c5ba:
-    expires_at: 2100-01-01
-    keep: false
 bufbuild/buf-lint-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  06f9dd823d873146471cfaaf108a993fe00e5325:
-    expires_at: 2100-01-01
-    keep: false
 bufbuild/buf-setup-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  9802736440b01b57d3b63463f27b2ef49b2ea5b1:
-    expires_at: 2100-01-01
-    keep: false
 burnett01/rsync-deployments:
   0dc935cdecc5f5e571865e60d2a6cdc673704823:
     expires_at: 2050-01-01
@@ -197,18 +136,12 @@ burnett01/rsync-deployments:
     expires_at: 2025-08-01
 burrunan/gradle-cache-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  c15634bb25b7284dc084f38dff4e838048b7feaf:
-    expires_at: 2100-01-01
-    keep: false
 bytedeco/javacpp-presets:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  881a68bb85eed39fe32e83049147242021db9e6e:
-    expires_at: 2100-01-01
-    keep: false
 carloscastrojumo/github-cherry-pick-action:
   a145da1b8142e752d3cbc11aaaa46a535690f0c5:
     expires_at: 2050-01-01
@@ -216,95 +149,59 @@ carloscastrojumo/github-cherry-pick-action:
     expires_at: 2025-08-01
 carlosperate/arm-none-eabi-gcc-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  0cc83a7330501be1848887e2966aaceb49a4bb12:
-    expires_at: 2100-01-01
-    keep: false
 check-spelling/check-spelling:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  67debf50669c7fc76fc8f5d7f996384535a72b77:
-    expires_at: 2100-01-01
-    keep: false
 chromaui/action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  7387a6dd38a46a9ef42be59f4bbbc3f4e655fb1e:
-    expires_at: 2100-01-01
-    keep: false
 cicirello/javadoc-cleanup:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  3a003a6c9039fa9ec01186dc1aad43f357085347:
-    expires_at: 2100-01-01
-    keep: false
 clechasseur/rs-cargo:
   '*':
     expires_at: 2025-08-01
     keep: true
 codecov/codecov-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  cb6530fbecd68d5f1ee7a3dcd113450ea8d5d6d4:
-    expires_at: 2100-01-01
-    keep: false
 codelytv/pr-size-labeler:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  f2aafc4d8735009c6de18acefe15eecbfbfae56f:
-    expires_at: 2100-01-01
-    keep: false
 codspeedhq/action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  294e5a7b35f2b70e40e2a0b8575ff47cb23d9c33:
-    expires_at: 2100-01-01
-    keep: false
 commit-check/commit-check-action:
   8d507e12899a9feb405c3ed546252ff9508724e0:
     expires_at: 2050-01-01
 conda-incubator/setup-miniconda:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  505e6394dae86d6a5c7fbb6e3fb8938e3e863830:
-    expires_at: 2100-01-01
-    keep: false
 container-tools/kind-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  0ad70e2299366b0e1552c7240f4e4567148f723e:
-    expires_at: 2100-01-01
-    keep: false
 container-tools/microshift-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  2e3f1d9ef8b53ef6eab6ea777891265510bc1b72:
-    expires_at: 2100-01-01
-    keep: false
 coursier/cache-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  142d2738bd29f0eb9d44610828acb3a19809feab:
-    expires_at: 2100-01-01
-    keep: false
 coursier/setup-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  039f736548afa5411c1382f40a5bd9c2d30e0383:
-    expires_at: 2100-01-01
-    keep: false
 cpp-linter/cpp-linter-action:
   e3fcb174b19d50de4eae1b46896698a1dd48b094:
     expires_at: 2050-01-01
@@ -312,11 +209,8 @@ cpp-linter/cpp-linter-action:
     expires_at: 2025-08-01
 crate-ci/typos:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  9fcf285463eae5bf9093550b679b624842b12fe0:
-    expires_at: 2100-01-01
-    keep: false
 crazy-max/ghaction-import-gpg:
   111c56156bcc6918c056dbef52164cfa583dc549:
     expires_at: 2050-01-01
@@ -330,11 +224,8 @@ damccorm/tag-ur-it:
     expires_at: 2050-01-01
 dawidd6/action-download-artifact:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  80620a5d27ce0ae443b965134db88467fc607b43:
-    expires_at: 2100-01-01
-    keep: false
 dawidd6/action-send-mail:
   4226df7daafa6fc901a43789c49bf7ab309066e7:
     expires_at: 2050-01-01
@@ -342,18 +233,12 @@ dawidd6/action-send-mail:
     expires_at: 2025-08-01
 delaguardo/setup-graalvm:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  48f2bf339ab7d35e31029b1822a213681fdfc42e:
-    expires_at: 2100-01-01
-    keep: false
 dlang-community/setup-dlang:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  0a7469b93f791d83f30932c6fd105796c6966e20:
-    expires_at: 2100-01-01
-    keep: false
 docker://jekyll/jekyll:
   sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625:
     expires_at: 2050-01-01
@@ -363,91 +248,60 @@ dominikh/staticcheck-action:
   v1.1.0:
     expires_at: 2025-08-01
 dorny/paths-filter:
-  de90cc6fb38fc0963ad72b210f1f284cd68cea36:
+  0bc4621a3135347011ad047f9ecf449bf72ce2bd:
     expires_at: 2050-01-01
-  v3:
+  v3.0.0:
     expires_at: 2025-08-01
 easimon/maximize-build-space:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  bb67daa4a202a2ea017b6410ea1f07da0c9a0251:
-    expires_at: 2100-01-01
-    keep: false
 eps1lon/actions-label-merge-conflict:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  636b369ea34ff799b8db5182df6f19e39b2d4adb:
-    expires_at: 2100-01-01
-    keep: false
 erisu/apache-rat-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  3127a8c18f3bb10e91c60e835144085b31c5c463:
-    expires_at: 2100-01-01
-    keep: false
 erisu/license-checker-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  e929758f9416f30234ac454fc9054ca4b803871d:
-    expires_at: 2100-01-01
-    keep: false
 gaurav-nelson/github-action-markdown-link-check:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  499c1e7f3637c131334fa8e937c45144f79d72d2:
-    expires_at: 2100-01-01
-    keep: false
 geekyeggo/delete-artifact:
-  f275313e70c08f6120db482d7a6b98377786765b:
-    expires_at: 2025-06-13
-  b54d29a59e55046d1f7fc8226cdda507e6b9cf62:
-    expires_at: 2100-01-01
-    keep: false
+  '*':
+    expires_at: 2025-08-01
+    keep: true
 golang/govulncheck-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  b625fbe08f3bccbe446d94fbf87fcc875a4f50ee:
-    expires_at: 2100-01-01
-    keep: false
 gr2m/twitter-together:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  5c4c327d1ad1ed8e1759e78a697b1cc93c1da692:
-    expires_at: 2100-01-01
-    keep: false
 graalvm/setup-graalvm:
   01ed653ac833fe80569f1ef9f25585ba2811baab:
-    expires_at: 2025-06-13
+    expires_at: 2050-01-01
   v1:
-    expires_at: 2025-06-13
-  f1c3d2c33975ce45ef9c765511424183dd647a2d:
-    expires_at: 2100-01-01
-    keep: false
+    expires_at: 2025-08-01
 gradle/wrapper-validation-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  f9c9c575b8b21b6485636a91ffecd10e558c62f6:
-    expires_at: 2100-01-01
-    keep: false
 gsactions/commit-message-checker:
   '*':
     expires_at: 2025-08-01
     keep: true
 hadolint/hadolint-action:
-  '*':
-    expires_at: 2025-06-13
-    keep: true
-  54c9adbab1582c2ef04b2016b760714a4bfde3cf:
-    expires_at: 2100-01-01
-    keep: false
+  f988afea3da57ee48710a9795b6bb677cc901183:
+    expires_at: 2050-01-01
+  v2.1.0:
+    expires_at: 2025-08-01
 hashicorp/setup-terraform:
   b9cd54a3c349d3f38e8881555d616ced269862dd:
     expires_at: 2050-01-01
@@ -461,6 +315,8 @@ helm/chart-releaser-action:
 helm/chart-testing-action:
   e6669bcd63d7cb57cb4380c33043eebe5d111992:
     expires_at: 2050-01-01
+  v2.6.1:
+    expires_at: 2025-08-01
 helm/kind-action:
   0025e74a8c7512023d06dc019c617aa3cf561fde:
     expires_at: 2050-01-01
@@ -472,19 +328,13 @@ houseabsolute/actions-rust-cross:
     keep: true
 ilammy/msvc-dev-cmd:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  c1ed231f339aec74961130db0459823a08f1b215:
-    expires_at: 2100-01-01
-    keep: false
 ilammy/setup-nasm:
   e77cc62a22a374a4d0668286007cc3e3b4c17760:
-    expires_at: 2025-06-13
+    expires_at: 2050-01-01
   v1:
-    expires_at: 2025-06-13
-  13cbeb366c45c4379d3478cdcbadd8295feb5028:
-    expires_at: 2100-01-01
-    keep: false
+    expires_at: 2025-08-01
 jarvusinnovations/background-action:
   '*':
     expires_at: 2025-08-01
@@ -496,91 +346,59 @@ jasonetco/create-an-issue:
     expires_at: 2025-08-01
 jidicula/clang-format-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  4bb67b12614177e8c869e0e66b47aaa79b3b253b:
-    expires_at: 2100-01-01
-    keep: false
 jlumbroso/free-disk-space:
-  54081f138730dfa15788a46383842cd2f914a1be:
-    expires_at: 2050-01-01
+  '*':
+    expires_at: 2025-08-01
+    keep: true
 jrouly/scalafmt-native-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  4babdb31ad32d30fa1e7857264da984f30893f48:
-    expires_at: 2100-01-01
-    keep: false
 julia-actions/julia-buildpkg:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  e3eb439fad4f9aba7da2667e7510e4a46ebc46e1:
-    expires_at: 2100-01-01
-    keep: false
 julia-actions/julia-docdeploy:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  e62cc8fd639797a0c2922a437d5b1b81c4a12787:
-    expires_at: 2100-01-01
-    keep: false
 julia-actions/julia-processcoverage:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  51f6c28a089e613035452e069b8a002671dd24a5:
-    expires_at: 2100-01-01
-    keep: false
 julia-actions/julia-runtest:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  79a7e100883947123f8263c5f06e6c0ea3eb972f:
-    expires_at: 2100-01-01
-    keep: false
 julia-actions/setup-julia:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  5c9647d97b78a5debe5164e9eec09d653d29bd71:
-    expires_at: 2100-01-01
-    keep: false
 juliaregistries/tagbot:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  5b2da6d0e14448609f43c55f50474ea284358756:
-    expires_at: 2100-01-01
-    keep: false
 jwgmeligmeyling/checkstyle-github-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  50292990e18466f2c5d95d04ff5fab931254fa5f:
-    expires_at: 2100-01-01
-    keep: false
+jwgmeligmeyling/pmd-github-action:
+  322e346bd76a0757c4d54ff9209e245965aa066d:
+    expires_at: 2050-01-01
 jwgmeligmeyling/spotbugs-github-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  b8e2c3523acb34c87f14e18cbcd2d87db8c8584e:
-    expires_at: 2100-01-01
-    keep: false
 kiegroup/github-action-build-chain:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  bba24315cc6e273aacb5cbbd667dfe5ee657f53e:
-    expires_at: 2100-01-01
-    keep: false
 korandoru/hawkeye:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  6fa658f73275c295776edf53cc57baec669364e7:
-    expires_at: 2100-01-01
-    keep: false
 korandoru/setup-zig:
   92b649f4723a14798d8b3cf3b6168edb65d5b04e:
     expires_at: 2050-01-01
@@ -588,11 +406,8 @@ korandoru/setup-zig:
     expires_at: 2025-08-01
 leafo/gh-actions-lua:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  d84e7d61946edb679210088bc1378c099fde51fe:
-    expires_at: 2100-01-01
-    keep: false
 leafo/gh-actions-luarocks:
   e65774a6386cb4f24e293dca7fc4ff89165b64c5:
     expires_at: 2050-01-01
@@ -603,39 +418,24 @@ ludeeus/action-shellcheck:
     expires_at: 2050-01-01
 manusa/actions-setup-minikube:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  3856c6fa039819f1c8e7e248b1fc5a8564e354c9:
-    expires_at: 2100-01-01
-    keep: false
 marcospereira/action-surefire-report:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  a915ba6359417544044fb06093a6c75097fe2a2b:
-    expires_at: 2100-01-01
-    keep: false
 maxim-lobanov/setup-xcode:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  60606e260d2fc5762a71e64e74b2174e8ea3c8bd:
-    expires_at: 2100-01-01
-    keep: false
 medyagh/setup-minikube:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  697f2b7aaed5f70bf2a94ee21a4ec3dde7b12f92:
-    expires_at: 2100-01-01
-    keep: false
 mikepenz/action-junit-report:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  bcf7029fba43b61c2fe9b9bcfc7588052e318364:
-    expires_at: 2100-01-01
-    keep: false
 mozilla-actions/sccache-action:
   2e7f9ec7921547d4b46598398ca573513895d0bd:
     expires_at: 2050-01-01
@@ -643,11 +443,8 @@ mozilla-actions/sccache-action:
     expires_at: 2025-08-01
 msys2/setup-msys2:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  f84a36b4009b96413f91c01441130855db9392e5:
-    expires_at: 2100-01-01
-    keep: false
 mukunku/tag-exists-action:
   bdad1eaa119ce71b150b952c97351c75025c06a9:
     expires_at: 2050-01-01
@@ -655,18 +452,12 @@ mukunku/tag-exists-action:
     expires_at: 2025-08-01
 mvasigh/dispatch-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  6c531050af419a00a683637f632ad00c10661c0f:
-    expires_at: 2100-01-01
-    keep: false
 nanasess/setup-chromedriver:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  e93e57b843c0c92788f22483f1a31af8ee48db25:
-    expires_at: 2100-01-01
-    keep: false
 ncipollo/release-action:
   1e3e9c6637e5566e185b7ab66f187539c5a76da7:
     expires_at: 2050-01-01
@@ -677,11 +468,8 @@ neofinancial/ticket-check-action:
     expires_at: 2025-08-01
 nick-fields/retry:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  7152eba30c6575329ac0576536151aca5a72780e:
-    expires_at: 2100-01-01
-    keep: false
 nwtgck/actions-netlify:
   ac1cb16858bada08a9c71a81240a85cfc3f72913:
     expires_at: 2050-01-01
@@ -689,18 +477,12 @@ nwtgck/actions-netlify:
     expires_at: 2025-08-01
 ocaml/setup-ocaml:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  62861fde2b852f4a6bc4fee6cacfe01be444d883:
-    expires_at: 2100-01-01
-    keep: false
 olafurpg/setup-scala:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  435abbde15ea54cc92b9f7481ca800f405e9bdaf:
-    expires_at: 2100-01-01
-    keep: false
 opentofu/setup-opentofu:
   592200bd4b9bbf4772ace78f887668b1aee8f716:
     expires_at: 2050-01-01
@@ -708,11 +490,8 @@ opentofu/setup-opentofu:
     expires_at: 2025-08-01
 oracle-actions/setup-java:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  2e744f723b003fdd759727d0ff654c8717024845:
-    expires_at: 2100-01-01
-    keep: false
 orhun/git-cliff-action:
   4a4a951bc43fafe41cd2348d181853f52356bee7:
     expires_at: 2050-01-01
@@ -720,11 +499,8 @@ orhun/git-cliff-action:
     expires_at: 2025-08-01
 ossf/scorecard-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  ff5dd8929f96a8a4dc67d13f32b8c75057829621:
-    expires_at: 2100-01-01
-    keep: false
 packetcoders/action-setup-cache-python-poetry:
   a3f2e6ed12462e038bc14270d139e373bf5ac564:
     expires_at: 2050-01-01
@@ -732,33 +508,21 @@ packetcoders/action-setup-cache-python-poetry:
     expires_at: 2025-08-01
 pdm-project/setup-pdm:
   483717a073bdef51804a58dac17d043a4183c384:
-    expires_at: 2025-06-13
+    expires_at: 2050-01-01
   v4:
-    expires_at: 2025-06-13
-  4fbf65b71981de2c3178d1bca62fd9e42ba89c4a:
-    expires_at: 2100-01-01
-    keep: false
+    expires_at: 2025-08-01
 peaceiris/actions-gh-pages:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  47f197a2200bb9de68ba5f48fad1c088eb1c4a32:
-    expires_at: 2100-01-01
-    keep: false
 peaceiris/actions-hugo:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  6e295a6a0c9087bf374299e9d67f9d2edab9f18f:
-    expires_at: 2100-01-01
-    keep: false
 peaceiris/actions-mdbook:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  948b432f0fddb61de0806565a7222b36e12e2ee3:
-    expires_at: 2100-01-01
-    keep: false
 peter-evans/close-issue:
   1373cadf1f0c96c1420bc000cfba2273ea307fd1:
     expires_at: 2050-01-01
@@ -769,11 +533,8 @@ peter-evans/create-or-update-comment:
     expires_at: 2050-01-01
 peter-evans/create-pull-request:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  67ccf781d68cd99b580ae25a5c18a1cc84ffff1f:
-    expires_at: 2100-01-01
-    keep: false
 phoenix-actions/test-reporting:
   f957cd93fc2d848d556fa0d03c57bc79127b6b5e:
     expires_at: 2050-01-01
@@ -783,15 +544,13 @@ pmd/pmd-github-action:
   967a81f8b657c87f7c3e96b62301cb1a48efef29:
     expires_at: 2050-01-01
 pnpm/action-setup:
-  fe02b34f77f8bc703788d5817da081398fad5dd2:
-    expires_at: 2050-01-01
+  '*':
+    expires_at: 2025-08-01
+    keep: true
 potiuk/cancel-workflow-runs:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  8248bc1feff049e98c0e6a96889b147199c38203:
-    expires_at: 2100-01-01
-    keep: false
 pre-commit/action:
   2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd:
     expires_at: 2050-01-01
@@ -799,11 +558,8 @@ pre-commit/action:
     expires_at: 2025-08-01
 pyTooling/Actions:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  679ec24c80c6736efa7099a11c19086263a6beba:
-    expires_at: 2100-01-01
-    keep: false
 pypa/cibuildwheel:
   0f04e96e2f58e63b8b03886c1db16a507f2199bf:
     expires_at: 2050-01-01
@@ -811,88 +567,52 @@ pypa/cibuildwheel:
     expires_at: 2025-08-01
 pytooling/actions:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  679ec24c80c6736efa7099a11c19086263a6beba:
-    expires_at: 2100-01-01
-    keep: false
 quarto-dev/quarto-actions:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  8776aaf3ebefdda84c7654715823a205d047802a:
-    expires_at: 2100-01-01
-    keep: false
 r-lib/actions:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  929c772977a3a13c8733b363bf5a2f685c25dd91:
-    expires_at: 2100-01-01
-    keep: false
 reactivecircus/android-emulator-runner:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  31f424d05a8bea0229d0feab746260472ef8e34d:
-    expires_at: 2100-01-01
-    keep: false
 readthedocs/actions:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  cc0920454cf03ca8a3fbd3cbaa2ce2e509e70636:
-    expires_at: 2100-01-01
-    keep: false
 release-drafter/release-drafter:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  7cf306f56b79636bb76931494ccf29fc893763bd:
-    expires_at: 2100-01-01
-    keep: false
 ruby/setup-ruby:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  e5517072e87f198d9533967ae13d97c11b604005:
-    expires_at: 2100-01-01
-    keep: false
 sbt/setup-sbt:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  a7ef9b2b93274092da3b2634ed2738e67c74b0d2:
-    expires_at: 2100-01-01
-    keep: false
 scacap/action-surefire-report:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  1a128e49c0585bc0b8e38e541ac3b6e35a5bc727:
-    expires_at: 2100-01-01
-    keep: false
 scala-steward-org/scala-steward-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  a47d19c37d74bf079ad9528ee04d511c1f3d1805:
-    expires_at: 2100-01-01
-    keep: false
 scalacenter/sbt-dependency-submission:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3:
-    expires_at: 2100-01-01
-    keep: false
 scottbrenner/puppet-lint-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  2491d895fe3d0beac4a453bf90c3e087e47d8d5e:
-    expires_at: 2100-01-01
-    keep: false
 seanmiddleditch/gha-setup-ninja:
   8b297075da4cd2a5f1fd21fe011b499edf06e9d2:
     expires_at: 2050-01-01
@@ -900,92 +620,57 @@ seanmiddleditch/gha-setup-ninja:
     expires_at: 2025-08-01
 securego/gosec:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  53aee87f9fa5e513efcaaa99e387f9b5e9fbab47:
-    expires_at: 2100-01-01
-    keep: false
 shivammathur/setup-php:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  4cdabe8a53c84876e0d2e0cb9b0a0f370c4171e7:
-    expires_at: 2100-01-01
-    keep: false
 shogo82148/actions-setup-perl:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  1358ec99f8d1069243050e42a75a3cdce3e91607:
-    expires_at: 2100-01-01
-    keep: false
 shufo/auto-assign-reviewer-by-files:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  0a7fae44d02e841755d0caaac2ef05ad12a3bbc9:
-    expires_at: 2100-01-01
-    keep: false
 snok/install-poetry:
   76e04a911780d5b312d89783f7b1cd627778900a:
     expires_at: 2050-01-01
+  v1:
+    expires_at: 2025-08-01
 softprops/action-gh-release:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda:
-    expires_at: 2100-01-01
-    keep: false
 stCarolas/setup-maven:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  d6af6abeda15e98926a57b5aa970a96bb37f97d1:
-    expires_at: 2100-01-01
-    keep: false
 subosito/flutter-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  9a48871cbeff8679f6337339dc79b806ad9a9a13:
-    expires_at: 2100-01-01
-    keep: false
 swatinem/rust-cache:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  d02b92e7fe642b857655cdeb56a960a719bcc121:
-    expires_at: 2100-01-01
-    keep: false
 swift-actions/setup-swift:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  d4537ff835c9778c934e48f78639e270edd5839e:
-    expires_at: 2100-01-01
-    keep: false
 taiki-e/install-action:
-  05cc46f5a76308a35fcd65633ff380d2ed430ba8:
-    expires_at: 2025-06-13
-  cargo-llvm-cov:
-    expires_at: 2025-06-13
-  2e4348238a5a3b5af9700111e6053be382adccc1:
-    expires_at: 2100-01-01
-    keep: false
+  '*':
+    expires_at: 2025-08-01
+    keep: true
 test-summary/action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  31493c76ec9e7aa675f1585d3ed6f1da69269a86:
-    expires_at: 2100-01-01
-    keep: false
 timonvs/pr-labeler-action:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  f9c084306ce8b3f488a8f3ee1ccedc6da131d1af:
-    expires_at: 2100-01-01
-    keep: false
 untitaker/hyperlink:
   0.1.21:
     expires_at: 2025-08-01
@@ -1003,38 +688,13 @@ vimtor/action-zip:
     expires_at: 2025-08-01
 vishalsinha21/dynamic-checklist:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  23eec89b55d2565f678788c4a12a8bc66b8fe1e5:
-    expires_at: 2100-01-01
-    keep: false
 wei/curl:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  61d92b5169ea0425820dd13cf6fbad66b483e9f1:
-    expires_at: 2100-01-01
-    keep: false
 xpol/setup-lua:
   '*':
-    expires_at: 2025-06-13
+    expires_at: 2025-08-01
     keep: true
-  221ef73ebc81d32ff2aaf1a12e1e5807d63b2f06:
-    expires_at: 2100-01-01
-    keep: false
-docker//jekyll/jekyll:
-  sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625:
-    expires_at: 2100-01-01
-    keep: false
-tj-actions/changed-files:
-  77af4bed286740ef1a6387dc4e4e4dec39f96054:
-    expires_at: 2100-01-01
-    keep: false
-tj-actions/glob:
-  8852971095f57bebf1912233304340b43a79d3e3:
-    expires_at: 2100-01-01
-    keep: false
-tj-actions/json2file:
-  c5364d9124d91e02006028ab3090d125d87ef459:
-    expires_at: 2100-01-01
-    keep: false
