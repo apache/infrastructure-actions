@@ -169,8 +169,8 @@ jobs:
       - uses: peaceiris/actions-gh-pages@47f197a2200bb9de68ba5f48fad1c088eb1c4a32
       - uses: peaceiris/actions-hugo@6e295a6a0c9087bf374299e9d67f9d2edab9f18f
       - uses: peaceiris/actions-mdbook@948b432f0fddb61de0806565a7222b36e12e2ee3
-      - uses: peter-evans/close-issue@1373cadf1f0c96c1420bc000cfba2273ea307fd1
-      - uses: peter-evans/close-issue@v2
+      - uses: peter-evans/close-issue@276d7966e389d888f011539a86c8920025ea0626
+      - uses: peter-evans/close-issue@v3
       - uses: peter-evans/create-or-update-comment@c9fcb64660bc90ec1cc535646af190c992007c32
       - uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f
       - uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e
