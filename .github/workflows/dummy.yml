@@ -220,7 +220,7 @@ jobs:
       - uses: vimtor/action-zip@v1
       - uses: vishalsinha21/dynamic-checklist@23eec89b55d2565f678788c4a12a8bc66b8fe1e5
       - uses: wei/curl@61d92b5169ea0425820dd13cf6fbad66b483e9f1
-      - uses: xpol/setup-lua@221ef73ebc81d32ff2aaf1a12e1e5807d63b2f06
+      - uses: xpol/setup-lua@84f642e19a1adbad98b74f9e69ab82d1e6b95e3e
       - uses: docker//jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
       - uses: tj-actions/changed-files@77af4bed286740ef1a6387dc4e4e4dec39f96054
       - uses: tj-actions/glob@8852971095f57bebf1912233304340b43a79d3e3
