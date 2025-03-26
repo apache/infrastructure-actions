@@ -9,21 +9,18 @@ on:
 
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   clean_up:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
 
       - uses: actions/checkout@v4
         with:
           persist-credentials: true
           # Use PAT so the commit triggers other actions
-          token: ${{ secrets.WORKFLOW_TOKEN || github.token }}
+          token: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }}
 
       - name: Clean actions.yml
         shell: python

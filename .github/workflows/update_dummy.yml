@@ -11,9 +11,7 @@ on:
       - ".github/workflows/update_dummy.yml"
       - "actions.yml"
 
-permissions:
-  contents: write
-  actions: write
+permissions: {}
 
 # We want workflows on main to run in order to avoid losing data through race conditions
 concurrency: "${{ github.ref }}-${{ github.workflow }}"
@@ -28,7 +26,7 @@ jobs:
         with:
           persist-credentials: true
           # We have to use a PAT to commit the workflow file
-          token: ${{ secrets.WORKFLOW_TOKEN || github.token }}
+          token: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }}
 
       - name: Update Workflow 
         shell: python
