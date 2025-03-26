@@ -89,7 +89,6 @@
 - graalvm/setup-graalvm@01ed653ac833fe80569f1ef9f25585ba2811baab
 - graalvm/setup-graalvm@v1
 - gradle/wrapper-validation-action@*
-- gradle/wrapper-validation-action@v3.5.0
 - gsactions/commit-message-checker@*
 - hadolint/hadolint-action@f988afea3da57ee48710a9795b6bb677cc901183
 - hadolint/hadolint-action@v2.1.0
