@@ -128,7 +128,7 @@ jobs:
       - uses: jwgmeligmeyling/checkstyle-github-action@50292990e18466f2c5d95d04ff5fab931254fa5f
       - uses: jwgmeligmeyling/spotbugs-github-action@b8e2c3523acb34c87f14e18cbcd2d87db8c8584e
       - uses: kiegroup/github-action-build-chain@bba24315cc6e273aacb5cbbd667dfe5ee657f53e
-      - uses: korandoru/hawkeye@6fa658f73275c295776edf53cc57baec669364e7
+      - uses: korandoru/hawkeye@33b828d2bdac2c47b825fa15a4651b0fc12fe3b8
       - uses: korandoru/setup-zig@92b649f4723a14798d8b3cf3b6168edb65d5b04e
       - uses: korandoru/setup-zig@v1
       - uses: leafo/gh-actions-lua@d84e7d61946edb679210088bc1378c099fde51fe
