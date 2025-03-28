@@ -212,3 +212,5 @@
 - vishalsinha21/dynamic-checklist@*
 - wei/curl@*
 - xpol/setup-lua@*
+- slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
+- slackapi/slack-github-action@v2.0.0

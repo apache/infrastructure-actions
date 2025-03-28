@@ -112,3 +112,5 @@ jobs:
       - uses: uraimo/run-on-arch-action@v2
       - uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
       - uses: vimtor/action-zip@v1
+      - uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
+      - uses: slackapi/slack-github-action@v2.0.0
