@@ -700,3 +700,8 @@ xpol/setup-lua:
   '*':
     expires_at: 2025-08-01
     keep: true
+slackapi/slack-github-action:
+  485a9d42d3a73031f12ec201c457e2162c45d02d:
+    expires_at: 2025-08-01
+  v2.0.0:
+    expires_at: 2025-08-01
