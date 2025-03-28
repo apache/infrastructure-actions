@@ -90,9 +90,9 @@ awalsh128/cache-apt-pkgs-action:
     expires_at: 2025-08-01
     keep: true
 aws-actions/configure-aws-credentials:
-  6a64f289c4a4b67a1e2c44cc4bd9d6f7bc59b156:
+  ececac1a45f3b08a01d2dd070d28d111c5fe6722:
     expires_at: 2050-01-01
-  v1:
+  v4.1.0:
     expires_at: 2025-08-01
 azure/setup-helm:
   5119fcb9089d432beecbf79bb2c7915207344b78:
