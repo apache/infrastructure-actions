@@ -23,8 +23,8 @@ jobs:
       - uses: addnab/docker-run-action@v3
       - uses: amondnet/vercel-action@225d234cfe5340ca1f9a6cd158338126b5b6845f
       - uses: amondnet/vercel-action@v25.1.1
-      - uses: aws-actions/configure-aws-credentials@6a64f289c4a4b67a1e2c44cc4bd9d6f7bc59b156
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722
+      - uses: aws-actions/configure-aws-credentials@v4.1.0
       - uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78
       - uses: azure/setup-helm@v3
       - uses: betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619

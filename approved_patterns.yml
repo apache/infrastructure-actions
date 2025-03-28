@@ -27,8 +27,8 @@
 - amondnet/vercel-action@v25.1.1
 - arduino/setup-protoc@*
 - awalsh128/cache-apt-pkgs-action@*
-- aws-actions/configure-aws-credentials@6a64f289c4a4b67a1e2c44cc4bd9d6f7bc59b156
-- aws-actions/configure-aws-credentials@v1
+- aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722
+- aws-actions/configure-aws-credentials@v4.1.0
 - azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78
 - azure/setup-helm@v3
 - betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619
