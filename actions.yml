@@ -242,6 +242,10 @@ dlang-community/setup-dlang:
 docker://jekyll/jekyll:
   sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625:
     expires_at: 2050-01-01
+docker/setup-qemu-action:
+  '*':
+    expires_at: 2025-08-01
+    keep: true
 dominikh/staticcheck-action:
   4ec9a0dff54be2642bc76581598ba433fd8d4967:
     expires_at: 2050-01-01
