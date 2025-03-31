@@ -39,8 +39,8 @@ jobs:
       - uses: carloscastrojumo/github-cherry-pick-action@a145da1b8142e752d3cbc11aaaa46a535690f0c5
       - uses: carloscastrojumo/github-cherry-pick-action@v1.0.9
       - uses: commit-check/commit-check-action@8d507e12899a9feb405c3ed546252ff9508724e0
-      - uses: cpp-linter/cpp-linter-action@e3fcb174b19d50de4eae1b46896698a1dd48b094
-      - uses: cpp-linter/cpp-linter-action@v2.13.3
+      - uses: cpp-linter/cpp-linter-action@8ae6cfaea8cc035c6155b5fe79d7991a9bf638af
+      - uses: cpp-linter/cpp-linter-action@v2.14.0
       - uses: crazy-max/ghaction-import-gpg@111c56156bcc6918c056dbef52164cfa583dc549
       - uses: crazy-max/ghaction-setup-docker@b60f85385d03ac8acfca6d9996982511d8620a19
       - uses: crazy-max/ghaction-setup-docker@v4
