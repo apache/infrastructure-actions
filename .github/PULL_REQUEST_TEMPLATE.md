@@ -11,7 +11,7 @@
 
 **URL of action:**
 
-**Version to pin to (branch, tag, hash):**
+**Version to pin to ([hash only](https://infra.apache.org/github-actions-policy.html)):**
 
 
 ## Permissions
