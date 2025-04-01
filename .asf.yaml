@@ -1,4 +1,5 @@
 github:
+  del_branch_on_merge: true
   features:
     issues: true
 
