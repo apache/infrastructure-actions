@@ -50,8 +50,8 @@ jobs:
       - uses: docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
       - uses: dominikh/staticcheck-action@4ec9a0dff54be2642bc76581598ba433fd8d4967
       - uses: dominikh/staticcheck-action@v1.1.0
-      - uses: dorny/paths-filter@0bc4621a3135347011ad047f9ecf449bf72ce2bd
-      - uses: dorny/paths-filter@v3.0.0
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+      - uses: dorny/paths-filter@v3.0.2
       - uses: graalvm/setup-graalvm@01ed653ac833fe80569f1ef9f25585ba2811baab
       - uses: graalvm/setup-graalvm@v1
       - uses: gradle/wrapper-validation-action@v3.5.0
