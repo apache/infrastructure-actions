@@ -108,8 +108,8 @@ jobs:
       - uses: pre-commit/action@v3.0.1
       - uses: pypa/cibuildwheel@0f04e96e2f58e63b8b03886c1db16a507f2199bf
       - uses: pypa/cibuildwheel@v2.12.0
-      - uses: seanmiddleditch/gha-setup-ninja@8b297075da4cd2a5f1fd21fe011b499edf06e9d2
-      - uses: seanmiddleditch/gha-setup-ninja@v4
+      - uses: seanmiddleditch/gha-setup-ninja@3b1f8f94a2f8254bd26914c4ab9474d4f0015f67
+      - uses: seanmiddleditch/gha-setup-ninja@v6
       - uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a
       - uses: snok/install-poetry@v1
       - uses: untitaker/hyperlink@0.1.21
