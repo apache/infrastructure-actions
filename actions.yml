@@ -5,6 +5,54 @@
 ana06/get-changed-files:
   v2.3.0:
     expires_at: 2025-08-01
+actions-rs/*:
+  '*'
+    expires_at: 2025-08-01
+    keep: true
+apache/*:
+  '*'
+    expires_at: 2025-08-01
+    keep: true
+bytedeco/javacpp-presets/.github/actions/*:
+  '*'
+    expires_at: 2025-08-01
+    keep: true
+dtolnay/rust-toolchain@nightly:
+    expires_at: 2025-08-01
+    keep: true
+dtolnay/rust-toolchain@stable:
+    expires_at: 2025-08-01
+    keep: true
+golangci/*:
+    expires_at: 2025-08-01
+    keep: true
+pypa/gh-action-pypi-publish:
+  'release/v1*'
+    expires_at: 2025-08-01
+    keep: true
+pytooling/actions/with-post-step@*:
+    expires_at: 2025-08-01
+    keep: true
+quarto-dev/quarto-actions/*:
+  '*'
+    expires_at: 2025-08-01
+    keep: true
+r-lib/actions/*:
+  '*'
+    expires_at: 2025-08-01
+    keep: true
+readthedocs/actions/preview:
+  '*',
+    expires_at: 2025-08-01
+    keep: true
+rustsec/*:
+  '*'
+    expires_at: 2025-08-01
+    keep: true
+vhelm/chart-releaser-action:
+  '*'
+    expires_at: 2025-08-01
+    keep: true
 AdoptOpenJDK/install-jdk:
   '*':
     expires_at: 2025-08-01
@@ -245,6 +293,8 @@ dlang-community/setup-dlang:
 docker://jekyll/jekyll:
   sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625:
     expires_at: 2050-01-01
+  '*':
+    expires_at: 2025-08-01
 dominikh/staticcheck-action:
   4ec9a0dff54be2642bc76581598ba433fd8d4967:
     expires_at: 2050-01-01
