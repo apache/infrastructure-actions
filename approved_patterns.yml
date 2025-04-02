@@ -1,6 +1,18 @@
 # This is a generated file. DO NOT UPDATE MANUALLY.
 - 1Password/load-secrets-action@*
 - ana06/get-changed-files@v2.3.0
+- actions-rs/*@*
+- apache/*@*
+- bytedeco/javacpp-presets/.github/actions/*@*
+- dtolnay/rust-toolchain@stable
+- golangci/*@*
+- pypa/gh-action-pypi-publish@release/v1*
+- pytooling/actions/with-post-step@*
+- quarto-dev/quarto-actions/*@*
+- r-lib/actions/*@*
+- readthedocs/actions/preview@*
+- rustsec/*@*
+- vhelm/chart-releaser-action@*
 - AdoptOpenJDK/install-jdk@*
 - BobAnkh/auto-generate-changelog@*
 - DavidAnson/markdownlint-cli2-action@b4c9feab76d8025d1e83c653fa3990936df0e6c8
@@ -75,6 +87,7 @@
 - delaguardo/setup-graalvm@*
 - dlang-community/setup-dlang@*
 - docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
+- docker://jekyll/jekyll@*
 - dominikh/staticcheck-action@4ec9a0dff54be2642bc76581598ba433fd8d4967
 - dominikh/staticcheck-action@v1.1.0
 - dorny/paths-filter@0bc4621a3135347011ad047f9ecf449bf72ce2bd
@@ -182,7 +195,6 @@
 - pypa/cibuildwheel@v2.12.0
 - pytooling/actions@*
 - quarto-dev/quarto-actions@*
-- r-lib/actions/*@*
 - reactivecircus/android-emulator-runner@*
 - readthedocs/actions@*
 - release-drafter/release-drafter@*
