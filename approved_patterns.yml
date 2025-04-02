@@ -1,5 +1,6 @@
 # This is a generated file. DO NOT UPDATE MANUALLY.
 - 1Password/load-secrets-action@*
+- ana06/get-changed-files@v2.3.0
 - AdoptOpenJDK/install-jdk@*
 - BobAnkh/auto-generate-changelog@*
 - DavidAnson/markdownlint-cli2-action@b4c9feab76d8025d1e83c653fa3990936df0e6c8

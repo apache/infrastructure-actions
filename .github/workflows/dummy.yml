@@ -8,6 +8,7 @@ jobs:
     if: false
     runs-on: ubuntu-latest
     steps:
+      - uses: ana06/get-changed-files@v2.3.0
       - uses: DavidAnson/markdownlint-cli2-action@b4c9feab76d8025d1e83c653fa3990936df0e6c8
       - uses: DavidAnson/markdownlint-cli2-action@v16
       - uses: JamesIves/github-pages-deploy-action@881db5376404c5c8d621010bcbec0310b58d5e29
