@@ -588,7 +588,7 @@ quarto-dev/quarto-actions:
   '*':
     expires_at: 2025-08-01
     keep: true
-r-lib/actions:
+r-lib/actions/*:
   '*':
     expires_at: 2025-08-01
     keep: true
