@@ -182,7 +182,7 @@
 - pypa/cibuildwheel@v2.12.0
 - pytooling/actions@*
 - quarto-dev/quarto-actions@*
-- r-lib/actions@*
+- r-lib/actions/*@*
 - reactivecircus/android-emulator-runner@*
 - readthedocs/actions@*
 - release-drafter/release-drafter@*
