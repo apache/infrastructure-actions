@@ -2,6 +2,9 @@
   '*':
     expires_at: 2025-08-01
     keep: true
+ana06/get-changed-files:
+  v2.3.0:
+    expires_at: 2025-08-01
 AdoptOpenJDK/install-jdk:
   '*':
     expires_at: 2025-08-01
