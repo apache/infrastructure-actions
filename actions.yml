@@ -6,7 +6,7 @@ ana06/get-changed-files:
   v2.3.0:
     expires_at: 2025-08-01
 actions-rs/*:
-  '*': 
+  '*':
     expires_at: 2025-08-01
     keep: true
 apache/*:
@@ -18,11 +18,7 @@ bytedeco/javacpp-presets/.github/actions/*:
     expires_at: 2025-08-01
     keep: true
 dtolnay/rust-toolchain:
-  'nightly':
-    expires_at: 2025-08-01
-    keep: true
-dtolnay/rust-toolchain:
-  'stable':
+  stable:
     expires_at: 2025-08-01
     keep: true
 golangci/*:
@@ -30,7 +26,7 @@ golangci/*:
     expires_at: 2025-08-01
     keep: true
 pypa/gh-action-pypi-publish:
-  'release/v1*':
+  release/v1*:
     expires_at: 2025-08-01
     keep: true
 pytooling/actions/with-post-step:
@@ -639,10 +635,6 @@ pytooling/actions:
     expires_at: 2025-08-01
     keep: true
 quarto-dev/quarto-actions:
-  '*':
-    expires_at: 2025-08-01
-    keep: true
-r-lib/actions/*:
   '*':
     expires_at: 2025-08-01
     keep: true
