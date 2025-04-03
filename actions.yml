@@ -132,6 +132,10 @@ amondnet/vercel-action:
     expires_at: 2050-01-01
   v25.1.1:
     expires_at: 2025-08-01
+aquasecurity/trivy-action:
+  '*':
+    expires_at: 2025-08-01
+    keep: true
 arduino/setup-protoc:
   '*':
     expires_at: 2025-08-01
