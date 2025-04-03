@@ -8,6 +8,7 @@ jobs:
     if: false
     runs-on: ubuntu-latest
     steps:
+      - uses: ana06/get-changed-files@v2.3.0
       - uses: DavidAnson/markdownlint-cli2-action@b4c9feab76d8025d1e83c653fa3990936df0e6c8
       - uses: DavidAnson/markdownlint-cli2-action@v16
       - uses: JamesIves/github-pages-deploy-action@881db5376404c5c8d621010bcbec0310b58d5e29
@@ -48,10 +49,15 @@ jobs:
       - uses: dawidd6/action-send-mail@4226df7daafa6fc901a43789c49bf7ab309066e7
       - uses: dawidd6/action-send-mail@v3
       - uses: docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
+      - uses: docker://jekyll/jekyll@*
       - uses: dominikh/staticcheck-action@4ec9a0dff54be2642bc76581598ba433fd8d4967
       - uses: dominikh/staticcheck-action@v1.1.0
       - uses: dorny/paths-filter@0bc4621a3135347011ad047f9ecf449bf72ce2bd
       - uses: dorny/paths-filter@v3.0.0
+      - uses: dorny/paths-filter@ebc4d7e9ebcb0b1eb21480bb8f43113e996ac77a
+      - uses: dorny/paths-filter@v3.0.1
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+      - uses: dorny/paths-filter@v3.0.2
       - uses: graalvm/setup-graalvm@01ed653ac833fe80569f1ef9f25585ba2811baab
       - uses: graalvm/setup-graalvm@v1
       - uses: gradle/wrapper-validation-action@v3.5.0
