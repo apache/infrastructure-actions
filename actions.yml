@@ -295,6 +295,10 @@ docker://jekyll/jekyll:
     expires_at: 2050-01-01
   '*':
     expires_at: 2025-08-01
+docker/setup-qemu-action:
+  29109295f81e9208d7d86ff1c6c12d2833863392:
+    expires_at: 2050-01-01
+    keep: true
 dominikh/staticcheck-action:
   4ec9a0dff54be2642bc76581598ba433fd8d4967:
     expires_at: 2050-01-01
