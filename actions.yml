@@ -1,3 +1,7 @@
+apache/infrastructure-actions:
+  '*':
+    expires_at: 2025-08-01
+    keep: true    
 1Password/load-secrets-action:
   '*':
     expires_at: 2025-08-01
