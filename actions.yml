@@ -716,6 +716,10 @@ subosito/flutter-action:
   '*':
     expires_at: 2025-08-01
     keep: true
+supercharge/redis-github-action:
+  ea9b21c6ecece47bd99595c532e481390ea0f044:
+    expires_at: 2050-01-01
+    keep: true
 swatinem/rust-cache:
   '*':
     expires_at: 2025-08-01
