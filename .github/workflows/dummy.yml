@@ -81,8 +81,8 @@ jobs:
       - uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
       - uses: ludeeus/action-shellcheck@1.1.0
       - uses: ludeeus/action-shellcheck@94e0aab03ca135d11a35e5bfc14e6746dc56e7e9
-      - uses: mozilla-actions/sccache-action@2e7f9ec7921547d4b46598398ca573513895d0bd
-      - uses: mozilla-actions/sccache-action@v0.0.4
+      - uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: mukunku/tag-exists-action@bdad1eaa119ce71b150b952c97351c75025c06a9
       - uses: mukunku/tag-exists-action@v1.6.0
       - uses: ncipollo/release-action@1e3e9c6637e5566e185b7ab66f187539c5a76da7
