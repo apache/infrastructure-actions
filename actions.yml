@@ -716,6 +716,10 @@ subosito/flutter-action:
   '*':
     expires_at: 2025-08-01
     keep: true
+supercharge/mongodb-github-action:
+  90004df786821b6308fb02299e5835d0dae05d0d:
+    expires_at: 2050-01-01
+    keep: true
 swatinem/rust-cache:
   '*':
     expires_at: 2025-08-01
