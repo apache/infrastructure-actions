@@ -58,6 +58,7 @@ jobs:
       - uses: dorny/paths-filter@v3.0.1
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
       - uses: dorny/paths-filter@v3.0.2
+      - uses: google-github-actions/setup-gcloud@77e7a554d41e2ee56fc945c52dfd3f33d12def9a
       - uses: graalvm/setup-graalvm@01ed653ac833fe80569f1ef9f25585ba2811baab
       - uses: graalvm/setup-graalvm@v1
       - uses: gradle/wrapper-validation-action@v3.5.0
