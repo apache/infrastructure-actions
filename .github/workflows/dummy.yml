@@ -100,8 +100,8 @@ jobs:
       - uses: packetcoders/action-setup-cache-python-poetry@v1.1.0
       - uses: pdm-project/setup-pdm@483717a073bdef51804a58dac17d043a4183c384
       - uses: pdm-project/setup-pdm@v4
-      - uses: peter-evans/close-issue@1373cadf1f0c96c1420bc000cfba2273ea307fd1
-      - uses: peter-evans/close-issue@v2
+      - uses: peter-evans/close-issue@276d7966e389d888f011539a86c8920025ea0626
+      - uses: peter-evans/close-issue@v3
       - uses: peter-evans/create-or-update-comment@c9fcb64660bc90ec1cc535646af190c992007c32
       - uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e
       - uses: phoenix-actions/test-reporting@v15
