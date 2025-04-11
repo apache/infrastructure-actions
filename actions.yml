@@ -1,5 +1,5 @@
 1Password/load-secrets-action:
-  '581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0':
+  581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0:
     expires_at: 2025-08-01
 ana06/get-changed-files:
   v2.3.0:
