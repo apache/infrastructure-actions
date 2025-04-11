@@ -10,8 +10,8 @@ jobs:
     steps:
       - uses: 1Password/load-secrets-action@581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0
       - uses: ana06/get-changed-files@v2.3.0
-      - uses: DavidAnson/markdownlint-cli2-action@b4c9feab76d8025d1e83c653fa3990936df0e6c8
-      - uses: DavidAnson/markdownlint-cli2-action@v16
+      - uses: DavidAnson/markdownlint-cli2-action@05f32210e84442804257b2a6f20b273450ec8265
+      - uses: DavidAnson/markdownlint-cli2-action@v19
       - uses: JamesIves/github-pages-deploy-action@881db5376404c5c8d621010bcbec0310b58d5e29
       - uses: JamesIves/github-pages-deploy-action@v4.6.8
       - uses: JustinBeckwith/linkinator-action@3d5ba091319fa7b0ac14703761eebb7d100e6f6d
