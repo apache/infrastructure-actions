@@ -468,6 +468,9 @@ jwgmeligmeyling/spotbugs-github-action:
   '*':
     expires_at: 2025-08-01
     keep: true
+jwlawson/actions-setup-cmake:
+  802fa1a2c4e212495c05bf94dba2704a92a472be:
+    expires_at: 2050-08-01
 kiegroup/github-action-build-chain:
   '*':
     expires_at: 2025-08-01
