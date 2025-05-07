@@ -96,6 +96,8 @@ TobKed/label-when-approved-action:
 VirtusLab/scala-cli-setup:
   ef3764b372549ee60cce795f98da0df46e2567ff:
     expires_at: 2050-01-01
+  6fc878be89f1990f6599f4f6a2e52a252e54d9f9:
+    expires_at: 2050-01-01
 actions-cool/check-user-permission:
   '*':
     expires_at: 2025-08-01
