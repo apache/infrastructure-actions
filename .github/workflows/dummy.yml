@@ -19,6 +19,7 @@ jobs:
       - uses: Kesin11/actions-timeline@427ee2cf860166e404d0d69b4f2b24012bb7af4f
       - uses: Madrapps/jacoco-report@fd4800e8a81e21bdf373438e5918b975df041d15
       - uses: VirtusLab/scala-cli-setup@ef3764b372549ee60cce795f98da0df46e2567ff
+      - uses: VirtusLab/scala-cli-setup@6fc878be89f1990f6599f4f6a2e52a252e54d9f9
       - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b
       - uses: actions/setup-go@v5
       - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185
@@ -69,6 +70,8 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
       - uses: helm/chart-releaser-action@fc23f249f75decd5edf254c6b4401532cef093c3
       - uses: helm/chart-releaser-action@v1.4.0
+      - uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992
+      - uses: helm/chart-testing-action@v2.6.1
       - uses: helm/chart-testing-action@0d28d3144d3a25ea2cc349d6e59901c4ff469b3b
       - uses: helm/chart-testing-action@v2.7.0
       - uses: helm/kind-action@0025e74a8c7512023d06dc019c617aa3cf561fde
@@ -83,6 +86,7 @@ jobs:
       - uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
       - uses: ludeeus/action-shellcheck@1.1.0
       - uses: ludeeus/action-shellcheck@94e0aab03ca135d11a35e5bfc14e6746dc56e7e9
+      - uses: manusa/actions-setup-minikube@b589f2d61bf96695c546929c72b38563e856059d
       - uses: mozilla-actions/sccache-action@2e7f9ec7921547d4b46598398ca573513895d0bd
       - uses: mozilla-actions/sccache-action@v0.0.4
       - uses: mukunku/tag-exists-action@bdad1eaa119ce71b150b952c97351c75025c06a9
@@ -110,6 +114,8 @@ jobs:
       - uses: pre-commit/action@v3.0.1
       - uses: pypa/cibuildwheel@0f04e96e2f58e63b8b03886c1db16a507f2199bf
       - uses: pypa/cibuildwheel@v2.12.0
+      - uses: sbt/setup-sbt@26ab4b0fa1c47fa62fc1f6e51823a658fb6c760c
+      - uses: scala-steward-org/scala-steward-action@5021652c555c5724af574758b78ea5be49640007
       - uses: seanmiddleditch/gha-setup-ninja@8b297075da4cd2a5f1fd21fe011b499edf06e9d2
       - uses: seanmiddleditch/gha-setup-ninja@v4
       - uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a
