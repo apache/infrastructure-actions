@@ -96,6 +96,8 @@ TobKed/label-when-approved-action:
 VirtusLab/scala-cli-setup:
   ef3764b372549ee60cce795f98da0df46e2567ff:
     expires_at: 2050-01-01
+  6fc878be89f1990f6599f4f6a2e52a252e54d9f9:
+    expires_at: 2050-01-01
 actions-cool/check-user-permission:
   '*':
     expires_at: 2025-08-01
@@ -494,6 +496,8 @@ ludeeus/action-shellcheck:
   94e0aab03ca135d11a35e5bfc14e6746dc56e7e9:
     expires_at: 2050-01-01
 manusa/actions-setup-minikube:
+  b589f2d61bf96695c546929c72b38563e856059d:
+    expires_at: 2050-01-01
   '*':
     expires_at: 2025-08-01
     keep: true
@@ -667,6 +671,8 @@ ruby/setup-ruby:
     expires_at: 2025-08-01
     keep: true
 sbt/setup-sbt:
+  26ab4b0fa1c47fa62fc1f6e51823a658fb6c760c:
+    expires_at: 2050-01-01
   '*':
     expires_at: 2025-08-01
     keep: true
@@ -675,6 +681,8 @@ scacap/action-surefire-report:
     expires_at: 2025-08-01
     keep: true
 scala-steward-org/scala-steward-action:
+  5021652c555c5724af574758b78ea5be49640007:
+    expires_at: 2050-01-01
   '*':
     expires_at: 2025-08-01
     keep: true
