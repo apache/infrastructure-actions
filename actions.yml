@@ -519,9 +519,15 @@ mikepenz/action-junit-report:
     keep: true
 mozilla-actions/sccache-action:
   2e7f9ec7921547d4b46598398ca573513895d0bd:
-    expires_at: 2050-01-01
+    expires_at: 2025-08-03
   v0.0.4:
-    expires_at: 2025-08-01
+    expires_at: 2025-08-03
+  7d986dd989559c6ecdb630a3fd2557667be217ad:
+    expires_at: 2025-08-03
+    keep: false
+  v0.0.9:
+    expires_at: 2100-01-01
+    keep: false
 msys2/setup-msys2:
   '*':
     expires_at: 2025-08-01
