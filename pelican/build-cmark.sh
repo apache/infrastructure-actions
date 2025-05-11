@@ -1,15 +1,15 @@
 #!/bin/bash
 #
-# Build the cmark-gfm library and extensions within CURRENT DIRECTORY.
+# Build the cmark-gfm library and extensions in a temporary directory
 # 
-# The binary output will be under: cmark-gfm-$VERSION/lib
+# The binary output will be under: LIBCMARKDIR
 # 
 # USAGE:
-#   $ build-cmark.sh [ VERSION [ TARDIR ] ]
+#   $ build-cmark.sh VERSION LIBCMARKDIR [TARFILE]
 #
-#   VERSION: defaults to 0.28.3.gfm.12
-#   TARDIR: where to find a downloaded/cached tarball of the cmark
-#           code, or where to place a tarball
+#   VERSION: e.g. 0.28.3.gfm.12
+#   LIBCMARKDIR: where to put the binary library files
+#   TARFILE: local copy of the tarfile; must be for the correct version! (optional)
 #
 
 # Echo all of our steps if DEBUG_STEPS is set
@@ -17,33 +17,36 @@ test -n "$DEBUG_STEPS" && set -x
 
 set -e # early exit if any step fails
 
-#VERSION=0.28.3.gfm.20  ### not yet
-VERSION=0.28.3.gfm.12
-if [ "$1" != "" ]; then VERSION="$1"; fi
+VERSION=${1:?version}
+LIBCMARKDIR=${2:?library output}
+TARFILE=$3
 
-# The tarball exists here, or will be downloaded here.
-TARDIR="."
-if [ "$2" != "" ]; then TARDIR="$2"; fi
-
-ARCHIVES="https://github.com/github/cmark-gfm/archive/refs/tags"
-LOCAL="${TARDIR}/cmark-gfm.$VERSION.orig.tar.gz"
-
-# WARNING: this must agree with the parent directory in the tar file or the build will fail
-EXTRACTED_AS="cmark-gfm-$VERSION"
-
-# Follow redirects, and place the result into known name $LOCAL
-if [ -f "$LOCAL" ]; then
-    echo "Using cached tarball: ${LOCAL}" >&2
-else
-    echo "Fetching $VERSION from cmark archives" >&2
-    curl -sSL --fail -o "$LOCAL" "$ARCHIVES/$VERSION.tar.gz"
+if [[ -n $3 ]]
+then 
+  mkdir -p $3
+  cd $3
 fi
 
-# Clean anything old, then extract and build.
-### somebody smart could peek into the .tgz. ... MEH
-if [ -d "$EXTRACTED_AS" ]; then rm -r "$EXTRACTED_AS"; fi
-tar xzf "$LOCAL"
-pushd "$EXTRACTED_AS" >/dev/null
+ARCHIVES="https://github.com/github/cmark-gfm/archive/refs/tags"
+TARNAME="cmark-gfm.$VERSION.orig.tar.gz"
+TARDIR="cmark-gfm-$VERSION"
+
+# Work in a temporary directory
+TEMP=$(mktemp -d)
+
+if [[ -f $TARFILE ]]
+then
+  echo "Found tar!"
+  cp $TARFILE $TEMP # do this before cd to allow for relative paths
+  cd $TEMP
+else
+  cd $TEMP
+  echo "Fetching $VERSION from cmark archives" >&2
+  curl -sSL --fail -o "$TARNAME" "$ARCHIVES/$VERSION.tar.gz"
+fi
+
+tar xzf "$TARNAME"
+pushd "$TARDIR" >/dev/null
   mkdir build
   pushd build >/dev/null
     cmake --version >&2
@@ -53,14 +56,6 @@ pushd "$EXTRACTED_AS" >/dev/null
     } > build.log
   popd >/dev/null
 
-  mkdir lib
-  cp -Pp build/src/lib* lib/
-  cp -Pp build/extensions/lib* lib/
+  cp -Pp build/src/lib* ${LIBCMARKDIR}/
+  cp -Pp build/extensions/lib* ${LIBCMARKDIR}/
 popd >/dev/null
-
-# These files/dir may need a reference with LD_LIBRARY_PATH.
-# gfm.py wants this lib/ in LIBCMARKDIR.
-# ls -laF "$EXTRACTED_AS/lib/"
-
-# Provide a handy line for copy/paste.
-echo "export LIBCMARKDIR='$(pwd)/$EXTRACTED_AS/lib'"
