@@ -94,7 +94,7 @@ TobKed/label-when-approved-action:
     expires_at: 2025-08-01
     keep: true
 VirtusLab/scala-cli-setup:
-  ef3764b372549ee60cce795f98da0df46e2567ff:
+  ca54569bf13a29cd648721038a89c47c7921c060:
     expires_at: 2050-01-01
   6fc878be89f1990f6599f4f6a2e52a252e54d9f9:
     expires_at: 2050-01-01
@@ -247,10 +247,14 @@ container-tools/microshift-action:
     expires_at: 2025-08-01
     keep: true
 coursier/cache-action:
+  4e2615869d13561d626ed48655e1a39e5b192b3c:
+    expires_at: 2050-01-01
   '*':
     expires_at: 2025-08-01
     keep: true
 coursier/setup-action:
+  039f736548afa5411c1382f40a5bd9c2d30e0383:
+    expires_at: 2050-01-01
   '*':
     expires_at: 2025-08-01
     keep: true
@@ -432,6 +436,8 @@ jlumbroso/free-disk-space:
     expires_at: 2025-08-01
     keep: true
 jrouly/scalafmt-native-action:
+  14620cde093e5ff6bfbbecd4f638370024287b9d:
+    expires_at: 2050-01-01
   '*':
     expires_at: 2025-08-01
     keep: true
