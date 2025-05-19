@@ -18,7 +18,7 @@ jobs:
       - uses: JustinBeckwith/linkinator-action@v1.11.0
       - uses: Kesin11/actions-timeline@427ee2cf860166e404d0d69b4f2b24012bb7af4f
       - uses: Madrapps/jacoco-report@fd4800e8a81e21bdf373438e5918b975df041d15
-      - uses: VirtusLab/scala-cli-setup@ef3764b372549ee60cce795f98da0df46e2567ff
+      - uses: VirtusLab/scala-cli-setup@ca54569bf13a29cd648721038a89c47c7921c060
       - uses: VirtusLab/scala-cli-setup@6fc878be89f1990f6599f4f6a2e52a252e54d9f9
       - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b
       - uses: actions/setup-go@v5
@@ -42,6 +42,8 @@ jobs:
       - uses: carloscastrojumo/github-cherry-pick-action@a145da1b8142e752d3cbc11aaaa46a535690f0c5
       - uses: carloscastrojumo/github-cherry-pick-action@v1.0.9
       - uses: commit-check/commit-check-action@8d507e12899a9feb405c3ed546252ff9508724e0
+      - uses: coursier/cache-action@4e2615869d13561d626ed48655e1a39e5b192b3c
+      - uses: coursier/setup-action@039f736548afa5411c1382f40a5bd9c2d30e0383
       - uses: cpp-linter/cpp-linter-action@e3fcb174b19d50de4eae1b46896698a1dd48b094
       - uses: cpp-linter/cpp-linter-action@v2.13.3
       - uses: crazy-max/ghaction-import-gpg@111c56156bcc6918c056dbef52164cfa583dc549
@@ -80,6 +82,7 @@ jobs:
       - uses: ilammy/setup-nasm@v1
       - uses: jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5
       - uses: jasonetco/create-an-issue@v2
+      - uses: jrouly/scalafmt-native-action@14620cde093e5ff6bfbbecd4f638370024287b9d
       - uses: jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d
       - uses: korandoru/setup-zig@92b649f4723a14798d8b3cf3b6168edb65d5b04e
       - uses: korandoru/setup-zig@v1
@@ -87,6 +90,8 @@ jobs:
       - uses: ludeeus/action-shellcheck@1.1.0
       - uses: ludeeus/action-shellcheck@94e0aab03ca135d11a35e5bfc14e6746dc56e7e9
       - uses: manusa/actions-setup-minikube@b589f2d61bf96695c546929c72b38563e856059d
+      - uses: mozilla-actions/sccache-action@2e7f9ec7921547d4b46598398ca573513895d0bd
+      - uses: mozilla-actions/sccache-action@v0.0.4
       - uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
       - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: mukunku/tag-exists-action@bdad1eaa119ce71b150b952c97351c75025c06a9
