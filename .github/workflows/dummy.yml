@@ -19,6 +19,7 @@ jobs:
       - uses: Kesin11/actions-timeline@427ee2cf860166e404d0d69b4f2b24012bb7af4f
       - uses: Madrapps/jacoco-report@fd4800e8a81e21bdf373438e5918b975df041d15
       - uses: VirtusLab/scala-cli-setup@ca54569bf13a29cd648721038a89c47c7921c060
+      - uses: VirtusLab/scala-cli-setup@6fc878be89f1990f6599f4f6a2e52a252e54d9f9
       - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b
       - uses: actions/setup-go@v5
       - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185
