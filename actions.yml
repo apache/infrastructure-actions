@@ -507,10 +507,6 @@ manusa/actions-setup-minikube:
   '*':
     expires_at: 2025-08-01
     keep: true
-marcospereira/action-surefire-report:
-  '*':
-    expires_at: 2025-08-01
-    keep: true
 maxim-lobanov/setup-xcode:
   '*':
     expires_at: 2025-08-01
