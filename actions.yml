@@ -695,6 +695,8 @@ scala-steward-org/scala-steward-action:
     expires_at: 2025-08-01
     keep: true
 scalacenter/sbt-dependency-submission:
+  64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3:
+    expires_at: 2050-01-01
   '*':
     expires_at: 2025-08-01
     keep: true
