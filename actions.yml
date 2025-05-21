@@ -801,3 +801,9 @@ golangci/golangci-lint-action:
   55c2c1448f86e01eaae002a5a3a9624417608d84:
     expires_at: 2050-08-01
     keep: true
+usthe/issues-translate-action:
+  b41f55ddc81d7d54bd542a4f289fe28ec081898e:
+    expires_at: 2050-01-01
+    keep: true
+  v2.7:
+    expires_at: 2025-08-01
