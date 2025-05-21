@@ -801,3 +801,9 @@ golangci/golangci-lint-action:
   55c2c1448f86e01eaae002a5a3a9624417608d84:
     expires_at: 2050-08-01
     keep: true
+mirromutth/mysql-action:
+  de1fba8b3f90ce8db80f663a7043be3cf3231248:
+    expires_at: 2050-08-01
+    keep: true
+  v1.1:
+    expires_at: 2025-08-01
