@@ -685,6 +685,8 @@ sbt/setup-sbt:
     expires_at: 2025-08-01
     keep: true
 scacap/action-surefire-report:
+  1a128e49c0585bc0b8e38e541ac3b6e35a5bc727:
+    expires_at: 2050-01-01
   '*':
     expires_at: 2025-08-01
     keep: true
