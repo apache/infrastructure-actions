@@ -1,8 +1,3 @@
-# Main configuration file. We manually add trusted actions here.
-# Version updates can be triggered by merging dependabot PRs
-# into .github/workflows/dummy-workflow.yml . This will also
-# update expiry dates for previous versions.
-# Versions that are known to be problematic should be removed explicitly manually.
 1Password/load-secrets-action:
   581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0:
     expires_at: 2025-08-01
