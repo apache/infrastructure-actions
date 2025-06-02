@@ -61,6 +61,8 @@
 - bytedeco/javacpp-presets@*
 - carloscastrojumo/github-cherry-pick-action@a145da1b8142e752d3cbc11aaaa46a535690f0c5
 - carloscastrojumo/github-cherry-pick-action@v1.0.9
+- carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3
+- carloscastrojumo/github-cherry-pick-action@v1.0.10
 - carlosperate/arm-none-eabi-gcc-action@*
 - check-spelling/check-spelling@*
 - chromaui/action@*

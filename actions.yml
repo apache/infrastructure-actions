@@ -196,9 +196,15 @@ bytedeco/javacpp-presets:
     keep: true
 carloscastrojumo/github-cherry-pick-action:
   a145da1b8142e752d3cbc11aaaa46a535690f0c5:
-    expires_at: 2050-01-01
+    expires_at: 2025-08-25
   v1.0.9:
-    expires_at: 2025-08-01
+    expires_at: 2025-08-25
+  503773289f4a459069c832dc628826685b75b4b3:
+    expires_at: 2025-08-25
+    keep: false
+  v1.0.10:
+    expires_at: 2100-01-01
+    keep: false
 carlosperate/arm-none-eabi-gcc-action:
   '*':
     expires_at: 2025-08-01
