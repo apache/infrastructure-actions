@@ -1,2 +1,3 @@
 # Generated file, prevent accidental commits
 approved_patterns.yml
+/gateway/__pycache__
