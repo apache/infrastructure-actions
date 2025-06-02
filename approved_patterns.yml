@@ -1,4 +1,4 @@
-# This is a generated file. DO NOT UPDATE MANUALLY.
+# This file was generated from approved_patterns.yml by gateway/gateway.py. DO NOT UPDATE MANUALLY.
 - 1Password/load-secrets-action@581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0
 - ana06/get-changed-files@v2.3.0
 - actions-rs/*@*
