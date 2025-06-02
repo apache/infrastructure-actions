@@ -39,8 +39,8 @@ jobs:
       - uses: browser-actions/setup-geckodriver@5ef1526ed36211ab6cb531ec1cfb11f924ca2dee
       - uses: burnett01/rsync-deployments@0dc935cdecc5f5e571865e60d2a6cdc673704823
       - uses: burnett01/rsync-deployments@5.2
-      - uses: carloscastrojumo/github-cherry-pick-action@a145da1b8142e752d3cbc11aaaa46a535690f0c5
-      - uses: carloscastrojumo/github-cherry-pick-action@v1.0.9
+      - uses: carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3
+      - uses: carloscastrojumo/github-cherry-pick-action@v1.0.10
       - uses: commit-check/commit-check-action@8d507e12899a9feb405c3ed546252ff9508724e0
       - uses: coursier/cache-action@4e2615869d13561d626ed48655e1a39e5b192b3c
       - uses: coursier/setup-action@039f736548afa5411c1382f40a5bd9c2d30e0383
