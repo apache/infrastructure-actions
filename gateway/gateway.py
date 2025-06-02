@@ -226,7 +226,7 @@ def update_patterns(pattern_path: Path, list_path: Path):
     """
     actions: ActionsYAML = load_yaml(list_path)
     patterns = create_pattern(actions)
-    comment = "# This is a generated file. DO NOT UPDATE MANUALLY.\n"
+    comment = f"# This file was generated from {pattern_path} by gateway/gateway.py. DO NOT UPDATE MANUALLY.\n"
     patterns_str = comment + yaml.safe_dump(patterns)
     gha_print(patterns_str, "Generated Patterns")
     write_str(pattern_path, patterns_str)
