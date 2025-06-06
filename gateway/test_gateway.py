@@ -38,7 +38,7 @@ def test_update_refs():
         },
         "dorny/paths-filter": {
             "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {
-                "expires_at": calculate_expiry()
+                "expires_at": calculate_expiry(12)
             },
             "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {
                 "expires_at": datetime.date(2100, 1, 1),

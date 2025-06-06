@@ -14,6 +14,7 @@
 
 import unittest
 import json
+import os
 
 from get_stash import ensure_json, gh_api, jq
 
@@ -23,7 +24,8 @@ class TestGetStash(unittest.TestCase):
         self.assertEqual(jq('{"a": 1}', ".a", ["-j"]).stdout, "1")
 
     def test_jq_file(self):
-        self.assertEqual(jq("test.json", ".a").stdout, "1\n")
+        this_dir = os.path.dirname(os.path.realpath(__file__))
+        self.assertEqual(jq(this_dir + "/test.json", ".a").stdout, "1\n")
 
     def test_jq_error(self):
         with self.assertRaises(ValueError):
