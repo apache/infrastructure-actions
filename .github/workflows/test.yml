@@ -38,7 +38,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pyaml pytest
+          pip install pyaml pytest ruyaml
 
       - name: Run tests
         run: |

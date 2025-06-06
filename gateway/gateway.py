@@ -3,8 +3,7 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Dict, NotRequired, TypedDict
 
-import yaml
-
+import ruyaml
 
 class RefDetails(TypedDict):
     """
@@ -50,17 +49,9 @@ def load_yaml(path: Path) -> dict:
         dict: Parsed YAML content
     """
     with open(path, "r") as file:
-        actions = yaml.safe_load(file)
+        yaml = ruyaml.YAML()
+        actions = yaml.load(file)
     return actions
-
-
-class IndentDumper(yaml.Dumper):
-    """
-    Custom YAML dumper that maintains indentation for improved readability.
-    """
-
-    def increase_indent(self, flow=False, indentless=False):
-        return super(IndentDumper, self).increase_indent(flow, False)
 
 
 def write_yaml(path: Path, yaml_dict: dict | list):
@@ -72,7 +63,8 @@ def write_yaml(path: Path, yaml_dict: dict | list):
         yaml_dict: Data to write as YAML
     """
     with open(path, "w") as file:
-        yaml.dump(yaml_dict, file, Dumper=IndentDumper, sort_keys=False)
+        yaml = ruyaml.YAML()
+        yaml.dump(yaml_dict, file)
 
 
 def write_str(path: Path, content: str):
