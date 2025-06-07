@@ -1,9 +1,17 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "ruyaml",
+# ]
+# ///
+
 import os
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Dict, NotRequired, TypedDict
 
 import ruyaml
+
 
 class RefDetails(TypedDict):
     """

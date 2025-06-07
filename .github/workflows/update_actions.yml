@@ -29,8 +29,10 @@ jobs:
         with:
           persist-credentials: true
 
+      - run: pip install ruyaml 
+
       - name: Update actions.yml
-        shell: python
+        shell: python 
         run: |
           import sys
           sys.path.append("./gateway/")

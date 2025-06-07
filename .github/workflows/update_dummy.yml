@@ -29,8 +29,10 @@ jobs:
           # We have to use a PAT to commit the workflow file
           token: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }}
 
+      - run: pip install ruyaml 
+
       - name: Update Workflow 
-        shell: python
+        shell: python 
         run: |
           import sys
           sys.path.append("./gateway/")
