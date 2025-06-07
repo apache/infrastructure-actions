@@ -19,7 +19,7 @@ name: pytest
 
 on:
   pull_request:
-    branches: ['main']
+    branches: [main]
 
 permissions:
   contents: read
@@ -37,7 +37,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pyaml pytest ruyaml
+          pip install pytest ruyaml
 
       - name: Run tests
         run: |
