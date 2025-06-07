@@ -190,7 +190,8 @@ def update_actions(dummy_path: Path, actions_path: Path):
     actions: ActionsYAML = load_yaml(actions_path)
 
     update_refs(steps, actions)
-    gha_print(yaml.safe_dump(actions), "Generated List")
+    yaml = ruyaml.YAML()
+    gha_print(yaml.dump(actions), "Generated List")
     write_yaml(actions_path, actions)
 
 
@@ -227,6 +228,7 @@ def update_patterns(pattern_path: Path, list_path: Path):
     actions: ActionsYAML = load_yaml(list_path)
     patterns = create_pattern(actions)
     comment = f"# This file was generated from {pattern_path} by gateway/gateway.py. DO NOT UPDATE MANUALLY.\n"
+    yaml = ruyaml.YAML()
     patterns_str = comment + yaml.safe_dump(patterns)
     gha_print(patterns_str, "Generated Patterns")
     write_str(pattern_path, patterns_str)
@@ -281,5 +283,6 @@ def clean_actions(actions_path: Path):
     """
     actions: ActionsYAML = load_yaml(actions_path)
     remove_expired_refs(actions)
+    yaml = ruyaml.YAML()
     gha_print(yaml.safe_dump(actions), "Cleaned Actions")
     write_yaml(actions_path, actions)
