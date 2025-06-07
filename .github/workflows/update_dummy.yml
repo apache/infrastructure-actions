@@ -10,6 +10,7 @@ on:
     paths:
       - ".github/workflows/update_dummy.yml"
       - "actions.yml"
+      - gateway/*
 
 permissions: {}
 
