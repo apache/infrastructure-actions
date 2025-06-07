@@ -1,3 +1,4 @@
 # Generated file, prevent accidental commits
 approved_patterns.yml
 /gateway/__pycache__
+/gateway/test_out_dummy.yml
