@@ -3,6 +3,9 @@ import datetime
 import filecmp
 from gateway import *
 
+def load_yaml_string(yaml_string: str):
+    yaml = ruyaml.YAML()
+    return yaml.load(yaml_string)
 
 def test_load_yaml():
     this_dir = os.path.dirname(os.path.realpath(__file__))
@@ -17,7 +20,6 @@ def test_roundtrip_yaml():
     outfile = this_dir + "/test_out_dummy.yml"
     write_yaml(outfile, parsed)
     assert filecmp.cmp(infile, outfile, shallow=False)
-
 
 def test_update_refs():
     steps = [
@@ -64,7 +66,54 @@ def test_update_refs():
     }
 
     update_refs(steps, refs)
-    print(refs["dorny/paths-filter"])
+    assert refs == expected_refs
+
+def test_update_tagged_ref():
+    steps = load_yaml_string('''
+    - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+    - uses: DavidAnson/markdownlint-cli2-action@b4c9feab76d8025d1e83c653fa3990936df0e6c8   # v16
+    ''')
+
+    refs: ActionsYAML = {
+        "actions/setup-go": {"v4": {"expires_at": datetime.date(2100, 1, 1), "keep": True}},
+        "hashicorp/setup-terraform": {"v2": {"expires_at": datetime.date(2100, 1, 1)}},
+        "opentofu/setup-opentofu": {"v1": {"expires_at": datetime.date(2100, 1, 1)}},
+        "helm/chart-testing-action": {
+            "v2.5.0": {"expires_at": datetime.date(2100, 1, 1)}
+        },
+        "dorny/paths-filter": {
+            "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {
+                "expires_at": datetime.date(2100, 1, 1)
+            }
+        },
+    }
+
+    expected_refs: ActionsYAML = {
+        "actions/setup-go": {"v4": {"expires_at": datetime.date(2100, 1, 1), "keep": True}},
+        "hashicorp/setup-terraform": {"v2": {"expires_at": datetime.date(2100, 1, 1)}},
+        "opentofu/setup-opentofu": {"v1": {"expires_at": datetime.date(2100, 1, 1)}},
+        "helm/chart-testing-action": {
+            "v2.5.0": {"expires_at": datetime.date(2100, 1, 1)}
+        },
+        "dorny/paths-filter": {
+            "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {
+                "expires_at": calculate_expiry(12)
+            },
+            "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {
+                "expires_at": datetime.date(2100, 1, 1),
+                "keep": False,
+            },
+        },
+        "DavidAnson/markdownlint-cli2-action": {
+            "b4c9feab76d8025d1e83c653fa3990936df0e6c8": {
+                "expires_at": datetime.date(2100, 1, 1),
+                "tag": "v16",
+                "keep": False,
+            }
+        },
+    }
+
+    update_refs(steps, refs)
     assert refs == expected_refs
 
 

@@ -139,11 +139,11 @@ jobs:
 """
     steps = []
     steps.extend(
-        f"      - uses: {name}@{ref}"
+        f"      - uses: {name}@{ref}" + (f"  # {details['tag']}" if 'tag' in details else '')
         for name, refs in actions.items()
-        for ref, details in refs.items()
-        # exclude actions that entered expiry range, use gt to also exclude actions that were expired today.
-        if details["expires_at"] > calculate_expiry()
+        for ref, details in [ list(refs.items())[-1] ]
+        # exclude expired actions, use gt to also exclude actions that expired today.
+        if details["expires_at"] > date.today()
         and not details.get("keep")  # Exclude refs with "keep"
     )
 
@@ -165,6 +165,9 @@ def update_refs(
     """
     for step in dummy_steps:
         name, new_ref = step["uses"].split("@")
+        new_tag = None
+        if hasattr(step, 'ca') and 'uses' in step.ca.items:
+            new_tag = step.ca.items['uses'][2].value[1:].strip()
 
         if name not in action_refs:
             action_refs[name] = {}
@@ -178,6 +181,8 @@ def update_refs(
                 details["expires_at"] = calculate_expiry(12)
 
             refs[new_ref] = {"expires_at": date(2100, 1, 1), "keep": False}
+            if new_tag:
+                refs[new_ref]['tag'] = new_tag
 
     return action_refs
 
