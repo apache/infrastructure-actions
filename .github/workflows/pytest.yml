@@ -32,15 +32,9 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python environment
-        uses: actions/setup-python@v5
-
-      - name: Install dependencies
-        run: |
-          pip install pytest ruyaml
-
       - name: Run tests
         run: |
-          pytest
+          pipx install uv
+          uvx --with ruyaml pytest
         env:
           GH_TOKEN: ${{ github.token }}
