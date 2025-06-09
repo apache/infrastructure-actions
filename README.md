@@ -47,6 +47,15 @@ As stated in the [ASF GitHub Actions Policy](https://infra.apache.org/github-act
 
 All other actions must be explicitly added to the allow list after undergoing a security review. This review process applies to both new actions and new versions of previously approved actions (though reviews for new versions are typically expedited).
 
+```mermaid
+graph TD;
+    manual["manual PRs"]--new entries-->actions.yml
+    dependabot--updates (after review)-->dummy[".github/workflows/dummy.yml"];
+    dummy--updates-->actions.yml
+    actions.yml--new entries-->dummy
+    actions.yml--generates-->approved_patterns.yml
+```
+
 ### Adding a New Action to the Allow List
 
 To request addition of an action to the allow list:
