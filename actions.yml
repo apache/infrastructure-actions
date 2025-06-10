@@ -669,12 +669,6 @@ peaceiris/actions-mdbook:
   '*':
     expires_at: 2025-08-01
     keep: true
-peter-evans/close-issue:
-  v2:
-    expires_at: 2025-08-01
-  1373cadf1f0c96c1420bc000cfba2273ea307fd1:
-    expires_at: 2050-01-01
-    tag: v2
 peter-evans/create-or-update-comment:
   c9fcb64660bc90ec1cc535646af190c992007c32:
     expires_at: 2050-01-01
