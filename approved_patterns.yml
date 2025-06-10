@@ -90,6 +90,7 @@
 - dawidd6/action-download-artifact@*
 - dawidd6/action-send-mail@v3
 - dawidd6/action-send-mail@4226df7daafa6fc901a43789c49bf7ab309066e7
+- dawidd6/action-send-mail@2cea9617b09d79a095af21254fbcb7ae95903dde
 - delaguardo/setup-graalvm@*
 - dlang-community/setup-dlang@*
 - docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
