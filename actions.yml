@@ -690,7 +690,11 @@ phoenix-actions/test-reporting:
     tag: v15
 pmd/pmd-github-action:
   967a81f8b657c87f7c3e96b62301cb1a48efef29:
+    expires_at: 2025-09-02
+  d9c1f3c5940cbf5923f1354e83fa858b4496ebaa:
     expires_at: 2050-01-01
+    keep: false
+    tag: v2.0.0
 pnpm/action-setup:
   '*':
     expires_at: 2025-08-01
