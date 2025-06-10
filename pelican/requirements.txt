@@ -9,4 +9,4 @@ certifi==2024.7.4
 idna==3.7
 charset-normalizer==2.0.4
 urllib3==2.2.2
-requests==2.32.2
+requests==2.32.4
