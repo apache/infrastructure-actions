@@ -775,12 +775,6 @@ scottbrenner/puppet-lint-action:
   '*':
     expires_at: 2025-08-01
     keep: true
-seanmiddleditch/gha-setup-ninja:
-  v4:
-    expires_at: 2025-08-01
-  8b297075da4cd2a5f1fd21fe011b499edf06e9d2:
-    expires_at: 2050-01-01
-    tag: v4
 securego/gosec:
   '*':
     expires_at: 2025-08-01
