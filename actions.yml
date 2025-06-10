@@ -5,10 +5,13 @@
 # Versions that are known to be problematic should be removed explicitly manually.
 1Password/load-secrets-action:
   581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0:
-    expires_at: 2025-08-01
+    expires_at: 2050-01-01
 ana06/get-changed-files:
   v2.3.0:
     expires_at: 2025-08-01
+  25f79e676e7ea1868813e21465014798211fad8c:
+    tag: v2.3.0
+    expires_at: 2050-01-01
 actions-rs/*:
   '*':
     expires_at: 2025-08-01
@@ -66,24 +69,27 @@ BobAnkh/auto-generate-changelog:
     expires_at: 2025-08-01
     keep: true
 DavidAnson/markdownlint-cli2-action:
-  b4c9feab76d8025d1e83c653fa3990936df0e6c8:
-    expires_at: 2050-01-01
   v16:
     expires_at: 2025-08-01
+  b4c9feab76d8025d1e83c653fa3990936df0e6c8:
+    expires_at: 2050-01-01
+    tag: v16
 EnricoMi/publish-unit-test-result-action:
   '*':
     expires_at: 2025-08-01
     keep: true
 JamesIves/github-pages-deploy-action:
-  881db5376404c5c8d621010bcbec0310b58d5e29:
-    expires_at: 2050-01-01
   v4.6.8:
     expires_at: 2025-08-01
-JustinBeckwith/linkinator-action:
-  3d5ba091319fa7b0ac14703761eebb7d100e6f6d:
+  881db5376404c5c8d621010bcbec0310b58d5e29:
     expires_at: 2050-01-01
+    tag: v4.6.8
+JustinBeckwith/linkinator-action:
   v1.11.0:
     expires_at: 2025-08-01
+  3d5ba091319fa7b0ac14703761eebb7d100e6f6d:
+    expires_at: 2050-01-01
+    tag: v1.11.0
 Kesin11/actions-timeline:
   427ee2cf860166e404d0d69b4f2b24012bb7af4f:
     expires_at: 2050-01-01
@@ -99,9 +105,11 @@ TobKed/label-when-approved-action:
     expires_at: 2025-08-01
     keep: true
 VirtusLab/scala-cli-setup:
-  ca54569bf13a29cd648721038a89c47c7921c060:
-    expires_at: 2050-01-01
   6fc878be89f1990f6599f4f6a2e52a252e54d9f9:
+    tag: v1.7.1
+    expires_at: 2025-09-08
+  ca54569bf13a29cd648721038a89c47c7921c060:
+    tag: v1.8.0
     expires_at: 2050-01-01
 actions-cool/check-user-permission:
   '*':
@@ -116,15 +124,17 @@ actions-cool/maintain-one-comment:
     expires_at: 2025-08-01
     keep: true
 actions/setup-go:
-  0aaccfd150d50ccaeb58ebd88d36e91967a5f35b:
-    expires_at: 2050-01-01
   v5:
     expires_at: 2025-08-01
-addnab/docker-run-action:
-  4f65fabd2431ebc8d299f8e5a018d79a769ae185:
+  0aaccfd150d50ccaeb58ebd88d36e91967a5f35b:
     expires_at: 2050-01-01
+    tag: v5
+addnab/docker-run-action:
   v3:
     expires_at: 2025-08-01
+  4f65fabd2431ebc8d299f8e5a018d79a769ae185:
+    expires_at: 2050-01-01
+    tag: v3
 al-cheb/configure-pagefile-action:
   '*':
     expires_at: 2025-08-01
@@ -134,10 +144,11 @@ amannn/action-semantic-pull-request:
     expires_at: 2025-08-01
     keep: true
 amondnet/vercel-action:
-  225d234cfe5340ca1f9a6cd158338126b5b6845f:
-    expires_at: 2050-01-01
   v25.1.1:
     expires_at: 2025-08-01
+  225d234cfe5340ca1f9a6cd158338126b5b6845f:
+    expires_at: 2050-01-01
+    tag: v25.1.1
 arduino/setup-protoc:
   '*':
     expires_at: 2025-08-01
@@ -147,30 +158,35 @@ awalsh128/cache-apt-pkgs-action:
     expires_at: 2025-08-01
     keep: true
 aws-actions/configure-aws-credentials:
-  ececac1a45f3b08a01d2dd070d28d111c5fe6722:
-    expires_at: 2050-01-01
   v4.1.0:
     expires_at: 2025-08-01
-azure/setup-helm:
-  5119fcb9089d432beecbf79bb2c7915207344b78:
+  ececac1a45f3b08a01d2dd070d28d111c5fe6722:
     expires_at: 2050-01-01
+    tag: v4.1.0
+azure/setup-helm:
   v3:
     expires_at: 2025-08-01
+  5119fcb9089d432beecbf79bb2c7915207344b78:
+    expires_at: 2050-01-01
+    tag: v3
 betahuhn/repo-file-sync-action:
+  v1:
+    expires_at: 2025-08-01
   8b92be3375cf1d1b0cd579af488a9255572e4619:
     expires_at: 2050-01-01
-  v1:
-    expires_at: 2025-08-01
+    tag: v1
 bnjbvr/cargo-machete:
-  5eaad10acf89fb0c6a31d9b197a2d48ba762d28e:
-    expires_at: 2050-01-01
   v0.7.0:
     expires_at: 2025-08-01
-browser-actions/setup-firefox:
-  5b19b18df8c293aae9e77f0a936e9fdc358f543a:
+  5eaad10acf89fb0c6a31d9b197a2d48ba762d28e:
     expires_at: 2050-01-01
+    tag: v0.7.0
+browser-actions/setup-firefox:
   v1:
     expires_at: 2025-08-01
+  5b19b18df8c293aae9e77f0a936e9fdc358f543a:
+    expires_at: 2050-01-01
+    tag: v1
 browser-actions/setup-geckodriver:
   5ef1526ed36211ab6cb531ec1cfb11f924ca2dee:
     expires_at: 2050-01-01
@@ -187,10 +203,11 @@ bufbuild/buf-setup-action:
     expires_at: 2025-08-01
     keep: true
 burnett01/rsync-deployments:
-  0dc935cdecc5f5e571865e60d2a6cdc673704823:
-    expires_at: 2050-01-01
   '5.2':
     expires_at: 2025-08-01
+  0dc935cdecc5f5e571865e60d2a6cdc673704823:
+    expires_at: 2050-01-01
+    tag: '5.2'
 burrunan/gradle-cache-action:
   '*':
     expires_at: 2025-08-01
@@ -200,16 +217,16 @@ bytedeco/javacpp-presets:
     expires_at: 2025-08-01
     keep: true
 carloscastrojumo/github-cherry-pick-action:
-  a145da1b8142e752d3cbc11aaaa46a535690f0c5:
-    expires_at: 2025-08-25
   v1.0.9:
-    expires_at: 2025-08-25
-  503773289f4a459069c832dc628826685b75b4b3:
-    expires_at: 2025-08-25
-    keep: false
+    expires_at: 2025-08-01
+  a145da1b8142e752d3cbc11aaaa46a535690f0c5:
+    expires_at: 2025-08-01
+    tag: v1.0.9
   v1.0.10:
-    expires_at: 2100-01-01
-    keep: false
+    expires_at: 2025-08-01
+  503773289f4a459069c832dc628826685b75b4b3:
+    expires_at: 2050-01-01
+    tag: v1.0.10
 carlosperate/arm-none-eabi-gcc-action:
   '*':
     expires_at: 2025-08-01
@@ -260,20 +277,23 @@ container-tools/microshift-action:
 coursier/cache-action:
   4e2615869d13561d626ed48655e1a39e5b192b3c:
     expires_at: 2050-01-01
+    tag: 6.4.7
   '*':
     expires_at: 2025-08-01
     keep: true
 coursier/setup-action:
   039f736548afa5411c1382f40a5bd9c2d30e0383:
     expires_at: 2050-01-01
+    tag: v1.3.9
   '*':
     expires_at: 2025-08-01
     keep: true
 cpp-linter/cpp-linter-action:
-  e3fcb174b19d50de4eae1b46896698a1dd48b094:
-    expires_at: 2050-01-01
   v2.13.3:
     expires_at: 2025-08-01
+  e3fcb174b19d50de4eae1b46896698a1dd48b094:
+    expires_at: 2050-01-01
+    tag: v2.13.3
 crate-ci/typos:
   '*':
     expires_at: 2025-08-01
@@ -282,10 +302,11 @@ crazy-max/ghaction-import-gpg:
   111c56156bcc6918c056dbef52164cfa583dc549:
     expires_at: 2050-01-01
 crazy-max/ghaction-setup-docker:
-  b60f85385d03ac8acfca6d9996982511d8620a19:
-    expires_at: 2050-01-01
   v4:
     expires_at: 2025-08-01
+  b60f85385d03ac8acfca6d9996982511d8620a19:
+    expires_at: 2050-01-01
+    tag: v4
 damccorm/tag-ur-it:
   6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5:
     expires_at: 2050-01-01
@@ -294,10 +315,11 @@ dawidd6/action-download-artifact:
     expires_at: 2025-08-01
     keep: true
 dawidd6/action-send-mail:
-  4226df7daafa6fc901a43789c49bf7ab309066e7:
-    expires_at: 2050-01-01
   v3:
     expires_at: 2025-08-01
+  4226df7daafa6fc901a43789c49bf7ab309066e7:
+    expires_at: 2050-01-01
+    tag: v3
 delaguardo/setup-graalvm:
   '*':
     expires_at: 2025-08-01
@@ -316,25 +338,28 @@ docker/setup-qemu-action:
     expires_at: 2050-01-01
     keep: true
 dominikh/staticcheck-action:
-  4ec9a0dff54be2642bc76581598ba433fd8d4967:
-    expires_at: 2050-01-01
   v1.1.0:
     expires_at: 2025-08-01
+  4ec9a0dff54be2642bc76581598ba433fd8d4967:
+    expires_at: 2050-01-01
+    tag: v1.1.0
 dorny/paths-filter:
+  v3.0.0:
+    expires_at: 2025-08-01
   0bc4621a3135347011ad047f9ecf449bf72ce2bd:
     expires_at: 2025-06-24
-  v3.0.0:
-    expires_at: 2025-06-24
+    tag: v3.0.0
+  v3.0.1:
+    expires_at: 2025-08-01
   ebc4d7e9ebcb0b1eb21480bb8f43113e996ac77a:
     expires_at: 2025-06-24
-  v3.0.1:
-    expires_at: 2025-06-24
-  de90cc6fb38fc0963ad72b210f1f284cd68cea36:
-    expires_at: 2025-06-24
-    keep: false
+    tag: v3.0.1
   v3.0.2:
-    expires_at: 2100-01-01
+    expires_at: 2025-08-01
+  de90cc6fb38fc0963ad72b210f1f284cd68cea36:
+    expires_at: 2050-01-01
     keep: false
+    tag: v3.0.2
 easimon/maximize-build-space:
   '*':
     expires_at: 2025-08-01
@@ -371,51 +396,59 @@ gr2m/twitter-together:
     expires_at: 2025-08-01
     keep: true
 graalvm/setup-graalvm:
-  01ed653ac833fe80569f1ef9f25585ba2811baab:
-    expires_at: 2050-01-01
   v1:
     expires_at: 2025-08-01
+  01ed653ac833fe80569f1ef9f25585ba2811baab:
+    expires_at: 2050-01-01
+    tag: v1
 gradle/wrapper-validation-action:
   '*':
-    expires_at: 2025-08-01
+    expires_at: 2050-01-01
     keep: true
   v3.5.0:
     expires_at: 2025-08-01
+  f9c9c575b8b21b6485636a91ffecd10e558c62f6:
+    tag: v3.5.0
+    expires_at: 2050-01-01
 gsactions/commit-message-checker:
   '*':
     expires_at: 2025-08-01
     keep: true
 hadolint/hadolint-action:
-  f988afea3da57ee48710a9795b6bb677cc901183:
-    expires_at: 2050-01-01
   v2.1.0:
     expires_at: 2025-08-01
-hashicorp/setup-terraform:
-  b9cd54a3c349d3f38e8881555d616ced269862dd:
+  f988afea3da57ee48710a9795b6bb677cc901183:
     expires_at: 2050-01-01
+    tag: v2.1.0
+hashicorp/setup-terraform:
   v3:
     expires_at: 2025-08-01
-helm/chart-releaser-action:
-  fc23f249f75decd5edf254c6b4401532cef093c3:
+  b9cd54a3c349d3f38e8881555d616ced269862dd:
     expires_at: 2050-01-01
+    tag: v3
+helm/chart-releaser-action:
   v1.4.0:
     expires_at: 2025-08-01
+  fc23f249f75decd5edf254c6b4401532cef093c3:
+    expires_at: 2050-01-01
+    tag: v1.4.0
 helm/chart-testing-action:
+  v2.6.1:
+    expires_at: 2025-08-01
   e6669bcd63d7cb57cb4380c33043eebe5d111992:
     expires_at: 2025-07-17
-  v2.6.1:
-    expires_at: 2025-07-17
-  0d28d3144d3a25ea2cc349d6e59901c4ff469b3b:
-    expires_at: 2025-07-17
-    keep: false
+    tag: v2.6.1
   v2.7.0:
-    expires_at: 2100-01-01
-    keep: false
-helm/kind-action:
-  0025e74a8c7512023d06dc019c617aa3cf561fde:
+    expires_at: 2025-08-01
+  0d28d3144d3a25ea2cc349d6e59901c4ff469b3b:
     expires_at: 2050-01-01
+    tag: v2.7.0
+helm/kind-action:
   v1.10.0:
     expires_at: 2025-08-01
+  0025e74a8c7512023d06dc019c617aa3cf561fde:
+    expires_at: 2050-01-01
+    tag: v1.10.0
 houseabsolute/actions-rust-cross:
   '*':
     expires_at: 2025-08-01
@@ -425,19 +458,21 @@ ilammy/msvc-dev-cmd:
     expires_at: 2025-08-01
     keep: true
 ilammy/setup-nasm:
-  e77cc62a22a374a4d0668286007cc3e3b4c17760:
-    expires_at: 2050-01-01
   v1:
     expires_at: 2025-08-01
+  e77cc62a22a374a4d0668286007cc3e3b4c17760:
+    expires_at: 2050-01-01
+    tag: v1
 jarvusinnovations/background-action:
   '*':
     expires_at: 2025-08-01
     keep: true
 jasonetco/create-an-issue:
-  1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5:
-    expires_at: 2050-01-01
   v2:
     expires_at: 2025-08-01
+  1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5:
+    expires_at: 2050-01-01
+    tag: v2
 jidicula/clang-format-action:
   '*':
     expires_at: 2025-08-01
@@ -449,6 +484,7 @@ jlumbroso/free-disk-space:
 jrouly/scalafmt-native-action:
   14620cde093e5ff6bfbbecd4f638370024287b9d:
     expires_at: 2050-01-01
+    tag: v4
   '*':
     expires_at: 2025-08-01
     keep: true
@@ -496,10 +532,11 @@ korandoru/hawkeye:
     expires_at: 2025-08-01
     keep: true
 korandoru/setup-zig:
-  92b649f4723a14798d8b3cf3b6168edb65d5b04e:
-    expires_at: 2050-01-01
   v1:
     expires_at: 2025-08-01
+  92b649f4723a14798d8b3cf3b6168edb65d5b04e:
+    expires_at: 2050-01-01
+    tag: v1
 leafo/gh-actions-lua:
   '*':
     expires_at: 2025-08-01
@@ -512,9 +549,11 @@ ludeeus/action-shellcheck:
     expires_at: 2025-08-01
   94e0aab03ca135d11a35e5bfc14e6746dc56e7e9:
     expires_at: 2050-01-01
+    tag: 1.1.0
 manusa/actions-setup-minikube:
   b589f2d61bf96695c546929c72b38563e856059d:
     expires_at: 2050-01-01
+    tag: v2.14.0
   '*':
     expires_at: 2025-08-01
     keep: true
@@ -531,25 +570,26 @@ mikepenz/action-junit-report:
     expires_at: 2025-08-01
     keep: true
 mozilla-actions/sccache-action:
+  v0.0.4:
+    expires_at: 2025-08-01
   2e7f9ec7921547d4b46598398ca573513895d0bd:
     expires_at: 2025-08-03
-  v0.0.4:
-    expires_at: 2025-08-03
-  7d986dd989559c6ecdb630a3fd2557667be217ad:
-    expires_at: 2025-08-03
-    keep: false
+    tag: v0.0.4
   v0.0.9:
-    expires_at: 2100-01-01
-    keep: false
+    expires_at: 2025-08-01
+  7d986dd989559c6ecdb630a3fd2557667be217ad:
+    expires_at: 2050-01-01
+    tag: v0.0.9
 msys2/setup-msys2:
   '*':
     expires_at: 2025-08-01
     keep: true
 mukunku/tag-exists-action:
-  bdad1eaa119ce71b150b952c97351c75025c06a9:
-    expires_at: 2050-01-01
   v1.6.0:
     expires_at: 2025-08-01
+  bdad1eaa119ce71b150b952c97351c75025c06a9:
+    expires_at: 2050-01-01
+    tag: v1.6.0
 mvasigh/dispatch-action:
   '*':
     expires_at: 2025-08-01
@@ -562,19 +602,21 @@ ncipollo/release-action:
   1e3e9c6637e5566e185b7ab66f187539c5a76da7:
     expires_at: 2050-01-01
 neofinancial/ticket-check-action:
-  609d901d5130a4bbd7d9f62931082ed67f855891:
-    expires_at: 2050-01-01
   v2.0.0:
     expires_at: 2025-08-01
+  609d901d5130a4bbd7d9f62931082ed67f855891:
+    expires_at: 2050-01-01
+    tag: v2.0.0
 nick-fields/retry:
   '*':
     expires_at: 2025-08-01
     keep: true
 nwtgck/actions-netlify:
-  ac1cb16858bada08a9c71a81240a85cfc3f72913:
-    expires_at: 2050-01-01
   v1.2:
     expires_at: 2025-08-01
+  ac1cb16858bada08a9c71a81240a85cfc3f72913:
+    expires_at: 2050-01-01
+    tag: v1.2
 ocaml/setup-ocaml:
   '*':
     expires_at: 2025-08-01
@@ -584,33 +626,37 @@ olafurpg/setup-scala:
     expires_at: 2025-08-01
     keep: true
 opentofu/setup-opentofu:
-  592200bd4b9bbf4772ace78f887668b1aee8f716:
-    expires_at: 2050-01-01
   v1:
     expires_at: 2025-08-01
+  592200bd4b9bbf4772ace78f887668b1aee8f716:
+    expires_at: 2050-01-01
+    tag: v1
 oracle-actions/setup-java:
   '*':
     expires_at: 2025-08-01
     keep: true
 orhun/git-cliff-action:
-  4a4a951bc43fafe41cd2348d181853f52356bee7:
-    expires_at: 2050-01-01
   v4:
     expires_at: 2025-08-01
+  4a4a951bc43fafe41cd2348d181853f52356bee7:
+    expires_at: 2050-01-01
+    tag: v4
 ossf/scorecard-action:
   '*':
     expires_at: 2025-08-01
     keep: true
 packetcoders/action-setup-cache-python-poetry:
-  a3f2e6ed12462e038bc14270d139e373bf5ac564:
-    expires_at: 2050-01-01
   v1.1.0:
     expires_at: 2025-08-01
-pdm-project/setup-pdm:
-  483717a073bdef51804a58dac17d043a4183c384:
+  a3f2e6ed12462e038bc14270d139e373bf5ac564:
     expires_at: 2050-01-01
+    tag: v1.1.0
+pdm-project/setup-pdm:
   v4:
     expires_at: 2025-08-01
+  483717a073bdef51804a58dac17d043a4183c384:
+    expires_at: 2050-01-01
+    tag: v4
 peaceiris/actions-gh-pages:
   '*':
     expires_at: 2025-08-01
@@ -624,10 +670,11 @@ peaceiris/actions-mdbook:
     expires_at: 2025-08-01
     keep: true
 peter-evans/close-issue:
-  1373cadf1f0c96c1420bc000cfba2273ea307fd1:
-    expires_at: 2050-01-01
   v2:
     expires_at: 2025-08-01
+  1373cadf1f0c96c1420bc000cfba2273ea307fd1:
+    expires_at: 2050-01-01
+    tag: v2
 peter-evans/create-or-update-comment:
   c9fcb64660bc90ec1cc535646af190c992007c32:
     expires_at: 2050-01-01
@@ -636,10 +683,11 @@ peter-evans/create-pull-request:
     expires_at: 2025-08-01
     keep: true
 phoenix-actions/test-reporting:
-  f957cd93fc2d848d556fa0d03c57bc79127b6b5e:
-    expires_at: 2050-01-01
   v15:
     expires_at: 2025-08-01
+  f957cd93fc2d848d556fa0d03c57bc79127b6b5e:
+    expires_at: 2050-01-01
+    tag: v15
 pmd/pmd-github-action:
   967a81f8b657c87f7c3e96b62301cb1a48efef29:
     expires_at: 2050-01-01
@@ -652,19 +700,21 @@ potiuk/cancel-workflow-runs:
     expires_at: 2025-08-01
     keep: true
 pre-commit/action:
-  2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd:
-    expires_at: 2050-01-01
   v3.0.1:
     expires_at: 2025-08-01
+  2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd:
+    expires_at: 2050-01-01
+    tag: v3.0.1
 pyTooling/Actions:
   '*':
     expires_at: 2025-08-01
     keep: true
 pypa/cibuildwheel:
-  0f04e96e2f58e63b8b03886c1db16a507f2199bf:
-    expires_at: 2050-01-01
   v2.12.0:
     expires_at: 2025-08-01
+  0f04e96e2f58e63b8b03886c1db16a507f2199bf:
+    expires_at: 2050-01-01
+    tag: v2.12.0
 pytooling/actions:
   '*':
     expires_at: 2025-08-01
@@ -692,24 +742,28 @@ ruby/setup-ruby:
 sbt/setup-sbt:
   26ab4b0fa1c47fa62fc1f6e51823a658fb6c760c:
     expires_at: 2050-01-01
+    tag: v1.1.7
   '*':
     expires_at: 2025-08-01
     keep: true
 scacap/action-surefire-report:
   1a128e49c0585bc0b8e38e541ac3b6e35a5bc727:
     expires_at: 2050-01-01
+    tag: v1.9.0
   '*':
     expires_at: 2025-08-01
     keep: true
 scala-steward-org/scala-steward-action:
   5021652c555c5724af574758b78ea5be49640007:
     expires_at: 2050-01-01
+    tag: v2.75.0
   '*':
     expires_at: 2025-08-01
     keep: true
 scalacenter/sbt-dependency-submission:
   64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3:
     expires_at: 2050-01-01
+    tag: v3.0.2
   '*':
     expires_at: 2025-08-01
     keep: true
@@ -718,10 +772,11 @@ scottbrenner/puppet-lint-action:
     expires_at: 2025-08-01
     keep: true
 seanmiddleditch/gha-setup-ninja:
-  8b297075da4cd2a5f1fd21fe011b499edf06e9d2:
-    expires_at: 2050-01-01
   v4:
     expires_at: 2025-08-01
+  8b297075da4cd2a5f1fd21fe011b499edf06e9d2:
+    expires_at: 2050-01-01
+    tag: v4
 securego/gosec:
   '*':
     expires_at: 2025-08-01
@@ -739,10 +794,11 @@ shufo/auto-assign-reviewer-by-files:
     expires_at: 2025-08-01
     keep: true
 snok/install-poetry:
-  76e04a911780d5b312d89783f7b1cd627778900a:
-    expires_at: 2050-01-01
   v1:
     expires_at: 2025-08-01
+  76e04a911780d5b312d89783f7b1cd627778900a:
+    expires_at: 2050-01-01
+    tag: v1
 softprops/action-gh-release:
   '*':
     expires_at: 2025-08-01
@@ -780,16 +836,19 @@ untitaker/hyperlink:
     expires_at: 2025-08-01
   d277930ba480c61cd3dd1a0caf0d18acfed294a6:
     expires_at: 2050-01-01
+    tag: 0.1.21
 uraimo/run-on-arch-action:
-  ac33288c3728ca72563c97b8b88dda5a65a84448:
-    expires_at: 2050-01-01
   v2:
     expires_at: 2025-08-01
-vimtor/action-zip:
-  5f1c4aa587ea41db1110df6a99981dbe19cee310:
+  ac33288c3728ca72563c97b8b88dda5a65a84448:
     expires_at: 2050-01-01
+    tag: v2
+vimtor/action-zip:
   v1:
     expires_at: 2025-08-01
+  5f1c4aa587ea41db1110df6a99981dbe19cee310:
+    expires_at: 2050-01-01
+    tag: v1
 vishalsinha21/dynamic-checklist:
   '*':
     expires_at: 2025-08-01
@@ -803,10 +862,11 @@ xpol/setup-lua:
     expires_at: 2025-08-01
     keep: true
 slackapi/slack-github-action:
-  485a9d42d3a73031f12ec201c457e2162c45d02d:
-    expires_at: 2025-08-01
   v2.0.0:
     expires_at: 2025-08-01
+  485a9d42d3a73031f12ec201c457e2162c45d02d:
+    expires_at: 2050-01-01
+    tag: v2.0.0
 golangci/golangci-lint-action:
   1481404843c368bc19ca9406f87d6e0fc97bdcfd:
     expires_at: 2050-08-01

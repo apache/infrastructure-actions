@@ -13,6 +13,7 @@ from typing import Dict, NotRequired, TypedDict
 
 import ruyaml
 
+indefinitely = date(2050, 1, 1)
 
 class RefDetails(TypedDict):
     """
@@ -138,14 +139,21 @@ jobs:
     steps:
 """
     steps = []
-    steps.extend(
-        f"      - uses: {name}@{ref}"
-        for name, refs in actions.items()
-        for ref, details in refs.items()
-        # exclude actions that entered expiry range, use gt to also exclude actions that were expired today.
-        if details["expires_at"] > calculate_expiry()
-        and not details.get("keep")  # Exclude refs with "keep"
-    )
+    for name, refs in actions.items():
+        def is_updatable(ref):
+            details = refs[ref]
+            return (len(ref) >= 40 and
+                    not details.get("keep") and
+                    details["expires_at"] == indefinitely)
+
+        ref_to_update = list(filter(is_updatable, refs))
+
+        if len(ref_to_update) > 1:
+            raise ValueError(f"multiple candidates for auto-updates for {name}")
+        elif len(ref_to_update) == 1:
+            ref = ref_to_update[0]
+            details = refs[ref]
+            steps.append(f"      - uses: {name}@{ref}" + (f"  # {details['tag']}" if 'tag' in details else ''))
 
     return header + "\n".join(steps)
 
@@ -165,6 +173,9 @@ def update_refs(
     """
     for step in dummy_steps:
         name, new_ref = step["uses"].split("@")
+        new_tag = None
+        if hasattr(step, 'ca') and 'uses' in step.ca.items:
+            new_tag = step.ca.items['uses'][2].value[1:].strip()
 
         if name not in action_refs:
             action_refs[name] = {}
@@ -177,7 +188,9 @@ def update_refs(
                 # CVE releases should be handled manually by removing old versions explicitly
                 details["expires_at"] = calculate_expiry(12)
 
-            refs[new_ref] = {"expires_at": date(2100, 1, 1), "keep": False}
+            refs[new_ref] = {"expires_at": indefinitely, "keep": False}
+            if new_tag:
+                refs[new_ref]['tag'] = new_tag
 
     return action_refs
 
