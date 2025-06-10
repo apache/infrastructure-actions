@@ -193,8 +193,6 @@
 - peaceiris/actions-gh-pages@*
 - peaceiris/actions-hugo@*
 - peaceiris/actions-mdbook@*
-- peter-evans/close-issue@v2
-- peter-evans/close-issue@1373cadf1f0c96c1420bc000cfba2273ea307fd1
 - peter-evans/create-or-update-comment@c9fcb64660bc90ec1cc535646af190c992007c32
 - peter-evans/create-pull-request@*
 - phoenix-actions/test-reporting@v15
