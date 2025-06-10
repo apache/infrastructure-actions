@@ -66,7 +66,7 @@ jobs:
       - uses: peter-evans/close-issue@1373cadf1f0c96c1420bc000cfba2273ea307fd1  # v2
       - uses: peter-evans/create-or-update-comment@c9fcb64660bc90ec1cc535646af190c992007c32
       - uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e  # v15
-      - uses: pmd/pmd-github-action@d9c1f3c5940cbf5923f1354e83fa858b4496ebaa
+      - uses: pmd/pmd-github-action@d9c1f3c5940cbf5923f1354e83fa858b4496ebaa # v2.0.0
       - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd  # v3.0.1
       - uses: pypa/cibuildwheel@0f04e96e2f58e63b8b03886c1db16a507f2199bf  # v2.12.0
       - uses: sbt/setup-sbt@26ab4b0fa1c47fa62fc1f6e51823a658fb6c760c  # v1.1.7
