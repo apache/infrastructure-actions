@@ -17,6 +17,8 @@
 version: 2
 updates:
   - package-ecosystem: "github-actions"
+    commit-message:
+      prefix: "gateway(bump)"
     directories:
       - "/"
       - "/pelican/"
