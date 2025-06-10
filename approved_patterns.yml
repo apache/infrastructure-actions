@@ -1,6 +1,7 @@
 # This file was generated from actions.yml by gateway/gateway.py. DO NOT UPDATE MANUALLY.
 - 1Password/load-secrets-action@581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0
 - ana06/get-changed-files@v2.3.0
+- ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c
 - actions-rs/*@*
 - apache/*@*
 - bytedeco/javacpp-presets/.github/actions/*@*
@@ -26,8 +27,8 @@
 - Madrapps/jacoco-report@fd4800e8a81e21bdf373438e5918b975df041d15
 - PyO3/maturin-action@*
 - TobKed/label-when-approved-action@*
-- VirtusLab/scala-cli-setup@ca54569bf13a29cd648721038a89c47c7921c060
 - VirtusLab/scala-cli-setup@6fc878be89f1990f6599f4f6a2e52a252e54d9f9
+- VirtusLab/scala-cli-setup@ca54569bf13a29cd648721038a89c47c7921c060
 - actions-cool/check-user-permission@*
 - actions-cool/issues-helper@*
 - actions-cool/maintain-one-comment@*
@@ -115,6 +116,7 @@
 - graalvm/setup-graalvm@01ed653ac833fe80569f1ef9f25585ba2811baab
 - gradle/wrapper-validation-action@*
 - gradle/wrapper-validation-action@v3.5.0
+- gradle/wrapper-validation-action@f9c9c575b8b21b6485636a91ffecd10e558c62f6
 - gsactions/commit-message-checker@*
 - hadolint/hadolint-action@v2.1.0
 - hadolint/hadolint-action@f988afea3da57ee48710a9795b6bb677cc901183

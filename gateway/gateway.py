@@ -13,6 +13,7 @@ from typing import Dict, NotRequired, TypedDict
 
 import ruyaml
 
+indefinitely = date(2050, 1, 1)
 
 class RefDetails(TypedDict):
     """
@@ -138,14 +139,21 @@ jobs:
     steps:
 """
     steps = []
-    steps.extend(
-        f"      - uses: {name}@{ref}" + (f"  # {details['tag']}" if 'tag' in details else '')
-        for name, refs in actions.items()
-        for ref, details in [ list(refs.items())[-1] ]
-        # exclude expired actions, use gt to also exclude actions that expired today.
-        if details["expires_at"] > date.today()
-        and not details.get("keep")  # Exclude refs with "keep"
-    )
+    for name, refs in actions.items():
+        def is_updatable(ref):
+            details = refs[ref]
+            return (len(ref) >= 40 and
+                    not details.get("keep") and
+                    details["expires_at"] == indefinitely)
+
+        ref_to_update = list(filter(is_updatable, refs))
+
+        if len(ref_to_update) > 1:
+            raise ValueError(f"multiple candidates for auto-updates for {name}")
+        elif len(ref_to_update) == 1:
+            ref = ref_to_update[0]
+            details = refs[ref]
+            steps.append(f"      - uses: {name}@{ref}" + (f"  # {details['tag']}" if 'tag' in details else ''))
 
     return header + "\n".join(steps)
 
@@ -180,7 +188,7 @@ def update_refs(
                 # CVE releases should be handled manually by removing old versions explicitly
                 details["expires_at"] = calculate_expiry(12)
 
-            refs[new_ref] = {"expires_at": date(2100, 1, 1), "keep": False}
+            refs[new_ref] = {"expires_at": indefinitely, "keep": False}
             if new_tag:
                 refs[new_ref]['tag'] = new_tag
 

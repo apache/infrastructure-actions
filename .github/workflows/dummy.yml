@@ -9,13 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: 1Password/load-secrets-action@581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0
-      - uses: ana06/get-changed-files@v2.3.0
+      - uses: ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c  # v2.3.0
       - uses: DavidAnson/markdownlint-cli2-action@b4c9feab76d8025d1e83c653fa3990936df0e6c8  # v16
       - uses: JamesIves/github-pages-deploy-action@881db5376404c5c8d621010bcbec0310b58d5e29  # v4.6.8
       - uses: JustinBeckwith/linkinator-action@3d5ba091319fa7b0ac14703761eebb7d100e6f6d  # v1.11.0
       - uses: Kesin11/actions-timeline@427ee2cf860166e404d0d69b4f2b24012bb7af4f
       - uses: Madrapps/jacoco-report@fd4800e8a81e21bdf373438e5918b975df041d15
-      - uses: VirtusLab/scala-cli-setup@6fc878be89f1990f6599f4f6a2e52a252e54d9f9
+      - uses: VirtusLab/scala-cli-setup@ca54569bf13a29cd648721038a89c47c7921c060  # v1.8.0
       - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b  # v5
       - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185  # v3
       - uses: amondnet/vercel-action@225d234cfe5340ca1f9a6cd158338126b5b6845f  # v25.1.1
@@ -28,17 +28,19 @@ jobs:
       - uses: burnett01/rsync-deployments@0dc935cdecc5f5e571865e60d2a6cdc673704823  # 5.2
       - uses: carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3  # v1.0.10
       - uses: commit-check/commit-check-action@8d507e12899a9feb405c3ed546252ff9508724e0
+      - uses: coursier/cache-action@4e2615869d13561d626ed48655e1a39e5b192b3c  # 6.4.7
+      - uses: coursier/setup-action@039f736548afa5411c1382f40a5bd9c2d30e0383  # v1.3.9
       - uses: cpp-linter/cpp-linter-action@e3fcb174b19d50de4eae1b46896698a1dd48b094  # v2.13.3
       - uses: crazy-max/ghaction-import-gpg@111c56156bcc6918c056dbef52164cfa583dc549
       - uses: crazy-max/ghaction-setup-docker@b60f85385d03ac8acfca6d9996982511d8620a19  # v4
       - uses: damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
       - uses: dawidd6/action-send-mail@4226df7daafa6fc901a43789c49bf7ab309066e7  # v3
-      - uses: docker://jekyll/jekyll@*
+      - uses: docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
       - uses: dominikh/staticcheck-action@4ec9a0dff54be2642bc76581598ba433fd8d4967  # v1.1.0
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3.0.2
       - uses: google-github-actions/setup-gcloud@77e7a554d41e2ee56fc945c52dfd3f33d12def9a
       - uses: graalvm/setup-graalvm@01ed653ac833fe80569f1ef9f25585ba2811baab  # v1
-      - uses: gradle/wrapper-validation-action@v3.5.0
+      - uses: gradle/wrapper-validation-action@f9c9c575b8b21b6485636a91ffecd10e558c62f6  # v3.5.0
       - uses: hadolint/hadolint-action@f988afea3da57ee48710a9795b6bb677cc901183  # v2.1.0
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd  # v3
       - uses: helm/chart-releaser-action@fc23f249f75decd5edf254c6b4401532cef093c3  # v1.4.0
@@ -46,10 +48,12 @@ jobs:
       - uses: helm/kind-action@0025e74a8c7512023d06dc019c617aa3cf561fde  # v1.10.0
       - uses: ilammy/setup-nasm@e77cc62a22a374a4d0668286007cc3e3b4c17760  # v1
       - uses: jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5  # v2
+      - uses: jrouly/scalafmt-native-action@14620cde093e5ff6bfbbecd4f638370024287b9d  # v4
       - uses: jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d
       - uses: korandoru/setup-zig@92b649f4723a14798d8b3cf3b6168edb65d5b04e  # v1
       - uses: leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
       - uses: ludeeus/action-shellcheck@94e0aab03ca135d11a35e5bfc14e6746dc56e7e9  # 1.1.0
+      - uses: manusa/actions-setup-minikube@b589f2d61bf96695c546929c72b38563e856059d  # v2.14.0
       - uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad  # v0.0.9
       - uses: mukunku/tag-exists-action@bdad1eaa119ce71b150b952c97351c75025c06a9  # v1.6.0
       - uses: ncipollo/release-action@1e3e9c6637e5566e185b7ab66f187539c5a76da7
@@ -65,6 +69,10 @@ jobs:
       - uses: pmd/pmd-github-action@967a81f8b657c87f7c3e96b62301cb1a48efef29
       - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd  # v3.0.1
       - uses: pypa/cibuildwheel@0f04e96e2f58e63b8b03886c1db16a507f2199bf  # v2.12.0
+      - uses: sbt/setup-sbt@26ab4b0fa1c47fa62fc1f6e51823a658fb6c760c  # v1.1.7
+      - uses: scacap/action-surefire-report@1a128e49c0585bc0b8e38e541ac3b6e35a5bc727  # v1.9.0
+      - uses: scala-steward-org/scala-steward-action@5021652c555c5724af574758b78ea5be49640007  # v2.75.0
+      - uses: scalacenter/sbt-dependency-submission@64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3  # v3.0.2
       - uses: seanmiddleditch/gha-setup-ninja@8b297075da4cd2a5f1fd21fe011b499edf06e9d2  # v4
       - uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a  # v1
       - uses: untitaker/hyperlink@d277930ba480c61cd3dd1a0caf0d18acfed294a6  # 0.1.21
