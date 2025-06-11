@@ -183,10 +183,10 @@ def update_refs(
         refs = action_refs[name]
         if new_ref not in refs:
             for _, details in refs.items():
-                # expire old versions in 12 weeks this will also bump already expired refs further
-                # this allows projects some more time in the case of rapid releases
-                # CVE releases should be handled manually by removing old versions explicitly
-                details["expires_at"] = calculate_expiry(12)
+                if not details.get("keep"):
+                    new_expiry = calculate_expiry(12)
+                    if "expires_at" not in details or details["expires_at"] > new_expiry:
+                        details["expires_at"] = new_expiry
 
             refs[new_ref] = {"expires_at": indefinitely, "keep": False}
             if new_tag:
