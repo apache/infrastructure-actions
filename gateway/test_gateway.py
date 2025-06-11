@@ -68,6 +68,60 @@ def test_update_refs():
     update_refs(steps, refs)
     assert refs == expected_refs
 
+def test_update_refs_expiry():
+    steps = [
+        {"uses": "dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36"},
+    ]
+
+    refs: ActionsYAML = {
+        "dorny/paths-filter": {
+            "taew9aeJ3thuoteerohpohxei7ahWivuki9eshoh": {
+                "expires_at": calculate_expiry(-3)
+            },
+            "hoo9eethee7ootieY3Ahbie9aen9oopiquaej9do": {
+                "expires_at": calculate_expiry(3)
+            },
+            "AefuzeiLo3shaexieCiewoo3ahmoo7kie3zi9thu": {
+                "expires_at": calculate_expiry(16)
+            },
+            "kee7Kineiy9thu4eikahTeiP9ahch3iey4deepah": {
+                "expires_at": indefinitely,
+                "keep": True,
+            },
+            "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {
+                "expires_at": indefinitely
+            },
+        },
+    }
+
+    expected_refs: ActionsYAML = {
+        "dorny/paths-filter": {
+            "taew9aeJ3thuoteerohpohxei7ahWivuki9eshoh": {
+                "expires_at": calculate_expiry(-3)
+            },
+            "hoo9eethee7ootieY3Ahbie9aen9oopiquaej9do": {
+                "expires_at": calculate_expiry(3)
+            },
+            "AefuzeiLo3shaexieCiewoo3ahmoo7kie3zi9thu": {
+                "expires_at": calculate_expiry(12)
+            },
+            "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {
+                "expires_at": calculate_expiry(12)
+            },
+            "kee7Kineiy9thu4eikahTeiP9ahch3iey4deepah": {
+                "expires_at": indefinitely,
+                "keep": True,
+            },
+            "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {
+                "expires_at": indefinitely,
+                "keep": False,
+            },
+        },
+    }
+
+    update_refs(steps, refs)
+    assert refs == expected_refs
+
 def test_update_tagged_ref():
     steps = load_yaml_string('''
     - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
