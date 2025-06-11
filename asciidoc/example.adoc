@@ -1,0 +1,6 @@
+= Example Presentation
+// Header info goes here
+:revealjs_template: sky
+:imagedir: static/images
+
+== Slide 1
