@@ -60,7 +60,6 @@ def test_update_refs():
             },
             "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {
                 "expires_at": indefinitely,
-                "keep": False,
             },
         },
     }
@@ -114,7 +113,6 @@ def test_update_refs_expiry():
             },
             "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {
                 "expires_at": indefinitely,
-                "keep": False,
             },
         },
     }
@@ -155,14 +153,12 @@ def test_update_tagged_ref():
             },
             "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {
                 "expires_at": indefinitely,
-                "keep": False,
             },
         },
         "DavidAnson/markdownlint-cli2-action": {
             "b4c9feab76d8025d1e83c653fa3990936df0e6c8": {
                 "expires_at": indefinitely,
                 "tag": "v16",
-                "keep": False,
             }
         },
     }
@@ -198,7 +194,6 @@ def test_clean_actions():
             },
             "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {
                 "expires_at": indefinitely,
-                "keep": False,
             },
         },
     }
@@ -211,7 +206,6 @@ def test_clean_actions():
         "dorny/paths-filter": {
             "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {
                 "expires_at": indefinitely,
-                "keep": False,
             }
         },
     }

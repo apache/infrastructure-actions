@@ -264,7 +264,6 @@ commit-check/commit-check-action:
     expires_at: 2025-09-03
   f09ba795622b9cb0d0d5e668926235a1d893c7a4:
     expires_at: 2050-01-01
-    keep: false
     tag: v0.8.0
 conda-incubator/setup-miniconda:
   '*':
@@ -326,7 +325,6 @@ dawidd6/action-send-mail:
     tag: v3
   2cea9617b09d79a095af21254fbcb7ae95903dde:
     expires_at: 2050-01-01
-    keep: false
     tag: v3.12.0
 delaguardo/setup-graalvm:
   '*':
@@ -366,7 +364,6 @@ dorny/paths-filter:
     expires_at: 2025-08-01
   de90cc6fb38fc0963ad72b210f1f284cd68cea36:
     expires_at: 2050-01-01
-    keep: false
     tag: v3.0.2
 easimon/maximize-build-space:
   '*':
@@ -695,7 +692,6 @@ pmd/pmd-github-action:
     expires_at: 2025-09-02
   d9c1f3c5940cbf5923f1354e83fa858b4496ebaa:
     expires_at: 2050-01-01
-    keep: false
     tag: v2.0.0
 pnpm/action-setup:
   '*':
