@@ -22,6 +22,8 @@ jobs:
           # Use PAT so the commit triggers other actions
           token: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }}
 
+      - run: pip install ruyaml
+
       - name: Clean actions.yml
         shell: python
         run: |
