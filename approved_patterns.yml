@@ -83,6 +83,7 @@
 - coursier/setup-action@*
 - cpp-linter/cpp-linter-action@v2.13.3
 - cpp-linter/cpp-linter-action@e3fcb174b19d50de4eae1b46896698a1dd48b094
+- cpp-linter/cpp-linter-action@f91c446a32ae3eb9f98fef8c9ed4c7cb613a4f8a
 - crate-ci/typos@*
 - crazy-max/ghaction-import-gpg@111c56156bcc6918c056dbef52164cfa583dc549
 - crazy-max/ghaction-setup-docker@v4
