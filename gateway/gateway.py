@@ -188,7 +188,7 @@ def update_refs(
                     if "expires_at" not in details or details["expires_at"] > new_expiry:
                         details["expires_at"] = new_expiry
 
-            refs[new_ref] = {"expires_at": indefinitely, "keep": False}
+            refs[new_ref] = {"expires_at": indefinitely}
             if new_tag:
                 refs[new_ref]['tag'] = new_tag
 
