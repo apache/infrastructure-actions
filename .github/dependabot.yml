@@ -25,5 +25,4 @@ updates:
       - "/stash/restore"
       - "/stash/save"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: "daily"
