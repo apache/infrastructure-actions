@@ -67,6 +67,7 @@ To request addition of an action to the allow list:
 repo/owner:
   '<exact-commit-sha>':
     expires_at: 2050-01-01
+    tag: vX.Y.Z
 ```
 
 3. **Create a PR** against the `main` branch
@@ -101,6 +102,7 @@ existing/action:
   '<exact-commit-sha>':
     expires_at: 2025-01-01
     keep: true
+    tag: vX.Y.Z
 ```
 
 3. **Create a PR** against the `main` branch
