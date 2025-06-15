@@ -14,7 +14,7 @@ jobs:
       - uses: JamesIves/github-pages-deploy-action@881db5376404c5c8d621010bcbec0310b58d5e29  # v4.6.8
       - uses: JustinBeckwith/linkinator-action@3d5ba091319fa7b0ac14703761eebb7d100e6f6d  # v1.11.0
       - uses: Kesin11/actions-timeline@427ee2cf860166e404d0d69b4f2b24012bb7af4f
-      - uses: Madrapps/jacoco-report@fd4800e8a81e21bdf373438e5918b975df041d15
+      - uses: Madrapps/jacoco-report@94dfcf8dae9680be2cfa714ca37fb37790bd7663
       - uses: VirtusLab/scala-cli-setup@ca54569bf13a29cd648721038a89c47c7921c060  # v1.8.0
       - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b  # v5
       - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185  # v3
