@@ -170,8 +170,11 @@ azure/setup-helm:
   v3:
     expires_at: 2025-08-01
   5119fcb9089d432beecbf79bb2c7915207344b78:
-    expires_at: 2050-01-01
+    expires_at: 2025-09-08
     tag: v3
+  b9e51907a09c216f16ebe8536097933489208112:
+    expires_at: 2050-01-01
+    tag: v4.3.0
 betahuhn/repo-file-sync-action:
   v1:
     expires_at: 2025-08-01

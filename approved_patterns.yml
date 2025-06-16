@@ -47,6 +47,7 @@
 - aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722
 - azure/setup-helm@v3
 - azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78
+- azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112
 - betahuhn/repo-file-sync-action@v1
 - betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619
 - bnjbvr/cargo-machete@v0.7.0
