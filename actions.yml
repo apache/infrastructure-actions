@@ -668,12 +668,6 @@ packetcoders/action-setup-cache-python-poetry:
   a3f2e6ed12462e038bc14270d139e373bf5ac564:
     expires_at: 2050-01-01
     tag: v1.1.0
-pdm-project/setup-pdm:
-  v4:
-    expires_at: 2025-08-01
-  483717a073bdef51804a58dac17d043a4183c384:
-    expires_at: 2050-01-01
-    tag: v4
 peaceiris/actions-gh-pages:
   '*':
     expires_at: 2025-08-01
