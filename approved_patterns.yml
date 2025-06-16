@@ -18,6 +18,7 @@
 - BobAnkh/auto-generate-changelog@*
 - DavidAnson/markdownlint-cli2-action@v16
 - DavidAnson/markdownlint-cli2-action@b4c9feab76d8025d1e83c653fa3990936df0e6c8
+- DavidAnson/markdownlint-cli2-action@992badcdf24e3b8eb7e87ff9287fe931bcb00c6e
 - EnricoMi/publish-unit-test-result-action@*
 - JamesIves/github-pages-deploy-action@v4.6.8
 - JamesIves/github-pages-deploy-action@881db5376404c5c8d621010bcbec0310b58d5e29

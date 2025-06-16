@@ -72,8 +72,11 @@ DavidAnson/markdownlint-cli2-action:
   v16:
     expires_at: 2025-08-01
   b4c9feab76d8025d1e83c653fa3990936df0e6c8:
-    expires_at: 2050-01-01
+    expires_at: 2025-09-08
     tag: v16
+  992badcdf24e3b8eb7e87ff9287fe931bcb00c6e:
+    expires_at: 2050-01-01
+    tag: v20.0.0
 EnricoMi/publish-unit-test-result-action:
   '*':
     expires_at: 2025-08-01
