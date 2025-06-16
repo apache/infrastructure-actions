@@ -93,9 +93,6 @@ JustinBeckwith/linkinator-action:
 Kesin11/actions-timeline:
   427ee2cf860166e404d0d69b4f2b24012bb7af4f:
     expires_at: 2050-01-01
-Madrapps/jacoco-report:
-  fd4800e8a81e21bdf373438e5918b975df041d15:
-    expires_at: 2050-01-01
 PyO3/maturin-action:
   '*':
     expires_at: 2025-08-01
