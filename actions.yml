@@ -849,8 +849,11 @@ uraimo/run-on-arch-action:
   v2:
     expires_at: 2025-08-01
   ac33288c3728ca72563c97b8b88dda5a65a84448:
-    expires_at: 2050-01-01
+    expires_at: 2025-09-08
     tag: v2
+  d94c13912ea685de38fccc1109385b83fd79427d:
+    expires_at: 2050-01-01
+    tag: v3.0.1
 vimtor/action-zip:
   v1:
     expires_at: 2025-08-01

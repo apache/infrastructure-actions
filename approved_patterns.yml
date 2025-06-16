@@ -245,6 +245,7 @@
 - untitaker/hyperlink@d277930ba480c61cd3dd1a0caf0d18acfed294a6
 - uraimo/run-on-arch-action@v2
 - uraimo/run-on-arch-action@ac33288c3728ca72563c97b8b88dda5a65a84448
+- uraimo/run-on-arch-action@d94c13912ea685de38fccc1109385b83fd79427d
 - vimtor/action-zip@v1
 - vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
 - vishalsinha21/dynamic-checklist@*
