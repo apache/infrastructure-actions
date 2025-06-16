@@ -43,6 +43,7 @@
 - awalsh128/cache-apt-pkgs-action@*
 - aws-actions/configure-aws-credentials@v4.1.0
 - aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722
+- aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df
 - azure/setup-helm@v3
 - azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78
 - azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112
