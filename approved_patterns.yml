@@ -53,6 +53,7 @@
 - bnjbvr/cargo-machete@5eaad10acf89fb0c6a31d9b197a2d48ba762d28e
 - browser-actions/setup-firefox@v1
 - browser-actions/setup-firefox@5b19b18df8c293aae9e77f0a936e9fdc358f543a
+- browser-actions/setup-firefox@634a60ccd6599686158cf5a570481b4cd30455a2
 - browser-actions/setup-geckodriver@5ef1526ed36211ab6cb531ec1cfb11f924ca2dee
 - bufbuild/buf-breaking-action@*
 - bufbuild/buf-lint-action@*
