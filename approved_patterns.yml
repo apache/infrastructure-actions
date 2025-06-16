@@ -210,6 +210,7 @@
 - pyTooling/Actions@*
 - pypa/cibuildwheel@v2.12.0
 - pypa/cibuildwheel@0f04e96e2f58e63b8b03886c1db16a507f2199bf
+- pypa/cibuildwheel@5f22145df44122af0f5a201f93cf0207171beca7
 - pytooling/actions@*
 - quarto-dev/quarto-actions@*
 - reactivecircus/android-emulator-runner@*
