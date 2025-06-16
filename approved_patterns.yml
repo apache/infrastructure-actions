@@ -39,8 +39,6 @@
 - addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185
 - al-cheb/configure-pagefile-action@*
 - amannn/action-semantic-pull-request@*
-- amondnet/vercel-action@v25.1.1
-- amondnet/vercel-action@225d234cfe5340ca1f9a6cd158338126b5b6845f
 - arduino/setup-protoc@*
 - awalsh128/cache-apt-pkgs-action@*
 - aws-actions/configure-aws-credentials@v4.1.0
@@ -257,3 +255,4 @@
 - slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
 - golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd
 - golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84
+- amondnet/vercel-action@16e87c0a08142b0d0d33b76aeaf20823c381b9b9
