@@ -746,11 +746,14 @@ ruby/setup-ruby:
     keep: true
 sbt/setup-sbt:
   26ab4b0fa1c47fa62fc1f6e51823a658fb6c760c:
-    expires_at: 2050-01-01
+    expires_at: 2025-09-08
     tag: v1.1.7
   '*':
     expires_at: 2025-08-01
     keep: true
+  6c68d2fe8dfbc0a0534d70101baa2e0420e1a506:
+    expires_at: 2050-01-01
+    tag: v1.1.9
 scacap/action-surefire-report:
   1a128e49c0585bc0b8e38e541ac3b6e35a5bc727:
     expires_at: 2050-01-01
