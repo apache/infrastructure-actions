@@ -309,7 +309,10 @@ crate-ci/typos:
     keep: true
 crazy-max/ghaction-import-gpg:
   111c56156bcc6918c056dbef52164cfa583dc549:
+    expires_at: 2025-09-08
+  e89d40939c28e39f97cf32126055eeae86ba74ec:
     expires_at: 2050-01-01
+    tag: v6.3.0
 crazy-max/ghaction-setup-docker:
   v4:
     expires_at: 2025-08-01

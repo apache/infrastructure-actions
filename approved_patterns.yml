@@ -87,6 +87,7 @@
 - cpp-linter/cpp-linter-action@f91c446a32ae3eb9f98fef8c9ed4c7cb613a4f8a
 - crate-ci/typos@*
 - crazy-max/ghaction-import-gpg@111c56156bcc6918c056dbef52164cfa583dc549
+- crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec
 - crazy-max/ghaction-setup-docker@v4
 - crazy-max/ghaction-setup-docker@b60f85385d03ac8acfca6d9996982511d8620a19
 - damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
