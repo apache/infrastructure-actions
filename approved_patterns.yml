@@ -194,8 +194,6 @@
 - ossf/scorecard-action@*
 - packetcoders/action-setup-cache-python-poetry@v1.1.0
 - packetcoders/action-setup-cache-python-poetry@a3f2e6ed12462e038bc14270d139e373bf5ac564
-- pdm-project/setup-pdm@v4
-- pdm-project/setup-pdm@483717a073bdef51804a58dac17d043a4183c384
 - peaceiris/actions-gh-pages@*
 - peaceiris/actions-hugo@*
 - peaceiris/actions-mdbook@*

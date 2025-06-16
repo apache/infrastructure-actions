@@ -60,7 +60,6 @@ jobs:
       - uses: opentofu/setup-opentofu@592200bd4b9bbf4772ace78f887668b1aee8f716  # v1
       - uses: orhun/git-cliff-action@4a4a951bc43fafe41cd2348d181853f52356bee7  # v4
       - uses: packetcoders/action-setup-cache-python-poetry@a3f2e6ed12462e038bc14270d139e373bf5ac564  # v1.1.0
-      - uses: pdm-project/setup-pdm@483717a073bdef51804a58dac17d043a4183c384  # v4
       - uses: peter-evans/create-or-update-comment@c9fcb64660bc90ec1cc535646af190c992007c32
       - uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e  # v15
       - uses: pmd/pmd-github-action@d9c1f3c5940cbf5923f1354e83fa858b4496ebaa  # v2.0.0
