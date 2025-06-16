@@ -31,7 +31,7 @@ jobs:
       - uses: coursier/cache-action@4e2615869d13561d626ed48655e1a39e5b192b3c  # 6.4.7
       - uses: coursier/setup-action@039f736548afa5411c1382f40a5bd9c2d30e0383  # v1.3.9
       - uses: cpp-linter/cpp-linter-action@f91c446a32ae3eb9f98fef8c9ed4c7cb613a4f8a  # v2.15.0
-      - uses: crazy-max/ghaction-import-gpg@111c56156bcc6918c056dbef52164cfa583dc549
+      - uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
       - uses: crazy-max/ghaction-setup-docker@b60f85385d03ac8acfca6d9996982511d8620a19  # v4
       - uses: damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
       - uses: dawidd6/action-send-mail@2cea9617b09d79a095af21254fbcb7ae95903dde  # v3.12.0
