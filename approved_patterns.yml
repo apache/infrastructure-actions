@@ -125,6 +125,7 @@
 - gsactions/commit-message-checker@*
 - hadolint/hadolint-action@v2.1.0
 - hadolint/hadolint-action@f988afea3da57ee48710a9795b6bb677cc901183
+- hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf
 - hashicorp/setup-terraform@v3
 - hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
 - helm/chart-releaser-action@v1.4.0

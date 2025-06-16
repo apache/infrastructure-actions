@@ -432,8 +432,11 @@ hadolint/hadolint-action:
   v2.1.0:
     expires_at: 2025-08-01
   f988afea3da57ee48710a9795b6bb677cc901183:
-    expires_at: 2050-01-01
+    expires_at: 2025-09-08
     tag: v2.1.0
+  54c9adbab1582c2ef04b2016b760714a4bfde3cf:
+    expires_at: 2050-01-01
+    tag: v3.1.0
 hashicorp/setup-terraform:
   v3:
     expires_at: 2025-08-01
