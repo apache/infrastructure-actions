@@ -16,7 +16,7 @@ jobs:
       - uses: Kesin11/actions-timeline@427ee2cf860166e404d0d69b4f2b24012bb7af4f
       - uses: Madrapps/jacoco-report@fd4800e8a81e21bdf373438e5918b975df041d15
       - uses: VirtusLab/scala-cli-setup@ca54569bf13a29cd648721038a89c47c7921c060  # v1.8.0
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5  # v5
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5  # v5.5.0
       - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185  # v3
       - uses: amondnet/vercel-action@225d234cfe5340ca1f9a6cd158338126b5b6845f  # v25.1.1
       - uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.1.0
