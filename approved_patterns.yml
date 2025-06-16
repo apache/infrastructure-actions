@@ -256,4 +256,3 @@
 - slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
 - golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd
 - golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84
-- amondnet/vercel-action@16e87c0a08142b0d0d33b76aeaf20823c381b9b9
