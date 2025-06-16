@@ -336,8 +336,11 @@ dawidd6/action-send-mail:
     expires_at: 2025-09-02
     tag: v3
   2cea9617b09d79a095af21254fbcb7ae95903dde:
-    expires_at: 2050-01-01
+    expires_at: 2025-09-08
     tag: v3.12.0
+  6d98ae34d733f9a723a9e04e94f2f24ba05e1402:
+    expires_at: 2050-01-01
+    tag: v6
 delaguardo/setup-graalvm:
   '*':
     expires_at: 2025-08-01
