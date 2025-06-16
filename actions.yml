@@ -888,7 +888,3 @@ golangci/golangci-lint-action:
   55c2c1448f86e01eaae002a5a3a9624417608d84:
     expires_at: 2050-08-01
     keep: true
-amondnet/vercel-action:
-  16e87c0a08142b0d0d33b76aeaf20823c381b9b9:
-    expires_at: 2050-01-01
-    tag: v25.2.0
