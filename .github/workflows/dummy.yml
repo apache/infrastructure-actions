@@ -47,7 +47,7 @@ jobs:
       - uses: jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5  # v2
       - uses: jrouly/scalafmt-native-action@14620cde093e5ff6bfbbecd4f638370024287b9d  # v4
       - uses: jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d
-      - uses: korandoru/setup-zig@92b649f4723a14798d8b3cf3b6168edb65d5b04e  # v1
+      - uses: korandoru/setup-zig@c1a533bcbce8c31ca826fd771dfce53deaf1ca77  # v1
       - uses: leafo/gh-actions-luarocks@4c082a5fad45388feaeb0798dbd82dbd7dc65bca # v5
       - uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38  # 2.0.0
       - uses: manusa/actions-setup-minikube@b589f2d61bf96695c546929c72b38563e856059d  # v2.14.0
