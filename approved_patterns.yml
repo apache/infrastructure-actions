@@ -166,6 +166,7 @@
 - leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
 - ludeeus/action-shellcheck@1.1.0
 - ludeeus/action-shellcheck@94e0aab03ca135d11a35e5bfc14e6746dc56e7e9
+- ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38
 - manusa/actions-setup-minikube@b589f2d61bf96695c546929c72b38563e856059d
 - manusa/actions-setup-minikube@*
 - maxim-lobanov/setup-xcode@*
