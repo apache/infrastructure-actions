@@ -57,7 +57,7 @@ jobs:
       - uses: mukunku/tag-exists-action@bdad1eaa119ce71b150b952c97351c75025c06a9  # v1.6.0
       - uses: ncipollo/release-action@1e3e9c6637e5566e185b7ab66f187539c5a76da7
       - uses: neofinancial/ticket-check-action@609d901d5130a4bbd7d9f62931082ed67f855891  # v2.0.0
-      - uses: nwtgck/actions-netlify@ac1cb16858bada08a9c71a81240a85cfc3f72913  # v1.2
+      - uses: nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654  # v1.2
       - uses: opentofu/setup-opentofu@592200bd4b9bbf4772ace78f887668b1aee8f716  # v1
       - uses: orhun/git-cliff-action@4a4a951bc43fafe41cd2348d181853f52356bee7  # v4
       - uses: packetcoders/action-setup-cache-python-poetry@a3f2e6ed12462e038bc14270d139e373bf5ac564  # v1.1.0
