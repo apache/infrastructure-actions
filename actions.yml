@@ -554,12 +554,6 @@ korandoru/hawkeye:
   '*':
     expires_at: 2025-08-01
     keep: true
-korandoru/setup-zig:
-  v1:
-    expires_at: 2025-08-01
-  92b649f4723a14798d8b3cf3b6168edb65d5b04e:
-    expires_at: 2050-01-01
-    tag: v1
 leafo/gh-actions-lua:
   '*':
     expires_at: 2025-08-01
