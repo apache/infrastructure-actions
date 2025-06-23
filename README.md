@@ -61,7 +61,7 @@ graph TD;
 To request addition of an action to the allow list:
 
 1. **Fork** this repository
-2. **Add** an entry to `actions.yaml` using the following format:
+2. **Add** an entry to `actions.yml` using the following format:
 
 ```yaml
 repo/owner:
@@ -95,7 +95,7 @@ In most cases, new versions are automatically added through Dependabot:
 If you need to add a specific version of an already approved action (especially an older one):
 
 1. **Fork** this repository
-2. **Add** a new version entry to an existing action in `actions.yaml` with the following format:
+2. **Add** a new version entry to an existing action in `actions.yml` with the following format:
 
 ```yaml
 existing/action:
@@ -121,7 +121,7 @@ existing/action:
 > If a version or entire action needs to be removed immediately due to a security vulnerability:
 
 1. **Fork** this repository
-2. **Remove** the relevant entry from `actions.yaml`
+2. **Remove** the relevant entry from `actions.yml`
 3. **Create a PR** against the `main` branch
 4. **Mark it as urgent** in the PR title (e.g., "URGENT: Remove vulnerable action X")
 5. **Include in your PR description**:
@@ -131,3 +131,5 @@ existing/action:
    - Recommended alternatives if available
 
 The infrastructure team will prioritize these removal requests and may take additional steps to notify affected projects if necessary.
+
+For 'regular' removals, you can use `gh search code --owner apache --language yaml --json repository --jq '.[] | .repository.nameWithOwner' 'davidanson/markdownlint-cli2-action' | sort | uniq` to see if an action is still used anywhere in the ASF, and create a 'regular' pr removing it from `actions.yml`.
