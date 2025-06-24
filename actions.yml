@@ -153,6 +153,9 @@ aquasecurity/trivy-action:
   '*':
     expires_at: 2025-08-01
     keep: true
+  76071ef0d7ec797419534a183b498b4d6366cf37:
+    expires_at: 2050-01-01
+    tag: "0.31.0"
 arduino/setup-protoc:
   '*':
     expires_at: 2025-08-01
