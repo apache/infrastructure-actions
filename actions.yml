@@ -149,6 +149,10 @@ amannn/action-semantic-pull-request:
   '*':
     expires_at: 2025-08-01
     keep: true
+aquasecurity/trivy-action:
+  '*':
+    expires_at: 2025-08-01
+    keep: true
 arduino/setup-protoc:
   '*':
     expires_at: 2025-08-01
