@@ -55,7 +55,7 @@ After your build completes, save the stash using the `infrastructure-actions/sta
 
 ```yaml
 steps:
-- uses: apache/infrastructure-actions/stash/save@main
+- uses: apache/infrastructure-actions/stash/save@e88c4936fdeeb13c0910747af0bd07d992a81f9b
   with:
     key: 'cache-key'
     path: 'path/to/cache'
