@@ -399,6 +399,10 @@ golang/govulncheck-action:
   '*':
     expires_at: 2025-08-01
     keep: true
+google-github-actions/auth:
+  ba79af03959ebeac9769e648f473a284504d9193:
+    expires_at: 2050-01-01
+    tag: v2.1.10 
 google-github-actions/setup-gcloud:
   77e7a554d41e2ee56fc945c52dfd3f33d12def9a:
     expires_at: 2050-01-01
