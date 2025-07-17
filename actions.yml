@@ -453,9 +453,6 @@ helm/chart-releaser-action:
 helm/chart-testing-action:
   v2.6.1:
     expires_at: 2025-08-01
-  e6669bcd63d7cb57cb4380c33043eebe5d111992:
-    expires_at: 2025-07-17
-    tag: v2.6.1
   v2.7.0:
     expires_at: 2025-08-01
   0d28d3144d3a25ea2cc349d6e59901c4ff469b3b:
