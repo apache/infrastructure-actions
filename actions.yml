@@ -384,9 +384,9 @@ erisu/apache-rat-action:
     expires_at: 2025-08-01
     keep: true
 erisu/license-checker-action:
-  '*':
-    expires_at: 2025-08-01
-    keep: true
+  1c222d0c2f5898a4c40b8bd6fd6888650bd6f68a:
+    expires_at: 2050-01-01
+    tag: v2.0.0
 gaurav-nelson/github-action-markdown-link-check:
   '*':
     expires_at: 2025-08-01
