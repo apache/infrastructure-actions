@@ -1,7 +1,6 @@
 # Settings
 # ========
-# Use the Python version as installed on CI pelican builders (2023-06-02)
-ARG PYTHON_VERSION=3.8.10
+ARG PYTHON_VERSION=3.9.17
 ARG GFM_VERSION=0.28.3.gfm.12 # must agree with copy below
 
 # Build cmake-gfm
