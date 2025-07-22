@@ -109,7 +109,7 @@
 - dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
 - easimon/maximize-build-space@*
 - eps1lon/actions-label-merge-conflict@*
-- erisu/apache-rat-action@*
+- erisu/apache-rat-action@3127a8c18f3bb10e91c60e835144085b31c5c463
 - erisu/license-checker-action@*
 - gaurav-nelson/github-action-markdown-link-check@*
 - geekyeggo/delete-artifact@*
