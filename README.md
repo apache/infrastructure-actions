@@ -1,6 +1,6 @@
 # ASF GitHub Actions Repository
 
-This repository hosts GitHub Actions developed by the ASF community and approved for any ASF top level project to use. It also manages the organization wide allow list of Github Actions via 'Configuration as Code'.
+This repository hosts GitHub Actions developed by the ASF community and approved for any ASF top level project to use. It also manages the organization wide allow list of GitHub Actions via 'Configuration as Code'.
 
 - [Submitting an Action](#submitting-an-action)
 - [Available GitHub Actions](#available-github-actions)
