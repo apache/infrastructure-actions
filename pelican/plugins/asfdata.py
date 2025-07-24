@@ -160,7 +160,7 @@ def add_logo(reference, part):
 def sequence_dict(seq, reference):
     sequence = [ ]
     for refs in reference:
-        # converting dicts into objects with attrributes. Ignore non-dict content.
+        # converting dicts into objects with attributes. Ignore non-dict content.
         if isinstance(reference[refs], dict):
             # put the key of the dict  into the dictionary
             reference[refs]['key_id'] = refs
@@ -420,7 +420,7 @@ def process_distributions(project, src, sort_revision, debug):
                 fsize = listing[-6]
             # date is close enough
             dtm = dtm1.strftime("%m/%d/%Y")
-            # covert to number of MB
+            # convert to number of MB
             if float(fsize) > 524288:
                 fsize = ('%.2f' % bytesto(fsize, 'm')) + ' MB'
             else:
