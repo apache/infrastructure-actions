@@ -71,7 +71,7 @@ jobs:
       - uses: scala-steward-org/scala-steward-action@5021652c555c5724af574758b78ea5be49640007  # v2.75.0
       - uses: scalacenter/sbt-dependency-submission@64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3  # v3.0.2
       - uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a  # v1
-      - uses: untitaker/hyperlink@d277930ba480c61cd3dd1a0caf0d18acfed294a6  # 0.1.21
+      - uses: untitaker/hyperlink@e66bb17cc9ae341677431edec3b893a0aa6ac747  # 0.1.44
       - uses: uraimo/run-on-arch-action@d94c13912ea685de38fccc1109385b83fd79427d  # v3.0.1
       - uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310  # v1
       - uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a  # v2.1.1
