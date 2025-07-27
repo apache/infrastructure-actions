@@ -200,8 +200,6 @@
 - orhun/git-cliff-action@v4
 - orhun/git-cliff-action@4a4a951bc43fafe41cd2348d181853f52356bee7
 - ossf/scorecard-action@*
-- packetcoders/action-setup-cache-python-poetry@v1.1.0
-- packetcoders/action-setup-cache-python-poetry@a3f2e6ed12462e038bc14270d139e373bf5ac564
 - peaceiris/actions-gh-pages@*
 - peaceiris/actions-hugo@*
 - peaceiris/actions-mdbook@*
