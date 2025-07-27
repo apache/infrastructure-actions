@@ -188,8 +188,11 @@ bnjbvr/cargo-machete:
   v0.7.0:
     expires_at: 2025-08-01
   5eaad10acf89fb0c6a31d9b197a2d48ba762d28e:
-    expires_at: 2050-01-01
+    expires_at: 2025-10-19
     tag: v0.7.0
+  b54422fa3319b3cac180f6030b663fe57af51635:
+    expires_at: 2050-01-01
+    tag: v0.8.0
 browser-actions/setup-firefox:
   v1:
     expires_at: 2025-08-01
