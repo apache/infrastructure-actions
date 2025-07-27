@@ -1,10 +1,10 @@
 # Settings
 # ========
-ARG PYTHON_VERSION=3.9.17
+ARG PYTHON_VERSION=3.10.18-bullseye
 ARG GFM_VERSION=0.28.3.gfm.12 # must agree with copy below
 
 # Build cmake-gfm
-FROM python:${PYTHON_VERSION}-slim-buster as pelican-asf
+FROM python:${PYTHON_VERSION} as pelican-asf
 
 RUN apt update && apt upgrade -y
 RUN apt install curl cmake build-essential -y
@@ -18,7 +18,7 @@ COPY build-cmark.sh bin/build-cmark.sh
 RUN bash bin/build-cmark.sh ${GFM_VERSION}
 
 # rebase the image to save on image size
-FROM python:${PYTHON_VERSION}-slim-buster
+FROM python:${PYTHON_VERSION}
 
 # Use the Pelican version as installed on CI pelican builders (2023-06-02)
 ARG PELICAN_VERSION=4.5.4
