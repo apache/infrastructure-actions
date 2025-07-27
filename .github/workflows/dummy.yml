@@ -55,7 +55,7 @@ jobs:
       - uses: manusa/actions-setup-minikube@b589f2d61bf96695c546929c72b38563e856059d  # v2.14.0
       - uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad  # v0.0.9
       - uses: mukunku/tag-exists-action@bdad1eaa119ce71b150b952c97351c75025c06a9  # v1.6.0
-      - uses: ncipollo/release-action@1e3e9c6637e5566e185b7ab66f187539c5a76da7
+      - uses: ncipollo/release-action@bcfe5470707e8832e12347755757cec0eb3c22af
       - uses: neofinancial/ticket-check-action@609d901d5130a4bbd7d9f62931082ed67f855891  # v2.0.0
       - uses: nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654  # v3.0.0
       - uses: opentofu/setup-opentofu@592200bd4b9bbf4772ace78f887668b1aee8f716  # v1
