@@ -506,6 +506,9 @@ ilammy/setup-nasm:
   v1:
     expires_at: 2025-08-01
   e77cc62a22a374a4d0668286007cc3e3b4c17760:
+    expires_at: 2025-10-19
+    tag: v1
+  72793074d3c8cdda771dba85f6deafe00623038b:
     expires_at: 2050-01-01
     tag: v1
 jarvusinnovations/background-action:
