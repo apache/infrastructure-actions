@@ -155,7 +155,7 @@ jobs:
             details = refs[ref]
             steps.append(f"      - uses: {name}@{ref}" + (f"  # {details['tag']}" if 'tag' in details else ''))
 
-    return header + "\n".join(steps)
+    return header + "\n".join(steps) + "\n"
 
 
 def update_refs(
