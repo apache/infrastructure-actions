@@ -22,6 +22,7 @@
 - EnricoMi/publish-unit-test-result-action@*
 - JamesIves/github-pages-deploy-action@v4.6.8
 - JamesIves/github-pages-deploy-action@881db5376404c5c8d621010bcbec0310b58d5e29
+- JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8
 - JustinBeckwith/linkinator-action@v1.11.0
 - JustinBeckwith/linkinator-action@3d5ba091319fa7b0ac14703761eebb7d100e6f6d
 - Kesin11/actions-timeline@427ee2cf860166e404d0d69b4f2b24012bb7af4f

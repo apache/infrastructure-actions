@@ -85,8 +85,11 @@ JamesIves/github-pages-deploy-action:
   v4.6.8:
     expires_at: 2025-08-01
   881db5376404c5c8d621010bcbec0310b58d5e29:
-    expires_at: 2050-01-01
+    expires_at: 2025-10-19
     tag: v4.6.8
+  6c2d9db40f9296374acc17b90404b6e8864128c8:
+    expires_at: 2050-01-01
+    tag: v4.7.3
 JustinBeckwith/linkinator-action:
   v1.11.0:
     expires_at: 2025-08-01
