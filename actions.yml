@@ -633,7 +633,10 @@ nanasess/setup-chromedriver:
     keep: true
 ncipollo/release-action:
   1e3e9c6637e5566e185b7ab66f187539c5a76da7:
+    expires_at: 2025-10-19
+  bcfe5470707e8832e12347755757cec0eb3c22af:
     expires_at: 2050-01-01
+    tag: v1.18.0
 neofinancial/ticket-check-action:
   v2.0.0:
     expires_at: 2025-08-01
