@@ -924,5 +924,8 @@ golangci/golangci-lint-action:
     keep: true
 mlugg/setup-zig:
   7dccf5e6d09267c55f815f2db29495f30ba2ebca:
-    expires_at: 2050-01-01
+    expires_at: 2025-10-19
     tag: v2.0.1
+  8d6198c65fb0feaa111df26e6b467fea8345e46f:
+    expires_at: 2050-01-01
+    tag: v2.0.5
