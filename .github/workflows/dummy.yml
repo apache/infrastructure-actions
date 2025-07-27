@@ -74,5 +74,5 @@ jobs:
       - uses: untitaker/hyperlink@d277930ba480c61cd3dd1a0caf0d18acfed294a6  # 0.1.21
       - uses: uraimo/run-on-arch-action@d94c13912ea685de38fccc1109385b83fd79427d  # v3.0.1
       - uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310  # v1
-      - uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52  # v2.1.0
+      - uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a  # v2.1.1
       - uses: mlugg/setup-zig@7dccf5e6d09267c55f815f2db29495f30ba2ebca  # v2.0.1
