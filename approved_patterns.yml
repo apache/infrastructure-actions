@@ -259,6 +259,7 @@
 - slackapi/slack-github-action@v2.0.0
 - slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
 - slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52
+- slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
 - golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd
 - golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84
 - mlugg/setup-zig@7dccf5e6d09267c55f815f2db29495f30ba2ebca

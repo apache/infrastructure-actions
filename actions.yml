@@ -895,8 +895,11 @@ slackapi/slack-github-action:
     expires_at: 2025-09-09
     tag: v2.0.0
   b0fa283ad8fea605de13dc3f449259339835fc52:
-    expires_at: 2050-01-01
+    expires_at: 2025-10-19
     tag: v2.1.0
+  91efab103c0de0a537f72a35f6b8cda0ee76bf0a:
+    expires_at: 2050-01-01
+    tag: v2.1.1
 golangci/golangci-lint-action:
   1481404843c368bc19ca9406f87d6e0fc97bdcfd:
     expires_at: 2050-08-01
