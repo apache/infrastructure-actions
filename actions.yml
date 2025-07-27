@@ -645,8 +645,11 @@ nwtgck/actions-netlify:
   v1.2:
     expires_at: 2025-08-01
   ac1cb16858bada08a9c71a81240a85cfc3f72913:
-    expires_at: 2050-01-01
+    expires_at: 2025-10-19
     tag: v1.2
+  4cbaf4c08f1a7bfa537d6113472ef4424e4eb654:
+    expires_at: 2050-01-01
+    tag: v3.0.0
 ocaml/setup-ocaml:
   '*':
     expires_at: 2025-08-01
