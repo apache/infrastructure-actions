@@ -862,8 +862,11 @@ untitaker/hyperlink:
   0.1.21:
     expires_at: 2025-08-01
   d277930ba480c61cd3dd1a0caf0d18acfed294a6:
-    expires_at: 2050-01-01
+    expires_at: 2025-10-19
     tag: 0.1.21
+  e66bb17cc9ae341677431edec3b893a0aa6ac747:
+    expires_at: 2050-01-01
+    tag: 0.1.44
 uraimo/run-on-arch-action:
   v2:
     expires_at: 2025-08-01
