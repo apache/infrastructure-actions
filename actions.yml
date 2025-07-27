@@ -197,8 +197,11 @@ browser-actions/setup-firefox:
     expires_at: 2025-09-08
     tag: v1
   634a60ccd6599686158cf5a570481b4cd30455a2:
-    expires_at: 2050-01-01
+    expires_at: 2025-10-19
     tag: v1.5.4
+  5914774dda97099441f02628f8d46411fcfbd208:
+    expires_at: 2050-01-01
+    tag: v1.7.0
 browser-actions/setup-geckodriver:
   5ef1526ed36211ab6cb531ec1cfb11f924ca2dee:
     expires_at: 2050-01-01
