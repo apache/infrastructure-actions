@@ -1,6 +1,6 @@
 # Settings
 # ========
-ARG PYTHON_VERSION=3.10.18-bullseye
+ARG PYTHON_VERSION=3.10.18-slim-bullseye
 ARG GFM_VERSION=0.28.3.gfm.12 # must agree with copy below
 
 # Build cmake-gfm
