@@ -2,7 +2,6 @@
 - 1Password/load-secrets-action@581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0
 - ana06/get-changed-files@v2.3.0
 - ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c
-- actions-rs/*@*
 - apache/*@*
 - bytedeco/javacpp-presets/.github/actions/*@*
 - dtolnay/rust-toolchain@stable
