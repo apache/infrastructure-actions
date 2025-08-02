@@ -196,6 +196,7 @@
 - scacap/action-surefire-report@*
 - scala-steward-org/scala-steward-action@5021652c555c5724af574758b78ea5be49640007
 - scala-steward-org/scala-steward-action@*
+- scala-steward-org/scala-steward-action@961c41c9fd3dc8a0f1f8dd59d60d071e17348ae8
 - scalacenter/sbt-dependency-submission@64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3
 - scalacenter/sbt-dependency-submission@*
 - scottbrenner/puppet-lint-action@*
