@@ -89,6 +89,7 @@
 - delaguardo/setup-graalvm@*
 - dlang-community/setup-dlang@*
 - docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
+- docker://pandoc/core@sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93
 - docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392
 - dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
 - easimon/maximize-build-space@*

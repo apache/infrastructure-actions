@@ -34,6 +34,7 @@ jobs:
       - uses: damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
       - uses: dawidd6/action-send-mail@6d98ae34d733f9a723a9e04e94f2f24ba05e1402  # v6
       - uses: docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
+      - uses: docker://pandoc/core@sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93  # 3.7.0.2
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3.0.2
       - uses: erisu/apache-rat-action@3127a8c18f3bb10e91c60e835144085b31c5c463  # v1.2.0
       - uses: erisu/license-checker-action@1c222d0c2f5898a4c40b8bd6fd6888650bd6f68a  # v2.0.0
