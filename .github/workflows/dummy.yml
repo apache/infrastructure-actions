@@ -67,7 +67,7 @@ jobs:
       - uses: pypa/cibuildwheel@9e4e50bd76b3190f55304387e333f6234823ea9b  # v3.1.2
       - uses: sbt/setup-sbt@234370af1319038bf8dc432f8a7e4b83078a1781  # v1.1.11
       - uses: scacap/action-surefire-report@1a128e49c0585bc0b8e38e541ac3b6e35a5bc727  # v1.9.0
-      - uses: scala-steward-org/scala-steward-action@5021652c555c5724af574758b78ea5be49640007  # v2.75.0
+      - uses: scala-steward-org/scala-steward-action@961c41c9fd3dc8a0f1f8dd59d60d071e17348ae8  # v2.76.0
       - uses: scalacenter/sbt-dependency-submission@64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3  # v3.0.2
       - uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a  # v1
       - uses: untitaker/hyperlink@e66bb17cc9ae341677431edec3b893a0aa6ac747  # 0.1.44
