@@ -335,8 +335,9 @@ docker://jekyll/jekyll:
   sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625:
     expires_at: 2050-01-01
 docker://pandoc/core:
-  sha256:a98725012a960ec77310acef038b57c82b9375bf65ae761d93146448c6e53a31: # 2.9
-    expires_at: 2026-07-31
+  sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93:
+    tag: 3.7.0.2
+    expires_at: 2050-01-01
 docker/setup-qemu-action:
   29109295f81e9208d7d86ff1c6c12d2833863392:
     expires_at: 2050-01-01
