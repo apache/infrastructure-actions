@@ -48,6 +48,14 @@ def calculate_expiry(weeks=4):
     return date.today() + timedelta(weeks=weeks)
 
 
+def get_separator(name):
+    """
+    Return the proper reference separator.
+    `@` for normal actions and `:` for docker:// actions
+    """
+
+    return ":" if name.startswith("docker://") else "@"
+
 def load_yaml(path: Path) -> dict:
     """
     Load and parse a YAML file.
@@ -153,7 +161,7 @@ jobs:
         elif len(ref_to_update) == 1:
             ref = ref_to_update[0]
             details = refs[ref]
-            steps.append(f"      - uses: {name}@{ref}" + (f"  # {details['tag']}" if 'tag' in details else ''))
+            steps.append(f"      - uses: {name}{get_separator(name)}{ref}" + (f"  # {details['tag']}" if 'tag' in details else ''))
 
     return header + "\n".join(steps) + "\n"
 
@@ -172,7 +180,16 @@ def update_refs(
         ActionsYAML: Updated action references
     """
     for step in dummy_steps:
-        name, new_ref = step["uses"].split("@")
+        name_with_ref = step["uses"]
+        separator = get_separator(name_with_ref)
+        if separator == '@':
+          name, new_ref = name_with_ref.split(separator)  
+        else:
+          # With docker:// it will be split into three parts,
+          # just merge the docker prefix back into the name.
+          docker, name, new_ref = name_with_ref.split(separator)  
+          name = docker + ':' + name
+
         new_tag = None
         if hasattr(step, 'ca') and 'uses' in step.ca.items:
             new_tag = step.ca.items['uses'][2].value[1:].strip()
@@ -225,7 +242,7 @@ def create_pattern(actions: ActionsYAML) -> list[str]:
     pattern: list[str] = []
 
     pattern.extend(
-        f"{name}@{ref}"
+        f"{name}{get_separator(name)}{ref}"
         for name, refs in actions.items()
         for ref, details in refs.items()
         if date.today() < details.get("expires_at") or details.get("keep")

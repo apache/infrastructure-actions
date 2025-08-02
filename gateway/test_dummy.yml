@@ -52,8 +52,8 @@ jobs:
     - uses: damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
     - uses: dawidd6/action-send-mail@4226df7daafa6fc901a43789c49bf7ab309066e7
     - uses: dawidd6/action-send-mail@v3
-    - uses: docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
-    - uses: docker://jekyll/jekyll@*
+    - uses: docker://jekyll/jekyll:sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
+    - uses: docker://jekyll/jekyll:*
     - uses: dominikh/staticcheck-action@4ec9a0dff54be2642bc76581598ba433fd8d4967
     - uses: dominikh/staticcheck-action@v1.1.0
     - uses: dorny/paths-filter@v3.0.2
