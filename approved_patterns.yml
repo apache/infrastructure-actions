@@ -182,6 +182,7 @@
 - pypa/cibuildwheel@5f22145df44122af0f5a201f93cf0207171beca7
 - pypa/cibuildwheel@e6de07ed3921b51089aae6981989889cf1eddd0c
 - pypa/cibuildwheel@9e4e50bd76b3190f55304387e333f6234823ea9b
+- pypa/cibuildwheel@352e01339f0a173aa2a3eb57f01492e341e83865
 - pytooling/actions@*
 - quarto-dev/quarto-actions@*
 - reactivecircus/android-emulator-runner@*
