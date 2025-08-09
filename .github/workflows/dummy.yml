@@ -59,7 +59,7 @@ jobs:
       - uses: ncipollo/release-action@bcfe5470707e8832e12347755757cec0eb3c22af  # v1.18.0
       - uses: neofinancial/ticket-check-action@609d901d5130a4bbd7d9f62931082ed67f855891  # v2.0.0
       - uses: nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654  # v3.0.0
-      - uses: opentofu/setup-opentofu@000eeb8522f0572907c393e8151076c205fdba1b  # v1
+      - uses: opentofu/setup-opentofu@000eeb8522f0572907c393e8151076c205fdba1b  # v1.0.6
       - uses: orhun/git-cliff-action@98c93442bb05a455a77bee982867857ae748eeea  # v4.5.1
       - uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043  # v4.0.0
       - uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e  # v15
