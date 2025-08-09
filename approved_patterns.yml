@@ -40,6 +40,7 @@
 - awalsh128/cache-apt-pkgs-action@*
 - aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722
 - aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df
+- aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a
 - azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78
 - azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112
 - betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619
