@@ -163,6 +163,7 @@
 - ocaml/setup-ocaml@*
 - olafurpg/setup-scala@*
 - opentofu/setup-opentofu@592200bd4b9bbf4772ace78f887668b1aee8f716
+- opentofu/setup-opentofu@000eeb8522f0572907c393e8151076c205fdba1b
 - oracle-actions/setup-java@*
 - orhun/git-cliff-action@4a4a951bc43fafe41cd2348d181853f52356bee7
 - orhun/git-cliff-action@98c93442bb05a455a77bee982867857ae748eeea
