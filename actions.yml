@@ -6,8 +6,10 @@
 1Password/load-secrets-action:
   581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0:
     expires_at: 2025-11-07
+    tag: v2.0.0
   13f58eec611f8e5db52ec16247f58c508398f3e6:
     expires_at: 2050-01-01
+    tag: v3.0.0
 ana06/get-changed-files:
   25f79e676e7ea1868813e21465014798211fad8c:
     tag: v2.3.0
@@ -175,7 +177,7 @@ azure/setup-helm:
 betahuhn/repo-file-sync-action:
   8b92be3375cf1d1b0cd579af488a9255572e4619:
     expires_at: 2050-01-01
-    tag: v1
+    tag: v1.21.1
 bnjbvr/cargo-machete:
   5eaad10acf89fb0c6a31d9b197a2d48ba762d28e:
     expires_at: 2025-10-19
