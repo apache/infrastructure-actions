@@ -8,7 +8,7 @@ jobs:
     if: false
     runs-on: ubuntu-latest
     steps:
-      - uses: 1Password/load-secrets-action@13f58eec611f8e5db52ec16247f58c508398f3e6
+      - uses: 1Password/load-secrets-action@13f58eec611f8e5db52ec16247f58c508398f3e6  # v3.0.0
       - uses: ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c  # v2.3.0
       - uses: DavidAnson/markdownlint-cli2-action@992badcdf24e3b8eb7e87ff9287fe931bcb00c6e  # v20.0.0
       - uses: JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8  # v4.7.3
@@ -19,7 +19,7 @@ jobs:
       - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185  # v3
       - uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a  # v4.3.1
       - uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112  # v4.3.0
-      - uses: betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619  # v1
+      - uses: betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619  # v1.21.1
       - uses: bnjbvr/cargo-machete@b54422fa3319b3cac180f6030b663fe57af51635  # v0.8.0
       - uses: browser-actions/setup-firefox@5914774dda97099441f02628f8d46411fcfbd208  # v1.7.0
       - uses: browser-actions/setup-geckodriver@5ef1526ed36211ab6cb531ec1cfb11f924ca2dee
