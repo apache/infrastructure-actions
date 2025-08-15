@@ -200,6 +200,7 @@
 - sbt/setup-sbt@*
 - sbt/setup-sbt@6c68d2fe8dfbc0a0534d70101baa2e0420e1a506
 - sbt/setup-sbt@234370af1319038bf8dc432f8a7e4b83078a1781
+- sbt/setup-sbt@f20dc1bc1f8be605c44ffbcec6f17f708a4af9d1
 - scacap/action-surefire-report@1a128e49c0585bc0b8e38e541ac3b6e35a5bc727
 - scacap/action-surefire-report@*
 - scala-steward-org/scala-steward-action@5021652c555c5724af574758b78ea5be49640007
