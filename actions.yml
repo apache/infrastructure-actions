@@ -397,8 +397,11 @@ google-github-actions/setup-gcloud:
   77e7a554d41e2ee56fc945c52dfd3f33d12def9a:
     expires_at: 2025-10-19
   6a7c903a70c8625ed6700fa299f5ddb4ca6022e9:
-    expires_at: 2050-01-01
+    expires_at: 2025-11-07
     tag: v2.1.5
+  cb1e50a9932213ecece00a606661ae9ca44f3397:
+    expires_at: 2050-01-01
+    tag: v2.2.0
 gr2m/twitter-together:
   '*':
     expires_at: 2025-08-01
