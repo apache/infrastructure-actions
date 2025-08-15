@@ -8,7 +8,7 @@ jobs:
     if: false
     runs-on: ubuntu-latest
     steps:
-      - uses: 1Password/load-secrets-action@581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0
+      - uses: 1Password/load-secrets-action@13f58eec611f8e5db52ec16247f58c508398f3e6
       - uses: ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c  # v2.3.0
       - uses: DavidAnson/markdownlint-cli2-action@992badcdf24e3b8eb7e87ff9287fe931bcb00c6e  # v20.0.0
       - uses: JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8  # v4.7.3
