@@ -39,7 +39,7 @@ jobs:
       - uses: erisu/apache-rat-action@3127a8c18f3bb10e91c60e835144085b31c5c463  # v1.2.0
       - uses: erisu/license-checker-action@1c222d0c2f5898a4c40b8bd6fd6888650bd6f68a  # v2.0.0
       - uses: google-github-actions/auth@b7593ed2efd1c1617e1b0254da33b86225adb2a5  # v2.1.12
-      - uses: google-github-actions/setup-gcloud@6a7c903a70c8625ed6700fa299f5ddb4ca6022e9  # v2.1.5
+      - uses: google-github-actions/setup-gcloud@cb1e50a9932213ecece00a606661ae9ca44f3397  # v2.2.0
       - uses: graalvm/setup-graalvm@7f488cf82a3629ee755e4e97342c01d6bed318fa  # v1.3.5
       - uses: gradle/wrapper-validation-action@f9c9c575b8b21b6485636a91ffecd10e558c62f6  # v3.5.0
       - uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf  # v3.1.0
