@@ -5,6 +5,8 @@
 # Versions that are known to be problematic should be removed explicitly manually.
 1Password/load-secrets-action:
   581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0:
+    expires_at: 2025-11-07
+  13f58eec611f8e5db52ec16247f58c508398f3e6:
     expires_at: 2050-01-01
 ana06/get-changed-files:
   25f79e676e7ea1868813e21465014798211fad8c:
