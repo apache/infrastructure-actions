@@ -76,3 +76,4 @@ jobs:
       - uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310  # v1
       - uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a  # v2.1.1
       - uses: mlugg/setup-zig@8d6198c65fb0feaa111df26e6b467fea8345e46f  # v2.0.5
+      - uses: posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237  # v1.0.0
