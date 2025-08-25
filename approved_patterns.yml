@@ -85,7 +85,6 @@
 - crate-ci/typos@*
 - crazy-max/ghaction-import-gpg@111c56156bcc6918c056dbef52164cfa583dc549
 - crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec
-- crazy-max/ghaction-setup-docker@b60f85385d03ac8acfca6d9996982511d8620a19
 - damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
 - dawidd6/action-download-artifact@*
 - dawidd6/action-send-mail@v3
@@ -120,7 +119,6 @@
 - hadolint/hadolint-action@f988afea3da57ee48710a9795b6bb677cc901183
 - hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf
 - hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
-- helm/chart-releaser-action@fc23f249f75decd5edf254c6b4401532cef093c3
 - helm/chart-testing-action@0d28d3144d3a25ea2cc349d6e59901c4ff469b3b
 - helm/kind-action@0025e74a8c7512023d06dc019c617aa3cf561fde
 - helm/kind-action@a1b0e391336a6ee6713a0583f8c6240d70863de3
@@ -148,8 +146,6 @@
 - leafo/gh-actions-lua@*
 - leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
 - leafo/gh-actions-luarocks@4c082a5fad45388feaeb0798dbd82dbd7dc65bca
-- ludeeus/action-shellcheck@94e0aab03ca135d11a35e5bfc14e6746dc56e7e9
-- ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38
 - manusa/actions-setup-minikube@b589f2d61bf96695c546929c72b38563e856059d
 - manusa/actions-setup-minikube@*
 - maxim-lobanov/setup-xcode@*
@@ -157,12 +153,10 @@
 - mikepenz/action-junit-report@*
 - mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
 - msys2/setup-msys2@*
-- mukunku/tag-exists-action@bdad1eaa119ce71b150b952c97351c75025c06a9
 - mvasigh/dispatch-action@*
 - nanasess/setup-chromedriver@*
 - ncipollo/release-action@1e3e9c6637e5566e185b7ab66f187539c5a76da7
 - ncipollo/release-action@bcfe5470707e8832e12347755757cec0eb3c22af
-- neofinancial/ticket-check-action@609d901d5130a4bbd7d9f62931082ed67f855891
 - nick-fields/retry@*
 - nwtgck/actions-netlify@ac1cb16858bada08a9c71a81240a85cfc3f72913
 - nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654
@@ -181,8 +175,6 @@
 - peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043
 - peter-evans/create-pull-request@*
 - phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e
-- pmd/pmd-github-action@967a81f8b657c87f7c3e96b62301cb1a48efef29
-- pmd/pmd-github-action@d9c1f3c5940cbf5923f1354e83fa858b4496ebaa
 - pnpm/action-setup@*
 - potiuk/cancel-workflow-runs@*
 - pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
