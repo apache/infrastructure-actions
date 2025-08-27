@@ -870,3 +870,7 @@ posit-dev/setup-air:
   63e80dedb6d275c94a3841e15e5ff8691e1ab237:
     expires_at: 2050-01-01
     tag: v1.0.0
+vmactions/freebsd-vm:
+  05856381fab64eeee9b038a0818f6cec649ca17a:
+    expires_at: 2050-01-01
+    tag: v1.2.3
