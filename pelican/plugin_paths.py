@@ -50,7 +50,7 @@ def main():
     with open(file, 'r', encoding='utf-8') as infile:
         contents = infile.read()
 
-    # This will contain the "globals" after executing the peliconconf.py.
+    # This will contain the "globals" after executing the pelicanconf.py.
     # Note: allow all builtins (by virtue of NOT inserting a __builtins__
     #   value into this dictionary. We have no concerns about builtin usage.
     values = { }
