@@ -221,6 +221,7 @@
 - untitaker/hyperlink@e66bb17cc9ae341677431edec3b893a0aa6ac747
 - uraimo/run-on-arch-action@ac33288c3728ca72563c97b8b88dda5a65a84448
 - uraimo/run-on-arch-action@d94c13912ea685de38fccc1109385b83fd79427d
+- vapier/coverity-scan-action@2068473c7bdf8c2fb984a6a40ae76ee7facd7a85
 - vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
 - vishalsinha21/dynamic-checklist@*
 - wei/curl@*

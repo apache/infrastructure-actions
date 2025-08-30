@@ -131,6 +131,8 @@ jobs:
         if: false
       - uses: uraimo/run-on-arch-action@d94c13912ea685de38fccc1109385b83fd79427d  # v3.0.1
         if: false
+      - uses: vapier/coverity-scan-action@2068473c7bdf8c2fb984a6a40ae76ee7facd7a85  # v1.8.0
+        if: false
       - uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310  # v1
         if: false
       - uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a  # v2.1.1
