@@ -138,6 +138,8 @@ on:
     paths:
       - .github/workflows/dummy.yml
 
+permissions: {}
+
 jobs:
   dummy:
     runs-on: ubuntu-latest
