@@ -20,7 +20,6 @@ jobs:
       - uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a  # v4.3.1
       - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
       - uses: betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619  # v1.21.1
-      - uses: bnjbvr/cargo-machete@7959c845782fed02ee69303126d4a12d64f1db18  # v0.9.1
       - uses: browser-actions/setup-firefox@5914774dda97099441f02628f8d46411fcfbd208  # v1.7.0
       - uses: browser-actions/setup-geckodriver@5ef1526ed36211ab6cb531ec1cfb11f924ca2dee
       - uses: burnett01/rsync-deployments@0dc935cdecc5f5e571865e60d2a6cdc673704823  # 5.2
