@@ -131,10 +131,15 @@ def generate_workflow(actions: ActionsYAML) -> str:
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/dummy.yml
+  push:
+    paths:
+      - .github/workflows/dummy.yml
 
 jobs:
   dummy:
-    if: false
     runs-on: ubuntu-latest
     steps:
 """
@@ -154,8 +159,9 @@ jobs:
             ref = ref_to_update[0]
             details = refs[ref]
             steps.append(f"      - uses: {name}@{ref}" + (f"  # {details['tag']}" if 'tag' in details else ''))
+            steps.append( "        if: false")
 
-    return header + "\n".join(steps) + "\n"
+    return header + "\n".join(steps) + "\n" + "      - run: echo Success!\n"
 
 
 def update_refs(
@@ -172,7 +178,12 @@ def update_refs(
         ActionsYAML: Updated action references
     """
     for step in dummy_steps:
-        name, new_ref = step["uses"].split("@")
+        uses = step.get("uses", None)
+        if uses is None:
+            # The last step is - run:
+            continue
+
+        name, new_ref = uses.split("@")
         new_tag = None
         if hasattr(step, 'ca') and 'uses' in step.ca.items:
             new_tag = step.ca.items['uses'][2].value[1:].strip()
