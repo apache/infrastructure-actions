@@ -27,7 +27,7 @@ jobs:
       - uses: commit-check/commit-check-action@1968496411d3da2dddc6a6d891ab95eaa9b03ec6  # v0.9.2
       - uses: coursier/cache-action@4e2615869d13561d626ed48655e1a39e5b192b3c  # 6.4.7
       - uses: coursier/setup-action@039f736548afa5411c1382f40a5bd9c2d30e0383  # v1.3.9
-      - uses: cpp-linter/cpp-linter-action@d7155ea6699028b6b09b0457e26b3c5d73f0ed46  # v2.16.0
+      - uses: cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8  # v2.15.1
       - uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec  # v6.3.0
       - uses: damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
       - uses: dawidd6/action-send-mail@6d98ae34d733f9a723a9e04e94f2f24ba05e1402  # v6
