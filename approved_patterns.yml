@@ -105,6 +105,7 @@
 - google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193
 - google-github-actions/auth@140bb5113ffb6b65a7e9b937a81fa96cf5064462
 - google-github-actions/auth@b7593ed2efd1c1617e1b0254da33b86225adb2a5
+- google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
 - google-github-actions/setup-gcloud@77e7a554d41e2ee56fc945c52dfd3f33d12def9a
 - google-github-actions/setup-gcloud@6a7c903a70c8625ed6700fa299f5ddb4ca6022e9
 - google-github-actions/setup-gcloud@cb1e50a9932213ecece00a606661ae9ca44f3397

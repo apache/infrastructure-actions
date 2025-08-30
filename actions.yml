@@ -390,8 +390,11 @@ google-github-actions/auth:
     expires_at: 2025-10-27
     tag: v2.1.11
   b7593ed2efd1c1617e1b0254da33b86225adb2a5:
-    expires_at: 2050-01-01
+    expires_at: 2025-11-22
     tag: v2.1.12
+  7c6bc770dae815cd3e89ee6cdf493a5fab2cc093:
+    expires_at: 2050-01-01
+    tag: v3.0.0
 google-github-actions/setup-gcloud:
   77e7a554d41e2ee56fc945c52dfd3f33d12def9a:
     expires_at: 2025-10-19
