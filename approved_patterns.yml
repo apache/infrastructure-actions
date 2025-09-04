@@ -30,6 +30,7 @@
 - VirtusLab/scala-cli-setup@6b3ba0ee6968ad077b859cb12246deabd2f7cb78
 - VirtusLab/scala-cli-setup@fd47cd1667585511042cb0504fbae3c588d4dc0c
 - VirtusLab/scala-cli-setup@54cd42adb92642fffd3b04cf9705d2806a3b8a92
+- VirtusLab/scala-cli-setup@b1b5d003a3db8e351bbf705ef4378d6b0ff8bf4d
 - actions-cool/check-user-permission@*
 - actions-cool/issues-helper@*
 - actions-cool/maintain-one-comment@*
