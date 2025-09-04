@@ -76,7 +76,6 @@
 - coursier/cache-action@*
 - coursier/setup-action@039f736548afa5411c1382f40a5bd9c2d30e0383
 - coursier/setup-action@*
-- cpp-linter/cpp-linter-action@e3fcb174b19d50de4eae1b46896698a1dd48b094
 - cpp-linter/cpp-linter-action@f91c446a32ae3eb9f98fef8c9ed4c7cb613a4f8a
 - cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8
 - crate-ci/typos@*
