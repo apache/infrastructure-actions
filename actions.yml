@@ -571,8 +571,11 @@ ncipollo/release-action:
   1e3e9c6637e5566e185b7ab66f187539c5a76da7:
     expires_at: 2025-10-19
   bcfe5470707e8832e12347755757cec0eb3c22af:
-    expires_at: 2050-01-01
+    expires_at: 2025-11-27
     tag: v1.18.0
+  b7eabc95ff50cbeeedec83973935c8f306dfcd0b:
+    expires_at: 2050-01-01
+    tag: v1.20.0
 nick-fields/retry:
   '*':
     expires_at: 2025-08-01
