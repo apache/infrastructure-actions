@@ -67,9 +67,6 @@ BobAnkh/auto-generate-changelog:
     expires_at: 2025-08-01
     keep: true
 DavidAnson/markdownlint-cli2-action:
-  b4c9feab76d8025d1e83c653fa3990936df0e6c8:
-    expires_at: 2025-09-08
-    tag: v16
   992badcdf24e3b8eb7e87ff9287fe931bcb00c6e:
     expires_at: 2050-01-01
     tag: v20.0.0
@@ -103,9 +100,6 @@ TobKed/label-when-approved-action:
     expires_at: 2025-08-01
     keep: true
 VirtusLab/scala-cli-setup:
-  6fc878be89f1990f6599f4f6a2e52a252e54d9f9:
-    tag: v1.7.1
-    expires_at: 2025-09-08
   ca54569bf13a29cd648721038a89c47c7921c060:
     tag: v1.8.0
     expires_at: 2025-09-09
@@ -134,9 +128,6 @@ actions-cool/maintain-one-comment:
     expires_at: 2025-08-01
     keep: true
 actions/setup-go:
-  0aaccfd150d50ccaeb58ebd88d36e91967a5f35b:
-    expires_at: 2025-09-08
-    tag: v5
   d35c59abb061a4a6fb18e82ac0862c26744d6ab5:
     expires_at: 2050-01-01
     tag: v5.5.0
@@ -161,9 +152,6 @@ awalsh128/cache-apt-pkgs-action:
     expires_at: 2025-08-01
     keep: true
 aws-actions/configure-aws-credentials:
-  ececac1a45f3b08a01d2dd070d28d111c5fe6722:
-    expires_at: 2025-09-08
-    tag: v4.1.0
   b47578312673ae6fa5b5096b330d9fbac3d116df:
     expires_at: 2025-11-01
     tag: v4.2.1
@@ -171,9 +159,6 @@ aws-actions/configure-aws-credentials:
     expires_at: 2050-01-01
     tag: v4.3.1
 azure/setup-helm:
-  5119fcb9089d432beecbf79bb2c7915207344b78:
-    expires_at: 2025-09-08
-    tag: v3
   b9e51907a09c216f16ebe8536097933489208112:
     expires_at: 2025-11-17
     tag: v4.3.0
@@ -185,9 +170,6 @@ betahuhn/repo-file-sync-action:
     expires_at: 2050-01-01
     tag: v1.21.1
 browser-actions/setup-firefox:
-  5b19b18df8c293aae9e77f0a936e9fdc358f543a:
-    expires_at: 2025-09-08
-    tag: v1
   634a60ccd6599686158cf5a570481b4cd30455a2:
     expires_at: 2025-10-19
     tag: v1.5.4
@@ -305,8 +287,6 @@ crate-ci/typos:
     expires_at: 2025-08-01
     keep: true
 crazy-max/ghaction-import-gpg:
-  111c56156bcc6918c056dbef52164cfa583dc549:
-    expires_at: 2025-09-08
   e89d40939c28e39f97cf32126055eeae86ba74ec:
     expires_at: 2050-01-01
     tag: v6.3.0
@@ -318,9 +298,6 @@ dawidd6/action-download-artifact:
     expires_at: 2025-08-01
     keep: true
 dawidd6/action-send-mail:
-  2cea9617b09d79a095af21254fbcb7ae95903dde:
-    expires_at: 2025-09-08
-    tag: v3.12.0
   6d98ae34d733f9a723a9e04e94f2f24ba05e1402:
     expires_at: 2050-01-01
     tag: v6
@@ -426,9 +403,6 @@ gsactions/commit-message-checker:
     expires_at: 2025-08-01
     keep: true
 hadolint/hadolint-action:
-  f988afea3da57ee48710a9795b6bb677cc901183:
-    expires_at: 2025-09-08
-    tag: v2.1.0
   54c9adbab1582c2ef04b2016b760714a4bfde3cf:
     expires_at: 2050-01-01
     tag: v3.1.0
@@ -441,9 +415,6 @@ helm/chart-testing-action:
     expires_at: 2050-01-01
     tag: v2.7.0
 helm/kind-action:
-  0025e74a8c7512023d06dc019c617aa3cf561fde:
-    expires_at: 2025-09-08
-    tag: v1.10.0
   a1b0e391336a6ee6713a0583f8c6240d70863de3:
     expires_at: 2050-01-01
     tag: v1.12.0
@@ -666,9 +637,6 @@ pyTooling/Actions:
     expires_at: 2025-08-01
     keep: true
 pypa/cibuildwheel:
-  0f04e96e2f58e63b8b03886c1db16a507f2199bf:
-    expires_at: 2025-09-08
-    tag: v2.12.0
   5f22145df44122af0f5a201f93cf0207171beca7:
     expires_at: 2025-10-19
     tag: v3.0.0
@@ -709,9 +677,6 @@ ruby/setup-ruby:
     expires_at: 2025-08-01
     keep: true
 sbt/setup-sbt:
-  26ab4b0fa1c47fa62fc1f6e51823a658fb6c760c:
-    expires_at: 2025-09-08
-    tag: v1.1.7
   '*':
     expires_at: 2025-08-01
     keep: true
@@ -812,9 +777,6 @@ untitaker/hyperlink:
     expires_at: 2050-01-01
     tag: 0.1.44
 uraimo/run-on-arch-action:
-  ac33288c3728ca72563c97b8b88dda5a65a84448:
-    expires_at: 2025-09-08
-    tag: v2
   d94c13912ea685de38fccc1109385b83fd79427d:
     expires_at: 2050-01-01
     tag: v3.0.1
