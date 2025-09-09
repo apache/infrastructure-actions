@@ -24,7 +24,6 @@
 - Kesin11/actions-timeline@a7eaabf426cdae26c3582c3fa674b897170dec8f
 - PyO3/maturin-action@*
 - TobKed/label-when-approved-action@*
-- VirtusLab/scala-cli-setup@ca54569bf13a29cd648721038a89c47c7921c060
 - VirtusLab/scala-cli-setup@6b3ba0ee6968ad077b859cb12246deabd2f7cb78
 - VirtusLab/scala-cli-setup@fd47cd1667585511042cb0504fbae3c588d4dc0c
 - VirtusLab/scala-cli-setup@54cd42adb92642fffd3b04cf9705d2806a3b8a92
@@ -132,7 +131,6 @@
 - kiegroup/github-action-build-chain@*
 - korandoru/hawkeye@*
 - leafo/gh-actions-lua@*
-- leafo/gh-actions-luarocks@e65774a6386cb4f24e293dca7fc4ff89165b64c5
 - leafo/gh-actions-luarocks@4c082a5fad45388feaeb0798dbd82dbd7dc65bca
 - manusa/actions-setup-minikube@b589f2d61bf96695c546929c72b38563e856059d
 - manusa/actions-setup-minikube@*
@@ -213,7 +211,6 @@
 - vishalsinha21/dynamic-checklist@*
 - wei/curl@*
 - xpol/setup-lua@*
-- slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d
 - slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52
 - slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
 - golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd

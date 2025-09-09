@@ -100,9 +100,6 @@ TobKed/label-when-approved-action:
     expires_at: 2025-08-01
     keep: true
 VirtusLab/scala-cli-setup:
-  ca54569bf13a29cd648721038a89c47c7921c060:
-    tag: v1.8.0
-    expires_at: 2025-09-09
   6b3ba0ee6968ad077b859cb12246deabd2f7cb78:
     expires_at: 2025-10-19
     tag: v1.8.1
@@ -504,8 +501,6 @@ leafo/gh-actions-lua:
     expires_at: 2025-08-01
     keep: true
 leafo/gh-actions-luarocks:
-  e65774a6386cb4f24e293dca7fc4ff89165b64c5:
-    expires_at: 2025-09-09
   4c082a5fad45388feaeb0798dbd82dbd7dc65bca:
     expires_at: 2050-01-01
     tag: v5
@@ -804,9 +799,6 @@ xpol/setup-lua:
     expires_at: 2025-08-01
     keep: true
 slackapi/slack-github-action:
-  485a9d42d3a73031f12ec201c457e2162c45d02d:
-    expires_at: 2025-09-09
-    tag: v2.0.0
   b0fa283ad8fea605de13dc3f449259339835fc52:
     expires_at: 2025-10-19
     tag: v2.1.0
