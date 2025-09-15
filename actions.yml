@@ -702,8 +702,11 @@ scala-steward-org/scala-steward-action:
     expires_at: 2025-08-01
     keep: true
   961c41c9fd3dc8a0f1f8dd59d60d071e17348ae8:
-    expires_at: 2050-01-01
+    expires_at: 2025-12-08
     tag: v2.76.0
+  53d486a68877f4a6d1e110e8058fe21e593db356:
+    expires_at: 2050-01-01
+    tag: v2.77.0
 scalacenter/sbt-dependency-submission:
   64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3:
     expires_at: 2050-01-01
