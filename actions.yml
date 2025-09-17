@@ -833,3 +833,7 @@ vmactions/freebsd-vm:
   05856381fab64eeee9b038a0818f6cec649ca17a:
     expires_at: 2050-01-01
     tag: v1.2.3
+astral-sh/setup-uv:
+  '*':
+    expires_at: 2050-01-01
+    keep: true
