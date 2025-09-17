@@ -75,7 +75,7 @@ jobs:
         if: false
       - uses: google-github-actions/setup-gcloud@26f734c2779b00b7dda794207734c511110a4368  # v3.0.0
         if: false
-      - uses: graalvm/setup-graalvm@7a1da54cb7fdef4ea19f6ecdfa9ecf59dc5a48fe  # v1.3.6
+      - uses: graalvm/setup-graalvm@aba6a077d71fbfc02138d7470c4ad6e7f85bd2a9  # v1.3.7
         if: false
       - uses: gradle/wrapper-validation-action@f9c9c575b8b21b6485636a91ffecd10e558c62f6  # v3.5.0
         if: false
