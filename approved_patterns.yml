@@ -15,6 +15,7 @@
 - vhelm/chart-releaser-action@*
 - AdoptOpenJDK/install-jdk@*
 - BobAnkh/auto-generate-changelog@*
+- dorny/test-reporter@dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3
 - DavidAnson/markdownlint-cli2-action@992badcdf24e3b8eb7e87ff9287fe931bcb00c6e
 - EnricoMi/publish-unit-test-result-action@*
 - JamesIves/github-pages-deploy-action@881db5376404c5c8d621010bcbec0310b58d5e29
