@@ -4,7 +4,7 @@ ARG PYTHON_VERSION=3.10.18-slim-bullseye
 ARG GFM_VERSION=0.28.3.gfm.12 # must agree with copy below
 
 # Build cmake-gfm
-FROM python:${PYTHON_VERSION} as pelican-asf
+FROM python:${PYTHON_VERSION} AS pelican-asf
 
 RUN apt update && apt upgrade -y
 RUN apt install curl cmake build-essential -y
@@ -25,8 +25,8 @@ ARG PELICAN_VERSION=4.5.4
 ARG GFM_VERSION=0.28.3.gfm.12 # must agree with copy above
 
 # Where we put GFM and the plugins
-ENV WORKDIR /opt/pelican-asf
-ENV LIBCMARKDIR ${WORKDIR}/cmark-gfm-${GFM_VERSION}/lib
+ENV WORKDIR=/opt/pelican-asf
+ENV LIBCMARKDIR=${WORKDIR}/cmark-gfm-${GFM_VERSION}/lib
 
 RUN apt update && apt upgrade -y
 
