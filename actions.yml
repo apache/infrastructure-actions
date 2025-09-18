@@ -66,6 +66,10 @@ BobAnkh/auto-generate-changelog:
   '*':
     expires_at: 2025-08-01
     keep: true
+dorny/test-reporter:
+  dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3:
+    expires_at: 2050-01-01
+    tag: v2.1.1
 DavidAnson/markdownlint-cli2-action:
   992badcdf24e3b8eb7e87ff9287fe931bcb00c6e:
     expires_at: 2050-01-01
