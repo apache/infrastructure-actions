@@ -349,10 +349,11 @@ def process_sequence(metadata, seq, sequence, load, debug):
             # determine the project or podling logo
             reference = add_logo(reference, sequence['logo'])
             if seq == 'featured_pods':
-                # for podlings strip "Apache" from the beginning and "(incubating)" from the end.
+                # for podlings strip "Apache " from the beginning and " (Incubating)" from the end.
                 # this is Sally's request
+                # It mainly applies to data fetched from https://projects.apache.org/json/foundation/podlings.json
                 for item in reference:
-                    setattr(item, 'name', ' '.join(item.name.split(' ')[1:-1]))
+                    setattr(item, 'name', item.name.replace('Apache ', '').replace(' (Incubating)', ''))
         else:
             print(f'{seq} - logo requires an existing sequence')
 
@@ -587,6 +588,7 @@ def process_blog(feed, count, words, debug):
             {
                 'id': get_element_text(entry, 'id'),
                 'title': get_element_text(entry, 'title'),
+                'date': get_element_text(entry, 'published'),
                 'content': content_text
             }
         )
@@ -596,6 +598,7 @@ def process_blog(feed, count, words, debug):
 
     return [ Blog(href=s['id'],
                   title=s['title'],
+                  date=s['date'],
                   content=s['content'])
              for s in v]
 
