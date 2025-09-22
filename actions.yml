@@ -118,8 +118,11 @@ VirtusLab/scala-cli-setup:
     expires_at: 2025-11-27
     tag: v1.8.5
   b1b5d003a3db8e351bbf705ef4378d6b0ff8bf4d:
-    expires_at: 2050-01-01
+    expires_at: 2025-12-15
     tag: v1.9.0
+  77834b5926f3eb70869d8009530c65585f7a039b:
+    expires_at: 2050-01-01
+    tag: v1.9.1
 actions-cool/check-user-permission:
   '*':
     expires_at: 2025-08-01
