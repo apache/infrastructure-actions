@@ -111,7 +111,7 @@ jobs:
         if: false
       - uses: opentofu/setup-opentofu@000eeb8522f0572907c393e8151076c205fdba1b  # v1.0.6
         if: false
-      - uses: orhun/git-cliff-action@98c93442bb05a455a77bee982867857ae748eeea  # v4.5.1
+      - uses: orhun/git-cliff-action@d77b37db2e3f7398432d34b72a12aa3e2ba87e51  # v4.6.0
         if: false
       - uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043  # v4.0.0
         if: false
