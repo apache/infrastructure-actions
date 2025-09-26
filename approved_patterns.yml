@@ -102,6 +102,7 @@
 - google-github-actions/setup-gcloud@6a7c903a70c8625ed6700fa299f5ddb4ca6022e9
 - google-github-actions/setup-gcloud@cb1e50a9932213ecece00a606661ae9ca44f3397
 - google-github-actions/setup-gcloud@26f734c2779b00b7dda794207734c511110a4368
+- google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
 - gr2m/twitter-together@*
 - graalvm/setup-graalvm@01ed653ac833fe80569f1ef9f25585ba2811baab
 - graalvm/setup-graalvm@7f488cf82a3629ee755e4e97342c01d6bed318fa
