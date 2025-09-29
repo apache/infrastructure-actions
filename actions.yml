@@ -862,3 +862,7 @@ vmactions/freebsd-vm:
   487ce35b96fae3e60d45b521735f5aa436ecfade:
     expires_at: 2050-01-01
     tag: v1.2.4
+tj-actions/changed-files:
+  24d32ffd492484c1d75e0c0b894501ddb9d30d62:
+    expires_at: 2050-01-01
+    tag: v47.0.0
