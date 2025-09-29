@@ -715,11 +715,14 @@ sbt/setup-sbt:
     tag: v1.1.13
 scacap/action-surefire-report:
   1a128e49c0585bc0b8e38e541ac3b6e35a5bc727:
-    expires_at: 2050-01-01
+    expires_at: 2025-12-22
     tag: v1.9.0
   '*':
     expires_at: 2025-08-01
     keep: true
+  5609ce4db72c09db044803b344a8968fd1f315da:
+    expires_at: 2050-01-01
+    tag: v1.9.1
 scala-steward-org/scala-steward-action:
   5021652c555c5724af574758b78ea5be49640007:
     expires_at: 2025-10-25
