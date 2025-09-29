@@ -57,7 +57,7 @@ jobs:
         if: false
       - uses: coursier/setup-action@039f736548afa5411c1382f40a5bd9c2d30e0383  # v1.3.9
         if: false
-      - uses: cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8  # v2.15.1
+      - uses: cpp-linter/cpp-linter-action@7dacd91f6a008a7c714bba700f4d08468a1eb428  # v2.16.4
         if: false
       - uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec  # v6.3.0
         if: false
