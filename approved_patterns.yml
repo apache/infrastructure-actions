@@ -76,6 +76,7 @@
 - coursier/setup-action@*
 - cpp-linter/cpp-linter-action@f91c446a32ae3eb9f98fef8c9ed4c7cb613a4f8a
 - cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8
+- cpp-linter/cpp-linter-action@7dacd91f6a008a7c714bba700f4d08468a1eb428
 - crate-ci/typos@*
 - crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec
 - damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
