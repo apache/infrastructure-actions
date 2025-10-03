@@ -29,7 +29,7 @@ jobs:
         if: false
       - uses: JustinBeckwith/linkinator-action@3d5ba091319fa7b0ac14703761eebb7d100e6f6d  # v1.11.0
         if: false
-      - uses: Kesin11/actions-timeline@a7eaabf426cdae26c3582c3fa674b897170dec8f  # v2.2.4
+      - uses: Kesin11/actions-timeline@54d513e0b5ff1158f1cf8321108d666a5a6c1fca  # v2.2.5
         if: false
       - uses: VirtusLab/scala-cli-setup@77834b5926f3eb70869d8009530c65585f7a039b  # v1.9.1
         if: false
