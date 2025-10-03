@@ -24,6 +24,7 @@
 - JustinBeckwith/linkinator-action@3d5ba091319fa7b0ac14703761eebb7d100e6f6d
 - Kesin11/actions-timeline@427ee2cf860166e404d0d69b4f2b24012bb7af4f
 - Kesin11/actions-timeline@a7eaabf426cdae26c3582c3fa674b897170dec8f
+- Kesin11/actions-timeline@54d513e0b5ff1158f1cf8321108d666a5a6c1fca
 - PyO3/maturin-action@*
 - TobKed/label-when-approved-action@*
 - VirtusLab/scala-cli-setup@6b3ba0ee6968ad077b859cb12246deabd2f7cb78
@@ -113,6 +114,7 @@
 - gradle/wrapper-validation-action@f9c9c575b8b21b6485636a91ffecd10e558c62f6
 - gsactions/commit-message-checker@*
 - hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf
+- hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5
 - hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
 - helm/chart-testing-action@0d28d3144d3a25ea2cc349d6e59901c4ff469b3b
 - helm/kind-action@a1b0e391336a6ee6713a0583f8c6240d70863de3

@@ -97,8 +97,11 @@ Kesin11/actions-timeline:
   427ee2cf860166e404d0d69b4f2b24012bb7af4f:
     expires_at: 2025-10-19
   a7eaabf426cdae26c3582c3fa674b897170dec8f:
-    expires_at: 2050-01-01
+    expires_at: 2025-12-26
     tag: v2.2.4
+  54d513e0b5ff1158f1cf8321108d666a5a6c1fca:
+    expires_at: &id001 2050-01-01
+    tag: v2.2.5
 PyO3/maturin-action:
   '*':
     expires_at: 2025-08-01
@@ -424,8 +427,11 @@ gsactions/commit-message-checker:
     keep: true
 hadolint/hadolint-action:
   54c9adbab1582c2ef04b2016b760714a4bfde3cf:
-    expires_at: 2050-01-01
+    expires_at: 2025-12-26
     tag: v3.1.0
+  2332a7b74a6de0dda2e2221d575162eba76ba5e5:
+    expires_at: *id001
+    tag: v3.3.0
 hashicorp/setup-terraform:
   b9cd54a3c349d3f38e8881555d616ced269862dd:
     expires_at: 2050-01-01
