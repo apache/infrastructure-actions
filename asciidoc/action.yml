@@ -1,0 +1,115 @@
+name: Build Presentations with AsciiDoc
+description: "Generate a Slidedeck from AsciiDoc Markdown"    
+inputs:
+  srcdir:
+    description: "AsciiDoc sourcefile directory"
+    required: false
+    default: "srcfiles"
+  assets:
+    description: "Site assets directory"
+    required: false
+    default: "static"
+  dest_branch:
+    description: "Slidedeck Output branch"
+    required: false
+    default: "presentations"
+  publish:
+    description: "Publish the site to the destination branch. If false, the site is built but not published."
+    required: false
+    type: boolean
+    default: false
+  output:
+    description: "AsciiDoc output directory"
+    required: false
+    default: "output"
+  tempdir:
+    description: "Temporary Directory name"
+    required: false
+    default: "output.tmp"
+  debug:
+    description: "AsciiDoc Debug mode"
+    required: false
+    default: "false"
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+    - name: Install AsciiDoc
+      shell: bash
+      # Install needs to run in separate shell so stdout is restored
+      run: |
+        (
+          test "${{ inputs.debug }}" == 'true' || exec >/dev/null
+          npm install
+        )
+      working-directory: "${{ github.action_path }}"
+    
+    - name: 
+      shell: bash
+      run: |
+        mkdir "${{ inputs.output }}"
+        ln -s "${{ github.action_path }}/convert-slides.js" .
+        for file in `ls`; do
+          if [[ "$(echo $file | awk -F. '{print $NF}')" != "adoc" ]]; then
+            continue
+          fi
+          echo $file
+          node convert-slides.js $file
+          mv $(basename $file .adoc).html "${{ inputs.output }}"/ 
+        done
+        cp "${{ github.action_path }}/package.json" "${{ inputs.output }}"
+        [ -d "${{ github.workspace }}/${{ inputs.assets }}" ] && cp -r "${{ github.workspace }}/${{ inputs.assets }}" "${{ inputs.output }}" || echo "No ${{ inputs.assets }} found!"
+      working-directory: "${{ inputs.srcdir }}"
+    
+#    - name: Check out previous branch
+#      if: ${{ inputs.publish == 'true' }}
+#      shell: bash
+#      run: | 
+#        git config --global user.email "dfoulks@apache.org"
+#        git config --global user.name "AsciiDcotor (action)"
+#        git remote update
+#        if git checkout "${{ inputs.dest_branch }}"
+#        then
+#          git pull origin "${{ inputs.dest_branch }}"
+#        else
+#          # if none, create it.
+#          echo "branch ${{ inputs.dest_branch }} is new; create empty site"
+#          git switch --orphan "${{ inputs.dest_branch }}"
+#          git checkout "origin/${{ github.ref_name }}" -- .asf.yaml
+#          git add .asf.yaml -f
+#          git commit -m "Initialise empty site"
+#          git push -u origin "${{ inputs.dest_branch }}"
+#        fi
+#      working-directory: "${{ inputs.srcdir }}"
+
+#    - name: Commit Directly to the branch
+#      if: ${{ inputs.publish == 'true' }}
+#      shell: bash
+#      run: |
+#        # Remove all existing output so deletions will be captured
+#        rm -rf "${{ inputs.output }}"
+#        git rm --quiet -r --ignore-unmatch --cached "${{ inputs.output }}"/*
+#        mv "${{ inputs.srcdir }}/${{ inputs.tempdir }}" "${{ inputs.output }}"
+#        git diff # Show changes
+#        git add "${{ inputs.output }}"
+#        git status
+#        if git commit -m "Commit build products"
+#          then
+#              git push
+#        else
+#          echo "No change"
+#          true # ensure step is successful
+#        fi
+#
+    - run: npm install
+      shell: bash
+      working-directory: "${{ inputs.srcdir }}/${{ inputs.output }}"
+    - name: Setup Pages
+      uses: actions/configure-pages@v5
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '${{ inputs.srcdir }}/${{ inputs.output }}'
+    - name: Deploy to GitHub Pages[
+      id: deployment
+      uses: actions/deploy-pages@v4
