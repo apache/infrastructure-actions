@@ -302,9 +302,6 @@ cpp-linter/cpp-linter-action:
   0f6d1b8d7e38b584cbee606eb23d850c217d54f8:
     expires_at: 2025-12-22
     tag: v2.15.1
-  7dacd91f6a008a7c714bba700f4d08468a1eb428:
-    expires_at: 2050-01-01
-    tag: v2.16.4
 crate-ci/typos:
   '*':
     expires_at: 2025-08-01
