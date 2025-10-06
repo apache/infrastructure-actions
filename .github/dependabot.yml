@@ -26,4 +26,10 @@ updates:
       - "/stash/save"
     schedule:
       interval: "daily"
+    ignore:
+      # post-2.16 versions depend on hustcer/setup-nu which
+      # we're not comfortable trusting fully yet. See also
+      # https://github.com/apache/infrastructure-actions/issues/324
+      - dependency-name: "cpp-linter/cpp-linter-action"
+        versions: ">=2.16"
     open-pull-requests-limit: 50
