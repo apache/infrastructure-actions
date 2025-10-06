@@ -16,7 +16,6 @@ ana06/get-changed-files:
     expires_at: 2050-01-01
 apache/*:
   '*':
-    expires_at: 2025-08-01
     keep: true
 astral-sh/setup-uv:
   b75a909f75acd358c2196fb9a5f1299a9a8868a4:
