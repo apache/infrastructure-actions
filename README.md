@@ -132,4 +132,4 @@ existing/action:
 
 The infrastructure team will prioritize these removal requests and may take additional steps to notify affected projects if necessary.
 
-For 'regular' removals, you can use `gh search code --owner apache --language yaml --json repository --jq '.[] | .repository.nameWithOwner' 'davidanson/markdownlint-cli2-action' | sort | uniq` to see if an action is still used anywhere in the ASF, and create a 'regular' pr removing it from `actions.yml`.
+For 'regular' removals (not security responses), you can use `./utils/action-usage.sh someorg/theaction` to see if/how an action is still used anywhere in the ASF, and create a 'regular' PR removing it from `actions.yml` when it is no longer used.
