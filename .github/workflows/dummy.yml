@@ -2,12 +2,8 @@ name: Dummy Workflow
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/workflows/dummy.yml
-  push:
-    paths:
-      - .github/workflows/dummy.yml
+  schedule:
+    - cron: "0 0 * * 3"
 
 permissions: {}
 
