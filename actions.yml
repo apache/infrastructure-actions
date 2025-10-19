@@ -83,9 +83,6 @@ EnricoMi/publish-unit-test-result-action:
     expires_at: 2025-08-01
     keep: true
 JamesIves/github-pages-deploy-action:
-  881db5376404c5c8d621010bcbec0310b58d5e29:
-    expires_at: 2025-10-19
-    tag: v4.6.8
   6c2d9db40f9296374acc17b90404b6e8864128c8:
     expires_at: 2050-01-01
     tag: v4.7.3
@@ -94,8 +91,6 @@ JustinBeckwith/linkinator-action:
     expires_at: 2050-01-01
     tag: v1.11.0
 Kesin11/actions-timeline:
-  427ee2cf860166e404d0d69b4f2b24012bb7af4f:
-    expires_at: 2025-10-19
   a7eaabf426cdae26c3582c3fa674b897170dec8f:
     expires_at: 2025-12-26
     tag: v2.2.4
@@ -111,9 +106,6 @@ TobKed/label-when-approved-action:
     expires_at: 2025-08-01
     keep: true
 VirtusLab/scala-cli-setup:
-  6b3ba0ee6968ad077b859cb12246deabd2f7cb78:
-    expires_at: 2025-10-19
-    tag: v1.8.1
   fd47cd1667585511042cb0504fbae3c588d4dc0c:
     expires_at: 2025-11-01
     tag: v1.8.4
@@ -187,9 +179,6 @@ betahuhn/repo-file-sync-action:
     expires_at: 2050-01-01
     tag: v1.21.1
 browser-actions/setup-firefox:
-  634a60ccd6599686158cf5a570481b4cd30455a2:
-    expires_at: 2025-10-19
-    tag: v1.5.4
   5914774dda97099441f02628f8d46411fcfbd208:
     expires_at: 2050-01-01
     tag: v1.7.0
@@ -257,9 +246,6 @@ codspeedhq/action:
     expires_at: 2025-08-01
     keep: true
 commit-check/commit-check-action:
-  f09ba795622b9cb0d0d5e668926235a1d893c7a4:
-    expires_at: 2025-10-19
-    tag: v0.8.0
   38641d6ac4173719bca74d302f60b429ea89015c:
     expires_at: 2025-10-27
     tag: v0.9.1
@@ -373,9 +359,6 @@ golang/govulncheck-action:
     expires_at: 2025-08-01
     keep: true
 google-github-actions/auth:
-  ba79af03959ebeac9769e648f473a284504d9193:
-    expires_at: 2025-10-19
-    tag: v2.1.10
   140bb5113ffb6b65a7e9b937a81fa96cf5064462:
     expires_at: 2025-10-27
     tag: v2.1.11
@@ -386,8 +369,6 @@ google-github-actions/auth:
     expires_at: 2050-01-01
     tag: v3.0.0
 google-github-actions/setup-gcloud:
-  77e7a554d41e2ee56fc945c52dfd3f33d12def9a:
-    expires_at: 2025-10-19
   6a7c903a70c8625ed6700fa299f5ddb4ca6022e9:
     expires_at: 2025-11-07
     tag: v2.1.5
@@ -405,9 +386,6 @@ gr2m/twitter-together:
     expires_at: 2025-08-01
     keep: true
 graalvm/setup-graalvm:
-  01ed653ac833fe80569f1ef9f25585ba2811baab:
-    expires_at: 2025-10-19
-    tag: v1
   7f488cf82a3629ee755e4e97342c01d6bed318fa:
     expires_at: 2025-11-27
     tag: v1.3.5
@@ -453,9 +431,6 @@ ilammy/msvc-dev-cmd:
     expires_at: 2025-08-01
     keep: true
 ilammy/setup-nasm:
-  e77cc62a22a374a4d0668286007cc3e3b4c17760:
-    expires_at: 2025-10-19
-    tag: v1
   72793074d3c8cdda771dba85f6deafe00623038b:
     expires_at: 2050-01-01
     tag: v1.5.2
@@ -569,8 +544,6 @@ nanasess/setup-chromedriver:
     expires_at: 2025-08-01
     keep: true
 ncipollo/release-action:
-  1e3e9c6637e5566e185b7ab66f187539c5a76da7:
-    expires_at: 2025-10-19
   bcfe5470707e8832e12347755757cec0eb3c22af:
     expires_at: 2025-11-27
     tag: v1.18.0
@@ -582,9 +555,6 @@ nick-fields/retry:
     expires_at: 2025-08-01
     keep: true
 nwtgck/actions-netlify:
-  ac1cb16858bada08a9c71a81240a85cfc3f72913:
-    expires_at: 2025-10-19
-    tag: v1.2
   4cbaf4c08f1a7bfa537d6113472ef4424e4eb654:
     expires_at: 2050-01-01
     tag: v3.0.0
@@ -634,8 +604,6 @@ peaceiris/actions-mdbook:
     expires_at: 2025-08-01
     keep: true
 peter-evans/create-or-update-comment:
-  c9fcb64660bc90ec1cc535646af190c992007c32:
-    expires_at: 2025-10-19
   71345be0265236311c031f5c7866368bd1eff043:
     expires_at: 2050-01-01
     tag: v4.0.0
@@ -664,9 +632,6 @@ pyTooling/Actions:
     expires_at: 2025-08-01
     keep: true
 pypa/cibuildwheel:
-  5f22145df44122af0f5a201f93cf0207171beca7:
-    expires_at: 2025-10-19
-    tag: v3.0.0
   e6de07ed3921b51089aae6981989889cf1eddd0c:
     expires_at: 2025-10-22
     tag: v3.1.1
@@ -710,9 +675,6 @@ sbt/setup-sbt:
   '*':
     expires_at: 2025-08-01
     keep: true
-  6c68d2fe8dfbc0a0534d70101baa2e0420e1a506:
-    expires_at: 2025-10-19
-    tag: v1.1.9
   234370af1319038bf8dc432f8a7e4b83078a1781:
     expires_at: 2025-11-07
     tag: v1.1.11
@@ -809,9 +771,6 @@ timonvs/pr-labeler-action:
     expires_at: 2025-08-01
     keep: true
 untitaker/hyperlink:
-  d277930ba480c61cd3dd1a0caf0d18acfed294a6:
-    expires_at: 2025-10-19
-    tag: 0.1.21
   e66bb17cc9ae341677431edec3b893a0aa6ac747:
     expires_at: 2050-01-01
     tag: 0.1.44
@@ -840,9 +799,6 @@ xpol/setup-lua:
     expires_at: 2025-08-01
     keep: true
 slackapi/slack-github-action:
-  b0fa283ad8fea605de13dc3f449259339835fc52:
-    expires_at: 2025-10-19
-    tag: v2.1.0
   91efab103c0de0a537f72a35f6b8cda0ee76bf0a:
     expires_at: 2050-01-01
     tag: v2.1.1
@@ -854,9 +810,6 @@ golangci/golangci-lint-action:
     expires_at: 2050-08-01
     keep: true
 mlugg/setup-zig:
-  7dccf5e6d09267c55f815f2db29495f30ba2ebca:
-    expires_at: 2025-10-19
-    tag: v2.0.1
   8d6198c65fb0feaa111df26e6b467fea8345e46f:
     expires_at: 2050-01-01
     tag: v2.0.5
