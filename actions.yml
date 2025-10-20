@@ -578,9 +578,6 @@ oracle-actions/setup-java:
     expires_at: 2025-08-01
     keep: true
 orhun/git-cliff-action:
-  4a4a951bc43fafe41cd2348d181853f52356bee7:
-    expires_at: 2025-10-20
-    tag: v4
   98c93442bb05a455a77bee982867857ae748eeea:
     expires_at: 2025-12-22
     tag: v4.5.1
