@@ -163,7 +163,6 @@
 - potiuk/cancel-workflow-runs@*
 - pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
 - pyTooling/Actions@*
-- pypa/cibuildwheel@e6de07ed3921b51089aae6981989889cf1eddd0c
 - pypa/cibuildwheel@9e4e50bd76b3190f55304387e333f6234823ea9b
 - pypa/cibuildwheel@352e01339f0a173aa2a3eb57f01492e341e83865
 - pypa/cibuildwheel@c923d83ad9c1bc00211c5041d0c3f73294ff88f6

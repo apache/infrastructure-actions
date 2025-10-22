@@ -629,9 +629,6 @@ pyTooling/Actions:
     expires_at: 2025-08-01
     keep: true
 pypa/cibuildwheel:
-  e6de07ed3921b51089aae6981989889cf1eddd0c:
-    expires_at: 2025-10-22
-    tag: v3.1.1
   9e4e50bd76b3190f55304387e333f6234823ea9b:
     expires_at: 2025-10-27
     tag: v3.1.2
