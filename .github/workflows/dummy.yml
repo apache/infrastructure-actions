@@ -69,7 +69,7 @@ jobs:
         if: false
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3.0.2
         if: false
-      - uses: erisu/apache-rat-action@3127a8c18f3bb10e91c60e835144085b31c5c463  # v1.2.0
+      - uses: erisu/apache-rat-action@46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c  # v2.0.0
         if: false
       - uses: erisu/license-checker-action@1c222d0c2f5898a4c40b8bd6fd6888650bd6f68a  # v2.0.0
         if: false
