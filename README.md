@@ -90,6 +90,8 @@ In most cases, new versions are automatically added through Dependabot:
 - The previously approved version will be marked to expire in 3 months
 - This grace period gives projects sufficient time to update their workflows
 
+Projects are encouraged to help review updates to actions they use. Please have a look at the diff and mention in your approval what you have checked and why you think the action is safe.
+
 ### Manual Addition of Specific Versions
 
 If you need to add a specific version of an already approved action (especially an older one):
