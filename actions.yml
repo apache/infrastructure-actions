@@ -695,9 +695,6 @@ scacap/action-surefire-report:
     expires_at: 2050-01-01
     tag: v1.9.1
 scala-steward-org/scala-steward-action:
-  5021652c555c5724af574758b78ea5be49640007:
-    expires_at: 2025-10-25
-    tag: v2.75.0
   961c41c9fd3dc8a0f1f8dd59d60d071e17348ae8:
     expires_at: 2025-12-08
     tag: v2.76.0
