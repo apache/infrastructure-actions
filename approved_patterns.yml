@@ -62,7 +62,6 @@
 - codecov/codecov-action@*
 - codelytv/pr-size-labeler@*
 - codspeedhq/action@*
-- commit-check/commit-check-action@38641d6ac4173719bca74d302f60b429ea89015c
 - commit-check/commit-check-action@1968496411d3da2dddc6a6d891ab95eaa9b03ec6
 - commit-check/commit-check-action@04667fa89b3d3feb0f28facf9c5ff944a5500e85
 - conda-incubator/setup-miniconda@*
@@ -93,7 +92,6 @@
 - gaurav-nelson/github-action-markdown-link-check@*
 - geekyeggo/delete-artifact@*
 - golang/govulncheck-action@*
-- google-github-actions/auth@140bb5113ffb6b65a7e9b937a81fa96cf5064462
 - google-github-actions/auth@b7593ed2efd1c1617e1b0254da33b86225adb2a5
 - google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
 - google-github-actions/setup-gcloud@6a7c903a70c8625ed6700fa299f5ddb4ca6022e9
@@ -164,7 +162,6 @@
 - potiuk/cancel-workflow-runs@*
 - pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
 - pyTooling/Actions@*
-- pypa/cibuildwheel@9e4e50bd76b3190f55304387e333f6234823ea9b
 - pypa/cibuildwheel@352e01339f0a173aa2a3eb57f01492e341e83865
 - pypa/cibuildwheel@c923d83ad9c1bc00211c5041d0c3f73294ff88f6
 - pypa/cibuildwheel@7c619efba910c04005a835b110b057fc28fd6e93
