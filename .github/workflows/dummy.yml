@@ -27,7 +27,7 @@ jobs:
         if: false
       - uses: JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8  # v4.7.3
         if: false
-      - uses: JustinBeckwith/linkinator-action@3d5ba091319fa7b0ac14703761eebb7d100e6f6d  # v1.11.0
+      - uses: JustinBeckwith/linkinator-action@1e27e83c5db7111df1bd8441251008042a60cefd  # v2.2
         if: false
       - uses: Kesin11/actions-timeline@54d513e0b5ff1158f1cf8321108d666a5a6c1fca  # v2.2.5
         if: false
