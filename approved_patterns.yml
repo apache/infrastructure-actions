@@ -25,7 +25,6 @@
 - Kesin11/actions-timeline@54d513e0b5ff1158f1cf8321108d666a5a6c1fca
 - PyO3/maturin-action@*
 - TobKed/label-when-approved-action@*
-- VirtusLab/scala-cli-setup@fd47cd1667585511042cb0504fbae3c588d4dc0c
 - VirtusLab/scala-cli-setup@54cd42adb92642fffd3b04cf9705d2806a3b8a92
 - VirtusLab/scala-cli-setup@b1b5d003a3db8e351bbf705ef4378d6b0ff8bf4d
 - VirtusLab/scala-cli-setup@77834b5926f3eb70869d8009530c65585f7a039b
@@ -39,7 +38,6 @@
 - amannn/action-semantic-pull-request@*
 - arduino/setup-protoc@*
 - awalsh128/cache-apt-pkgs-action@*
-- aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df
 - aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a
 - aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838
 - azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112
@@ -146,7 +144,6 @@
 - nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654
 - ocaml/setup-ocaml@*
 - olafurpg/setup-scala@*
-- opentofu/setup-opentofu@592200bd4b9bbf4772ace78f887668b1aee8f716
 - opentofu/setup-opentofu@000eeb8522f0572907c393e8151076c205fdba1b
 - oracle-actions/setup-java@*
 - orhun/git-cliff-action@98c93442bb05a455a77bee982867857ae748eeea

@@ -106,9 +106,6 @@ TobKed/label-when-approved-action:
     expires_at: 2025-08-01
     keep: true
 VirtusLab/scala-cli-setup:
-  fd47cd1667585511042cb0504fbae3c588d4dc0c:
-    expires_at: 2025-11-01
-    tag: v1.8.4
   54cd42adb92642fffd3b04cf9705d2806a3b8a92:
     expires_at: 2025-11-27
     tag: v1.8.5
@@ -158,9 +155,6 @@ awalsh128/cache-apt-pkgs-action:
     expires_at: 2025-08-01
     keep: true
 aws-actions/configure-aws-credentials:
-  b47578312673ae6fa5b5096b330d9fbac3d116df:
-    expires_at: 2025-11-01
-    tag: v4.2.1
   7474bc4690e29a8392af63c5b98e7449536d5c3a:
     expires_at: 2025-12-29
     tag: v4.3.1
@@ -564,9 +558,6 @@ olafurpg/setup-scala:
     expires_at: 2025-08-01
     keep: true
 opentofu/setup-opentofu:
-  592200bd4b9bbf4772ace78f887668b1aee8f716:
-    expires_at: 2025-11-01
-    tag: v1
   000eeb8522f0572907c393e8151076c205fdba1b:
     expires_at: 2050-01-01
     tag: v1.0.6
