@@ -589,8 +589,11 @@ peaceiris/actions-mdbook:
     keep: true
 peter-evans/create-or-update-comment:
   71345be0265236311c031f5c7866368bd1eff043:
-    expires_at: 2050-01-01
+    expires_at: 2026-01-26
     tag: v4.0.0
+  e8674b075228eee787fea43ef493e45ece1004c9:
+    expires_at: 2050-01-01
+    tag: v5.0.0
 peter-evans/create-pull-request:
   '*':
     expires_at: 2025-08-01

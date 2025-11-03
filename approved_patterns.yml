@@ -153,6 +153,7 @@
 - peaceiris/actions-hugo@*
 - peaceiris/actions-mdbook@*
 - peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043
+- peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9
 - peter-evans/create-pull-request@*
 - phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e
 - pnpm/action-setup@*
