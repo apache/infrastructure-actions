@@ -101,6 +101,7 @@
 - gr2m/twitter-together@*
 - graalvm/setup-graalvm@7f488cf82a3629ee755e4e97342c01d6bed318fa
 - graalvm/setup-graalvm@7a1da54cb7fdef4ea19f6ecdfa9ecf59dc5a48fe
+- graalvm/setup-graalvm@eec48106e0bf45f2976c2ff0c3e22395cced8243
 - gradle/wrapper-validation-action@*
 - gradle/wrapper-validation-action@f9c9c575b8b21b6485636a91ffecd10e558c62f6
 - gsactions/commit-message-checker@*
