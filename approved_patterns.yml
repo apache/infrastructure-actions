@@ -2,7 +2,6 @@
 - 1Password/load-secrets-action@581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0
 - 1Password/load-secrets-action@13f58eec611f8e5db52ec16247f58c508398f3e6
 - ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c
-- apache/*@*
 - astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4
 - bytedeco/javacpp-presets/.github/actions/*@*
 - dtolnay/rust-toolchain@stable
