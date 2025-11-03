@@ -155,8 +155,11 @@ aws-actions/configure-aws-credentials:
     expires_at: 2025-12-29
     tag: v4.3.1
   a03048d87541d1d9fcf2ecf528a4a65ba9bd7838:
-    expires_at: 2050-01-01
+    expires_at: 2026-01-26
     tag: v5.0.0
+  00943011d9042930efac3dcd3a170e4273319bc8:
+    expires_at: 2050-01-01
+    tag: v5.1.0
 azure/setup-helm:
   b9e51907a09c216f16ebe8536097933489208112:
     expires_at: 2025-11-17
