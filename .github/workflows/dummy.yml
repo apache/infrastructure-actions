@@ -111,7 +111,7 @@ jobs:
         if: false
       - uses: orhun/git-cliff-action@d77b37db2e3f7398432d34b72a12aa3e2ba87e51  # v4.6.0
         if: false
-      - uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043  # v4.0.0
+      - uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9  # v5.0.0
         if: false
       - uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e  # v15
         if: false
