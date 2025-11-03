@@ -259,11 +259,14 @@ container-tools/microshift-action:
     keep: true
 coursier/cache-action:
   4e2615869d13561d626ed48655e1a39e5b192b3c:
-    expires_at: 2050-01-01
+    expires_at: 2026-01-26
     tag: 6.4.7
   '*':
     expires_at: 2025-08-01
     keep: true
+  bebeeb0e6f48ebad66d3783946588ecf43114433:
+    expires_at: 2050-01-01
+    tag: 6.4.7
 coursier/setup-action:
   039f736548afa5411c1382f40a5bd9c2d30e0383:
     expires_at: 2050-01-01
