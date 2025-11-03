@@ -61,6 +61,7 @@
 - codspeedhq/action@*
 - commit-check/commit-check-action@1968496411d3da2dddc6a6d891ab95eaa9b03ec6
 - commit-check/commit-check-action@04667fa89b3d3feb0f28facf9c5ff944a5500e85
+- commit-check/commit-check-action@fc0543792ea1ba666c86fea9792d1d72e253ca97
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - container-tools/microshift-action@*
