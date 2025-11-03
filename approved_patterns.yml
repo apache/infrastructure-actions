@@ -129,6 +129,7 @@
 - korandoru/hawkeye@*
 - leafo/gh-actions-lua@*
 - leafo/gh-actions-luarocks@4c082a5fad45388feaeb0798dbd82dbd7dc65bca
+- leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248
 - manusa/actions-setup-minikube@b589f2d61bf96695c546929c72b38563e856059d
 - manusa/actions-setup-minikube@*
 - maxim-lobanov/setup-xcode@*
@@ -163,6 +164,7 @@
 - pypa/cibuildwheel@352e01339f0a173aa2a3eb57f01492e341e83865
 - pypa/cibuildwheel@c923d83ad9c1bc00211c5041d0c3f73294ff88f6
 - pypa/cibuildwheel@7c619efba910c04005a835b110b057fc28fd6e93
+- pypa/cibuildwheel@9c00cb4f6b517705a3794b22395aedc36257242c
 - pytooling/actions@*
 - quarto-dev/quarto-actions@*
 - reactivecircus/android-emulator-runner@*
