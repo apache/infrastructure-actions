@@ -4,9 +4,6 @@
 # update expiry dates for previous versions.
 # Versions that are known to be problematic should be removed explicitly manually.
 1Password/load-secrets-action:
-  581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0:
-    expires_at: 2025-11-07
-    tag: v2.0.0
   13f58eec611f8e5db52ec16247f58c508398f3e6:
     expires_at: 2050-01-01
     tag: v3.0.0
@@ -281,9 +278,6 @@ coursier/setup-action:
     expires_at: 2025-08-01
     keep: true
 cpp-linter/cpp-linter-action:
-  f91c446a32ae3eb9f98fef8c9ed4c7cb613a4f8a:
-    expires_at: 2025-11-07
-    tag: v2.15.0
   0f6d1b8d7e38b584cbee606eb23d850c217d54f8:
     expires_at: 2025-12-22
     tag: v2.15.1
@@ -368,9 +362,6 @@ google-github-actions/auth:
     expires_at: 2050-01-01
     tag: v3.0.0
 google-github-actions/setup-gcloud:
-  6a7c903a70c8625ed6700fa299f5ddb4ca6022e9:
-    expires_at: 2025-11-07
-    tag: v2.1.5
   cb1e50a9932213ecece00a606661ae9ca44f3397:
     expires_at: 2025-11-20
     tag: v2.2.0
@@ -674,9 +665,6 @@ sbt/setup-sbt:
   '*':
     expires_at: 2025-08-01
     keep: true
-  234370af1319038bf8dc432f8a7e4b83078a1781:
-    expires_at: 2025-11-07
-    tag: v1.1.11
   f20dc1bc1f8be605c44ffbcec6f17f708a4af9d1:
     expires_at: 2025-12-01
     tag: v1.1.12
