@@ -480,6 +480,7 @@ jwgmeligmeyling/checkstyle-github-action:
     keep: true
 jwgmeligmeyling/pmd-github-action:
   322e346bd76a0757c4d54ff9209e245965aa066d:
+    tag: v1.2
     expires_at: 2050-01-01
 jwgmeligmeyling/spotbugs-github-action:
   '*':
