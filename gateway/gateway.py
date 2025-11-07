@@ -42,6 +42,17 @@ class RefDetails(TypedDict):
 
     expires_at: date
     keep: NotRequired[bool]
+    tag: NotRequired[str]
+    # Action tags check: Ignore invalid Git SHA and GitHub API errors.
+    # Some actions are allowed to use branches.
+    # This should really be used in only very exceptional cases
+    # and MUST NEVER be used for new actions.
+    ignore_invalid_git_sha: NotRequired[bool]
+    # Action tags check: Ignore GitHub API errors in special situations,
+    # when for example the repository has an IP allow list enabled preventing checks using the GH API
+    # against such repositories. Sample error message in such cases:
+    # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
+    ignore_gh_api_errors: NotRequired[bool]
 
 
 ActionRefs = Dict[str, RefDetails]

@@ -822,6 +822,9 @@ sbt/setup-sbt:
 scacap/action-surefire-report:
   '*':
     keep: true
+    # GH API requests from GH hosted runners fail with 403 and the following error message:
+    # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
+    ignore_gh_api_errors: true
   5609ce4db72c09db044803b344a8968fd1f315da:
     tag: v1.9.1
 scalacenter/sbt-dependency-submission:
