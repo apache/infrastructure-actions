@@ -641,11 +641,17 @@ scacap/action-surefire-report:
   1a128e49c0585bc0b8e38e541ac3b6e35a5bc727:
     expires_at: 2025-12-22
     tag: v1.9.0
+    # GH API requests from GH hosted runners fail with 403 and the following error message:
+    # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
+    ignore_gh_api_errors: true
   '*':
     expires_at: 2025-08-01
     keep: true
   5609ce4db72c09db044803b344a8968fd1f315da:
     tag: v1.9.1
+    # GH API requests from GH hosted runners fail with 403 and the following error message:
+    # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
+    ignore_gh_api_errors: true
 scala-steward-org/scala-steward-action:
   53d486a68877f4a6d1e110e8058fe21e593db356:
     tag: v2.77.0
