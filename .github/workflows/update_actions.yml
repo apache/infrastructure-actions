@@ -32,7 +32,9 @@ jobs:
       - run: pip install ruyaml 
 
       - name: Update actions.yml
-        shell: python 
+        shell: python
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           import sys
           sys.path.append("./gateway/")
@@ -40,6 +42,11 @@ jobs:
           import gateway as g
           g.update_actions(".github/workflows/dummy.yml", "actions.yml")
           g.update_patterns("approved_patterns.yml", "actions.yml")
+
+          import action_tags as at
+          result = at.verify_actions("actions.yml")
+          if result.has_failures():
+            raise Exception(f"Verify actions result summary:\n{result}")
 
       - name: Commit and push changes
         if: ${{ github.event_name != 'pull_request' }}

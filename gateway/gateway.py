@@ -24,6 +24,7 @@ class RefDetails(TypedDict):
 
     expires_at: date
     keep: NotRequired[bool]
+    tag: NotRequired[str]
 
 
 ActionRefs = Dict[str, RefDetails]
