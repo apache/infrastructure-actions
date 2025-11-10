@@ -31,7 +31,7 @@ jobs:
         if: false
       - uses: Kesin11/actions-timeline@54d513e0b5ff1158f1cf8321108d666a5a6c1fca  # v2.2.5
         if: false
-      - uses: VirtusLab/scala-cli-setup@5fe8d5c007deb7903956fef29a715a0b0d5339f4  # v1.10.0
+      - uses: VirtusLab/scala-cli-setup@77834b5926f3eb70869d8009530c65585f7a039b  # v1.9.1
         if: false
       - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00  # v6.0.0
         if: false

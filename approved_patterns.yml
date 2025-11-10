@@ -182,12 +182,12 @@
 - scala-steward-org/scala-steward-action@961c41c9fd3dc8a0f1f8dd59d60d071e17348ae8
 - scala-steward-org/scala-steward-action@53d486a68877f4a6d1e110e8058fe21e593db356
 - scalacenter/sbt-dependency-submission@64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3
-- scalacenter/sbt-dependency-submission@*
 - scottbrenner/puppet-lint-action@*
 - securego/gosec@*
 - shivammathur/setup-php@*
 - shogo82148/actions-setup-perl@*
 - shufo/auto-assign-reviewer-by-files@*
+- sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad
 - snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a
 - softprops/action-gh-release@*
 - stCarolas/setup-maven@*
