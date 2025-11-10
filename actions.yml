@@ -352,6 +352,10 @@ google-github-actions/auth:
 google-github-actions/setup-gcloud:
   aa5489c8933f4cc7a4f7d45035b3b1440c9c10db:
     tag: v3.0.1
+gradle/actions/setup-gradle:
+  4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2:
+    expires_at: 2050-01-01
+    tag: v5
 gr2m/twitter-together:
   '*':
     expires_at: 2025-08-01
