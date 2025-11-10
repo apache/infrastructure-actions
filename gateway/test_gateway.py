@@ -212,3 +212,23 @@ def test_clean_actions():
 
     remove_expired_refs(refs)
     assert refs == expected_refs
+
+
+# TODO add some more test cases
+def test_patterns():
+    assert re.match(re_github_actions_repo, "foo/bar")
+    assert not re.match(re_github_actions_repo, "foo/*")
+    assert re.match(re_github_actions_repo, "foo/bar/.github/actions/*")
+    assert re.match(re_github_actions_repo, "foo/bar/.github/actions/some.yml")
+    assert re.match(re_docker_image, "docker://foo/bar")
+
+
+# TODO this is not a test, but a utility to run verify_actions manually.
+def test_verify_actions():
+    gh_token = os.environ['GH_TOKEN']
+    if not gh_token:
+        raise Exception("GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
+
+    this_dir = os.path.dirname(os.path.realpath(__file__))
+    actions_path = this_dir + "/../actions.yml"
+    verify_actions(actions_path)

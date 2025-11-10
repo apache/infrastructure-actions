@@ -6,12 +6,16 @@
 # ///
 
 import os
+import re
 from datetime import date, timedelta
 from io import StringIO
 from pathlib import Path
 from typing import Dict, NotRequired, TypedDict
+from urllib.request import Request, urlopen
+from http.client import HTTPResponse
 
 import ruyaml
+from ruyaml import CommentedMap, CommentedSeq
 
 indefinitely = date(2050, 1, 1)
 
@@ -26,6 +30,7 @@ class RefDetails(TypedDict):
 
     expires_at: date
     keep: NotRequired[bool]
+    tag: NotRequired[str]
 
 
 ActionRefs = Dict[str, RefDetails]
@@ -314,3 +319,217 @@ def clean_actions(actions_path: Path):
     remove_expired_refs(actions)
     gha_print(to_yaml_string(actions), "Cleaned Actions")
     write_yaml(actions_path, actions)
+
+
+re_github_actions_repo_wildcard = r"^[A-Za-z0-9-_.]+/[*]$"
+re_github_actions_repo = r"^([A-Za-z0-9-_.]+/[A-Za-z0-9-_.]+)(/.+)?$"
+# Something like 'pytooling/actions/with-post-step' or 'readthedocs/actions/preview'.
+re_docker_image = r"^docker://.+"
+re_git_sha = r"^[a-f0-9]{7,}$"
+
+def _gh_api_get(url_abspath: str) -> HTTPResponse:
+    headers: dict[str, str] = {
+        'Accept': 'application/vnd.github.v3+json',
+    }
+    # Use GH_TOKEN, if available.
+    # Unauthorized GH API requests are quite rate-limited.
+    # Tip: add an extra space before 'export' to prevent adding the line to the shell history.
+    #    export GH_TOKEN=$(gh auth token)
+    gh_token = os.environ['GH_TOKEN']
+    if gh_token:
+        headers['Authorization'] = f"Bearer {gh_token}"
+    request = Request(url=f"https://api.github.com{url_abspath}", headers=headers)
+    return urlopen(request)
+
+def _gh_get_commit_object(owner_repo: str, sha: str) -> HTTPResponse:
+    return _gh_api_get(f"/repos/{owner_repo}/git/commits/{sha}")
+
+def _gh_get_tag(owner_repo: str, tag_sha: str) -> HTTPResponse:
+    return _gh_api_get(f"/repos/{owner_repo}/git/tags/{tag_sha}")
+
+def _gh_matching_tags(owner_repo: str, tag: str) -> HTTPResponse:
+    return _gh_api_get(f"/repos/{owner_repo}/git/matching-refs/tags/{tag}")
+
+def verify_actions(actions_path: Path):
+    """
+    Validates the contents of the actions file against GitHub.
+
+    The function verifies that the SHAs specified in `actions.yml` exist in the GH repo.
+    Also ensures that the SHA exists on the Git tag, if the `tag` attribute is specified.
+
+    The algorithm roughly works like this, for each action specified in `actions.yml`:
+    * Issue a warning and stop, if the name is like `OWNER/*` ("wildcard" repository).
+      Can't verify Git SHAs in this case.
+    * Issue a warning and stop, if the name is like `docker:*` (not implemented)
+    * Issue an error and stop, if the name doesn't start with an `OWNER/REPO` pattern.
+    * Each expired entry is just skipped
+    * If there is a wildcard reference and a SHA reference, issue an error.
+
+    Then, for each reference for an action:
+    * If no `tag` is specified, let GH resolve the commit SHA.
+      Emit a warning to add the value of the `tag` attribute, if the SHA can be resolved.
+      Otherwise, emit an error.
+    * If `tag` is specified:
+      * Add the SHA to the set of requested-shas-by-tag
+      * Call GH's "matching-refs" endpoint for the 'tag' value
+        * Emit en error, if the object type is not a tag or commit.
+        * Also resolve 'tag' object types to 'commit' object types.
+        * Add each returned SHA to the set of valid-shas-by-tag.
+    * For each "requested tag" verify that the sets of valid and requested shas intersect. If not, emit an error.
+
+    Args:
+        actions_path: Path to the actions list file
+
+    TODO: return reasonable values
+    """
+    actions: ActionsYAML = load_yaml(actions_path)
+
+    failures: list[str] = []
+    warnings: list[str] = []
+
+    for name, action in actions.items():
+        gh_repo_matcher = re.match(re_github_actions_repo, name)
+        if gh_repo_matcher is not None:
+            owner_repo = gh_repo_matcher.group(1)
+            print(f"Checking GitHub action 'https://github.com/{owner_repo}' ...")
+            valid_shas_by_tag: dict[str, set[str]] = {}
+            requested_shas_by_tag: dict[str, set[str]] = {}
+            has_wildcard = False
+            for ref, details in action.items():
+                expires_at: date = details.get('expires_at')
+                # TODO consider the 'keep=true' flag?
+                if expires_at < date.today():
+                    # skip expired entries
+                    print(f"  .. ref '{ref}' is expired, skipping")
+                    continue
+
+                if ref == '*':
+                    # "wildcard" SHA - what would we...
+                    print(f"  .. detected wildcard ref")
+                    if len(requested_shas_by_tag) > 0:
+                        m = f"GitHub action 'https://github.com/{owner_repo}' references a wildcard SHA but also has specific SHAs"
+                        print(f"    .. ❌ {m}")
+                        failures.append(m)
+                    has_wildcard = True
+                    continue
+                elif re.match(re_git_sha, ref):
+                    print(f"  .. detected entry with Git SHA '{ref}'")
+                    if has_wildcard:
+                        m = f"GitHub action 'https://github.com/{owner_repo}' references a wildcard SHA but also has specific SHAs"
+                        print(f"    .. ❌ {m}")
+                        failures.append(m)
+
+                    tag: str = details.get('tag')
+                    print(f"    .. collecting Gig SHAs for tag {tag}")
+
+                    if tag is None:
+                        # https://docs.github.com/en/rest/git/commits?apiVersion=2022-11-28#get-a-commit-object
+                        with _gh_get_commit_object(owner_repo, ref) as response:
+                            match response.status:
+                                case 200:
+                                    m = f"GitHub action 'https://github.com/{owner_repo}' references existing commit SHA '{ref}' but but does specify the tag name for it."
+                                    print(f"    .. ⚡ {m}")
+                                    warnings.append(m)
+                                case 404:
+                                    m = f"GitHub action 'https://github.com/{owner_repo}' references non existing commit SHA '{ref}' (HTTP/{response.status}: {response.reason})"
+                                    print(f"    .. ❌ {m}")
+                                    failures.append(m)
+                                case _:
+                                    m = f"Failed to fetch Git SHA '{ref}' from GitHub repo 'https://github.com/{owner_repo}' (HTTP/{response.status}: {response.reason})"
+                                    print(f"    .. ❌ {m}")
+                                    failures.append(m)
+                    else:
+                        if not tag in requested_shas_by_tag:
+                            requested_shas_by_tag[tag] = set()
+                        requested_shas_by_tag[tag].add(ref)
+
+                        if not tag in valid_shas_by_tag:
+                            valid_shas_by_tag[tag] = set()
+                        valid_shas_for_tag = valid_shas_by_tag[tag]
+
+                        # https://docs.github.com/en/rest/git/refs?apiVersion=2022-11-28#list-matching-references
+                        with _gh_matching_tags(owner_repo, tag) as response:
+                            if response.status == 200:
+                                response_json: CommentedSeq = ruyaml.YAML().load(response)
+                                for elem in response_json:
+                                    tag_ref_map: CommentedMap = elem
+                                    tag_object: CommentedMap = tag_ref_map["object"]
+                                    tab_object_type: str = tag_object["type"]
+                                    tag_object_sha: str = tag_object["sha"]
+                                    print(f"      .. GH yields {tab_object_type} SHA '{tag_object_sha}' for '{tag_ref_map['ref']}'")
+                                    match tab_object_type:
+                                        case "tag":
+                                            valid_shas_for_tag.add(tag_object_sha)
+                                            # https://docs.github.com/en/rest/git/tags?apiVersion=2022-11-28#get-a-tag
+                                            with _gh_get_tag(owner_repo, tag_object_sha) as response2:
+                                                match response2.status:
+                                                    case 200:
+                                                        tag_object_sha = ruyaml.YAML().load(response2)["object"]["sha"]
+                                                        valid_shas_for_tag.add(tag_object_sha)
+                                                        print(f"        .. GH returns commit SHA '{tag_object_sha}' for previous tag SHA")
+                                                    case 404:
+                                                        print(f"        .. commit SHA '{tag_object_sha}' does not exist")
+                                                        pass
+                                                    case _:
+                                                        m = f"Failed to fetch details for Git tag '{tag}' from GitHub repo 'https://github.com/{owner_repo}', status code: {response2.status} ${response2.reason}, headers: {response2.headers} {response2.read()}"
+                                                        print(f"        .. ❌ {m}")
+                                                        failures.append(m)
+                                            pass
+                                        case "commit":
+                                            valid_shas_for_tag.add(tag_object_sha)
+                                        case "branch":
+                                            m = f"Branch references mentioned for Git tag '{tag}' for GitHub action 'https://github.com/{owner_repo}'"
+                                            print(f"        .. ❌ {m}")
+                                            failures.append(m)
+                                        case _:
+                                            m = f"Invalid Git object type '{tag_object['type']}' for Git tag '{tag}' in GitHub repo 'https://github.com/{owner_repo}'"
+                                            print(f"        .. ❌ {m}")
+                                            failures.append(m)
+                                            pass
+
+                                    # tag_ref: str = tag_ref_map["ref"]
+                                    # tag_to_sha[tag_ref.replace("refs/tags/", "")] = tag_object_sha
+                            else:
+                                m = f"Failed to fetch Git tag '{tag}' from GitHub repo 'https://github.com/{owner_repo}' (HTTP/{response.status}: {response.reason})"
+                                print(f"      .. ❌ {m}")
+                                failures.append(m)
+                else:
+                    m = f"GitHub action 'https://github.com/{owner_repo}' references an invalid Git SHA '{ref}'"
+                    print(f"      .. ❌ {m}")
+                    failures.append(m)
+
+            for req_tag, req_shas in requested_shas_by_tag.items():
+                print(f"  .. checking tag '{req_tag}'")
+                print(f"    .. referenced SHAs: {req_shas}")
+                valid_shas = valid_shas_by_tag.get(req_tag)
+                print(f"    .. verified SHAs: {valid_shas}")
+                if not valid_shas:
+                    m = f"GitHub action 'https://github.com/{owner_repo}' references Git tag '{req_tag}' but no SHAs for tag could be found"
+                    failures.append(m)
+                    print(f"  ❌ {m}")
+                elif req_shas.isdisjoint(valid_shas):
+                    m = f"GitHub action 'https://github.com/{owner_repo}' references Git tag '{req_tag}' via SHAs '{req_shas}' but none of those matches the valid SHAs '{valid_shas}'"
+                    failures.append(m)
+                    print(f"  ❌ {m}")
+                else:
+                    print(f"  ✅ GitHub action 'https://github.com/{owner_repo}' definition for tag '{req_tag}' is good!")
+
+        elif re.match(re_github_actions_repo_wildcard, name):
+            m =f"Ignoring '{name}' having a GitHub repository wildcard ..."
+            warnings.append(m)
+            print(f"⚡ {m}")
+
+        elif re.match(re_docker_image, name):
+            m =f"Ignoring '{name}' referencing a Docker image ..."
+            warnings.append(m)
+            print(f"⚡ {m}")
+
+        else:
+            m = f"Cannot determine action kind for '{name}'"
+            failures.append(m)
+            print(f"❌ {m}")
+
+    for failure in failures:
+        print(f"FAILURE: {failure}")
+    for warning in warnings:
+        print(f"WARN: {warning}")
