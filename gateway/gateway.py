@@ -21,7 +21,7 @@ class RefDetails(TypedDict):
 
     Attributes:
         expires_at: After this date the reference will be removed
-        keep: Optional flag to retain the reference regardless of expiry
+        keep: Optional flag to retain the reference, regardless of expiry, and not start the clock on expiry when new tags appear
     """
 
     expires_at: date
