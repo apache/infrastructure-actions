@@ -13,8 +13,6 @@ from typing import Dict, NotRequired, TypedDict
 
 import ruyaml
 
-indefinitely = date(2050, 1, 1)
-
 class RefDetails(TypedDict):
     """
     Type definition for reference details of GitHub Actions for actions.yml
@@ -149,9 +147,10 @@ jobs:
     for name, refs in actions.items():
         def is_updatable(ref):
             details = refs[ref]
-            return (len(ref) >= 40 and
-                    not details.get("keep") and
-                    details["expires_at"] == indefinitely)
+            return len(ref) >= 40 and (
+                    not details or (
+                        not "keep" in details and
+                        not "expires_at" in details))
 
         ref_to_update = list(filter(is_updatable, refs))
 
@@ -160,7 +159,7 @@ jobs:
         elif len(ref_to_update) == 1:
             ref = ref_to_update[0]
             details = refs[ref]
-            steps.append(f"      - uses: {name}@{ref}" + (f"  # {details['tag']}" if 'tag' in details else ''))
+            steps.append(f"      - uses: {name}@{ref}" + (f"  # {details['tag']}" if details and 'tag' in details else ''))
             steps.append( "        if: false")
 
     return header + "\n".join(steps) + "\n" + "      - run: echo Success!\n"
@@ -201,7 +200,7 @@ def update_refs(
                     if "expires_at" not in details or details["expires_at"] > new_expiry:
                         details["expires_at"] = new_expiry
 
-            refs[new_ref] = {"expires_at": indefinitely}
+            refs[new_ref] = {}
             if new_tag:
                 refs[new_ref]['tag'] = new_tag
 
@@ -241,7 +240,7 @@ def create_pattern(actions: ActionsYAML) -> list[str]:
         f"{name}@{ref}"
         for name, refs in actions.items()
         for ref, details in refs.items()
-        if date.today() < details.get("expires_at") or details.get("keep")
+        if (not details or "expires_at" not in details or date.today() < details["expires_at"]) or details.get("keep")
     )
     return pattern
 
@@ -291,7 +290,7 @@ def remove_expired_refs(actions: ActionsYAML):
         refs_to_remove.extend(
             (name, ref)
             for ref, details in action.items()
-            if details["expires_at"] <= date.today() and not details.get("keep")
+            if "expires_at" in details and details["expires_at"] <= date.today() and not details.get("keep")
         )
 
     # Changing the iterable during iteration raises a RuntimeError
