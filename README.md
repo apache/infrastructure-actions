@@ -66,7 +66,6 @@ To request addition of an action to the allow list:
 ```yaml
 repo/owner:
   '<exact-commit-sha>':
-    expires_at: 2050-01-01
     tag: vX.Y.Z
 ```
 

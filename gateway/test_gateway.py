@@ -29,38 +29,34 @@ def test_update_refs():
 
     refs: ActionsYAML = {
         "actions/setup-go": {
-            "v5": {"expires_at": indefinitely},
-            "v4": {"expires_at": indefinitely, "keep": True},
+            "v5": {},
+            "v4": {"keep": True},
         },
-        "hashicorp/setup-terraform": {"v2": {"expires_at": indefinitely}},
-        "opentofu/setup-opentofu": {"v1": {"expires_at": indefinitely}},
+        "hashicorp/setup-terraform": {"v2": {}},
+        "opentofu/setup-opentofu": {"v1": {}},
         "helm/chart-testing-action": {
-            "v2.5.0": {"expires_at": indefinitely}
+            "v2.5.0": {}
         },
         "dorny/paths-filter": {
-            "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {
-                "expires_at": indefinitely
-            }
+            "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {}
         },
     }
 
     expected_refs: ActionsYAML = {
         "actions/setup-go": {
-            "v5": {"expires_at": indefinitely},
-            "v4": {"expires_at": indefinitely, "keep": True},
+            "v5": {},
+            "v4": {"keep": True},
         },
-        "hashicorp/setup-terraform": {"v2": {"expires_at": indefinitely}},
-        "opentofu/setup-opentofu": {"v1": {"expires_at": indefinitely}},
+        "hashicorp/setup-terraform": {"v2": {}},
+        "opentofu/setup-opentofu": {"v1": {}},
         "helm/chart-testing-action": {
-            "v2.5.0": {"expires_at": indefinitely}
+            "v2.5.0": {}
         },
         "dorny/paths-filter": {
             "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {
                 "expires_at": calculate_expiry(12)
             },
-            "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {
-                "expires_at": indefinitely,
-            },
+            "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {},
         },
     }
 
@@ -84,12 +80,9 @@ def test_update_refs_expiry():
                 "expires_at": calculate_expiry(16)
             },
             "kee7Kineiy9thu4eikahTeiP9ahch3iey4deepah": {
-                "expires_at": indefinitely,
                 "keep": True,
             },
-            "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {
-                "expires_at": indefinitely
-            },
+            "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {},
         },
     }
 
@@ -108,12 +101,9 @@ def test_update_refs_expiry():
                 "expires_at": calculate_expiry(12)
             },
             "kee7Kineiy9thu4eikahTeiP9ahch3iey4deepah": {
-                "expires_at": indefinitely,
                 "keep": True,
             },
-            "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {
-                "expires_at": indefinitely,
-            },
+            "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {},
         },
     }
 
@@ -127,37 +117,32 @@ def test_update_tagged_ref():
     ''')
 
     refs: ActionsYAML = {
-        "actions/setup-go": {"v4": {"expires_at": indefinitely, "keep": True}},
-        "hashicorp/setup-terraform": {"v2": {"expires_at": indefinitely}},
-        "opentofu/setup-opentofu": {"v1": {"expires_at": indefinitely}},
+        "actions/setup-go": {"v4": {"keep": True}},
+        "hashicorp/setup-terraform": {"v2": {}},
+        "opentofu/setup-opentofu": {"v1": {}},
         "helm/chart-testing-action": {
-            "v2.5.0": {"expires_at": indefinitely}
+            "v2.5.0": {}
         },
         "dorny/paths-filter": {
-            "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {
-                "expires_at": indefinitely
-            }
+            "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {}
         },
     }
 
     expected_refs: ActionsYAML = {
-        "actions/setup-go": {"v4": {"expires_at": indefinitely, "keep": True}},
-        "hashicorp/setup-terraform": {"v2": {"expires_at": indefinitely}},
-        "opentofu/setup-opentofu": {"v1": {"expires_at": indefinitely}},
+        "actions/setup-go": {"v4": {"keep": True}},
+        "hashicorp/setup-terraform": {"v2": {}},
+        "opentofu/setup-opentofu": {"v1": {}},
         "helm/chart-testing-action": {
-            "v2.5.0": {"expires_at": indefinitely}
+            "v2.5.0": {}
         },
         "dorny/paths-filter": {
             "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {
                 "expires_at": calculate_expiry(12)
             },
-            "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {
-                "expires_at": indefinitely,
-            },
+            "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {},
         },
         "DavidAnson/markdownlint-cli2-action": {
             "b4c9feab76d8025d1e83c653fa3990936df0e6c8": {
-                "expires_at": indefinitely,
                 "tag": "v16",
             }
         },
@@ -170,8 +155,8 @@ def test_update_tagged_ref():
 def test_create_pattern():
     actions = {
         "actions/setup-go": {
-            "v5": {"expires_at": indefinitely},
-            "v4": {"expires_at": indefinitely, "keep": True},
+            "v5": {},
+            "v4": {"keep": True},
         },
         "hashicorp/setup-terraform": {"v2": {"expires_at": datetime.date(1100, 1, 1)}},
     }
@@ -192,9 +177,7 @@ def test_clean_actions():
             "0bc4621a3135347011ad047f9ecf449bf72ce2bd": {
                 "expires_at": datetime.date(1900, 1, 1)
             },
-            "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {
-                "expires_at": indefinitely,
-            },
+            "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {},
         },
     }
 
@@ -204,9 +187,7 @@ def test_clean_actions():
             "v4": {"expires_at": datetime.date(1900, 1, 1), "keep": True},
         },
         "dorny/paths-filter": {
-            "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {
-                "expires_at": indefinitely,
-            }
+            "de90cc6fb38fc0963ad72b210f1f284cd68cea36": {}
         },
     }
 
