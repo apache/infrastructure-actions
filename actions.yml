@@ -749,6 +749,10 @@ taiki-e/install-action:
   '*':
     expires_at: 2025-08-01
     keep: true
+tcort/github-action-markdown-link-check:
+  '*':
+    expires_at: 2050-01-01
+    keep: true
 test-summary/action:
   '*':
     expires_at: 2025-08-01
