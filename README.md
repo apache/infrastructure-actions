@@ -6,6 +6,7 @@ This repository hosts GitHub Actions developed by the ASF community and approved
 - [Available GitHub Actions](#available-github-actions)
 - [Organization-wide GitHub Actions Allow List](#management-of-organization-wide-github-actions-allow-list)
   - [Adding a New Action](#adding-a-new-action-to-the-allow-list)
+  - [Reviewing](#reviewing)
   - [Adding a New Version](#adding-a-new-version-to-the-allow-list)
   - [Manual Version Addition](#manual-addition-of-specific-versions)
   - [Removing a Version](#removing-a-version-manually)
@@ -25,6 +26,8 @@ To contribute a GitHub Action to this repository:
      - Any special considerations or limitations
 3. **Create a pull request** to merge your branch into the main branch
 
+## Reviewing
+
 The Infrastructure team will review each proposed Action based on:
 - Overall usefulness to the ASF community
 - Maintenance complexity
@@ -32,6 +35,12 @@ The Infrastructure team will review each proposed Action based on:
 - Code quality
 
 Once approved, the Infrastructure team will merge the pull request and add the new Action to the list of available Actions for all ASF projects.
+
+We highly appreciate contributed reviews, especially from people
+associated with the projects that (would like to) use a particular
+action, even if they're not committers on _this_ project: you're
+especially qualified to judge and vouch for the safety and
+correctness of the action.
 
 ## Available GitHub Actions
 
@@ -134,4 +143,4 @@ existing/action:
 
 The infrastructure team will prioritize these removal requests and may take additional steps to notify affected projects if necessary.
 
-For 'regular' removals (not security responses), you can use `./utils/action-usage.sh someorg/theaction` to see if/how an action is still used anywhere in the ASF, and create a 'regular' PR removing it from `actions.yml` when it is no longer used.
+For 'regular' removals (not security responses), you can use `./utils/action-usage.sh someorg/theaction` to see if/how an action is still used anywhere in the ASF, and create a 'regular' PR removing it from `actions.yml` (or adding an expiration date) when it is no longer used.
