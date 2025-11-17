@@ -129,6 +129,8 @@ jobs:
         if: false
       - uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a  # v1
         if: false
+      - uses: tcort/github-action-markdown-link-check@f3d33029dca1c4a24b87e2df648f9f4604ef6533  # v1.1.1
+        if: false
       - uses: untitaker/hyperlink@e66bb17cc9ae341677431edec3b893a0aa6ac747  # 0.1.44
         if: false
       - uses: uraimo/run-on-arch-action@d94c13912ea685de38fccc1109385b83fd79427d  # v3.0.1
