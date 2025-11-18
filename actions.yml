@@ -5,18 +5,15 @@
 # Versions that are known to be problematic should be removed explicitly manually.
 1Password/load-secrets-action:
   13f58eec611f8e5db52ec16247f58c508398f3e6:
-    expires_at: 2050-01-01
     tag: v3.0.0
 ana06/get-changed-files:
   25f79e676e7ea1868813e21465014798211fad8c:
     tag: v2.3.0
-    expires_at: 2050-01-01
 astral-sh/setup-uv:
   b75a909f75acd358c2196fb9a5f1299a9a8868a4:
     tag: v6.7.0
     expires_at: 2026-01-26
   85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41:
-    expires_at: 2050-01-01
     tag: v7.1.2
 bytedeco/javacpp-presets/.github/actions/*:
   '*':
@@ -68,11 +65,9 @@ BobAnkh/auto-generate-changelog:
     keep: true
 dorny/test-reporter:
   dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3:
-    expires_at: 2050-01-01
     tag: v2.1.1
 DavidAnson/markdownlint-cli2-action:
   992badcdf24e3b8eb7e87ff9287fe931bcb00c6e:
-    expires_at: 2050-01-01
     tag: v20.0.0
 EnricoMi/publish-unit-test-result-action:
   '*':
@@ -80,18 +75,15 @@ EnricoMi/publish-unit-test-result-action:
     keep: true
 JamesIves/github-pages-deploy-action:
   6c2d9db40f9296374acc17b90404b6e8864128c8:
-    expires_at: 2050-01-01
     tag: v4.7.3
 JustinBeckwith/linkinator-action:
   3d5ba091319fa7b0ac14703761eebb7d100e6f6d:
-    expires_at: 2050-01-01
     tag: v1.11.0
 Kesin11/actions-timeline:
   a7eaabf426cdae26c3582c3fa674b897170dec8f:
     expires_at: 2025-12-26
     tag: v2.2.4
   54d513e0b5ff1158f1cf8321108d666a5a6c1fca:
-    expires_at: &id001 2050-01-01
     tag: v2.2.5
 PyO3/maturin-action:
   '*':
@@ -112,7 +104,6 @@ VirtusLab/scala-cli-setup:
     expires_at: 2026-02-10
     tag: v1.9.1
   68bd9c30954d20e6cb6ddaf01b3b38336f25df4b:
-    expires_at: 2050-01-01
     tag: v1.10.1
 actions-cool/check-user-permission:
   '*':
@@ -131,11 +122,9 @@ actions/setup-go:
     expires_at: 2025-12-09
     tag: v5.5.0
   44694675825211faa026b3c33043df3e48a5fa00:
-    expires_at: 2050-01-01
     tag: v6.0.0
 addnab/docker-run-action:
   4f65fabd2431ebc8d299f8e5a018d79a769ae185:
-    expires_at: 2050-01-01
     tag: v3
 al-cheb/configure-pagefile-action:
   '*':
@@ -161,23 +150,18 @@ aws-actions/configure-aws-credentials:
     expires_at: 2026-01-26
     tag: v5.0.0
   00943011d9042930efac3dcd3a170e4273319bc8:
-    expires_at: 2050-01-01
     tag: v5.1.0
 azure/setup-helm:
   1a275c3b69536ee54be43f2070a358922e12c8d4:
-    expires_at: 2050-01-01
     tag: v4.3.1
 betahuhn/repo-file-sync-action:
   8b92be3375cf1d1b0cd579af488a9255572e4619:
-    expires_at: 2050-01-01
     tag: v1.21.1
 browser-actions/setup-firefox:
   5914774dda97099441f02628f8d46411fcfbd208:
-    expires_at: 2050-01-01
     tag: v1.7.0
 browser-actions/setup-geckodriver:
   5ef1526ed36211ab6cb531ec1cfb11f924ca2dee:
-    expires_at: 2050-01-01
 bufbuild/buf-breaking-action:
   '*':
     expires_at: 2025-08-01
@@ -192,7 +176,6 @@ bufbuild/buf-setup-action:
     keep: true
 burnett01/rsync-deployments:
   0dc935cdecc5f5e571865e60d2a6cdc673704823:
-    expires_at: 2050-01-01
     tag: '5.2'
 burrunan/gradle-cache-action:
   '*':
@@ -204,7 +187,6 @@ bytedeco/javacpp-presets:
     keep: true
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
-    expires_at: 2050-01-01
     tag: v1.0.10
 carlosperate/arm-none-eabi-gcc-action:
   '*':
@@ -249,7 +231,6 @@ commit-check/commit-check-action:
     expires_at: 2026-02-10
     tag: v2.1.0
   a0193b1ca486178b85d7a1db145af34cd227f81f:
-    expires_at: 2050-01-01
     tag: v2.1.1
 conda-incubator/setup-miniconda:
   '*':
@@ -271,11 +252,9 @@ coursier/cache-action:
     expires_at: 2025-08-01
     keep: true
   bebeeb0e6f48ebad66d3783946588ecf43114433:
-    expires_at: 2050-01-01
     tag: 6.4.7
 coursier/setup-action:
   039f736548afa5411c1382f40a5bd9c2d30e0383:
-    expires_at: 2050-01-01
     tag: v1.3.9
   '*':
     expires_at: 2025-08-01
@@ -290,18 +269,15 @@ crate-ci/typos:
     keep: true
 crazy-max/ghaction-import-gpg:
   e89d40939c28e39f97cf32126055eeae86ba74ec:
-    expires_at: 2050-01-01
     tag: v6.3.0
 damccorm/tag-ur-it:
   6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5:
-    expires_at: 2050-01-01
 dawidd6/action-download-artifact:
   '*':
     expires_at: 2025-08-01
     keep: true
 dawidd6/action-send-mail:
   6d98ae34d733f9a723a9e04e94f2f24ba05e1402:
-    expires_at: 2050-01-01
     tag: v6
 delaguardo/setup-graalvm:
   '*':
@@ -313,19 +289,15 @@ dlang-community/setup-dlang:
     keep: true
 docker://jekyll/jekyll:
   sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625:
-    expires_at: 2050-01-01
 docker://pandoc/core:
   sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93:
     tag: 3.7.0.2
-    expires_at: 2050-01-01
 docker/setup-qemu-action:
   29109295f81e9208d7d86ff1c6c12d2833863392:
-    expires_at: 2050-01-01
     tag: v3.6.0
     keep: true
 dorny/paths-filter:
   de90cc6fb38fc0963ad72b210f1f284cd68cea36:
-    expires_at: 2050-01-01
     tag: v3.0.2
 easimon/maximize-build-space:
   '*':
@@ -340,11 +312,9 @@ erisu/apache-rat-action:
     expires_at: 2026-01-14
     tag: v1.2.0
   46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c:
-    expires_at: 2050-01-01
     tag: v2.0.0
 erisu/license-checker-action:
   1c222d0c2f5898a4c40b8bd6fd6888650bd6f68a:
-    expires_at: 2050-01-01
     tag: v2.0.0
 gaurav-nelson/github-action-markdown-link-check:
   '*':
@@ -363,7 +333,6 @@ google-github-actions/auth:
     expires_at: 2025-11-22
     tag: v2.1.12
   7c6bc770dae815cd3e89ee6cdf493a5fab2cc093:
-    expires_at: 2050-01-01
     tag: v3.0.0
 google-github-actions/setup-gcloud:
   cb1e50a9932213ecece00a606661ae9ca44f3397:
@@ -373,7 +342,6 @@ google-github-actions/setup-gcloud:
     expires_at: 2025-12-19
     tag: v3.0.0
   aa5489c8933f4cc7a4f7d45035b3b1440c9c10db:
-    expires_at: 2050-01-01
     tag: v3.0.1
 gr2m/twitter-together:
   '*':
@@ -387,15 +355,12 @@ graalvm/setup-graalvm:
     expires_at: 2026-01-26
     tag: v1.3.6
   eec48106e0bf45f2976c2ff0c3e22395cced8243:
-    expires_at: 2050-01-01
     tag: v1.4.2
 gradle/wrapper-validation-action:
   '*':
-    expires_at: 2050-01-01
     keep: true
   f9c9c575b8b21b6485636a91ffecd10e558c62f6:
     tag: v3.5.0
-    expires_at: 2050-01-01
 gsactions/commit-message-checker:
   '*':
     expires_at: 2025-08-01
@@ -405,19 +370,15 @@ hadolint/hadolint-action:
     expires_at: 2025-12-26
     tag: v3.1.0
   2332a7b74a6de0dda2e2221d575162eba76ba5e5:
-    expires_at: *id001
     tag: v3.3.0
 hashicorp/setup-terraform:
   b9cd54a3c349d3f38e8881555d616ced269862dd:
-    expires_at: 2050-01-01
     tag: v3
 helm/chart-testing-action:
   0d28d3144d3a25ea2cc349d6e59901c4ff469b3b:
-    expires_at: 2050-01-01
     tag: v2.7.0
 helm/kind-action:
   a1b0e391336a6ee6713a0583f8c6240d70863de3:
-    expires_at: 2050-01-01
     tag: v1.12.0
 houseabsolute/actions-rust-cross:
   '*':
@@ -429,7 +390,6 @@ ilammy/msvc-dev-cmd:
     keep: true
 ilammy/setup-nasm:
   72793074d3c8cdda771dba85f6deafe00623038b:
-    expires_at: 2050-01-01
     tag: v1.5.2
 jarvusinnovations/background-action:
   '*':
@@ -437,7 +397,6 @@ jarvusinnovations/background-action:
     keep: true
 jasonetco/create-an-issue:
   1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5:
-    expires_at: 2050-01-01
     tag: v2
 jidicula/clang-format-action:
   '*':
@@ -449,7 +408,6 @@ jlumbroso/free-disk-space:
     keep: true
 jrouly/scalafmt-native-action:
   14620cde093e5ff6bfbbecd4f638370024287b9d:
-    expires_at: 2050-01-01
     tag: v4
   '*':
     expires_at: 2025-08-01
@@ -485,7 +443,6 @@ jwgmeligmeyling/checkstyle-github-action:
 jwgmeligmeyling/pmd-github-action:
   322e346bd76a0757c4d54ff9209e245965aa066d:
     tag: v1.2
-    expires_at: 2050-01-01
 jwgmeligmeyling/spotbugs-github-action:
   '*':
     expires_at: 2025-08-01
@@ -507,11 +464,9 @@ leafo/gh-actions-luarocks:
     expires_at: 2026-01-26
     tag: v5
   97053c556d6ce2c8e26eb7ac93743437c7af7248:
-    expires_at: &id002 2050-01-01
     tag: v5
 manusa/actions-setup-minikube:
   b589f2d61bf96695c546929c72b38563e856059d:
-    expires_at: 2050-01-01
     tag: v2.14.0
   '*':
     expires_at: 2025-08-01
@@ -530,7 +485,6 @@ mikepenz/action-junit-report:
     keep: true
 mozilla-actions/sccache-action:
   7d986dd989559c6ecdb630a3fd2557667be217ad:
-    expires_at: 2050-01-01
     tag: v0.0.9
 msys2/setup-msys2:
   '*':
@@ -549,7 +503,6 @@ ncipollo/release-action:
     expires_at: 2025-11-27
     tag: v1.18.0
   b7eabc95ff50cbeeedec83973935c8f306dfcd0b:
-    expires_at: 2050-01-01
     tag: v1.20.0
 nick-fields/retry:
   '*':
@@ -557,7 +510,6 @@ nick-fields/retry:
     keep: true
 nwtgck/actions-netlify:
   4cbaf4c08f1a7bfa537d6113472ef4424e4eb654:
-    expires_at: 2050-01-01
     tag: v3.0.0
 ocaml/setup-ocaml:
   '*':
@@ -569,7 +521,6 @@ olafurpg/setup-scala:
     keep: true
 opentofu/setup-opentofu:
   000eeb8522f0572907c393e8151076c205fdba1b:
-    expires_at: 2050-01-01
     tag: v1.0.6
 oracle-actions/setup-java:
   '*':
@@ -580,7 +531,6 @@ orhun/git-cliff-action:
     expires_at: 2025-12-22
     tag: v4.5.1
   d77b37db2e3f7398432d34b72a12aa3e2ba87e51:
-    expires_at: 2050-01-01
     tag: v4.6.0
 ossf/scorecard-action:
   '*':
@@ -603,7 +553,6 @@ peter-evans/create-or-update-comment:
     expires_at: 2026-01-26
     tag: v4.0.0
   e8674b075228eee787fea43ef493e45ece1004c9:
-    expires_at: 2050-01-01
     tag: v5.0.0
 peter-evans/create-pull-request:
   '*':
@@ -611,7 +560,6 @@ peter-evans/create-pull-request:
     keep: true
 phoenix-actions/test-reporting:
   f957cd93fc2d848d556fa0d03c57bc79127b6b5e:
-    expires_at: 2050-01-01
     tag: v15
 pnpm/action-setup:
   '*':
@@ -623,7 +571,6 @@ potiuk/cancel-workflow-runs:
     keep: true
 pre-commit/action:
   2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd:
-    expires_at: 2050-01-01
     tag: v3.0.1
 pyTooling/Actions:
   '*':
@@ -637,7 +584,6 @@ pypa/cibuildwheel:
     expires_at: 2026-01-26
     tag: v3.2.0
   9c00cb4f6b517705a3794b22395aedc36257242c:
-    expires_at: *id002
     tag: v3.2.1
 pytooling/actions:
   '*':
@@ -674,7 +620,6 @@ sbt/setup-sbt:
     expires_at: 2025-12-29
     tag: v1.1.13
   3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd:
-    expires_at: 2050-01-01
     tag: v1.1.14
 scacap/action-surefire-report:
   1a128e49c0585bc0b8e38e541ac3b6e35a5bc727:
@@ -684,18 +629,15 @@ scacap/action-surefire-report:
     expires_at: 2025-08-01
     keep: true
   5609ce4db72c09db044803b344a8968fd1f315da:
-    expires_at: 2050-01-01
     tag: v1.9.1
 scala-steward-org/scala-steward-action:
   961c41c9fd3dc8a0f1f8dd59d60d071e17348ae8:
     expires_at: 2025-12-08
     tag: v2.76.0
   53d486a68877f4a6d1e110e8058fe21e593db356:
-    expires_at: 2050-01-01
     tag: v2.77.0
 scalacenter/sbt-dependency-submission:
   64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3:
-    expires_at: 2050-01-01
     tag: v3.1.0
 scottbrenner/puppet-lint-action:
   '*':
@@ -723,7 +665,6 @@ sigstore/cosign-installer:
     tag: v4.0.0
 snok/install-poetry:
   76e04a911780d5b312d89783f7b1cd627778900a:
-    expires_at: 2050-01-01
     tag: v1
 softprops/action-gh-release:
   '*':
@@ -751,7 +692,6 @@ taiki-e/install-action:
     keep: true
 tcort/github-action-markdown-link-check:
   f3d33029dca1c4a24b87e2df648f9f4604ef6533:
-    expires_at: 2050-01-01
     tag: v1.1.1
 test-summary/action:
   '*':
@@ -763,19 +703,15 @@ timonvs/pr-labeler-action:
     keep: true
 untitaker/hyperlink:
   e66bb17cc9ae341677431edec3b893a0aa6ac747:
-    expires_at: 2050-01-01
     tag: 0.1.44
 uraimo/run-on-arch-action:
   d94c13912ea685de38fccc1109385b83fd79427d:
-    expires_at: 2050-01-01
     tag: v3.0.1
 vapier/coverity-scan-action:
   2068473c7bdf8c2fb984a6a40ae76ee7facd7a85:
-    expires_at: 2050-01-01
     tag: v1.8.0
 vimtor/action-zip:
   5f1c4aa587ea41db1110df6a99981dbe19cee310:
-    expires_at: 2050-01-01
     tag: v1
 vishalsinha21/dynamic-checklist:
   '*':
@@ -791,7 +727,6 @@ xpol/setup-lua:
     keep: true
 slackapi/slack-github-action:
   91efab103c0de0a537f72a35f6b8cda0ee76bf0a:
-    expires_at: 2050-01-01
     tag: v2.1.1
 golangci/golangci-lint-action:
   1481404843c368bc19ca9406f87d6e0fc97bdcfd:
@@ -804,16 +739,13 @@ golangci/golangci-lint-action:
     keep: true
 mlugg/setup-zig:
   8d6198c65fb0feaa111df26e6b467fea8345e46f:
-    expires_at: 2050-01-01
     tag: v2.0.5
 posit-dev/setup-air:
   63e80dedb6d275c94a3841e15e5ff8691e1ab237:
-    expires_at: 2050-01-01
     tag: v1.0.0
 vmactions/freebsd-vm:
   05856381fab64eeee9b038a0818f6cec649ca17a:
     expires_at: 2025-12-22
     tag: v1.2.3
   487ce35b96fae3e60d45b521735f5aa436ecfade:
-    expires_at: 2050-01-01
     tag: v1.2.4
