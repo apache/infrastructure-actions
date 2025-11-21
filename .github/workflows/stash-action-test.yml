@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     container: quay.io/centos/centos:stream8
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Run action
         continue-on-error: true
@@ -58,7 +58,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-15-intel, macos-14]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Run unittests
         shell: bash
@@ -135,7 +135,7 @@ jobs:
     needs: test-save
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Test intra-workflow stash
         uses: ./stash/restore
