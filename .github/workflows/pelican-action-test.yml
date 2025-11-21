@@ -20,14 +20,14 @@ jobs:
       group: testsite-${{ github.ref_name }} # must agree with TARGET
     steps:
       - name: Checkout the test site
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.SOURCE }}
       - name: Ignore the action checkout
         run: |
           echo "self/" >> .git/info/exclude
       - name: Checkout self
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: self
       - name: Reset output directory ${{ env.TARGET }}
