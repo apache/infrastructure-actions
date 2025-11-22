@@ -25,7 +25,9 @@ updates:
       - "/stash/restore"
       - "/stash/save"
     schedule:
-      interval: "daily"
+      # 'daily' only runs on weekdays
+      interval: "cron"
+      cronjob: "15 13 * * *"
     ignore:
       # post-2.16 versions depend on hustcer/setup-nu which
       # we're not comfortable trusting fully yet. See also
