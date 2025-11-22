@@ -89,12 +89,11 @@
 - erisu/apache-rat-action@3127a8c18f3bb10e91c60e835144085b31c5c463
 - erisu/apache-rat-action@46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c
 - erisu/license-checker-action@1c222d0c2f5898a4c40b8bd6fd6888650bd6f68a
+- erisu/license-checker-action@99cffa11264fe545fd0baa6c13bca5a00ae608f2
 - gaurav-nelson/github-action-markdown-link-check@*
 - geekyeggo/delete-artifact@*
 - golang/govulncheck-action@*
-- google-github-actions/auth@b7593ed2efd1c1617e1b0254da33b86225adb2a5
 - google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
-- google-github-actions/setup-gcloud@cb1e50a9932213ecece00a606661ae9ca44f3397
 - google-github-actions/setup-gcloud@26f734c2779b00b7dda794207734c511110a4368
 - google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
 - gr2m/twitter-together@*
