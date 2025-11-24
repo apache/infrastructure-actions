@@ -79,6 +79,7 @@ repo/owner:
 
 > [!NOTE]
 > Always pin actions to exact commit SHAs, never use tags or branch references.
+> (For historic reasons there are some exceptions to this rule)
 
 The infrastructure team will review your request and either approve, request changes, or provide feedback on alternatives.
 
