@@ -127,9 +127,8 @@ addnab/docker-run-action:
   4f65fabd2431ebc8d299f8e5a018d79a769ae185:
     tag: v3
 al-cheb/configure-pagefile-action:
-  '*':
-    expires_at: 2025-08-01
-    keep: true
+  a3b6ebd6b634da88790d9c58d4b37a7f4a7b8708:
+    tag: v1.4
 amannn/action-semantic-pull-request:
   '*':
     expires_at: 2025-08-01
