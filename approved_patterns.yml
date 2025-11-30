@@ -24,7 +24,6 @@
 - Kesin11/actions-timeline@54d513e0b5ff1158f1cf8321108d666a5a6c1fca
 - PyO3/maturin-action@*
 - TobKed/label-when-approved-action@*
-- VirtusLab/scala-cli-setup@54cd42adb92642fffd3b04cf9705d2806a3b8a92
 - VirtusLab/scala-cli-setup@b1b5d003a3db8e351bbf705ef4378d6b0ff8bf4d
 - VirtusLab/scala-cli-setup@77834b5926f3eb70869d8009530c65585f7a039b
 - VirtusLab/scala-cli-setup@68bd9c30954d20e6cb6ddaf01b3b38336f25df4b
@@ -34,7 +33,7 @@
 - actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
 - actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00
 - addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185
-- al-cheb/configure-pagefile-action@*
+- al-cheb/configure-pagefile-action@a3b6ebd6b634da88790d9c58d4b37a7f4a7b8708
 - amannn/action-semantic-pull-request@*
 - arduino/setup-protoc@*
 - awalsh128/cache-apt-pkgs-action@*
@@ -97,7 +96,6 @@
 - google-github-actions/setup-gcloud@26f734c2779b00b7dda794207734c511110a4368
 - google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
 - gr2m/twitter-together@*
-- graalvm/setup-graalvm@7f488cf82a3629ee755e4e97342c01d6bed318fa
 - graalvm/setup-graalvm@7a1da54cb7fdef4ea19f6ecdfa9ecf59dc5a48fe
 - graalvm/setup-graalvm@eec48106e0bf45f2976c2ff0c3e22395cced8243
 - gradle/wrapper-validation-action@*
@@ -140,7 +138,6 @@
 - msys2/setup-msys2@*
 - mvasigh/dispatch-action@*
 - nanasess/setup-chromedriver@*
-- ncipollo/release-action@bcfe5470707e8832e12347755757cec0eb3c22af
 - ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b
 - nick-fields/retry@*
 - nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654
