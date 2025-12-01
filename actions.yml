@@ -388,6 +388,9 @@ helm/chart-testing-action:
 helm/kind-action:
   a1b0e391336a6ee6713a0583f8c6240d70863de3:
     tag: v1.12.0
+    expires_at: 2026-02-23
+  92086f6be054225fa813e0a4b13787fc9088faab:
+    tag: v1.13.0
 houseabsolute/actions-rust-cross:
   '*':
     expires_at: 2025-08-01
