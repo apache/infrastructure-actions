@@ -79,6 +79,9 @@ JamesIves/github-pages-deploy-action:
 JustinBeckwith/linkinator-action:
   3d5ba091319fa7b0ac14703761eebb7d100e6f6d:
     tag: v1.11.0
+    expires_at: 2026-02-23
+  af984b9f30f63e796ae2ea5be5e07cb587f1bbd9:
+    tag: v2.3
 Kesin11/actions-timeline:
   a7eaabf426cdae26c3582c3fa674b897170dec8f:
     expires_at: 2025-12-26

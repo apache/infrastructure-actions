@@ -20,6 +20,7 @@
 - EnricoMi/publish-unit-test-result-action@*
 - JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8
 - JustinBeckwith/linkinator-action@3d5ba091319fa7b0ac14703761eebb7d100e6f6d
+- JustinBeckwith/linkinator-action@af984b9f30f63e796ae2ea5be5e07cb587f1bbd9
 - Kesin11/actions-timeline@a7eaabf426cdae26c3582c3fa674b897170dec8f
 - Kesin11/actions-timeline@54d513e0b5ff1158f1cf8321108d666a5a6c1fca
 - PyO3/maturin-action@*
@@ -170,7 +171,6 @@
 - release-drafter/release-drafter@*
 - ruby/setup-ruby@*
 - sbt/setup-sbt@*
-- sbt/setup-sbt@f20dc1bc1f8be605c44ffbcec6f17f708a4af9d1
 - sbt/setup-sbt@17575ea4e18dd928fe5968dbe32294b97923d65b
 - sbt/setup-sbt@3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd
 - scacap/action-surefire-report@1a128e49c0585bc0b8e38e541ac3b6e35a5bc727
