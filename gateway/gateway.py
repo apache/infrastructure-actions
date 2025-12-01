@@ -290,7 +290,7 @@ def remove_expired_refs(actions: ActionsYAML):
         refs_to_remove.extend(
             (name, ref)
             for ref, details in action.items()
-            if "expires_at" in details and details["expires_at"] <= date.today() and not details.get("keep")
+            if details and "expires_at" in details and details["expires_at"] <= date.today() and not details.get("keep")
         )
 
     # Changing the iterable during iteration raises a RuntimeError
