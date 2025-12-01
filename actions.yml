@@ -419,6 +419,10 @@ jidicula/clang-format-action:
   '*':
     expires_at: 2025-08-01
     keep: true
+Jimver/cuda-toolkit:
+  6008063726ffe3309d1b22e413d9e88fed91a2f2:
+    expires_at: 2050-01-01
+    tag: v0.2.29
 jlumbroso/free-disk-space:
   '*':
     expires_at: 2025-08-01
