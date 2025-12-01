@@ -23,7 +23,7 @@ jobs:
         if: false
       - uses: dorny/test-reporter@dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3  # v2.1.1
         if: false
-      - uses: DavidAnson/markdownlint-cli2-action@992badcdf24e3b8eb7e87ff9287fe931bcb00c6e  # v20.0.0
+      - uses: DavidAnson/markdownlint-cli2-action@30a0e04f1870d58f8d717450cc6134995f993c63  # v21.0.0
         if: false
       - uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23  # v4.7.4
         if: false
