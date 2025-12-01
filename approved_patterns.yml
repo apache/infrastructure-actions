@@ -19,6 +19,7 @@
 - DavidAnson/markdownlint-cli2-action@992badcdf24e3b8eb7e87ff9287fe931bcb00c6e
 - EnricoMi/publish-unit-test-result-action@*
 - JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8
+- JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23
 - JustinBeckwith/linkinator-action@3d5ba091319fa7b0ac14703761eebb7d100e6f6d
 - JustinBeckwith/linkinator-action@af984b9f30f63e796ae2ea5be5e07cb587f1bbd9
 - Kesin11/actions-timeline@a7eaabf426cdae26c3582c3fa674b897170dec8f
