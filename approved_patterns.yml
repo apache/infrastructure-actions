@@ -109,6 +109,7 @@
 - hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5
 - hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
 - helm/chart-testing-action@0d28d3144d3a25ea2cc349d6e59901c4ff469b3b
+- helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f
 - helm/kind-action@a1b0e391336a6ee6713a0583f8c6240d70863de3
 - helm/kind-action@92086f6be054225fa813e0a4b13787fc9088faab
 - houseabsolute/actions-rust-cross@*
