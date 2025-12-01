@@ -710,6 +710,9 @@ taiki-e/install-action:
 tcort/github-action-markdown-link-check:
   f3d33029dca1c4a24b87e2df648f9f4604ef6533:
     tag: v1.1.1
+    expires_at: 2026-02-23
+  e7c7a18363c842693fadde5d41a3bd3573a7a225:
+    tag: v1.1.2
 test-summary/action:
   '*':
     expires_at: 2025-08-01
