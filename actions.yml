@@ -109,9 +109,6 @@ TobKed/label-when-approved-action:
     expires_at: 2025-08-01
     keep: true
 VirtusLab/scala-cli-setup:
-  54cd42adb92642fffd3b04cf9705d2806a3b8a92:
-    expires_at: 2025-11-27
-    tag: v1.8.5
   b1b5d003a3db8e351bbf705ef4378d6b0ff8bf4d:
     expires_at: 2025-12-15
     tag: v1.9.0
@@ -349,15 +346,9 @@ golang/govulncheck-action:
     expires_at: 2025-08-01
     keep: true
 google-github-actions/auth:
-  b7593ed2efd1c1617e1b0254da33b86225adb2a5:
-    expires_at: 2025-11-22
-    tag: v2.1.12
   7c6bc770dae815cd3e89ee6cdf493a5fab2cc093:
     tag: v3.0.0
 google-github-actions/setup-gcloud:
-  cb1e50a9932213ecece00a606661ae9ca44f3397:
-    expires_at: 2025-11-20
-    tag: v2.2.0
   26f734c2779b00b7dda794207734c511110a4368:
     expires_at: 2025-12-19
     tag: v3.0.0
@@ -368,9 +359,6 @@ gr2m/twitter-together:
     expires_at: 2025-08-01
     keep: true
 graalvm/setup-graalvm:
-  7f488cf82a3629ee755e4e97342c01d6bed318fa:
-    expires_at: 2025-11-27
-    tag: v1.3.5
   7a1da54cb7fdef4ea19f6ecdfa9ecf59dc5a48fe:
     expires_at: 2026-01-26
     tag: v1.3.6
@@ -529,9 +517,6 @@ nanasess/setup-chromedriver:
     expires_at: 2025-08-01
     keep: true
 ncipollo/release-action:
-  bcfe5470707e8832e12347755757cec0eb3c22af:
-    expires_at: 2025-11-27
-    tag: v1.18.0
   b7eabc95ff50cbeeedec83973935c8f306dfcd0b:
     tag: v1.20.0
 nick-fields/retry:
@@ -646,9 +631,6 @@ sbt/setup-sbt:
   '*':
     expires_at: 2025-08-01
     keep: true
-  f20dc1bc1f8be605c44ffbcec6f17f708a4af9d1:
-    expires_at: 2025-12-01
-    tag: v1.1.12
   17575ea4e18dd928fe5968dbe32294b97923d65b:
     expires_at: 2025-12-29
     tag: v1.1.13
