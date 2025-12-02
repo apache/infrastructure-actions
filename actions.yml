@@ -270,9 +270,12 @@ coursier/cache-action:
 coursier/setup-action:
   039f736548afa5411c1382f40a5bd9c2d30e0383:
     tag: v1.3.9
+    expires_at: 2026-02-24
   '*':
     expires_at: 2025-08-01
     keep: true
+  0ed4d7e7c42eae80e14370990582092c749253c4:
+    tag: v2.0.0
 cpp-linter/cpp-linter-action:
   0f6d1b8d7e38b584cbee606eb23d850c217d54f8:
     expires_at: 2025-12-22
