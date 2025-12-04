@@ -655,6 +655,9 @@ scala-steward-org/scala-steward-action:
     tag: v2.76.0
   53d486a68877f4a6d1e110e8058fe21e593db356:
     tag: v2.77.0
+    expires_at: 2026-02-26
+  f60ccd18bc9d8083e6809d9dc3db4a69a71d856c:
+    tag: v2.78.0
 scalacenter/sbt-dependency-submission:
   64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3:
     tag: v3.1.0
