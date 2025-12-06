@@ -51,7 +51,7 @@ jobs:
         if: false
       - uses: carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3  # v1.0.10
         if: false
-      - uses: commit-check/commit-check-action@a0193b1ca486178b85d7a1db145af34cd227f81f  # v2.1.1
+      - uses: commit-check/commit-check-action@ed35ee08c2332753d7734c27f362deb27cc5e26d  # v2.1.2
         if: false
       - uses: coursier/cache-action@bebeeb0e6f48ebad66d3783946588ecf43114433  # 6.4.7
         if: false
