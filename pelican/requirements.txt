@@ -8,5 +8,5 @@ PyYAML==6.0.2
 certifi==2024.7.4
 idna==3.7
 charset-normalizer==2.0.4
-urllib3==2.5.0
+urllib3==2.6.0
 requests==2.32.4
