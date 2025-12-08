@@ -185,7 +185,6 @@
 - scacap/action-surefire-report@1a128e49c0585bc0b8e38e541ac3b6e35a5bc727
 - scacap/action-surefire-report@*
 - scacap/action-surefire-report@5609ce4db72c09db044803b344a8968fd1f315da
-- scala-steward-org/scala-steward-action@961c41c9fd3dc8a0f1f8dd59d60d071e17348ae8
 - scala-steward-org/scala-steward-action@53d486a68877f4a6d1e110e8058fe21e593db356
 - scala-steward-org/scala-steward-action@f60ccd18bc9d8083e6809d9dc3db4a69a71d856c
 - scalacenter/sbt-dependency-submission@64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3
