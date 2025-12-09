@@ -131,9 +131,6 @@ actions-cool/maintain-one-comment:
     expires_at: 2025-08-01
     keep: true
 actions/setup-go:
-  d35c59abb061a4a6fb18e82ac0862c26744d6ab5:
-    expires_at: 2025-12-09
-    tag: v5.5.0
   44694675825211faa026b3c33043df3e48a5fa00:
     tag: v6.0.0
 addnab/docker-run-action:

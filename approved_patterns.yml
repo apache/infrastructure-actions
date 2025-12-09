@@ -35,7 +35,6 @@
 - actions-cool/check-user-permission@*
 - actions-cool/issues-helper@*
 - actions-cool/maintain-one-comment@*
-- actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
 - actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00
 - addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185
 - al-cheb/configure-pagefile-action@a3b6ebd6b634da88790d9c58d4b37a7f4a7b8708
