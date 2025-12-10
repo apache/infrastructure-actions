@@ -655,6 +655,9 @@ scala-steward-org/scala-steward-action:
 scalacenter/sbt-dependency-submission:
   64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3:
     tag: v3.1.0
+    expires_at: 2026-03-10
+  bfbba169ec2dad010624339a27f402b311ed4083:
+    tag: v3.1.1
 scottbrenner/puppet-lint-action:
   '*':
     expires_at: 2025-08-01
