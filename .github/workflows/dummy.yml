@@ -125,7 +125,7 @@ jobs:
         if: false
       - uses: scala-steward-org/scala-steward-action@f60ccd18bc9d8083e6809d9dc3db4a69a71d856c  # v2.78.0
         if: false
-      - uses: scalacenter/sbt-dependency-submission@bfbba169ec2dad010624339a27f402b311ed4083  # v3.1.1
+      - uses: scalacenter/sbt-dependency-submission@568734c893d83d0bc2e17c03bc0ffdf3e9254a70  # v3.1.1
         if: false
       - uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a  # v1
         if: false
