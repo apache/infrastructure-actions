@@ -109,9 +109,6 @@ TobKed/label-when-approved-action:
     expires_at: 2025-08-01
     keep: true
 VirtusLab/scala-cli-setup:
-  b1b5d003a3db8e351bbf705ef4378d6b0ff8bf4d:
-    expires_at: 2025-12-15
-    tag: v1.9.0
   77834b5926f3eb70869d8009530c65585f7a039b:
     expires_at: 2026-02-10
     tag: v1.9.1

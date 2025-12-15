@@ -29,7 +29,6 @@
 - Kesin11/actions-timeline@54d513e0b5ff1158f1cf8321108d666a5a6c1fca
 - PyO3/maturin-action@*
 - TobKed/label-when-approved-action@*
-- VirtusLab/scala-cli-setup@b1b5d003a3db8e351bbf705ef4378d6b0ff8bf4d
 - VirtusLab/scala-cli-setup@77834b5926f3eb70869d8009530c65585f7a039b
 - VirtusLab/scala-cli-setup@68bd9c30954d20e6cb6ddaf01b3b38336f25df4b
 - actions-cool/check-user-permission@*
