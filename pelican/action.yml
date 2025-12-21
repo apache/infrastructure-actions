@@ -55,7 +55,7 @@ runs:
           pip3 list # This a long list
         fi
 
-    # If the site uses Github Flavored Markdown, use this build branch
+    # If the site uses GitHub Flavored Markdown, use this build branch
     - name: fetch and build libcmark-gfm.so
       if: ${{ inputs.gfm == 'true' }}
       shell: bash
