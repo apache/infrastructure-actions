@@ -5,6 +5,7 @@
 - astral-sh/setup-uv@eb1897b8dc4b5d5bfe39a428a8f2304605e0983c
 - astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41
 - astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244
+- astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867
 - bytedeco/javacpp-presets/.github/actions/*@*
 - dtolnay/rust-toolchain@stable
 - golangci/*@*
