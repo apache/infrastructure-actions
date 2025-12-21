@@ -35,10 +35,12 @@ class ActionTagsCheckResult(object):
             print(message)
         self.logs.append(message)
 
-    def failure(self, message: str) -> None:
+    def failure(self, message: str, indent: str) -> None:
+        self.log(f"{indent} ❌ {message}")
         self.failures.append(message)
 
-    def warning(self, message: str) -> None:
+    def warning(self, message: str, indent: str) -> None:
+        self.log(f"{indent} ⚡ {message}")
         self.warnings.append(message)
 
     def has_failures(self) -> bool:
@@ -106,7 +108,7 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
     * Issue a warning and stop if the name is like `docker:*` (not implemented)
     * Issue an error and stop if the name doesn't start with an `OWNER/REPO` pattern.
     * Each expired entry is just skipped
-    * If there is a wildcard reference and a SHA reference, issue an error.
+    * If there is a wildcard reference and an SHA reference, issue an error.
 
     Then, for each reference for an action:
     * If no `tag` is specified, let GH resolve the commit SHA.
@@ -114,7 +116,7 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
       Otherwise, emit an error.
     * If `tag` is specified:
       * Add the SHA to the set of requested-shas-by-tag
-      * Call GH's "matching-refs" endpoint for the 'tag' value
+      * Call GitHub's "matching-refs" endpoint for the 'tag' value
         * Emit en error if the object type is not a tag or commit.
         * Also resolve 'tag' object types to 'commit' object types.
         * Add each returned SHA to the set of valid-shas-by-tag.
@@ -159,26 +161,20 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                 # noinspection PyTypedDict
                 ignore_gh_api_errors = details and 'ignore_gh_api_errors' in details and details['ignore_gh_api_errors'] == True
                 if ignore_gh_api_errors:
-                    m = f"ignore_gh_api_errors is set to true: will ignore GH API errors for action {name} ref '{ref}'"
-                    result.log(f"  .. ⚡ {m}")
-                    result.warning(m)
+                    result.warning(f"ignore_gh_api_errors is set to true: will ignore GH API errors for action {name} ref '{ref}'", "  ..")
 
                 if ref == '*':
                     # "wildcard" SHA - what would we...
                     result.log(f"  .. detected wildcard ref")
                     if len(requested_shas_by_tag) > 0 and not has_wildcard_msg_emitted:
-                        m = f"GitHub action {name} references a wildcard SHA but also has specific SHAs"
-                        result.log(f"    .. ⚡ {m}")
-                        result.warning(m)
+                        result.warning(f"GitHub action {name} references a wildcard SHA but also has specific SHAs", "    ..")
                         has_wildcard_msg_emitted = True
                     has_wildcard = True
                     continue
                 elif re.match(re_git_sha, ref):
                     result.log(f"  .. detected entry with Git SHA '{ref}'")
                     if has_wildcard and not has_wildcard_msg_emitted:
-                        m = f"GitHub action {name} references a wildcard SHA but also has specific SHAs"
-                        result.log(f"    .. ⚡ {m}")
-                        result.warning(m)
+                        result.warning(f"GitHub action {name} references a wildcard SHA but also has specific SHAs", "    ..")
                         has_wildcard_msg_emitted = True
 
                     if not details or not 'tag' in details:
@@ -187,22 +183,16 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                         response = _gh_get_commit_object(owner_repo, ref)
                         match response.status:
                             case 200:
-                                m = f"GitHub action {name} references existing commit SHA '{ref}' but does not specify the tag name for it."
-                                result.log(f"    .. ⚡ {m}")
-                                result.warning(m)
+                                result.warning(f"GitHub action {name} references existing commit SHA '{ref}' but does not specify the tag name for it.", "    ..")
                             case 404:
-                                m = f"GitHub action {name} references non existing commit SHA '{ref}': HTTP/{response.status}: {response.reason}, API URL: {response.req_url}"
-                                result.log(f"    .. ❌ {m}")
-                                result.failure(m)
+                                result.failure(f"GitHub action {name} references non existing commit SHA '{ref}': HTTP/{response.status}: {response.reason}, API URL: {response.req_url}", "    ..")
                             case _:
                                 m = f"Failed to fetch Git SHA '{ref}' from GitHub repo 'https://github.com/{owner_repo}': HTTP/{response.status}: {response.reason}, API URL: {response.req_url}\n{response.body}"
                                 if ignore_gh_api_errors:
                                     has_ignored_api_errors = True
-                                    result.log(f"    .. ⚡ {m}")
-                                    result.warning(m)
+                                    result.warning(m, "    ..")
                                 else:
-                                    result.log(f"    .. ❌ {m}")
-                                    result.failure(m)
+                                    result.failure(m, "    ..")
                     else:
                         tag: str = details.get('tag')
                         result.log(f"    .. collecting Git SHAs for tag {tag}")
@@ -242,34 +232,24 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                                                     m = f"Failed to fetch details for Git tag '{tag}' from GitHub repo 'https://github.com/{owner_repo}': HTTP/{response2.status}: {response2.reason}, API URL: {response2.req_url}\n{response2.body}"
                                                     if ignore_gh_api_errors:
                                                         has_ignored_api_errors = True
-                                                        result.log(f"        .. ⚡ {m}")
-                                                        result.warning(m)
+                                                        result.warning(m, "        ..")
                                                     else:
-                                                        result.log(f"        .. ❌ {m}")
-                                                        result.failure(m)
+                                                        result.failure(m, "        ..")
                                         case "commit":
                                             valid_shas_for_tag.add(tag_object_sha)
                                         case "branch":
-                                            m = f"Branch references mentioned for Git tag '{tag}' for GitHub action {name}"
-                                            result.log(f"        .. ❌ {m}")
-                                            result.failure(m)
+                                            result.failure(f"Branch references mentioned for Git tag '{tag}' for GitHub action {name}", "        ..")
                                         case _:
-                                            m = f"Invalid Git object type '{tag_object['type']}' for Git tag '{tag}' in GitHub repo 'https://github.com/{owner_repo}'"
-                                            result.log(f"        .. ❌ {m}")
-                                            result.failure(m)
+                                            result.failure(f"Invalid Git object type '{tag_object['type']}' for Git tag '{tag}' in GitHub repo 'https://github.com/{owner_repo}'", "        ..")
                             case _:
                                 m = f"Failed to fetch matching Git tags for '{tag}' from GitHub repo 'https://github.com/{owner_repo}': HTTP/{response.status}: {response.reason}, API URL: {response.req_url}\n{response.body}"
                                 if ignore_gh_api_errors:
-                                    result.log(f"      .. ⚡ {m}")
-                                    result.warning(m)
+                                    result.warning(m, "      ..")
                                     has_ignored_api_errors = True
                                 else:
-                                    result.log(f"      .. ❌ {m}")
-                                    result.failure(m)
+                                    result.failure(m, "      ..")
                 else:
-                    m = f"GitHub action {name} references an invalid Git SHA '{ref}'"
-                    result.log(f"      .. ❌ {m}")
-                    result.failure(m)
+                    result.failure(f"GitHub action {name} references an invalid Git SHA '{ref}'", "      ..")
 
             for req_tag, req_shas in requested_shas_by_tag.items():
                 result.log(f"  .. checking tag '{req_tag}'")
@@ -279,32 +259,24 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                 if not valid_shas:
                     m = f"GitHub action {name} references Git tag '{req_tag}' via SHAs '{req_shas}' but no SHAs for tag could be found - does the Git tag exist?"
                     if has_ignored_api_errors:
-                        result.warning(m)
-                        result.log(f"  ⚡ {m}")
+                        result.warning(m, "")
                     else:
-                        result.failure(m)
-                        result.log(f"  ❌ {m}")
+                        result.failure(m, "")
                 elif req_shas.isdisjoint(valid_shas):
                     m = f"GitHub action {name} references Git tag '{req_tag}' via SHAs '{req_shas}' but none of those matches the valid SHAs '{valid_shas}'"
-                    result.failure(m)
-                    result.log(f"  ❌ {m}")
+                    result.failure(m, "")
                 else:
                     result.log(f"  ✅ GitHub action {name} definition for tag '{req_tag}' is good!")
 
         elif re.match(re_github_actions_repo_wildcard, name):
-            m =f"Ignoring '{name}' because it uses a GitHub repository wildcard ..."
-            result.warning(m)
-            result.log(f"⚡ {m}")
+            result.warning(f"Ignoring '{name}' because it uses a GitHub repository wildcard ...", "")
 
         elif re.match(re_docker_image, name):
-            m =f"Ignoring '{name}' because it references a Docker image ..."
-            result.warning(m)
-            result.log(f"⚡ {m}")
+            result.warning(f"Ignoring '{name}' because it references a Docker image ...", "")
 
         else:
             m = f"Cannot determine action kind for '{name}'"
-            result.failure(m)
-            result.log(f"❌ {m}")
+            result.failure(m, "")
 
     if on_gha():
         if result.has_failures() or result.has_warnings():
