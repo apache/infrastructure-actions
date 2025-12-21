@@ -31,8 +31,6 @@ jobs:
         if: false
       - uses: Kesin11/actions-timeline@54d513e0b5ff1158f1cf8321108d666a5a6c1fca  # v2.2.5
         if: false
-      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00  # v6.0.0
-        if: false
       - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185  # v3
         if: false
       - uses: al-cheb/configure-pagefile-action@9b6da52fb72a3c6147c1aad2df22d8d905681adc  # v1.5
