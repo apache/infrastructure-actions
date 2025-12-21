@@ -8,12 +8,7 @@ def test_patterns():
     assert re.match(re_github_actions_repo, "foo/bar/.github/actions/some.yml")
     assert re.match(re_docker_image, "docker://foo/bar")
 
-
-def _check_gh_token():
-    gh_token = os.environ['GH_TOKEN']
-    if not gh_token:
-        raise Exception("GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
-
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_sha_without_tag():
     # noinspection PyTypeChecker
     result = verify_actions({
@@ -27,6 +22,7 @@ def test_sha_without_tag():
         "GitHub action sbt/setup-sbt references existing commit SHA '3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd' but does not specify the tag name for it."
     ]
 
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_sha_non_existent():
     # noinspection PyTypeChecker
     result = verify_actions({
@@ -40,6 +36,7 @@ def test_sha_non_existent():
     ]
     assert result.warnings == []
 
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_tag_sha_vs_commit_sha():
     # noinspection PyTypeChecker
     result = verify_actions({
@@ -54,6 +51,7 @@ def test_tag_sha_vs_commit_sha():
     assert result.failures == []
     assert result.warnings == []
 
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_tag_sha_eq_commit_sha():
     # noinspection PyTypeChecker
     result = verify_actions({
@@ -68,6 +66,7 @@ def test_tag_sha_eq_commit_sha():
     assert result.failures == []
     assert result.warnings == []
 
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_non_existing_tag():
     # noinspection PyTypeChecker
     result = verify_actions({
@@ -82,6 +81,7 @@ def test_non_existing_tag():
     ]
     assert result.warnings == []
 
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_non_existing_tag_sha():
     # noinspection PyTypeChecker
     result = verify_actions({
@@ -96,6 +96,7 @@ def test_non_existing_tag_sha():
     ]
     assert result.warnings == []
 
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_repo_multiple_actions_repo_works():
     # noinspection PyTypeChecker
     result = verify_actions({
@@ -115,6 +116,7 @@ def test_repo_multiple_actions_repo_works():
     assert "  ✅ GitHub action gradle/actions/setup-gradle definition for tag 'v5.0.0' is good!" in result.logs
     assert "  ✅ GitHub action gradle/actions/wrapper-validation definition for tag 'v4.4.4' is good!" in result.logs
 
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_wildcard_warnings_1():
     # noinspection PyTypeChecker
     _test_wildcard_warnings({
@@ -132,6 +134,7 @@ def test_wildcard_warnings_1():
         },
     })
 
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_wildcard_warnings_2():
     """
     Similar to test_wildcard_warnings_1, but with the wildcard SHA at the end.
@@ -153,8 +156,6 @@ def test_wildcard_warnings_2():
     })
 
 def _test_wildcard_warnings(refs: ActionsYAML):
-    _check_gh_token()
-
     result = verify_actions(refs, today=date(2025, 12, 21))
     assert not "  .. ref '*' is expired, skipping" in result.logs
     assert result.failures == []
