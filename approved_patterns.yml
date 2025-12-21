@@ -100,6 +100,7 @@
 - golang/govulncheck-action@*
 - google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
 - google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+- gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2
 - gr2m/twitter-together@*
 - graalvm/setup-graalvm@7a1da54cb7fdef4ea19f6ecdfa9ecf59dc5a48fe
 - graalvm/setup-graalvm@eec48106e0bf45f2976c2ff0c3e22395cced8243
