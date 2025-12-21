@@ -98,24 +98,24 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
     Validates the contents of the actions file against GitHub.
 
     The function verifies that the SHAs specified in `actions.yml` exist in the GH repo.
-    Also ensures that the SHA exists on the Git tag, if the `tag` attribute is specified.
+    Also ensures that the SHA exists on the Git tag if the `tag` attribute is specified.
 
     The algorithm roughly works like this, for each action specified in `actions.yml`:
-    * Issue a warning and stop, if the name is like `OWNER/*` ("wildcard" repository).
+    * Issue a warning and stop if the name is like `OWNER/*` ("wildcard" repository).
       Can't verify Git SHAs in this case.
-    * Issue a warning and stop, if the name is like `docker:*` (not implemented)
-    * Issue an error and stop, if the name doesn't start with an `OWNER/REPO` pattern.
+    * Issue a warning and stop if the name is like `docker:*` (not implemented)
+    * Issue an error and stop if the name doesn't start with an `OWNER/REPO` pattern.
     * Each expired entry is just skipped
     * If there is a wildcard reference and a SHA reference, issue an error.
 
     Then, for each reference for an action:
     * If no `tag` is specified, let GH resolve the commit SHA.
-      Emit a warning to add the value of the `tag` attribute, if the SHA can be resolved.
+      Emit a warning to add the value of the `tag` attribute if the SHA can be resolved.
       Otherwise, emit an error.
     * If `tag` is specified:
       * Add the SHA to the set of requested-shas-by-tag
       * Call GH's "matching-refs" endpoint for the 'tag' value
-        * Emit en error, if the object type is not a tag or commit.
+        * Emit en error if the object type is not a tag or commit.
         * Also resolve 'tag' object types to 'commit' object types.
         * Add each returned SHA to the set of valid-shas-by-tag.
     * For each "requested tag" verify that the sets of valid and requested shas intersect. If not, emit an error.
@@ -126,7 +126,7 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
         today: The current date (default: today)
     """
     if on_gha():
-        print(f"::group::Verfiy GitHub Actions")
+        print(f"::group::Verify GitHub Actions")
         gh_token = os.environ['GH_TOKEN']
         if not gh_token or len(gh_token) == 0:
             raise Exception("GH_TOKEN environment variable is not set or empty")
