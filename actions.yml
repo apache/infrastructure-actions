@@ -631,8 +631,7 @@ ruby/setup-ruby:
     keep: true
 sbt/setup-sbt:
   '*':
-    expires_at: 2025-08-01
-    keep: true
+    expires_at: 2026-02-28
   17575ea4e18dd928fe5968dbe32294b97923d65b:
     expires_at: 2025-12-29
     tag: v1.1.13
