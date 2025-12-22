@@ -5,6 +5,7 @@
 - astral-sh/setup-uv@eb1897b8dc4b5d5bfe39a428a8f2304605e0983c
 - astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41
 - astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244
+- astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867
 - bytedeco/javacpp-presets/.github/actions/*@*
 - dtolnay/rust-toolchain@stable
 - golangci/*@*
@@ -29,13 +30,11 @@
 - Kesin11/actions-timeline@54d513e0b5ff1158f1cf8321108d666a5a6c1fca
 - PyO3/maturin-action@*
 - TobKed/label-when-approved-action@*
-- VirtusLab/scala-cli-setup@b1b5d003a3db8e351bbf705ef4378d6b0ff8bf4d
 - VirtusLab/scala-cli-setup@77834b5926f3eb70869d8009530c65585f7a039b
 - VirtusLab/scala-cli-setup@68bd9c30954d20e6cb6ddaf01b3b38336f25df4b
 - actions-cool/check-user-permission@*
 - actions-cool/issues-helper@*
 - actions-cool/maintain-one-comment@*
-- actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00
 - addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185
 - al-cheb/configure-pagefile-action@a3b6ebd6b634da88790d9c58d4b37a7f4a7b8708
 - al-cheb/configure-pagefile-action@9b6da52fb72a3c6147c1aad2df22d8d905681adc
@@ -64,7 +63,6 @@
 - codecov/codecov-action@*
 - codelytv/pr-size-labeler@*
 - codspeedhq/action@*
-- commit-check/commit-check-action@1968496411d3da2dddc6a6d891ab95eaa9b03ec6
 - commit-check/commit-check-action@04667fa89b3d3feb0f28facf9c5ff944a5500e85
 - commit-check/commit-check-action@fc0543792ea1ba666c86fea9792d1d72e253ca97
 - commit-check/commit-check-action@a0193b1ca486178b85d7a1db145af34cd227f81f
@@ -77,7 +75,7 @@
 - coursier/setup-action@039f736548afa5411c1382f40a5bd9c2d30e0383
 - coursier/setup-action@*
 - coursier/setup-action@0ed4d7e7c42eae80e14370990582092c749253c4
-- cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8
+- coursier/setup-action@7fdbcb2ec74047d6f6270a85967bc8ff1cebe626
 - crate-ci/typos@*
 - crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec
 - damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
@@ -99,8 +97,8 @@
 - geekyeggo/delete-artifact@*
 - golang/govulncheck-action@*
 - google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
-- google-github-actions/setup-gcloud@26f734c2779b00b7dda794207734c511110a4368
 - google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+- gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2
 - gr2m/twitter-together@*
 - graalvm/setup-graalvm@7a1da54cb7fdef4ea19f6ecdfa9ecf59dc5a48fe
 - graalvm/setup-graalvm@eec48106e0bf45f2976c2ff0c3e22395cced8243
@@ -154,7 +152,6 @@
 - olafurpg/setup-scala@*
 - opentofu/setup-opentofu@000eeb8522f0572907c393e8151076c205fdba1b
 - oracle-actions/setup-java@*
-- orhun/git-cliff-action@98c93442bb05a455a77bee982867857ae748eeea
 - orhun/git-cliff-action@d77b37db2e3f7398432d34b72a12aa3e2ba87e51
 - ossf/scorecard-action@*
 - peaceiris/actions-gh-pages@*
@@ -181,7 +178,6 @@
 - sbt/setup-sbt@*
 - sbt/setup-sbt@17575ea4e18dd928fe5968dbe32294b97923d65b
 - sbt/setup-sbt@3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd
-- scacap/action-surefire-report@1a128e49c0585bc0b8e38e541ac3b6e35a5bc727
 - scacap/action-surefire-report@*
 - scacap/action-surefire-report@5609ce4db72c09db044803b344a8968fd1f315da
 - scala-steward-org/scala-steward-action@53d486a68877f4a6d1e110e8058fe21e593db356
@@ -217,5 +213,4 @@
 - golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84
 - mlugg/setup-zig@8d6198c65fb0feaa111df26e6b467fea8345e46f
 - posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237
-- vmactions/freebsd-vm@05856381fab64eeee9b038a0818f6cec649ca17a
 - vmactions/freebsd-vm@487ce35b96fae3e60d45b521735f5aa436ecfade

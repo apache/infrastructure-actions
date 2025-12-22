@@ -21,6 +21,9 @@ astral-sh/setup-uv:
     expires_at: 2026-02-23
   1e862dfacbd1d6d858c55d9b792c756523627244:
     tag: v7.1.4
+    expires_at: 2026-03-15
+  681c641aba71e4a1c380be3ab5e12ad51f415867:
+    tag: v7.1.6
 bytedeco/javacpp-presets/.github/actions/*:
   '*':
     expires_at: 2025-08-01
@@ -109,9 +112,6 @@ TobKed/label-when-approved-action:
     expires_at: 2025-08-01
     keep: true
 VirtusLab/scala-cli-setup:
-  b1b5d003a3db8e351bbf705ef4378d6b0ff8bf4d:
-    expires_at: 2025-12-15
-    tag: v1.9.0
   77834b5926f3eb70869d8009530c65585f7a039b:
     expires_at: 2026-02-10
     tag: v1.9.1
@@ -130,9 +130,6 @@ actions-cool/maintain-one-comment:
   '*':
     expires_at: 2025-08-01
     keep: true
-actions/setup-go:
-  44694675825211faa026b3c33043df3e48a5fa00:
-    tag: v6.0.0
 addnab/docker-run-action:
   4f65fabd2431ebc8d299f8e5a018d79a769ae185:
     tag: v3
@@ -233,9 +230,6 @@ codspeedhq/action:
     expires_at: 2025-08-01
     keep: true
 commit-check/commit-check-action:
-  1968496411d3da2dddc6a6d891ab95eaa9b03ec6:
-    expires_at: 2025-12-22
-    tag: v0.9.2
   04667fa89b3d3feb0f28facf9c5ff944a5500e85:
     expires_at: 2026-01-26
     tag: v1
@@ -274,6 +268,9 @@ coursier/setup-action:
     keep: true
   0ed4d7e7c42eae80e14370990582092c749253c4:
     tag: v2.0.0
+    expires_at: 2026-03-09
+  7fdbcb2ec74047d6f6270a85967bc8ff1cebe626:
+    tag: v2.0.1
 cpp-linter/cpp-linter-action:
   0f6d1b8d7e38b584cbee606eb23d850c217d54f8:
     tag: v2.15.1
@@ -349,11 +346,12 @@ google-github-actions/auth:
   7c6bc770dae815cd3e89ee6cdf493a5fab2cc093:
     tag: v3.0.0
 google-github-actions/setup-gcloud:
-  26f734c2779b00b7dda794207734c511110a4368:
-    expires_at: 2025-12-19
-    tag: v3.0.0
   aa5489c8933f4cc7a4f7d45035b3b1440c9c10db:
     tag: v3.0.1
+gradle/actions/setup-gradle:
+  4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2:
+    expires_at: 2050-01-01
+    tag: v5.0.0
 gr2m/twitter-together:
   '*':
     expires_at: 2025-08-01
@@ -542,9 +540,6 @@ oracle-actions/setup-java:
     expires_at: 2025-08-01
     keep: true
 orhun/git-cliff-action:
-  98c93442bb05a455a77bee982867857ae748eeea:
-    expires_at: 2025-12-22
-    tag: v4.5.1
   d77b37db2e3f7398432d34b72a12aa3e2ba87e51:
     tag: v4.6.0
 ossf/scorecard-action:
@@ -629,17 +624,13 @@ ruby/setup-ruby:
     keep: true
 sbt/setup-sbt:
   '*':
-    expires_at: 2025-08-01
-    keep: true
+    expires_at: 2026-02-28
   17575ea4e18dd928fe5968dbe32294b97923d65b:
     expires_at: 2025-12-29
     tag: v1.1.13
   3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd:
     tag: v1.1.14
 scacap/action-surefire-report:
-  1a128e49c0585bc0b8e38e541ac3b6e35a5bc727:
-    expires_at: 2025-12-22
-    tag: v1.9.0
   '*':
     expires_at: 2025-08-01
     keep: true
@@ -656,7 +647,7 @@ scalacenter/sbt-dependency-submission:
     tag: v3.1.0
     expires_at: 2026-03-10
   bfbba169ec2dad010624339a27f402b311ed4083:
-    tag: v3.1.1
+    tag: v3.2.1
 scottbrenner/puppet-lint-action:
   '*':
     expires_at: 2025-08-01
@@ -765,8 +756,5 @@ posit-dev/setup-air:
   63e80dedb6d275c94a3841e15e5ff8691e1ab237:
     tag: v1.0.0
 vmactions/freebsd-vm:
-  05856381fab64eeee9b038a0818f6cec649ca17a:
-    expires_at: 2025-12-22
-    tag: v1.2.3
   487ce35b96fae3e60d45b521735f5aa436ecfade:
     tag: v1.2.4
