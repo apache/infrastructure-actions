@@ -45,7 +45,7 @@ jobs:
         if: false
       - uses: browser-actions/setup-geckodriver@5ef1526ed36211ab6cb531ec1cfb11f924ca2dee
         if: false
-      - uses: burnett01/rsync-deployments@0dc935cdecc5f5e571865e60d2a6cdc673704823  # 5.2
+      - uses: burnett01/rsync-deployments@0c902521b8b9135f0dae7841a01d7d3b19629cb2  # 8.0.2
         if: false
       - uses: carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3  # v1.0.10
         if: false
