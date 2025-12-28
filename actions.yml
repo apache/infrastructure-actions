@@ -637,8 +637,11 @@ scalacenter/sbt-dependency-submission:
   64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3:
     tag: v3.1.0
     expires_at: 2026-03-10
+  #f43202114d7522a4b233e052f82c2eea8d658134:
+  #  tag: v3.2.1
   bfbba169ec2dad010624339a27f402b311ed4083:
-    tag: v3.2.1
+    # This SHA was referenced as v3.1.1, but that tag no longer exists.
+    expires_at: 2025-08-01
 scottbrenner/puppet-lint-action:
   '*':
     expires_at: 2025-08-01
