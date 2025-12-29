@@ -149,9 +149,6 @@ awalsh128/cache-apt-pkgs-action:
     expires_at: 2025-08-01
     keep: true
 aws-actions/configure-aws-credentials:
-  7474bc4690e29a8392af63c5b98e7449536d5c3a:
-    expires_at: 2025-12-29
-    tag: v4.3.1
   a03048d87541d1d9fcf2ecf528a4a65ba9bd7838:
     expires_at: 2026-01-26
     tag: v5.0.0
@@ -616,9 +613,6 @@ ruby/setup-ruby:
 sbt/setup-sbt:
   '*':
     expires_at: 2026-02-28
-  17575ea4e18dd928fe5968dbe32294b97923d65b:
-    expires_at: 2025-12-29
-    tag: v1.1.13
   3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd:
     tag: v1.1.14
 scacap/action-surefire-report:
@@ -639,9 +633,6 @@ scalacenter/sbt-dependency-submission:
     expires_at: 2026-03-10
   #f43202114d7522a4b233e052f82c2eea8d658134:
   #  tag: v3.2.1
-  bfbba169ec2dad010624339a27f402b311ed4083:
-    # This SHA was referenced as v3.1.1, but that tag no longer exists.
-    expires_at: 2025-08-01
 scottbrenner/puppet-lint-action:
   '*':
     expires_at: 2025-08-01
