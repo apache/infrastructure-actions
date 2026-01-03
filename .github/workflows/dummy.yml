@@ -143,6 +143,6 @@ jobs:
         if: false
       - uses: posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237  # v1.0.0
         if: false
-      - uses: vmactions/freebsd-vm@487ce35b96fae3e60d45b521735f5aa436ecfade  # v1.2.4
+      - uses: vmactions/freebsd-vm@b63f158b115835d7dac66f25fcb957b1edfc051b  # v1.3.5
         if: false
       - run: echo Success!
