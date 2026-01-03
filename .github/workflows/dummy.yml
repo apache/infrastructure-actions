@@ -53,7 +53,7 @@ jobs:
         if: false
       - uses: coursier/cache-action@bebeeb0e6f48ebad66d3783946588ecf43114433  # 6.4.7
         if: false
-      - uses: coursier/setup-action@7fdbcb2ec74047d6f6270a85967bc8ff1cebe626  # v2.0.1
+      - uses: coursier/setup-action@f7be3eb3dcef84a4e16fc8cd75c87beb2e5cbcc9  # v2.0.2
         if: false
       - uses: cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8  # v2.15.1
         if: false
