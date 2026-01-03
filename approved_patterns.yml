@@ -74,6 +74,7 @@
 - coursier/setup-action@*
 - coursier/setup-action@0ed4d7e7c42eae80e14370990582092c749253c4
 - coursier/setup-action@7fdbcb2ec74047d6f6270a85967bc8ff1cebe626
+- coursier/setup-action@f7be3eb3dcef84a4e16fc8cd75c87beb2e5cbcc9
 - cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8
 - crate-ci/typos@*
 - crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec

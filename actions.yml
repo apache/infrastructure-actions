@@ -265,6 +265,9 @@ coursier/setup-action:
     expires_at: 2026-03-09
   7fdbcb2ec74047d6f6270a85967bc8ff1cebe626:
     tag: v2.0.1
+    expires_at: 2026-03-28
+  f7be3eb3dcef84a4e16fc8cd75c87beb2e5cbcc9:
+    tag: v2.0.2
 cpp-linter/cpp-linter-action:
   0f6d1b8d7e38b584cbee606eb23d850c217d54f8:
     tag: v2.15.1
