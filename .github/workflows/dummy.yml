@@ -109,7 +109,7 @@ jobs:
         if: false
       - uses: nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654  # v3.0.0
         if: false
-      - uses: opentofu/setup-opentofu@000eeb8522f0572907c393e8151076c205fdba1b  # v1.0.6
+      - uses: opentofu/setup-opentofu@e95ccdd20623115bfd7d47df14a3250d6066a9d0  # v1.0.7
         if: false
       - uses: orhun/git-cliff-action@e16f179f0be49ecdfe63753837f20b9531642772  # v4.7.0
         if: false
