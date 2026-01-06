@@ -548,6 +548,9 @@ oracle-actions/setup-java:
 orhun/git-cliff-action:
   d77b37db2e3f7398432d34b72a12aa3e2ba87e51:
     tag: v4.6.0
+    expires_at: 2026-03-31
+  e16f179f0be49ecdfe63753837f20b9531642772:
+    tag: v4.7.0
 ossf/scorecard-action:
   '*':
     expires_at: 2025-08-01

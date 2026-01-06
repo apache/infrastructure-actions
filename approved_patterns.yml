@@ -156,6 +156,7 @@
 - opentofu/setup-opentofu@000eeb8522f0572907c393e8151076c205fdba1b
 - oracle-actions/setup-java@*
 - orhun/git-cliff-action@d77b37db2e3f7398432d34b72a12aa3e2ba87e51
+- orhun/git-cliff-action@e16f179f0be49ecdfe63753837f20b9531642772
 - ossf/scorecard-action@*
 - peaceiris/actions-gh-pages@*
 - peaceiris/actions-hugo@*
