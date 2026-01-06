@@ -707,6 +707,9 @@ timonvs/pr-labeler-action:
 untitaker/hyperlink:
   e66bb17cc9ae341677431edec3b893a0aa6ac747:
     tag: 0.1.44
+    expires_at: 2026-03-31
+  fb5bb9c5011a3d143a54b4b30aedc30ec5bc0f89:
+    tag: 0.2.0
 uraimo/run-on-arch-action:
   d94c13912ea685de38fccc1109385b83fd79427d:
     tag: v3.0.1
