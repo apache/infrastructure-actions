@@ -211,5 +211,6 @@
 - golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd
 - golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84
 - mlugg/setup-zig@8d6198c65fb0feaa111df26e6b467fea8345e46f
+- mlugg/setup-zig@fa65c4058643678a4e4a9a60513944a7d8d35440
 - posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237
 - vmactions/freebsd-vm@487ce35b96fae3e60d45b521735f5aa436ecfade
