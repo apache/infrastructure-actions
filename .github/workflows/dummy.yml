@@ -25,7 +25,7 @@ jobs:
         if: false
       - uses: DavidAnson/markdownlint-cli2-action@07035fd053f7be764496c0f8d8f9f41f98305101  # v22.0.0
         if: false
-      - uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23  # v4.7.4
+      - uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f  # v4.8.0
         if: false
       - uses: JustinBeckwith/linkinator-action@af984b9f30f63e796ae2ea5be5e07cb587f1bbd9  # v2.3
         if: false
