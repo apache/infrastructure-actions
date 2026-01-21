@@ -40,17 +40,20 @@ runs:
   using: "composite"
   steps:
     - name: Install Pelican
+      env:
+        debug: ${{ inputs.debug }}
+        version: ${{ inputs.version }}
       shell: bash
       # Install needs to run in separate shell so stdout is restored
       run: |
         (
-          test "${{ inputs.debug }}" == 'true' || exec >/dev/null
-          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install pelican==${{ inputs.version }} markdown bs4 ezt requests markupsafe==2.0.1
+          test "${debug}" == 'true' || exec >/dev/null
+          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install pelican==${version} markdown bs4 ezt requests markupsafe==2.0.1
         )
         python3 -V
         echo "Pelican version:"
         pelican --version
-        if [ "${{ inputs.debug }}" == 'true' ]
+        if [ "${debug}" == 'true' ]
         then
           pip3 list # This a long list
         fi
@@ -60,89 +63,102 @@ runs:
       if: ${{ inputs.gfm == 'true' }}
       shell: bash
       env:
-        WORKDIR: /opt/pelican-asf # where to build GFM
         GFM_VERSION: '0.28.3.gfm.12' # ensure we agree with build-cmark.sh script
+        debug: ${{ inputs.debug }}
       run: |
+        if [[ -z $LIBCMARKDIR ]] # define LIBCMARKDIR if it is not already
+        then
+          # set up the GFM environment
+          export LIBCMARKDIR=/opt/pelican-asf/gfm-${GFM_VERSION} # arbitrary, but should contain version
+          mkdir -p $LIBCMARKDIR
+          echo  "LIBCMARKDIR=${LIBCMARKDIR}" >>$GITHUB_ENV # needed for the build step
+        fi
+
         # Does the GFM build already exist?
-        if [[ -n $LIBCMARKDIR && -d $LIBCMARKDIR ]]
+        if [[ -f $LIBCMARKDIR/libcmark-gfm.so ]]
         then
           echo "Already have GFM binary at $LIBCMARKDIR, skipping build"
           exit 0 # nothing more to do in this step
         fi
         {
+          echo "Creating GFM binary in ${LIBCMARKDIR}"
           # disable stdout unless debug is on
-          if [ "${{ inputs.debug }}" == 'true' ]
+          if [ "${debug}" == 'true' ]
           then
             # This envvar is used within build-cmark.sh
             DEBUG_STEPS=1; export DEBUG_STEPS
           else
             exec >/dev/null
           fi
-          # Don't pollute site checkout
-          mkdir -p $WORKDIR
-          pushd $WORKDIR
-            # build the code and define LIBCMARKDIR
-            bash ${{ github.action_path }}/build-cmark.sh $GFM_VERSION | grep "export LIBCMARKDIR" >/tmp/libcmarkdir.$$
-            source /tmp/libcmarkdir.$$
-          popd
-          # ensure LIBCMARKDIR is defined for subsequent steps
-          echo "LIBCMARKDIR=${LIBCMARKDIR}"  >> $GITHUB_ENV
+          # build the code and define LIBCMARKDIR under $WORKDIR
+          bash ${GITHUB_ACTION_PATH}/build-cmark.sh $GFM_VERSION $LIBCMARKDIR
         }
 
     - name: Generate website from markdown
+      env:
+        requirements: ${{ inputs.requirements }}
+        debug: ${{ inputs.debug }}
+        fatal: ${{ inputs.fatal }}
+        tempdir: ${{ inputs.tempdir }}
       shell: bash
       run: |
-        if [ -n "${{ inputs.requirements }}" ]
+        if [ -n "${requirements}" ]
         then
-          echo "Installing python requirements from ${{ inputs.requirements }}"
-          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install -r ${{ inputs.requirements }}
+          echo "Installing python requirements from ${requirements}"
+          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install -r ${requirements}
         fi
-        if [ "${{ inputs.debug }}" == 'true' ]
+        if [ "${debug}" == 'true' ]
         then
           OPTS='-D'
         else
           OPTS=''
         fi
-        if [ -n "${{ inputs.fatal }}" ]
+        if [ -n "${fatal}" ]
         then
-          OPTS="$OPTS --fatal ${{ inputs.fatal }}"
+          OPTS="$OPTS --fatal ${fatal}"
         fi
-        echo "Getting plugins from action location: ${{ github.action_path }}"
-        PP=$(python3 ${{ github.action_path }}/plugin_paths.py '${{ github.action_path }}/plugins')
+        echo "Getting plugins from action location: ${GITHUB_ACTION_PATH}"
+        PP=$(python3 ${GITHUB_ACTION_PATH}/plugin_paths.py "${GITHUB_ACTION_PATH}/plugins")
         set -x # Show the expanded variables
-        python3 -B -m pelican content -e "$PP" -o ${{ inputs.tempdir }} $OPTS
+        python3 -B -m pelican content -e "$PP" -o ${tempdir} $OPTS
 
     - name: Check out previous branch
       if: ${{ inputs.publish == 'true' }}
+      env:
+        destination: ${{ inputs.destination }}
+        ref_name: ${{ inputs.ref_name }}
       shell: bash
       run: | 
         git config --global user.email "private@infra.apache.org"
         git config --global user.name "Build Pelican (action)"
         git remote update
-        if git checkout ${{ inputs.destination }}
+        if git checkout ${destination}
         then
-          git pull origin ${{ inputs.destination }}
+          git pull origin ${destination}
         else
           # if none, create it.
-          echo "branch ${{ inputs.destination }} is new; create empty site"
-          git switch --orphan ${{ inputs.destination }}
-          git checkout origin/${{ github.ref_name }} -- .asf.yaml
+          echo "branch ${destination} is new; create empty site"
+          git switch --orphan ${destination}
+          git checkout origin/${ref_name} -- .asf.yaml
           git add .asf.yaml -f
           git commit -m "Initialise empty site"
-          git push -u origin ${{ inputs.destination }}
+          git push -u origin ${destination}
         fi
 
     - name: Commit Directly to the branch
       if: ${{ inputs.publish == 'true' }}
+      env:
+        output: ${{ inputs.output }}
+        tempdir: ${{ inputs.tempdir }}
       shell: bash
       run: |
         # Remove all existing output so deletions will be captured
-        rm -rf ${{ inputs.output }}
-        git rm --quiet -r --ignore-unmatch --cached ${{ inputs.output }}/*
+        rm -rf ${output}
+        git rm --quiet -r --ignore-unmatch --cached ${output}/*
         # replace with generated output
-        mv ${{ inputs.tempdir }} ${{ inputs.output }}
+        mv ${tempdir} ${output}
         git diff # Show changes
-        git add ${{ inputs.output }}
+        git add ${output}
         git status
         if git commit -m "Commit build products"
           then
