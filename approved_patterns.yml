@@ -9,6 +9,7 @@
 - bytedeco/javacpp-presets/.github/actions/*@*
 - dtolnay/rust-toolchain@stable
 - golangci/*@*
+- pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266
 - pypa/gh-action-pypi-publish@release/v1*
 - pytooling/actions/with-post-step@*
 - quarto-dev/quarto-actions/*@*
