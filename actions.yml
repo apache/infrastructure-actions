@@ -37,9 +37,9 @@ golangci/*:
     expires_at: 2025-08-01
     keep: true
 pypa/gh-action-pip-audit:
-  release/v1*:
-    expires_at: 2025-08-01
-    keep: true
+  1220774d901786e6f652ae159f7b6bc8fea6d266:
+    tag: v1.1.0
+    expires_at: 2026-03-31
 pypa/gh-action-pypi-publish:
   release/v1*:
     expires_at: 2025-08-01
