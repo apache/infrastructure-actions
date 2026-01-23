@@ -193,6 +193,9 @@ bufbuild/buf-setup-action:
 burnett01/rsync-deployments:
   0dc935cdecc5f5e571865e60d2a6cdc673704823:
     tag: '5.2'
+    expires_at: 2026-04-17
+  7659d600d8bdd035bb5cdfba1d4bd0dd4a307ca6:
+    tag: 8.0.3
 burrunan/gradle-cache-action:
   '*':
     expires_at: 2025-08-01

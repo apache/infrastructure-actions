@@ -54,6 +54,7 @@
 - bufbuild/buf-lint-action@*
 - bufbuild/buf-setup-action@*
 - burnett01/rsync-deployments@0dc935cdecc5f5e571865e60d2a6cdc673704823
+- burnett01/rsync-deployments@7659d600d8bdd035bb5cdfba1d4bd0dd4a307ca6
 - burrunan/gradle-cache-action@*
 - bytedeco/javacpp-presets@*
 - carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3
