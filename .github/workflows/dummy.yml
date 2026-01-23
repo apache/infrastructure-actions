@@ -15,7 +15,7 @@ jobs:
   dummy:
     runs-on: ubuntu-latest
     steps:
-      - uses: 1Password/load-secrets-action@13f58eec611f8e5db52ec16247f58c508398f3e6  # v3.0.0
+      - uses: 1Password/load-secrets-action@8d0d610af187e78a2772c2d18d627f4c52d3fbfb  # v3.1.0
         if: false
       - uses: ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c  # v2.3.0
         if: false
