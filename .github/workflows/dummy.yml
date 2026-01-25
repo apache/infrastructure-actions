@@ -125,7 +125,7 @@ jobs:
         if: false
       - uses: scacap/action-surefire-report@5609ce4db72c09db044803b344a8968fd1f315da  # v1.9.1
         if: false
-      - uses: scala-steward-org/scala-steward-action@f60ccd18bc9d8083e6809d9dc3db4a69a71d856c  # v2.78.0
+      - uses: scala-steward-org/scala-steward-action@91f0a480668e574d7d1b413b19ee8240c56cd629  # v2.81.0
         if: false
       - uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a  # v1
         if: false
