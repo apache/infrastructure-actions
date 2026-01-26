@@ -1,7 +1,6 @@
 # This file was generated from actions.yml by gateway/gateway.py. DO NOT UPDATE MANUALLY.
 - 1Password/load-secrets-action@13f58eec611f8e5db52ec16247f58c508398f3e6
 - ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c
-- astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4
 - astral-sh/setup-uv@eb1897b8dc4b5d5bfe39a428a8f2304605e0983c
 - astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41
 - astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244
@@ -42,7 +41,6 @@
 - amannn/action-semantic-pull-request@*
 - arduino/setup-protoc@*
 - awalsh128/cache-apt-pkgs-action@*
-- aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838
 - aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8
 - aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708
 - azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4
@@ -66,13 +64,11 @@
 - codecov/codecov-action@*
 - codelytv/pr-size-labeler@*
 - codspeedhq/action@*
-- commit-check/commit-check-action@04667fa89b3d3feb0f28facf9c5ff944a5500e85
 - commit-check/commit-check-action@fc0543792ea1ba666c86fea9792d1d72e253ca97
 - commit-check/commit-check-action@a0193b1ca486178b85d7a1db145af34cd227f81f
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - container-tools/microshift-action@*
-- coursier/cache-action@4e2615869d13561d626ed48655e1a39e5b192b3c
 - coursier/cache-action@*
 - coursier/cache-action@bebeeb0e6f48ebad66d3783946588ecf43114433
 - coursier/setup-action@039f736548afa5411c1382f40a5bd9c2d30e0383
@@ -104,7 +100,6 @@
 - google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
 - gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2
 - gr2m/twitter-together@*
-- graalvm/setup-graalvm@7a1da54cb7fdef4ea19f6ecdfa9ecf59dc5a48fe
 - graalvm/setup-graalvm@eec48106e0bf45f2976c2ff0c3e22395cced8243
 - graalvm/setup-graalvm@790e28947b79a9c09c3391c0f18bf8d0f102ed69
 - gradle/wrapper-validation-action@*
@@ -138,7 +133,6 @@
 - kiegroup/github-action-build-chain@*
 - korandoru/hawkeye@*
 - leafo/gh-actions-lua@*
-- leafo/gh-actions-luarocks@4c082a5fad45388feaeb0798dbd82dbd7dc65bca
 - leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248
 - manusa/actions-setup-minikube@b589f2d61bf96695c546929c72b38563e856059d
 - manusa/actions-setup-minikube@*
@@ -162,7 +156,6 @@
 - peaceiris/actions-gh-pages@*
 - peaceiris/actions-hugo@*
 - peaceiris/actions-mdbook@*
-- peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043
 - peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9
 - peter-evans/create-pull-request@*
 - phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e
@@ -170,7 +163,6 @@
 - potiuk/cancel-workflow-runs@*
 - pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
 - pyTooling/Actions@*
-- pypa/cibuildwheel@7c619efba910c04005a835b110b057fc28fd6e93
 - pypa/cibuildwheel@9c00cb4f6b517705a3794b22395aedc36257242c
 - pypa/cibuildwheel@63fd63b352a9a8bdcc24791c9dbee952ee9a8abc
 - pytooling/actions@*
