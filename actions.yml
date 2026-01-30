@@ -6,6 +6,9 @@
 1Password/load-secrets-action:
   13f58eec611f8e5db52ec16247f58c508398f3e6:
     tag: v3.0.0
+    expires_at: 2026-04-24
+  8d0d610af187e78a2772c2d18d627f4c52d3fbfb:
+    tag: v3.1.0
 ana06/get-changed-files:
   25f79e676e7ea1868813e21465014798211fad8c:
     tag: v2.3.0
@@ -76,6 +79,9 @@ BobAnkh/auto-generate-changelog:
 dorny/test-reporter:
   dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3:
     tag: v2.1.1
+    expires_at: 2026-04-24
+  b082adf0eced0765477756c2a610396589b8c637:
+    tag: v2.5.0
 DavidAnson/markdownlint-cli2-action:
   992badcdf24e3b8eb7e87ff9287fe931bcb00c6e:
     tag: v20.0.0
@@ -95,6 +101,9 @@ JamesIves/github-pages-deploy-action:
     expires_at: 2026-02-23
   4a3abc783e1a24aeb44c16e869ad83caf6b4cc23:
     tag: v4.7.4
+    expires_at: 2026-04-24
+  d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
+    tag: v4.8.0
 JustinBeckwith/linkinator-action:
   3d5ba091319fa7b0ac14703761eebb7d100e6f6d:
     tag: v1.11.0
@@ -161,12 +170,21 @@ aws-actions/configure-aws-credentials:
 azure/setup-helm:
   1a275c3b69536ee54be43f2070a358922e12c8d4:
     tag: v4.3.1
+bazel-contrib/setup-bazel:
+  '*':
+    expires_at: 2026-12-21
+    keep: true
+  8d2cb86a3680a820c3e219597279ce3f80d17a47:
+    tag: v0.15.0
 betahuhn/repo-file-sync-action:
   8b92be3375cf1d1b0cd579af488a9255572e4619:
     tag: v1.21.1
 biomejs/setup-biome:
   454fa0d884737805f48d7dc236c1761a0ac3cc13:
     tag: v2.6.0
+    expires_at: 2026-04-24
+  29711cbb52afee00eb13aeb30636592f9edc0088:
+    tag: v2.7.0
 browser-actions/setup-firefox:
   5914774dda97099441f02628f8d46411fcfbd208:
     tag: v1.7.0
@@ -239,6 +257,9 @@ commit-check/commit-check-action:
     tag: v2.1.0
   a0193b1ca486178b85d7a1db145af34cd227f81f:
     tag: v2.1.1
+    expires_at: 2026-04-24
+  be79b5cd5953c8afd4266004c5bbb1431f544df1:
+    tag: v2.2.1
 conda-incubator/setup-miniconda:
   '*':
     expires_at: 2025-08-01
@@ -360,6 +381,9 @@ graalvm/setup-graalvm:
     expires_at: 2026-03-31
   790e28947b79a9c09c3391c0f18bf8d0f102ed69:
     tag: v1.4.4
+    expires_at: 2026-04-24
+  54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1:
+    tag: v1.4.5
 gradle/wrapper-validation-action:
   '*':
     keep: true
@@ -527,6 +551,9 @@ olafurpg/setup-scala:
 opentofu/setup-opentofu:
   000eeb8522f0572907c393e8151076c205fdba1b:
     tag: v1.0.6
+    expires_at: 2026-04-24
+  9d84900f3238fab8cd84ce47d658d25dd008be2f:
+    tag: v1.0.8
 oracle-actions/setup-java:
   '*':
     expires_at: 2025-08-01
@@ -584,6 +611,9 @@ pypa/cibuildwheel:
     expires_at: 2026-02-23
   63fd63b352a9a8bdcc24791c9dbee952ee9a8abc:
     tag: v3.3.0
+    expires_at: 2026-04-24
+  298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e:
+    tag: v3.3.1
 pytooling/actions:
   '*':
     expires_at: 2025-08-01
@@ -744,12 +774,12 @@ mlugg/setup-zig:
     expires_at: 2026-03-31
   fa65c4058643678a4e4a9a60513944a7d8d35440:
     tag: v2.1.0
+    expires_at: 2026-04-24
+  d1434d08867e3ee9daa34448df10607b98908d29:
+    tag: v2.2.1
 posit-dev/setup-air:
   63e80dedb6d275c94a3841e15e5ff8691e1ab237:
     tag: v1.0.0
-vmactions/freebsd-vm:
-  487ce35b96fae3e60d45b521735f5aa436ecfade:
-    tag: v1.2.4
 runs-on/action:
   cd2b598b0515d39d78c38a02d529db87d2196d1e:
     tag: v2.0.3

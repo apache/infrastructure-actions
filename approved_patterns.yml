@@ -1,5 +1,6 @@
 # This file was generated from actions.yml by gateway/gateway.py. DO NOT UPDATE MANUALLY.
 - 1Password/load-secrets-action@13f58eec611f8e5db52ec16247f58c508398f3e6
+- 1Password/load-secrets-action@8d0d610af187e78a2772c2d18d627f4c52d3fbfb
 - ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c
 - astral-sh/setup-uv@eb1897b8dc4b5d5bfe39a428a8f2304605e0983c
 - astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41
@@ -19,12 +20,14 @@
 - AdoptOpenJDK/install-jdk@*
 - BobAnkh/auto-generate-changelog@*
 - dorny/test-reporter@dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3
+- dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637
 - DavidAnson/markdownlint-cli2-action@992badcdf24e3b8eb7e87ff9287fe931bcb00c6e
 - DavidAnson/markdownlint-cli2-action@30a0e04f1870d58f8d717450cc6134995f993c63
 - DavidAnson/markdownlint-cli2-action@07035fd053f7be764496c0f8d8f9f41f98305101
 - EnricoMi/publish-unit-test-result-action@*
 - JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8
 - JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23
+- JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f
 - JustinBeckwith/linkinator-action@3d5ba091319fa7b0ac14703761eebb7d100e6f6d
 - JustinBeckwith/linkinator-action@af984b9f30f63e796ae2ea5be5e07cb587f1bbd9
 - Kesin11/actions-timeline@54d513e0b5ff1158f1cf8321108d666a5a6c1fca
@@ -44,8 +47,11 @@
 - aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8
 - aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708
 - azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4
+- bazel-contrib/setup-bazel@*
+- bazel-contrib/setup-bazel@8d2cb86a3680a820c3e219597279ce3f80d17a47
 - betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619
 - biomejs/setup-biome@454fa0d884737805f48d7dc236c1761a0ac3cc13
+- biomejs/setup-biome@29711cbb52afee00eb13aeb30636592f9edc0088
 - browser-actions/setup-firefox@5914774dda97099441f02628f8d46411fcfbd208
 - browser-actions/setup-geckodriver@5ef1526ed36211ab6cb531ec1cfb11f924ca2dee
 - bufbuild/buf-breaking-action@*
@@ -66,6 +72,7 @@
 - codspeedhq/action@*
 - commit-check/commit-check-action@fc0543792ea1ba666c86fea9792d1d72e253ca97
 - commit-check/commit-check-action@a0193b1ca486178b85d7a1db145af34cd227f81f
+- commit-check/commit-check-action@be79b5cd5953c8afd4266004c5bbb1431f544df1
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - container-tools/microshift-action@*
@@ -102,6 +109,7 @@
 - gr2m/twitter-together@*
 - graalvm/setup-graalvm@eec48106e0bf45f2976c2ff0c3e22395cced8243
 - graalvm/setup-graalvm@790e28947b79a9c09c3391c0f18bf8d0f102ed69
+- graalvm/setup-graalvm@54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1
 - gradle/wrapper-validation-action@*
 - gradle/wrapper-validation-action@f9c9c575b8b21b6485636a91ffecd10e558c62f6
 - gsactions/commit-message-checker@*
@@ -149,6 +157,7 @@
 - ocaml/setup-ocaml@*
 - olafurpg/setup-scala@*
 - opentofu/setup-opentofu@000eeb8522f0572907c393e8151076c205fdba1b
+- opentofu/setup-opentofu@9d84900f3238fab8cd84ce47d658d25dd008be2f
 - oracle-actions/setup-java@*
 - orhun/git-cliff-action@d77b37db2e3f7398432d34b72a12aa3e2ba87e51
 - orhun/git-cliff-action@e16f179f0be49ecdfe63753837f20b9531642772
@@ -165,6 +174,7 @@
 - pyTooling/Actions@*
 - pypa/cibuildwheel@9c00cb4f6b517705a3794b22395aedc36257242c
 - pypa/cibuildwheel@63fd63b352a9a8bdcc24791c9dbee952ee9a8abc
+- pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e
 - pytooling/actions@*
 - quarto-dev/quarto-actions@*
 - reactivecircus/android-emulator-runner@*
@@ -209,5 +219,5 @@
 - golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84
 - mlugg/setup-zig@8d6198c65fb0feaa111df26e6b467fea8345e46f
 - mlugg/setup-zig@fa65c4058643678a4e4a9a60513944a7d8d35440
+- mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29
 - posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237
-- vmactions/freebsd-vm@487ce35b96fae3e60d45b521735f5aa436ecfade
