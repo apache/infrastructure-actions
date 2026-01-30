@@ -19,7 +19,7 @@ jobs:
         if: false
       - uses: ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c  # v2.3.0
         if: false
-      - uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867  # v7.1.6
+      - uses: astral-sh/setup-uv@803947b9bd8e9f986429fa0c5a41c367cd732b41  # v7.2.1
         if: false
       - uses: dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637  # v2.5.0
         if: false
