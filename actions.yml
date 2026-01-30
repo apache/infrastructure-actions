@@ -182,6 +182,9 @@ betahuhn/repo-file-sync-action:
 biomejs/setup-biome:
   454fa0d884737805f48d7dc236c1761a0ac3cc13:
     tag: v2.6.0
+    expires_at: 2026-04-24
+  29711cbb52afee00eb13aeb30636592f9edc0088:
+    tag: v2.7.0
 browser-actions/setup-firefox:
   5914774dda97099441f02628f8d46411fcfbd208:
     tag: v1.7.0

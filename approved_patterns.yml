@@ -51,6 +51,7 @@
 - bazel-contrib/setup-bazel@8d2cb86a3680a820c3e219597279ce3f80d17a47
 - betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619
 - biomejs/setup-biome@454fa0d884737805f48d7dc236c1761a0ac3cc13
+- biomejs/setup-biome@29711cbb52afee00eb13aeb30636592f9edc0088
 - browser-actions/setup-firefox@5914774dda97099441f02628f8d46411fcfbd208
 - browser-actions/setup-geckodriver@5ef1526ed36211ab6cb531ec1cfb11f924ca2dee
 - bufbuild/buf-breaking-action@*
