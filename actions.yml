@@ -79,6 +79,9 @@ BobAnkh/auto-generate-changelog:
 dorny/test-reporter:
   dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3:
     tag: v2.1.1
+    expires_at: 2026-04-24
+  b082adf0eced0765477756c2a610396589b8c637:
+    tag: v2.5.0
 DavidAnson/markdownlint-cli2-action:
   992badcdf24e3b8eb7e87ff9287fe931bcb00c6e:
     tag: v20.0.0

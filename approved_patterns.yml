@@ -20,6 +20,7 @@
 - AdoptOpenJDK/install-jdk@*
 - BobAnkh/auto-generate-changelog@*
 - dorny/test-reporter@dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3
+- dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637
 - DavidAnson/markdownlint-cli2-action@992badcdf24e3b8eb7e87ff9287fe931bcb00c6e
 - DavidAnson/markdownlint-cli2-action@30a0e04f1870d58f8d717450cc6134995f993c63
 - DavidAnson/markdownlint-cli2-action@07035fd053f7be764496c0f8d8f9f41f98305101
