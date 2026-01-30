@@ -551,6 +551,9 @@ olafurpg/setup-scala:
 opentofu/setup-opentofu:
   000eeb8522f0572907c393e8151076c205fdba1b:
     tag: v1.0.6
+    expires_at: 2026-04-24
+  9d84900f3238fab8cd84ce47d658d25dd008be2f:
+    tag: v1.0.8
 oracle-actions/setup-java:
   '*':
     expires_at: 2025-08-01
