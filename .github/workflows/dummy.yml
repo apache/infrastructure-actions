@@ -121,7 +121,7 @@ jobs:
         if: false
       - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd  # v3.0.1
         if: false
-      - uses: pypa/cibuildwheel@63fd63b352a9a8bdcc24791c9dbee952ee9a8abc  # v3.3.0
+      - uses: pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e  # v3.3.1
         if: false
       - uses: sbt/setup-sbt@a627500d27445f8c5021755a439829b6e78e3358  # v1.1.15
         if: false
