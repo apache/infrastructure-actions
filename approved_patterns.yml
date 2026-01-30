@@ -1,5 +1,6 @@
 # This file was generated from actions.yml by gateway/gateway.py. DO NOT UPDATE MANUALLY.
 - 1Password/load-secrets-action@13f58eec611f8e5db52ec16247f58c508398f3e6
+- 1Password/load-secrets-action@8d0d610af187e78a2772c2d18d627f4c52d3fbfb
 - ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c
 - astral-sh/setup-uv@eb1897b8dc4b5d5bfe39a428a8f2304605e0983c
 - astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41

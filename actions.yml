@@ -6,6 +6,9 @@
 1Password/load-secrets-action:
   13f58eec611f8e5db52ec16247f58c508398f3e6:
     tag: v3.0.0
+    expires_at: 2026-04-24
+  8d0d610af187e78a2772c2d18d627f4c52d3fbfb:
+    tag: v3.1.0
 ana06/get-changed-files:
   25f79e676e7ea1868813e21465014798211fad8c:
     tag: v2.3.0
