@@ -101,6 +101,9 @@ JamesIves/github-pages-deploy-action:
     expires_at: 2026-02-23
   4a3abc783e1a24aeb44c16e869ad83caf6b4cc23:
     tag: v4.7.4
+    expires_at: 2026-04-24
+  d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
+    tag: v4.8.0
 JustinBeckwith/linkinator-action:
   3d5ba091319fa7b0ac14703761eebb7d100e6f6d:
     tag: v1.11.0
