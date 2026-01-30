@@ -774,6 +774,9 @@ mlugg/setup-zig:
     expires_at: 2026-03-31
   fa65c4058643678a4e4a9a60513944a7d8d35440:
     tag: v2.1.0
+    expires_at: 2026-04-24
+  d1434d08867e3ee9daa34448df10607b98908d29:
+    tag: v2.2.1
 posit-dev/setup-air:
   63e80dedb6d275c94a3841e15e5ff8691e1ab237:
     tag: v1.0.0
