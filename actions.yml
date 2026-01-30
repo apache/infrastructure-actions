@@ -747,6 +747,3 @@ mlugg/setup-zig:
 posit-dev/setup-air:
   63e80dedb6d275c94a3841e15e5ff8691e1ab237:
     tag: v1.0.0
-vmactions/freebsd-vm:
-  487ce35b96fae3e60d45b521735f5aa436ecfade:
-    tag: v1.2.4
