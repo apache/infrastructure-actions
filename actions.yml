@@ -780,3 +780,6 @@ mlugg/setup-zig:
 posit-dev/setup-air:
   63e80dedb6d275c94a3841e15e5ff8691e1ab237:
     tag: v1.0.0
+runs-on/action:
+  cd2b598b0515d39d78c38a02d529db87d2196d1e:
+    tag: v2.0.3
