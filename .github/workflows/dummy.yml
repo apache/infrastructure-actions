@@ -147,4 +147,6 @@ jobs:
         if: false
       - uses: posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237  # v1.0.0
         if: false
+      - uses: runs-on/action@cd2b598b0515d39d78c38a02d529db87d2196d1e  # v2.0.3
+        if: false
       - run: echo Success!
