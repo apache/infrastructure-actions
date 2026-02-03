@@ -78,6 +78,7 @@
 - container-tools/microshift-action@*
 - coursier/cache-action@*
 - coursier/cache-action@bebeeb0e6f48ebad66d3783946588ecf43114433
+- coursier/cache-action@c5ca79321d170b8a18c288d9cadc2a6037166d0f
 - coursier/setup-action@039f736548afa5411c1382f40a5bd9c2d30e0383
 - coursier/setup-action@*
 - coursier/setup-action@0ed4d7e7c42eae80e14370990582092c749253c4
