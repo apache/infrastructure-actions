@@ -60,6 +60,9 @@ readthedocs/actions/preview:
   '*':
     expires_at: 2025-08-01
     keep: true
+rust-lang/crates-io-auth-action:
+  b7e9a28eded4986ec6b1fa40eeee8f8f165559ec:
+    tag: v1.0.3
 rustsec/*:
   '*':
     expires_at: 2025-08-01
