@@ -110,6 +110,9 @@ JustinBeckwith/linkinator-action:
     expires_at: 2026-02-23
   af984b9f30f63e796ae2ea5be5e07cb587f1bbd9:
     tag: v2.3
+    expires_at: 2026-05-09
+  f62ba0c110a76effb2ee6022cc6ce4ab161085e3:
+    tag: v2.4
 Kesin11/actions-timeline:
   54d513e0b5ff1158f1cf8321108d666a5a6c1fca:
     tag: v2.2.5
