@@ -33,7 +33,6 @@
 - Kesin11/actions-timeline@54d513e0b5ff1158f1cf8321108d666a5a6c1fca
 - PyO3/maturin-action@*
 - TobKed/label-when-approved-action@*
-- VirtusLab/scala-cli-setup@77834b5926f3eb70869d8009530c65585f7a039b
 - VirtusLab/scala-cli-setup@68bd9c30954d20e6cb6ddaf01b3b38336f25df4b
 - actions-cool/check-user-permission@*
 - actions-cool/issues-helper@*
@@ -70,7 +69,6 @@
 - codecov/codecov-action@*
 - codelytv/pr-size-labeler@*
 - codspeedhq/action@*
-- commit-check/commit-check-action@fc0543792ea1ba666c86fea9792d1d72e253ca97
 - commit-check/commit-check-action@a0193b1ca486178b85d7a1db145af34cd227f81f
 - commit-check/commit-check-action@be79b5cd5953c8afd4266004c5bbb1431f544df1
 - conda-incubator/setup-miniconda@*

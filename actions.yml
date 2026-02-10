@@ -122,9 +122,6 @@ TobKed/label-when-approved-action:
     expires_at: 2025-08-01
     keep: true
 VirtusLab/scala-cli-setup:
-  77834b5926f3eb70869d8009530c65585f7a039b:
-    expires_at: 2026-02-10
-    tag: v1.9.1
   68bd9c30954d20e6cb6ddaf01b3b38336f25df4b:
     expires_at: 2026-03-10
     tag: v1.10.1
@@ -252,9 +249,6 @@ codspeedhq/action:
     expires_at: 2025-08-01
     keep: true
 commit-check/commit-check-action:
-  fc0543792ea1ba666c86fea9792d1d72e253ca97:
-    expires_at: 2026-02-10
-    tag: v2.1.0
   a0193b1ca486178b85d7a1db145af34cd227f81f:
     tag: v2.1.1
     expires_at: 2026-04-24
