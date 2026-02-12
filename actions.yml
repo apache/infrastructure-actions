@@ -24,17 +24,11 @@ astral-sh/setup-uv:
     expires_at: 2026-03-15
   681c641aba71e4a1c380be3ab5e12ad51f415867:
     tag: v7.1.6
-bytedeco/javacpp-presets/.github/actions/*:
-  '*':
-    expires_at: 2025-08-01
-    keep: true
 dtolnay/rust-toolchain:
   stable:
-    expires_at: 2025-08-01
     keep: true
 golangci/*:
   '*':
-    expires_at: 2025-08-01
     keep: true
 pypa/gh-action-pip-audit:
   1220774d901786e6f652ae159f7b6bc8fea6d266:
@@ -42,39 +36,30 @@ pypa/gh-action-pip-audit:
     expires_at: 2026-03-31
 pypa/gh-action-pypi-publish:
   release/v1*:
-    expires_at: 2025-08-01
     keep: true
 pytooling/actions/with-post-step:
   '*':
-    expires_at: 2025-08-01
     keep: true
 quarto-dev/quarto-actions/*:
   '*':
-    expires_at: 2025-08-01
     keep: true
 r-lib/actions/*:
   '*':
-    expires_at: 2025-08-01
     keep: true
 readthedocs/actions/preview:
   '*':
-    expires_at: 2025-08-01
     keep: true
 rustsec/*:
   '*':
-    expires_at: 2025-08-01
     keep: true
 vhelm/chart-releaser-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 AdoptOpenJDK/install-jdk:
   '*':
-    expires_at: 2025-08-01
     keep: true
 BobAnkh/auto-generate-changelog:
   '*':
-    expires_at: 2025-08-01
     keep: true
 dorny/test-reporter:
   dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3:
@@ -93,7 +78,6 @@ DavidAnson/markdownlint-cli2-action:
     tag: v22.0.0
 EnricoMi/publish-unit-test-result-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 JamesIves/github-pages-deploy-action:
   6c2d9db40f9296374acc17b90404b6e8864128c8:
@@ -115,11 +99,9 @@ Kesin11/actions-timeline:
     tag: v2.2.5
 PyO3/maturin-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 TobKed/label-when-approved-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 VirtusLab/scala-cli-setup:
   68bd9c30954d20e6cb6ddaf01b3b38336f25df4b:
@@ -127,15 +109,12 @@ VirtusLab/scala-cli-setup:
     tag: v1.10.1
 actions-cool/check-user-permission:
   '*':
-    expires_at: 2025-08-01
     keep: true
 actions-cool/issues-helper:
   '*':
-    expires_at: 2025-08-01
     keep: true
 actions-cool/maintain-one-comment:
   '*':
-    expires_at: 2025-08-01
     keep: true
 addnab/docker-run-action:
   4f65fabd2431ebc8d299f8e5a018d79a769ae185:
@@ -148,15 +127,12 @@ al-cheb/configure-pagefile-action:
     tag: v1.5
 amannn/action-semantic-pull-request:
   '*':
-    expires_at: 2025-08-01
     keep: true
 arduino/setup-protoc:
   '*':
-    expires_at: 2025-08-01
     keep: true
 awalsh128/cache-apt-pkgs-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 aws-actions/configure-aws-credentials:
   00943011d9042930efac3dcd3a170e4273319bc8:
@@ -169,7 +145,6 @@ azure/setup-helm:
     tag: v4.3.1
 bazel-contrib/setup-bazel:
   '*':
-    expires_at: 2026-12-21
     keep: true
   8d2cb86a3680a820c3e219597279ce3f80d17a47:
     tag: v0.15.0
@@ -189,15 +164,12 @@ browser-actions/setup-geckodriver:
   5ef1526ed36211ab6cb531ec1cfb11f924ca2dee:
 bufbuild/buf-breaking-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 bufbuild/buf-lint-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 bufbuild/buf-setup-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 burnett01/rsync-deployments:
   0dc935cdecc5f5e571865e60d2a6cdc673704823:
@@ -207,46 +179,36 @@ burnett01/rsync-deployments:
     tag: 8.0.3
 burrunan/gradle-cache-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 bytedeco/javacpp-presets:
   '*':
-    expires_at: 2025-08-01
     keep: true
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
 carlosperate/arm-none-eabi-gcc-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 check-spelling/check-spelling:
   '*':
-    expires_at: 2025-08-01
     keep: true
 chromaui/action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 cicirello/javadoc-cleanup:
   '*':
-    expires_at: 2025-08-01
     keep: true
 clechasseur/rs-cargo:
   '*':
-    expires_at: 2025-08-01
     keep: true
 codecov/codecov-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 codelytv/pr-size-labeler:
   '*':
-    expires_at: 2025-08-01
     keep: true
 codspeedhq/action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 commit-check/commit-check-action:
   a0193b1ca486178b85d7a1db145af34cd227f81f:
@@ -256,19 +218,15 @@ commit-check/commit-check-action:
     tag: v2.2.1
 conda-incubator/setup-miniconda:
   '*':
-    expires_at: 2025-08-01
     keep: true
 container-tools/kind-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 container-tools/microshift-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 coursier/cache-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
   bebeeb0e6f48ebad66d3783946588ecf43114433:
     tag: 6.4.7
@@ -280,7 +238,6 @@ coursier/setup-action:
     tag: v1.3.9
     expires_at: 2026-02-24
   '*':
-    expires_at: 2025-08-01
     keep: true
   0ed4d7e7c42eae80e14370990582092c749253c4:
     tag: v2.0.0
@@ -295,7 +252,6 @@ cpp-linter/cpp-linter-action:
     tag: v2.15.1
 crate-ci/typos:
   '*':
-    expires_at: 2025-08-01
     keep: true
 crazy-max/ghaction-import-gpg:
   e89d40939c28e39f97cf32126055eeae86ba74ec:
@@ -304,18 +260,15 @@ damccorm/tag-ur-it:
   6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5:
 dawidd6/action-download-artifact:
   '*':
-    expires_at: 2025-08-01
     keep: true
 dawidd6/action-send-mail:
   6d98ae34d733f9a723a9e04e94f2f24ba05e1402:
     tag: v6
 delaguardo/setup-graalvm:
   '*':
-    expires_at: 2025-08-01
     keep: true
 dlang-community/setup-dlang:
   '*':
-    expires_at: 2025-08-01
     keep: true
 docker://jekyll/jekyll:
   sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625:
@@ -325,17 +278,14 @@ docker://pandoc/core:
 docker/setup-qemu-action:
   29109295f81e9208d7d86ff1c6c12d2833863392:
     tag: v3.6.0
-    keep: true
 dorny/paths-filter:
   de90cc6fb38fc0963ad72b210f1f284cd68cea36:
     tag: v3.0.2
 easimon/maximize-build-space:
   '*':
-    expires_at: 2025-08-01
     keep: true
 eps1lon/actions-label-merge-conflict:
   '*':
-    expires_at: 2025-08-01
     keep: true
 erisu/apache-rat-action:
   46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c:
@@ -348,15 +298,12 @@ erisu/license-checker-action:
     tag: v2.0.1
 gaurav-nelson/github-action-markdown-link-check:
   '*':
-    expires_at: 2025-08-01
     keep: true
 geekyeggo/delete-artifact:
   '*':
-    expires_at: 2025-08-01
     keep: true
 golang/govulncheck-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 google-github-actions/auth:
   7c6bc770dae815cd3e89ee6cdf493a5fab2cc093:
@@ -370,7 +317,6 @@ gradle/actions/setup-gradle:
     tag: v5.0.0
 gr2m/twitter-together:
   '*':
-    expires_at: 2025-08-01
     keep: true
 graalvm/setup-graalvm:
   eec48106e0bf45f2976c2ff0c3e22395cced8243:
@@ -388,7 +334,6 @@ gradle/wrapper-validation-action:
     tag: v3.5.0
 gsactions/commit-message-checker:
   '*':
-    expires_at: 2025-08-01
     keep: true
 hadolint/hadolint-action:
   2332a7b74a6de0dda2e2221d575162eba76ba5e5:
@@ -410,25 +355,21 @@ helm/kind-action:
     tag: v1.13.0
 houseabsolute/actions-rust-cross:
   '*':
-    expires_at: 2025-08-01
     keep: true
 ilammy/msvc-dev-cmd:
   '*':
-    expires_at: 2025-08-01
     keep: true
 ilammy/setup-nasm:
   72793074d3c8cdda771dba85f6deafe00623038b:
     tag: v1.5.2
 jarvusinnovations/background-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 jasonetco/create-an-issue:
   1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5:
     tag: v2
 jidicula/clang-format-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 Jimver/cuda-toolkit:
   6008063726ffe3309d1b22e413d9e88fed91a2f2:
@@ -436,60 +377,47 @@ Jimver/cuda-toolkit:
     tag: v0.2.29
 jlumbroso/free-disk-space:
   '*':
-    expires_at: 2025-08-01
     keep: true
 jrouly/scalafmt-native-action:
   14620cde093e5ff6bfbbecd4f638370024287b9d:
     tag: v4
   '*':
-    expires_at: 2025-08-01
     keep: true
 julia-actions/julia-buildpkg:
   '*':
-    expires_at: 2025-08-01
     keep: true
 julia-actions/julia-docdeploy:
   '*':
-    expires_at: 2025-08-01
     keep: true
 julia-actions/julia-processcoverage:
   '*':
-    expires_at: 2025-08-01
     keep: true
 julia-actions/julia-runtest:
   '*':
-    expires_at: 2025-08-01
     keep: true
 julia-actions/setup-julia:
   '*':
-    expires_at: 2025-08-01
     keep: true
 juliaregistries/tagbot:
   '*':
-    expires_at: 2025-08-01
     keep: true
 jwgmeligmeyling/checkstyle-github-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 jwgmeligmeyling/pmd-github-action:
   322e346bd76a0757c4d54ff9209e245965aa066d:
     tag: v1.2
 jwgmeligmeyling/spotbugs-github-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 kiegroup/github-action-build-chain:
   '*':
-    expires_at: 2025-08-01
     keep: true
 korandoru/hawkeye:
   '*':
-    expires_at: 2025-08-01
     keep: true
 leafo/gh-actions-lua:
   '*':
-    expires_at: 2025-08-01
     keep: true
 leafo/gh-actions-luarocks:
   97053c556d6ce2c8e26eb7ac93743437c7af7248:
@@ -498,52 +426,42 @@ manusa/actions-setup-minikube:
   b589f2d61bf96695c546929c72b38563e856059d:
     tag: v2.14.0
   '*':
-    expires_at: 2025-08-01
     keep: true
 maxim-lobanov/setup-xcode:
   '*':
-    expires_at: 2025-08-01
     keep: true
 medyagh/setup-minikube:
   '*':
-    expires_at: 2025-08-01
     keep: true
 mikepenz/action-junit-report:
   '*':
-    expires_at: 2025-08-01
     keep: true
 mozilla-actions/sccache-action:
   7d986dd989559c6ecdb630a3fd2557667be217ad:
     tag: v0.0.9
 msys2/setup-msys2:
   '*':
-    expires_at: 2025-08-01
     keep: true
 mvasigh/dispatch-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 nanasess/setup-chromedriver:
   '*':
-    expires_at: 2025-08-01
     keep: true
 ncipollo/release-action:
   b7eabc95ff50cbeeedec83973935c8f306dfcd0b:
     tag: v1.20.0
 nick-fields/retry:
   '*':
-    expires_at: 2025-08-01
     keep: true
 nwtgck/actions-netlify:
   4cbaf4c08f1a7bfa537d6113472ef4424e4eb654:
     tag: v3.0.0
 ocaml/setup-ocaml:
   '*':
-    expires_at: 2025-08-01
     keep: true
 olafurpg/setup-scala:
   '*':
-    expires_at: 2025-08-01
     keep: true
 opentofu/setup-opentofu:
   000eeb8522f0572907c393e8151076c205fdba1b:
@@ -553,7 +471,6 @@ opentofu/setup-opentofu:
     tag: v1.0.8
 oracle-actions/setup-java:
   '*':
-    expires_at: 2025-08-01
     keep: true
 orhun/git-cliff-action:
   d77b37db2e3f7398432d34b72a12aa3e2ba87e51:
@@ -563,44 +480,36 @@ orhun/git-cliff-action:
     tag: v4.7.0
 ossf/scorecard-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 peaceiris/actions-gh-pages:
   '*':
-    expires_at: 2025-08-01
     keep: true
 peaceiris/actions-hugo:
   '*':
-    expires_at: 2025-08-01
     keep: true
 peaceiris/actions-mdbook:
   '*':
-    expires_at: 2025-08-01
     keep: true
 peter-evans/create-or-update-comment:
   e8674b075228eee787fea43ef493e45ece1004c9:
     tag: v5.0.0
 peter-evans/create-pull-request:
   '*':
-    expires_at: 2025-08-01
     keep: true
 phoenix-actions/test-reporting:
   f957cd93fc2d848d556fa0d03c57bc79127b6b5e:
     tag: v15
 pnpm/action-setup:
   '*':
-    expires_at: 2025-08-01
     keep: true
 potiuk/cancel-workflow-runs:
   '*':
-    expires_at: 2025-08-01
     keep: true
 pre-commit/action:
   2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd:
     tag: v3.0.1
 pyTooling/Actions:
   '*':
-    expires_at: 2025-08-01
     keep: true
 pypa/cibuildwheel:
   9c00cb4f6b517705a3794b22395aedc36257242c:
@@ -613,27 +522,21 @@ pypa/cibuildwheel:
     tag: v3.3.1
 pytooling/actions:
   '*':
-    expires_at: 2025-08-01
     keep: true
 quarto-dev/quarto-actions:
   '*':
-    expires_at: 2025-08-01
     keep: true
 reactivecircus/android-emulator-runner:
   '*':
-    expires_at: 2025-08-01
     keep: true
 readthedocs/actions:
   '*':
-    expires_at: 2025-08-01
     keep: true
 release-drafter/release-drafter:
   '*':
-    expires_at: 2025-08-01
     keep: true
 ruby/setup-ruby:
   '*':
-    expires_at: 2025-08-01
     keep: true
 sbt/setup-sbt:
   '*':
@@ -648,7 +551,6 @@ sbt/setup-sbt:
     tag: v1.1.16
 scacap/action-surefire-report:
   '*':
-    expires_at: 2025-08-01
     keep: true
   5609ce4db72c09db044803b344a8968fd1f315da:
     tag: v1.9.1
@@ -666,23 +568,18 @@ scalacenter/sbt-dependency-submission:
   #  tag: v3.2.1
 scottbrenner/puppet-lint-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 securego/gosec:
   '*':
-    expires_at: 2025-08-01
     keep: true
 shivammathur/setup-php:
   '*':
-    expires_at: 2025-08-01
     keep: true
 shogo82148/actions-setup-perl:
   '*':
-    expires_at: 2025-08-01
     keep: true
 shufo/auto-assign-reviewer-by-files:
   '*':
-    expires_at: 2025-08-01
     keep: true
 sigstore/cosign-installer:
   faadad0cce49287aee09b3a48701e75088a2c6ad:
@@ -693,27 +590,21 @@ snok/install-poetry:
     tag: v1
 softprops/action-gh-release:
   '*':
-    expires_at: 2025-08-01
     keep: true
 stCarolas/setup-maven:
   '*':
-    expires_at: 2025-08-01
     keep: true
 subosito/flutter-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 swatinem/rust-cache:
   '*':
-    expires_at: 2025-08-01
     keep: true
 swift-actions/setup-swift:
   '*':
-    expires_at: 2025-08-01
     keep: true
 taiki-e/install-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 tcort/github-action-markdown-link-check:
   f3d33029dca1c4a24b87e2df648f9f4604ef6533:
@@ -723,11 +614,9 @@ tcort/github-action-markdown-link-check:
     tag: v1.1.2
 test-summary/action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 timonvs/pr-labeler-action:
   '*':
-    expires_at: 2025-08-01
     keep: true
 untitaker/hyperlink:
   e66bb17cc9ae341677431edec3b893a0aa6ac747:
@@ -746,28 +635,22 @@ vimtor/action-zip:
     tag: v1
 vishalsinha21/dynamic-checklist:
   '*':
-    expires_at: 2025-08-01
     keep: true
 wei/curl:
   '*':
-    expires_at: 2025-08-01
     keep: true
 xpol/setup-lua:
   '*':
-    expires_at: 2025-08-01
     keep: true
 slackapi/slack-github-action:
   91efab103c0de0a537f72a35f6b8cda0ee76bf0a:
     tag: v2.1.1
 golangci/golangci-lint-action:
-  1481404843c368bc19ca9406f87d6e0fc97bdcfd:
-    expires_at: 2050-08-01
-    tag: v7.0.0
-    keep: true
   55c2c1448f86e01eaae002a5a3a9624417608d84:
-    expires_at: 2050-08-01
     tag: v6.5.2
-    keep: true
+    expires_at: 2026-04-24
+  1481404843c368bc19ca9406f87d6e0fc97bdcfd:
+    tag: v7.0.0
 mlugg/setup-zig:
   8d6198c65fb0feaa111df26e6b467fea8345e46f:
     tag: v2.0.5
