@@ -1,0 +1,62 @@
+# Workflow to be called from ASF project repository workflows to check
+# whether the referenced GitHub actions are approved.
+#
+# The README.md of ASF Infrastructure Actions repository https://github.com/apache/infrastructure-actions
+# contains usage instructions.
+#
+# See: ASF Infrastructure GitHub Actions Policy: https://infra.apache.org/github-actions-policy.html
+
+
+name: check-project-actions.yml
+on:
+  workflow_call:
+    inputs:
+      repository:
+        required: false
+        description: The `repository` parameter for `actions/checkout`
+        type: string
+      ref:
+        required: false
+        description: The `ref` parameter for `actions/checkout`
+        type: string
+      fetch-depth:
+        required: false
+        description: The `fetch-depth` parameter for `actions/checkout`
+        type: number
+        default: 1
+      submodules:
+        required: false
+        description: The `submodules` parameter for `actions/checkout`
+        type: boolean
+        default: false
+
+jobs:
+  check-project-actions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout apache/infrastructure-actions"
+        uses: actions/checkout@v2
+        with:
+          repository: 'apache/infrastructure-actions'
+          ref: 'main'
+          path: infrastructure-actions
+      - name: "Checkout repository to be checked"
+        uses: actions/checkout@v2
+        with:
+          repository: '${{ inputs.repository }}'
+          ref: ${{ inputs.ref }}
+          fetch-depth: ${{ inputs.fetch-depth }}
+          submodules: ${{ inputs.submodules }}
+          path: repository
+
+      - run: pip install ruyaml
+
+      - name: Check project actions in repository
+        working-directory: infrastructure-actions
+        shell: python
+        run: |
+          import sys
+          sys.path.append("./gateway/")
+
+          import check_repository_actions as c
+          c.check_project_actions('../repository', '../infrastructure-actions/approved_patterns.yml')
