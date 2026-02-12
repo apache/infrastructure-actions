@@ -366,7 +366,6 @@ google-github-actions/setup-gcloud:
     tag: v3.0.1
 gradle/actions/setup-gradle:
   4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2:
-    expires_at: 2050-01-01
     tag: v5.0.0
 gr2m/twitter-together:
   '*':
@@ -432,7 +431,6 @@ jidicula/clang-format-action:
     keep: true
 Jimver/cuda-toolkit:
   6008063726ffe3309d1b22e413d9e88fed91a2f2:
-    expires_at: 2050-01-01
     tag: v0.2.29
 jlumbroso/free-disk-space:
   '*':
@@ -760,14 +758,11 @@ slackapi/slack-github-action:
   91efab103c0de0a537f72a35f6b8cda0ee76bf0a:
     tag: v2.1.1
 golangci/golangci-lint-action:
-  1481404843c368bc19ca9406f87d6e0fc97bdcfd:
-    expires_at: 2050-08-01
-    tag: v7.0.0
-    keep: true
   55c2c1448f86e01eaae002a5a3a9624417608d84:
-    expires_at: 2050-08-01
     tag: v6.5.2
-    keep: true
+    expires_at: 2026-04-24
+  1481404843c368bc19ca9406f87d6e0fc97bdcfd:
+    tag: v7.0.0
 mlugg/setup-zig:
   8d6198c65fb0feaa111df26e6b467fea8345e46f:
     tag: v2.0.5
