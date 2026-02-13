@@ -1,3 +1,21 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
@@ -125,7 +143,26 @@ def generate_workflow(actions: ActionsYAML) -> str:
     # Github Workflow 'yaml' has slight deviations from the yaml spec. (e.g. keys with no values)
     # Because of that it's much easier to generate this as a string rather
     # then use pyyaml to dump this from a dict.
-    header = """# This file was generated from /actions.yml by gateway/gateway.py.
+    header = """#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# This file was generated from /actions.yml by gateway/gateway.py.
 # It will be regenerated and committed as part of various workflows.
 # DO NOT UPDATE MANUALLY. Update /actions.yml instead.
 
@@ -268,10 +305,29 @@ def update_patterns(pattern_path: Path, list_path: Path):
     """
     actions: ActionsYAML = load_yaml(list_path)
     patterns = create_pattern(actions)
+    license_header = """#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+"""
     comment = f"""# This file was generated from {list_path} by gateway/gateway.py.
 # It will be regenerated and committed as part of various workflows.
 # DO NOT UPDATE MANUALLY. Update /actions.yml instead.\n"""
-    patterns_str = comment + to_yaml_string(patterns)
+    patterns_str = license_header + comment + to_yaml_string(patterns)
     gha_print(patterns_str, "Generated Patterns")
     write_str(pattern_path, patterns_str)
 
