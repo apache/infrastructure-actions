@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -16,8 +17,30 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# Generated file, prevent accidental commits
-approved_patterns.yml
-/gateway/__pycache__
-/gateway/test_out_dummy.yml
-/tmp
+
+set -e
+
+cd "${0%/*}/.."
+
+RAT_VERSION="0.17"
+RAT_JAR="tmp/apache-rat-${RAT_VERSION}.jar"
+
+mkdir -p tmp
+if [[ ! -e ${RAT_JAR} ]]; then
+  wget -O "${RAT_JAR}" "https://repo.maven.apache.org/maven2/org/apache/rat/apache-rat/${RAT_VERSION}/apache-rat-${RAT_VERSION}.jar"
+fi
+
+# IMPORTANT: RAT 0.17 does not scan files like shell scripts or the executable python files,
+# even if explicitly included.
+
+java -jar "${RAT_JAR}" \
+  --input-exclude-std GIT IDEA ECLIPSE \
+  --input-exclude \
+    .github/PULL_REQUEST_TEMPLATE.md \
+  --input-exclude-parsed-scm GIT \
+  --license-families-approved AL \
+  --input-include \
+    .github/ \
+    "**/.gitignore" \
+  -- \
+  . \
