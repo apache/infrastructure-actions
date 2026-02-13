@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -15,46 +16,31 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
 
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
+set -e
 
-# Claude Code
-.claude/
+cd "${0%/*}/.."
 
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-*.egg
-dist/
-build/
-.eggs/
-*.whl
+RAT_VERSION="0.17"
+RAT_JAR="tmp/apache-rat-${RAT_VERSION}.jar"
 
-# Virtual environments
-.venv/
-venv/
-env/
+mkdir -p tmp
+if [[ ! -e ${RAT_JAR} ]]; then
+  wget -O "${RAT_JAR}" "https://repo.maven.apache.org/maven2/org/apache/rat/apache-rat/${RAT_VERSION}/apache-rat-${RAT_VERSION}.jar"
+fi
 
-# Testing / Coverage
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
+# IMPORTANT: RAT 0.17 does not scan files like shell scripts or the executable python files,
+# even if explicitly included.
 
-# Environment variables
-.env
-.env.local
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Generated file, prevent accidental commits
-approved_patterns.yml
-/gateway/test_out_dummy.yml
-/tmp
+java -jar "${RAT_JAR}" \
+  --input-exclude-std GIT IDEA ECLIPSE \
+  --input-exclude \
+    .github/PULL_REQUEST_TEMPLATE.md \
+  --input-exclude-parsed-scm GIT \
+  --license-families-approved AL \
+  --input-include \
+    .github/ \
+    "**/.gitignore" \
+  -- \
+  . \
