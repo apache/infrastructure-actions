@@ -103,7 +103,7 @@ jobs:
         if: false
       - uses: leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248  # v5
         if: false
-      - uses: manusa/actions-setup-minikube@b589f2d61bf96695c546929c72b38563e856059d  # v2.14.0
+      - uses: manusa/actions-setup-minikube@8234275e0386fe1cdaf519d28c90f4f03fad89e4  # v2.15.0
         if: false
       - uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad  # v0.0.9
         if: false
