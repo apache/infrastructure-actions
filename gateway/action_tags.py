@@ -151,7 +151,7 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
             # Flag whether to not error out on tag/SHA mismatches due to explicitly ignored GH API errors.
             has_ignored_api_errors = False
             for ref, details in action.items():
-                if details and 'expires_at' in details:
+                if details and 'expires_at' in details and not details.get('keep'):
                     expires_at: date = details.get('expires_at')
                     if expires_at < today:
                         # skip expired entries
