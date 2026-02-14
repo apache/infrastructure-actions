@@ -36,6 +36,8 @@ from gateway import load_yaml, on_gha
 re_action = r"^([A-Za-z0-9-_.]+/[A-Za-z0-9-_.]+)(/.+)?(@(.+))?$"
 re_local_file = r"^[.]/.+"
 
+re_docker_sha = r"^docker://[A-Za-z0-9-_.]+/[A-Za-z0-9-_.]+@sha256:[0-9a-f]{64}$"
+re_action_hash = r"^([A-Za-z0-9-_.]+/[A-Za-z0-9-_.]+)(/.+)?@[0-9a-f]{40}$"
 
 def _iter_uses_nodes(node: dict, yaml_path: str = ""):
     """
@@ -101,6 +103,7 @@ def check_project_actions(repository: str | os.PathLike, approved_patterns_file:
 
     print(f"Found {len(yaml_files)} workflow or action YAML file(s) under {github_dir}:")
     failures: list[str] = []
+    warnings: list[str] = []
     for p in yaml_files:
         relative_path = p.relative_to(repo_root)
         print(f"Checking file {relative_path}")
@@ -110,15 +113,30 @@ def check_project_actions(repository: str | os.PathLike, approved_patterns_file:
             matcher = re.match(re_action, uses_value)
             if matcher is not None:
                 print(f"  {yaml_path}: {uses_value}")
+
                 if uses_value.startswith("./"):
                     print(f"    ✅ Local file reference, allowing")
                 elif uses_value.startswith("docker://apache/"):
                     print(f"    ✅ Apache project image, allowing")
+                # The following three are always allowed, see 'External actions' in
+                # the Apache Infrastructure GitHub Actions Policy.
                 elif uses_value.startswith("apache/"):
                     print(f"    ✅ Apache action reference, allowing")
+                elif uses_value.startswith("github/"):
+                    print(f"    ✅ GitHub github/* action reference, allowing")
                 elif uses_value.startswith("actions/"):
-                    print(f"    ✅ GitHub action reference, allowing")
+                    print(f"    ✅ GitHub action/* action reference, allowing")
                 else:
+                    # These should actually be failures, not warnings according to
+                    # the Apache Infrastructure GitHub Actions Policy.
+                    if uses_value.startswith("docker:"):
+                        if not re.match(re_docker_sha, uses_value):
+                            warnings.append(f"⚠️ Mandatory SHA256 digest missing for Docker action reference: {uses_value}")
+                            print("    ️⚠️  Mandatory SHA256 digest missing")
+                    elif not re.match(re_action_hash, uses_value):
+                        warnings.append(f"⚠️ Mandatory Git Commit ID missing for action reference: {uses_value}")
+                        print("    ️⚠️  Mandatory Git Commit ID digest missing")
+
                     approved = False
                     blocked = False
                     for pattern in approved_patterns:
@@ -146,12 +164,17 @@ def check_project_actions(repository: str | os.PathLike, approved_patterns_file:
             f.write("\n")
             f.write("For more information visit the [ASF Infrastructure GitHub Actions Policy](https://infra.apache.org/github-actions-policy.html) page\n")
             f.write("and the [ASF Infrastructure Actions](https://github.com/apache/infrastructure-actions) repository.\n")
-            f.write("\n")
             if len(failures) > 0:
+                f.write("\n")
                 f.write(f"## Failures ({len(failures)})\n")
                 for msg in failures:
                     f.write(f"{msg}\n\n")
-            else:
+            if len(warnings) > 0:
+                f.write("\n")
+                f.write(f"## Warnings ({len(warnings)})\n")
+                for msg in warnings:
+                    f.write(f"{msg}\n\n")
+            if len(failures) == 0:
                 f.write(f"✅ Success, all action usages match the currently approved patterns.\n")
 
     if len(failures) > 0:
