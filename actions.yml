@@ -685,6 +685,10 @@ sigstore/cosign-installer:
   faadad0cce49287aee09b3a48701e75088a2c6ad:
     expires_at: 2026-12-31
     tag: v4.0.0
+slsa-framework/source-actions:
+  dea965cdca5e0cb422bf7b2653c9d15f678ad01c:
+    expires_at: 2026-12-31
+    tag: v0.1.0
 snok/install-poetry:
   76e04a911780d5b312d89783f7b1cd627778900a:
     tag: v1
