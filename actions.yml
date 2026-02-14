@@ -341,9 +341,6 @@ erisu/apache-rat-action:
   46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c:
     tag: v2.0.0
 erisu/license-checker-action:
-  1c222d0c2f5898a4c40b8bd6fd6888650bd6f68a:
-    tag: v2.0.0
-    expires_at: 2026-02-14
   99cffa11264fe545fd0baa6c13bca5a00ae608f2:
     tag: v2.0.1
 gaurav-nelson/github-action-markdown-link-check:
