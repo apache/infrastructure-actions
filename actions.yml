@@ -592,6 +592,10 @@ potiuk/cancel-workflow-runs:
   '*':
     expires_at: 2025-08-01
     keep: true
+ppkarwasz/fetch-metadata:
+  14da1d746fb4c6f05dbc353e4fd619a1065c8ff6:
+    expires_at: 2025-10-01
+    tag: v0.1.0
 pre-commit/action:
   2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd:
     tag: v3.0.1
