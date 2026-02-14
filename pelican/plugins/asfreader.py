@@ -114,7 +114,7 @@ class ASFReader(gfm.GFMReader):
 
 # The following are required or ezmd files are not read instead they are static.
 # For direct subclasses of BaseReader like GFMReader the following two
-# callables are optional if the class includes enabled=True and file_extenaions.
+# callables are optional if the class includes enabled=True and file_extensions.
 def add_readers(readers):
     readers.reader_classes['ezmd'] = ASFReader
 

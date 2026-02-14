@@ -43,7 +43,7 @@ inputs:
   only-current-branch:
     description: >
         If true, only the current branch will be searched for the stash.
-        If false, the base branch(PRs)/default branch branch will be searched as well.
+        If false, the base branch(PRs)/default branch will be searched as well.
     default: "false"
 outputs:
   stash-hit:

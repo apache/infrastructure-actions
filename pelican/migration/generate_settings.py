@@ -179,15 +179,15 @@ def main():
     parser.add_argument('-y', '--yaml', required=True, help="Pelicanconf YAML file")
     args = parser.parse_args()
 
-    pelconf_yaml = args.yaml
-    sourcepath = os.path.dirname(os.path.realpath(pelconf_yaml))
+    pelicanconf_yaml = args.yaml
+    sourcepath = os.path.dirname(os.path.realpath(pelicanconf_yaml))
     tool_dir = THIS_DIR
 
-    if os.path.exists(pelconf_yaml):
-        print(f"found {pelconf_yaml}")
+    if os.path.exists(pelicanconf_yaml):
+        print(f"found {pelicanconf_yaml}")
         settings_path = os.path.join(sourcepath, AUTO_SETTINGS)
         builtin_plugins = os.path.join(tool_dir, os.pardir, "plugins")
-        generate_settings(pelconf_yaml, settings_path, [builtin_plugins], sourcepath)
+        generate_settings(pelicanconf_yaml, settings_path, [builtin_plugins], sourcepath)
 
 if __name__ == "__main__":
     main()

@@ -25,7 +25,7 @@ During initiation, runs scripts that can be used to create content and static fi
 
 ## gfm
 
-Pelican plugin that processes Github Flavored Markdown (**GFM**) using the cmark library.
+Pelican plugin that processes GitHub Flavored Markdown (**GFM**) using the cmark library.
 
 ## toc
 
