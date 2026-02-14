@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -16,24 +17,30 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: Build a Pelican Website
-on:
-  push:
-    # This prevents the workflow from running automatically on a new branch
-    # When creating a new site branch, please ensure that the push and checkout branches agree
-    # and that the action/pelican destination value is updated accordingly
-    branches: [ '[whoami]' ]
-  workflow_dispatch:
-jobs:
-  build-pelican:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # This must equal the push/branches list above, and be appropriate for the destination below
-          ref: '[whoami]'
-      - uses: apache/infrastructure-actions/pelican@main
-        with:
-          # This must be appropriate for the branch being built
-          destination: '[target]'
-          gfm: 'true'
+
+set -e
+
+cd "${0%/*}/.."
+
+RAT_VERSION="0.17"
+RAT_JAR="tmp/apache-rat-${RAT_VERSION}.jar"
+
+mkdir -p tmp
+if [[ ! -e ${RAT_JAR} ]]; then
+  wget -O "${RAT_JAR}" "https://repo.maven.apache.org/maven2/org/apache/rat/apache-rat/${RAT_VERSION}/apache-rat-${RAT_VERSION}.jar"
+fi
+
+# IMPORTANT: RAT 0.17 does not scan files like shell scripts or the executable python files,
+# even if explicitly included.
+
+java -jar "${RAT_JAR}" \
+  --input-exclude-std GIT IDEA ECLIPSE \
+  --input-exclude \
+    .github/PULL_REQUEST_TEMPLATE.md \
+  --input-exclude-parsed-scm GIT \
+  --license-families-approved AL \
+  --input-include \
+    .github/ \
+    "**/.gitignore" \
+  -- \
+  . \
