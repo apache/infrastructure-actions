@@ -65,7 +65,7 @@ jobs:
         if: false
       - uses: damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
         if: false
-      - uses: dawidd6/action-send-mail@6d98ae34d733f9a723a9e04e94f2f24ba05e1402  # v6
+      - uses: dawidd6/action-send-mail@62a2d05b79935ad4fb90ce9079928099579c14ac  # v9
         if: false
       - uses: docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
         if: false
