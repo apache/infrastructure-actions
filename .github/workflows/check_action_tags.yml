@@ -1,0 +1,46 @@
+name: Check action tags
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/dummy.yml"
+  pull_request:
+    paths:
+      - ".github/workflows/update_actions.yml"
+      - ".github/workflows/dummy.yml"
+      - gateway/*
+
+permissions:
+  contents: read
+
+# We want workflows on main to run in order to avoid losing data through race conditions
+concurrency: "${{ github.ref }}-${{ github.workflow }}"
+
+jobs:
+  check_action_tags:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v6
+
+      - run: pip install ruyaml 
+
+      - name: Update actions.yml and check action tags
+        # This step is similar to the one in update_actions.yml but also verifies the actions' tags
+        shell: python
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          import sys
+          sys.path.append("./gateway/")
+
+          import gateway as g
+          g.update_actions(".github/workflows/dummy.yml", "actions.yml")
+          g.update_patterns("approved_patterns.yml", "actions.yml")
+
+          import action_tags as at
+          result = at.verify_actions("actions.yml")
+          if result.has_failures():
+            raise Exception(f"Verify actions result summary:\n{result}")
