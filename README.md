@@ -2,6 +2,7 @@
 
 This repository hosts GitHub Actions developed by the ASF community and approved for any ASF top level project to use. It also manages the organization wide allow list of GitHub Actions via 'Configuration as Code'.
 
+- [Checking the Action Usage in an ASF Project](#checking-the-action-usage-in-an-asf-project)
 - [Submitting an Action](#submitting-an-action)
 - [Available GitHub Actions](#available-github-actions)
 - [Organization-wide GitHub Actions Allow List](#management-of-organization-wide-github-actions-allow-list)
@@ -10,6 +11,47 @@ This repository hosts GitHub Actions developed by the ASF community and approved
   - [Adding a New Version](#adding-a-new-version-to-the-allow-list)
   - [Manual Version Addition](#manual-addition-of-specific-versions)
   - [Removing a Version](#removing-a-version-manually)
+
+## Checking the Action Usage in an ASF Project
+
+You can let your CI workflows check if the Actions used in your project are approved for use in the ASF.
+
+Either create a new workflow in your project repository, e.g. `.github/workflows/check-project-actions.yml`,
+like the following example, or call the workflow from a job from your existing CI workflow in your repository.
+
+```yaml
+ name: Check action references
+ on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/**"
+  pull_request:
+    paths:
+      - ".github/**"
+ jobs:
+   # This is the job that verifies your project's usage of approved GitHub actions
+   check:
+     name: Check actions usage
+     uses: apache/infrastructure-actions/.github/workflows/check-project-actions.yml@main
+```
+
+When calling the `check-project-actions` from a `push` or `pull_request` event, the workflow should work
+automatically against the "right" reference.
+
+You can also pass the `repository`, `ref`, `fetch-depth` and `submodules` parameters, as documented for
+the the [GitHub `actions/checkout` action](https://github.com/actions/checkout?tab=readme-ov-file#usage)
+to the workflow call to check against a specific commit or tag. For example:
+```yaml
+  check:
+    name: Check actions usage
+    uses: apache/infrastructure-actions/.github/workflows/check-project-actions.yml@main
+    with:
+      repository: apacha/my-project
+      ref: my-branch
+```
 
 ## Submitting an Action
 
