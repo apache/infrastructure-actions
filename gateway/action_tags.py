@@ -261,7 +261,12 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                                 else:
                                     result.failure(m, "      ..")
                 else:
-                    result.failure(f"GitHub action {name} references an invalid Git SHA '{ref}'", "      ..")
+                    ignore_invalid_git_sha = details and 'ignore_invalid_git_sha' in details and details['ignore_invalid_git_sha'] == True
+                    if ignore_invalid_git_sha:
+                        result.warning(f"GitHub action {name} references an invalid Git SHA but 'ignore_invalid_git_sha' is set: will ignore invalid Git SHA '{ref}'", "  ..")
+                    else:
+                        result.failure(f"GitHub action {name} references an invalid Git SHA '{ref}'", "  ..")
+                        raise Exception("foo")
 
             for req_tag, req_shas in requested_shas_by_tag.items():
                 result.log(f"  .. checking tag '{req_tag}'")

@@ -27,6 +27,8 @@ bytedeco/javacpp-presets/.github/actions/*:
 dtolnay/rust-toolchain:
   stable:
     keep: true
+    # 'stable' is a branch, not a Git SHA
+    ignore_invalid_git_sha: true
 golangci/*:
   '*':
     keep: true
@@ -37,6 +39,8 @@ pypa/gh-action-pip-audit:
 pypa/gh-action-pypi-publish:
   release/v1*:
     keep: true
+    # 'release/v1*' is a branch wildcard, not a Git SHA
+    ignore_invalid_git_sha: true
 pytooling/actions/with-post-step:
   '*':
     keep: true
