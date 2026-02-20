@@ -24,6 +24,9 @@ astral-sh/setup-uv:
     expires_at: 2026-03-15
   681c641aba71e4a1c380be3ab5e12ad51f415867:
     tag: v7.1.6
+    expires_at: 2026-05-15
+  eac588ad8def6316056a12d4907a9d4d84ff7a3b:
+    tag: v7.3.0
 bytedeco/javacpp-presets/.github/actions/*:
   '*':
     expires_at: 2025-08-01
