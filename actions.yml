@@ -570,9 +570,6 @@ scacap/action-surefire-report:
     keep: true
   5609ce4db72c09db044803b344a8968fd1f315da:
     tag: v1.9.1
-scala-steward-org/scala-steward-action:
-  f60ccd18bc9d8083e6809d9dc3db4a69a71d856c:
-    tag: v2.78.0
 scalacenter/sbt-dependency-submission:
   64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3:
     tag: v3.1.0
