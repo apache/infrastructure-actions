@@ -123,7 +123,7 @@ jobs:
         if: false
       - uses: pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e  # v3.3.1
         if: false
-      - uses: sbt/setup-sbt@06192244f17880c9bf69ccd8de5b2e8785822be5  # v1.1.17
+      - uses: sbt/setup-sbt@1cad58d595b729a71ca2254cdf5b43dd6f42d4bb  # v1.1.18
         if: false
       - uses: scacap/action-surefire-report@5609ce4db72c09db044803b344a8968fd1f315da  # v1.9.1
         if: false
