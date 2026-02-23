@@ -13,12 +13,6 @@ ana06/get-changed-files:
   25f79e676e7ea1868813e21465014798211fad8c:
     tag: v2.3.0
 astral-sh/setup-uv:
-  eb1897b8dc4b5d5bfe39a428a8f2304605e0983c:
-    expires_at: 2026-02-23
-    tag: v7.0.0
-  85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41:
-    tag: v7.1.2
-    expires_at: 2026-02-23
   1e862dfacbd1d6d858c55d9b792c756523627244:
     tag: v7.1.4
     expires_at: 2026-03-15
@@ -86,9 +80,6 @@ dorny/test-reporter:
   b082adf0eced0765477756c2a610396589b8c637:
     tag: v2.5.0
 DavidAnson/markdownlint-cli2-action:
-  992badcdf24e3b8eb7e87ff9287fe931bcb00c6e:
-    tag: v20.0.0
-    expires_at: 2026-02-23
   30a0e04f1870d58f8d717450cc6134995f993c63:
     tag: v21.0.0
     expires_at: 2026-03-31
@@ -99,18 +90,12 @@ EnricoMi/publish-unit-test-result-action:
     expires_at: 2025-08-01
     keep: true
 JamesIves/github-pages-deploy-action:
-  6c2d9db40f9296374acc17b90404b6e8864128c8:
-    tag: v4.7.3
-    expires_at: 2026-02-23
   4a3abc783e1a24aeb44c16e869ad83caf6b4cc23:
     tag: v4.7.4
     expires_at: 2026-04-24
   d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
     tag: v4.8.0
 JustinBeckwith/linkinator-action:
-  3d5ba091319fa7b0ac14703761eebb7d100e6f6d:
-    tag: v1.11.0
-    expires_at: 2026-02-23
   af984b9f30f63e796ae2ea5be5e07cb587f1bbd9:
     tag: v2.3
 Kesin11/actions-timeline:
@@ -400,15 +385,9 @@ hashicorp/setup-terraform:
   b9cd54a3c349d3f38e8881555d616ced269862dd:
     tag: v3
 helm/chart-testing-action:
-  0d28d3144d3a25ea2cc349d6e59901c4ff469b3b:
-    tag: v2.7.0
-    expires_at: 2026-02-23
   6ec842c01de15ebb84c8627d2744a0c2f2755c9f:
     tag: v2.8.0
 helm/kind-action:
-  a1b0e391336a6ee6713a0583f8c6240d70863de3:
-    tag: v1.12.0
-    expires_at: 2026-02-23
   92086f6be054225fa813e0a4b13787fc9088faab:
     tag: v1.13.0
 houseabsolute/actions-rust-cross:
@@ -606,9 +585,6 @@ pyTooling/Actions:
     expires_at: 2025-08-01
     keep: true
 pypa/cibuildwheel:
-  9c00cb4f6b517705a3794b22395aedc36257242c:
-    tag: v3.2.1
-    expires_at: 2026-02-23
   63fd63b352a9a8bdcc24791c9dbee952ee9a8abc:
     tag: v3.3.0
     expires_at: 2026-04-24
@@ -722,9 +698,6 @@ taiki-e/install-action:
     expires_at: 2025-08-01
     keep: true
 tcort/github-action-markdown-link-check:
-  f3d33029dca1c4a24b87e2df648f9f4604ef6533:
-    tag: v1.1.1
-    expires_at: 2026-02-23
   e7c7a18363c842693fadde5d41a3bd3573a7a225:
     tag: v1.1.2
 test-summary/action:
