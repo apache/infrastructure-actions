@@ -180,7 +180,6 @@
 - sbt/setup-sbt@1cad58d595b729a71ca2254cdf5b43dd6f42d4bb
 - scacap/action-surefire-report@*
 - scacap/action-surefire-report@5609ce4db72c09db044803b344a8968fd1f315da
-- scala-steward-org/scala-steward-action@53d486a68877f4a6d1e110e8058fe21e593db356
 - scala-steward-org/scala-steward-action@f60ccd18bc9d8083e6809d9dc3db4a69a71d856c
 - scalacenter/sbt-dependency-submission@64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3
 - scottbrenner/puppet-lint-action@*
