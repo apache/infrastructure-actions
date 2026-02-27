@@ -17,7 +17,7 @@
 # under the License.
 #
 
-name: Example CI validating allowed GH Actions usage
+name: Example CI workflow validating allowed GH Actions usage in an ASF project
 on:
   # If you want to run this workflow manually, keep `workflow_dispatch`. Otherwise, remove this trigger.
   workflow_dispatch:
@@ -38,11 +38,13 @@ jobs:
     name: Check actions usage
     uses: apache/infrastructure-actions/check-project-actions/check-project-actions.yml@main
     permissions:
-      # Only read access to the repository's content
+      # Only read access to the repository's content.
       contents: read
-      # Allow the workflow to add a comment to a PR in case the actions-verification failed
+      # Allow the workflow to add a comment to a PR in case the actions-verification failed.
+      # This is required to run the workflow.
       pull-requests: write
-    # Optional: specify a different repository and/or ref to check. These options are passed to
+      # All other permissions are "none".
+    # Optionally, you can specify a different repository and/or ref to check. These options are passed to
     # GitHub actions/checkout, see https://github.com/actions/checkout?tab=readme-ov-file#usage for details.
     #with:
       #repository: apache/my-project

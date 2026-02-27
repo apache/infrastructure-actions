@@ -32,11 +32,7 @@ jobs:
 ```
 
 When calling the `check-project-actions` workflow from a `push` or `pull_request` event, it should work
-automatically against the "right" reference.
-
-You can also pass the `repository`, `ref`, `fetch-depth` and `submodules` parameters, as documented for
-the the [GitHub `actions/checkout` action](https://github.com/actions/checkout?tab=readme-ov-file#usage)
-to the workflow call to check against a specific commit or tag.
+automatically against the "right" reference. See the sample workflow linked above for more details.
 
 ## Submitting an Action
 
