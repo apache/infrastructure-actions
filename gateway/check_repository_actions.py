@@ -159,33 +159,23 @@ def check_project_actions(repository: str | os.PathLike, approved_patterns_file:
                         failures.append(f"❌ {relative_path} {yaml_path}: '{uses_value}' is not approved")
 
     if on_gha():
-        summary_lines: list[str] = [
-            "# GitHub Actions verification result",
-            "",
-            "For more information visit the [ASF Infrastructure GitHub Actions Policy](https://infra.apache.org/github-actions-policy.html) page",
-            "and the [ASF Infrastructure Actions](https://github.com/apache/infrastructure-actions) repository.",
-        ]
-
-        if len(failures) > 0:
-            summary_lines.extend(["", f"## Failures ({len(failures)})"])
-            for msg in failures:
-                summary_lines.extend([msg, ""])
-
-        if len(warnings) > 0:
-            summary_lines.extend(["", f"## Warnings ({len(warnings)})"])
-            for msg in warnings:
-                summary_lines.extend([msg, ""])
-
-        if len(failures) == 0:
-            summary_lines.append("✅ Success, all action usages match the currently approved patterns.")
-
-        summary_text = "\n".join(summary_lines).rstrip() + "\n"
-
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
-            f.write(summary_text)
-        # This file is used in the workflow to post a comment on a pull request.
-        with open("step-summary-output.txt", "a") as f:
-            f.write(summary_text)
+            f.write(f"# GitHub Actions verification result\n")
+            f.write("\n")
+            f.write("For more information visit the [ASF Infrastructure GitHub Actions Policy](https://infra.apache.org/github-actions-policy.html) page\n")
+            f.write("and the [ASF Infrastructure Actions](https://github.com/apache/infrastructure-actions) repository.\n")
+            if len(failures) > 0:
+                f.write("\n")
+                f.write(f"## Failures ({len(failures)})\n")
+                for msg in failures:
+                    f.write(f"{msg}\n\n")
+            if len(warnings) > 0:
+                f.write("\n")
+                f.write(f"## Warnings ({len(warnings)})\n")
+                for msg in warnings:
+                    f.write(f"{msg}\n\n")
+            if len(failures) == 0:
+                f.write(f"✅ Success, all action usages match the currently approved patterns.\n")
 
     if len(failures) > 0:
         raise Exception(f"One or more action references are not approved or explicitly blocked:\n{"\n".join(failures)}")
