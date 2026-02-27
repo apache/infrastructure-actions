@@ -32,14 +32,16 @@ on:
     paths:
       - ".github/**"
 
-permissions:
-  contents: read
-
 jobs:
   # This is the job that verifies your project's usage of approved GitHub actions
   check:
     name: Check actions usage
     uses: apache/infrastructure-actions/check-project-actions/check-project-actions.yml@main
+    permissions:
+      # Only read access to the repository's content
+      contents: read
+      # Allow the workflow to add a comment to a PR in case the actions-verification failed
+      pull-requests: write
     # Optional: specify a different repository and/or ref to check. These options are passed to
     # GitHub actions/checkout, see https://github.com/actions/checkout?tab=readme-ov-file#usage for details.
     #with:

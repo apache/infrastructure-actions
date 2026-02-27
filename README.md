@@ -24,6 +24,11 @@ jobs:
   check:
     name: Check actions usage
     uses: apache/infrastructure-actions/.github/workflows/check-project-actions.yml@main
+    permissions:
+      # Only read access to the repository's content
+      contents: read
+      # Allow the workflow to add a comment to a PR in case the actions-verification failed
+      pull-requests: write
 ```
 
 When calling the `check-project-actions` workflow from a `push` or `pull_request` event, it should work
