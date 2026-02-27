@@ -330,6 +330,9 @@ easimon/maximize-build-space:
   '*':
     expires_at: 2025-08-01
     keep: true
+editorconfig-checker/action-editorconfig-checker:
+  4b6cd6190d435e7e084fb35e36a096e98506f7b9:
+    tag: v2.1.0
 eps1lon/actions-label-merge-conflict:
   '*':
     expires_at: 2025-08-01
