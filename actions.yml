@@ -101,6 +101,9 @@ JustinBeckwith/linkinator-action:
 Kesin11/actions-timeline:
   54d513e0b5ff1158f1cf8321108d666a5a6c1fca:
     tag: v2.2.5
+    expires_at: 2026-05-22
+  e018cfefea60b4f44266998551211a35a58b8097:
+    tag: v3.0.0
 PyO3/maturin-action:
   '*':
     expires_at: 2025-08-01
