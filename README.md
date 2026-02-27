@@ -16,42 +16,22 @@ This repository hosts GitHub Actions developed by the ASF community and approved
 
 You can let your CI workflows check if the Actions used in your project are approved for use in the ASF.
 
-Either create a new workflow in your project repository, e.g. `.github/workflows/check-project-actions.yml`,
-like the following example, or call the workflow from a job from your existing CI workflow in your repository.
-
+An example workflow that can be used as a template for your project's CI can be found
+[here `check-actions-usage/sample-ci-workflow.yml`](check-actions-usage/sample-ci-workflow.yml).
+It is usually enough to add the following job to an existing `.github/workflows/ci.yml` file:
 ```yaml
- name: Check action references
- on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/**"
-  pull_request:
-    paths:
-      - ".github/**"
- jobs:
-   # This is the job that verifies your project's usage of approved GitHub actions
-   check:
-     name: Check actions usage
-     uses: apache/infrastructure-actions/.github/workflows/check-project-actions.yml@main
+jobs:
+  check:
+    name: Check actions usage
+    uses: apache/infrastructure-actions/.github/workflows/check-project-actions.yml@main
 ```
 
-When calling the `check-project-actions` from a `push` or `pull_request` event, the workflow should work
+When calling the `check-project-actions` workflow from a `push` or `pull_request` event, it should work
 automatically against the "right" reference.
 
 You can also pass the `repository`, `ref`, `fetch-depth` and `submodules` parameters, as documented for
 the the [GitHub `actions/checkout` action](https://github.com/actions/checkout?tab=readme-ov-file#usage)
-to the workflow call to check against a specific commit or tag. For example:
-```yaml
-  check:
-    name: Check actions usage
-    uses: apache/infrastructure-actions/.github/workflows/check-project-actions.yml@main
-    with:
-      repository: apacha/my-project
-      ref: my-branch
-```
+to the workflow call to check against a specific commit or tag.
 
 ## Submitting an Action
 
