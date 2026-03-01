@@ -429,6 +429,9 @@ jidicula/clang-format-action:
 Jimver/cuda-toolkit:
   6008063726ffe3309d1b22e413d9e88fed91a2f2:
     tag: v0.2.29
+    expires_at: 2026-05-24
+  b6fc3a9f3f15256d9d94ffe1254f9c5a2565cde6:
+    tag: v0.2.30
 jlumbroso/free-disk-space:
   '*':
     expires_at: 2025-08-01
