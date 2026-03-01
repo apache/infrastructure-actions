@@ -19,7 +19,9 @@ jobs:
         if: false
       - uses: ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c  # v2.3.0
         if: false
-      - uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867  # v7.1.6
+      - uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b  # v7.3.0
+        if: false
+      - uses: rust-lang/crates-io-auth-action@b7e9a28eded4986ec6b1fa40eeee8f8f165559ec  # v1.0.3
         if: false
       - uses: dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637  # v2.5.0
         if: false
@@ -27,19 +29,19 @@ jobs:
         if: false
       - uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f  # v4.8.0
         if: false
-      - uses: JustinBeckwith/linkinator-action@af984b9f30f63e796ae2ea5be5e07cb587f1bbd9  # v2.3
+      - uses: JustinBeckwith/linkinator-action@f62ba0c110a76effb2ee6022cc6ce4ab161085e3  # v2.4
         if: false
-      - uses: Kesin11/actions-timeline@54d513e0b5ff1158f1cf8321108d666a5a6c1fca  # v2.2.5
+      - uses: Kesin11/actions-timeline@e018cfefea60b4f44266998551211a35a58b8097  # v3.0.0
         if: false
       - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185  # v3
         if: false
       - uses: al-cheb/configure-pagefile-action@9b6da52fb72a3c6147c1aad2df22d8d905681adc  # v1.5
         if: false
-      - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708  # v5.1.1
+      - uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # v6.0.0
         if: false
       - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
         if: false
-      - uses: bazel-contrib/setup-bazel@8d2cb86a3680a820c3e219597279ce3f80d17a47  # v0.15.0
+      - uses: bazel-contrib/setup-bazel@083175551ceeceebc757ebee2127fde78840ca77  # 0.18.0
         if: false
       - uses: betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619  # v1.21.1
         if: false
@@ -49,15 +51,15 @@ jobs:
         if: false
       - uses: browser-actions/setup-geckodriver@5ef1526ed36211ab6cb531ec1cfb11f924ca2dee
         if: false
-      - uses: burnett01/rsync-deployments@7659d600d8bdd035bb5cdfba1d4bd0dd4a307ca6  # 8.0.3
+      - uses: burnett01/rsync-deployments@dc0d5d44c4728aad3f02154a87309809e62a960f  # 8.0.4
         if: false
       - uses: carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3  # v1.0.10
         if: false
       - uses: commit-check/commit-check-action@be79b5cd5953c8afd4266004c5bbb1431f544df1  # v2.2.1
         if: false
-      - uses: coursier/cache-action@c5ca79321d170b8a18c288d9cadc2a6037166d0f  # 6.4.7
+      - uses: coursier/cache-action@e47d7d35a0d3a2c7f649ca5c63dfc2bbfaa002e7  # v8.0.1
         if: false
-      - uses: coursier/setup-action@f7be3eb3dcef84a4e16fc8cd75c87beb2e5cbcc9  # v2.0.2
+      - uses: coursier/setup-action@7acb5c9ea69bc1a1bb185ec45ebce2ac114f3628  # v2.0.3
         if: false
       - uses: cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8  # v2.15.1
         if: false
@@ -73,6 +75,8 @@ jobs:
         if: false
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3.0.2
         if: false
+      - uses: editorconfig-checker/action-editorconfig-checker@4b6cd6190d435e7e084fb35e36a096e98506f7b9  # v2.1.0
+        if: false
       - uses: erisu/apache-rat-action@46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c  # v2.0.0
         if: false
       - uses: erisu/license-checker-action@99cffa11264fe545fd0baa6c13bca5a00ae608f2  # v2.0.1
@@ -80,6 +84,8 @@ jobs:
       - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3.0.0
         if: false
       - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3.0.1
+        if: false
+      - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2  # v5.0.0
         if: false
       - uses: graalvm/setup-graalvm@54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1  # v1.4.5
         if: false
@@ -97,13 +103,15 @@ jobs:
         if: false
       - uses: jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5  # v2
         if: false
+      - uses: Jimver/cuda-toolkit@6008063726ffe3309d1b22e413d9e88fed91a2f2  # v0.2.29
+        if: false
       - uses: jrouly/scalafmt-native-action@14620cde093e5ff6bfbbecd4f638370024287b9d  # v4
         if: false
       - uses: jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d  # v1.2
         if: false
-      - uses: leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248  # v5
+      - uses: leafo/gh-actions-luarocks@4c082a5fad45388feaeb0798dbd82dbd7dc65bca  # v5
         if: false
-      - uses: manusa/actions-setup-minikube@b589f2d61bf96695c546929c72b38563e856059d  # v2.14.0
+      - uses: manusa/actions-setup-minikube@8234275e0386fe1cdaf519d28c90f4f03fad89e4  # v2.15.0
         if: false
       - uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad  # v0.0.9
         if: false
@@ -123,7 +131,7 @@ jobs:
         if: false
       - uses: pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e  # v3.3.1
         if: false
-      - uses: sbt/setup-sbt@ae54f7cfe46ec0d24ade661d77f007360ab48bda  # v1.1.16
+      - uses: sbt/setup-sbt@1cad58d595b729a71ca2254cdf5b43dd6f42d4bb  # v1.1.18
         if: false
       - uses: scacap/action-surefire-report@5609ce4db72c09db044803b344a8968fd1f315da  # v1.9.1
         if: false
@@ -142,6 +150,8 @@ jobs:
       - uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310  # v1
         if: false
       - uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a  # v2.1.1
+        if: false
+      - uses: golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd  # v7.0.0
         if: false
       - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29  # v2.2.1
         if: false

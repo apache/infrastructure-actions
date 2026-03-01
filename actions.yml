@@ -13,17 +13,14 @@ ana06/get-changed-files:
   25f79e676e7ea1868813e21465014798211fad8c:
     tag: v2.3.0
 astral-sh/setup-uv:
-  eb1897b8dc4b5d5bfe39a428a8f2304605e0983c:
-    expires_at: 2026-02-23
-    tag: v7.0.0
-  85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41:
-    tag: v7.1.2
-    expires_at: 2026-02-23
   1e862dfacbd1d6d858c55d9b792c756523627244:
     tag: v7.1.4
     expires_at: 2026-03-15
   681c641aba71e4a1c380be3ab5e12ad51f415867:
     tag: v7.1.6
+    expires_at: 2026-05-15
+  eac588ad8def6316056a12d4907a9d4d84ff7a3b:
+    tag: v7.3.0
 dtolnay/rust-toolchain:
   stable:
     keep: true
@@ -49,6 +46,9 @@ r-lib/actions/*:
 readthedocs/actions/preview:
   '*':
     keep: true
+rust-lang/crates-io-auth-action:
+  b7e9a28eded4986ec6b1fa40eeee8f8f165559ec:
+    tag: v1.0.3
 rustsec/*:
   '*':
     keep: true
@@ -68,9 +68,6 @@ dorny/test-reporter:
   b082adf0eced0765477756c2a610396589b8c637:
     tag: v2.5.0
 DavidAnson/markdownlint-cli2-action:
-  992badcdf24e3b8eb7e87ff9287fe931bcb00c6e:
-    tag: v20.0.0
-    expires_at: 2026-02-23
   30a0e04f1870d58f8d717450cc6134995f993c63:
     tag: v21.0.0
     expires_at: 2026-03-31
@@ -80,23 +77,23 @@ EnricoMi/publish-unit-test-result-action:
   '*':
     keep: true
 JamesIves/github-pages-deploy-action:
-  6c2d9db40f9296374acc17b90404b6e8864128c8:
-    tag: v4.7.3
-    expires_at: 2026-02-23
   4a3abc783e1a24aeb44c16e869ad83caf6b4cc23:
     tag: v4.7.4
     expires_at: 2026-04-24
   d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
     tag: v4.8.0
 JustinBeckwith/linkinator-action:
-  3d5ba091319fa7b0ac14703761eebb7d100e6f6d:
-    tag: v1.11.0
-    expires_at: 2026-02-23
   af984b9f30f63e796ae2ea5be5e07cb587f1bbd9:
     tag: v2.3
+    expires_at: 2026-05-22
+  f62ba0c110a76effb2ee6022cc6ce4ab161085e3:
+    tag: v2.4
 Kesin11/actions-timeline:
   54d513e0b5ff1158f1cf8321108d666a5a6c1fca:
     tag: v2.2.5
+    expires_at: 2026-05-22
+  e018cfefea60b4f44266998551211a35a58b8097:
+    tag: v3.0.0
 PyO3/maturin-action:
   '*':
     keep: true
@@ -120,9 +117,6 @@ addnab/docker-run-action:
   4f65fabd2431ebc8d299f8e5a018d79a769ae185:
     tag: v3
 al-cheb/configure-pagefile-action:
-  a3b6ebd6b634da88790d9c58d4b37a7f4a7b8708:
-    tag: v1.4
-    expires_at: 2026-02-22
   9b6da52fb72a3c6147c1aad2df22d8d905681adc:
     tag: v1.5
 amannn/action-semantic-pull-request:
@@ -140,14 +134,18 @@ aws-actions/configure-aws-credentials:
     expires_at: 2026-03-31
   61815dcd50bd041e203e49132bacad1fd04d2708:
     tag: v5.1.1
+    expires_at: 2026-05-22
+  8df5847569e6427dd6c4fb1cf565c83acfa8afa7:
+    tag: v6.0.0
 azure/setup-helm:
   1a275c3b69536ee54be43f2070a358922e12c8d4:
     tag: v4.3.1
 bazel-contrib/setup-bazel:
-  '*':
-    keep: true
   8d2cb86a3680a820c3e219597279ce3f80d17a47:
-    tag: v0.15.0
+    tag: 0.15.0
+    expires_at: 2026-03-31
+  083175551ceeceebc757ebee2127fde78840ca77:
+    tag: 0.18.0
 betahuhn/repo-file-sync-action:
   8b92be3375cf1d1b0cd579af488a9255572e4619:
     tag: v1.21.1
@@ -177,6 +175,9 @@ burnett01/rsync-deployments:
     expires_at: 2026-04-17
   7659d600d8bdd035bb5cdfba1d4bd0dd4a307ca6:
     tag: 8.0.3
+    expires_at: 2026-05-22
+  dc0d5d44c4728aad3f02154a87309809e62a960f:
+    tag: 8.0.4
 burrunan/gradle-cache-action:
   '*':
     keep: true
@@ -226,17 +227,18 @@ container-tools/microshift-action:
   '*':
     keep: true
 coursier/cache-action:
-  '*':
-    keep: true
+  e47d7d35a0d3a2c7f649ca5c63dfc2bbfaa002e7:
+    tag: v8.0.1
+  c5ca79321d170b8a18c288d9cadc2a6037166d0f:
+    tag: v8.0.0
+    expires_at: 2026-09-01
   bebeeb0e6f48ebad66d3783946588ecf43114433:
+    tag: v7.0.0
+    expires_at: 2026-08-01
+  4e2615869d13561d626ed48655e1a39e5b192b3c:
     tag: 6.4.7
     expires_at: 2026-04-28
-  c5ca79321d170b8a18c288d9cadc2a6037166d0f:
-    tag: 6.4.7
 coursier/setup-action:
-  039f736548afa5411c1382f40a5bd9c2d30e0383:
-    tag: v1.3.9
-    expires_at: 2026-02-24
   '*':
     keep: true
   0ed4d7e7c42eae80e14370990582092c749253c4:
@@ -247,6 +249,9 @@ coursier/setup-action:
     expires_at: 2026-03-28
   f7be3eb3dcef84a4e16fc8cd75c87beb2e5cbcc9:
     tag: v2.0.2
+    expires_at: 2026-05-15
+  7acb5c9ea69bc1a1bb185ec45ebce2ac114f3628:
+    tag: v2.0.3
 cpp-linter/cpp-linter-action:
   0f6d1b8d7e38b584cbee606eb23d850c217d54f8:
     tag: v2.15.1
@@ -284,6 +289,9 @@ dorny/paths-filter:
 easimon/maximize-build-space:
   '*':
     keep: true
+editorconfig-checker/action-editorconfig-checker:
+  4b6cd6190d435e7e084fb35e36a096e98506f7b9:
+    tag: v2.1.0
 eps1lon/actions-label-merge-conflict:
   '*':
     keep: true
@@ -291,9 +299,6 @@ erisu/apache-rat-action:
   46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c:
     tag: v2.0.0
 erisu/license-checker-action:
-  1c222d0c2f5898a4c40b8bd6fd6888650bd6f68a:
-    tag: v2.0.0
-    expires_at: 2026-02-14
   99cffa11264fe545fd0baa6c13bca5a00ae608f2:
     tag: v2.0.1
 gaurav-nelson/github-action-markdown-link-check:
@@ -313,7 +318,6 @@ google-github-actions/setup-gcloud:
     tag: v3.0.1
 gradle/actions/setup-gradle:
   4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2:
-    expires_at: 2050-01-01
     tag: v5.0.0
 gr2m/twitter-together:
   '*':
@@ -342,15 +346,9 @@ hashicorp/setup-terraform:
   b9cd54a3c349d3f38e8881555d616ced269862dd:
     tag: v3
 helm/chart-testing-action:
-  0d28d3144d3a25ea2cc349d6e59901c4ff469b3b:
-    tag: v2.7.0
-    expires_at: 2026-02-23
   6ec842c01de15ebb84c8627d2744a0c2f2755c9f:
     tag: v2.8.0
 helm/kind-action:
-  a1b0e391336a6ee6713a0583f8c6240d70863de3:
-    tag: v1.12.0
-    expires_at: 2026-02-23
   92086f6be054225fa813e0a4b13787fc9088faab:
     tag: v1.13.0
 houseabsolute/actions-rust-cross:
@@ -373,7 +371,6 @@ jidicula/clang-format-action:
     keep: true
 Jimver/cuda-toolkit:
   6008063726ffe3309d1b22e413d9e88fed91a2f2:
-    expires_at: 2050-01-01
     tag: v0.2.29
 jlumbroso/free-disk-space:
   '*':
@@ -421,12 +418,18 @@ leafo/gh-actions-lua:
     keep: true
 leafo/gh-actions-luarocks:
   97053c556d6ce2c8e26eb7ac93743437c7af7248:
+    expires_at: 2026-08-01
+    tag: v5
+  4c082a5fad45388feaeb0798dbd82dbd7dc65bca:
     tag: v5
 manusa/actions-setup-minikube:
   b589f2d61bf96695c546929c72b38563e856059d:
     tag: v2.14.0
+    expires_at: 2026-05-22
   '*':
     keep: true
+  8234275e0386fe1cdaf519d28c90f4f03fad89e4:
+    tag: v2.15.0
 maxim-lobanov/setup-xcode:
   '*':
     keep: true
@@ -512,9 +515,6 @@ pyTooling/Actions:
   '*':
     keep: true
 pypa/cibuildwheel:
-  9c00cb4f6b517705a3794b22395aedc36257242c:
-    tag: v3.2.1
-    expires_at: 2026-02-23
   63fd63b352a9a8bdcc24791c9dbee952ee9a8abc:
     tag: v3.3.0
     expires_at: 2026-04-24
@@ -539,8 +539,6 @@ ruby/setup-ruby:
   '*':
     keep: true
 sbt/setup-sbt:
-  '*':
-    expires_at: 2026-02-28
   3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd:
     tag: v1.1.14
     expires_at: 2026-04-06
@@ -549,15 +547,18 @@ sbt/setup-sbt:
     expires_at: 2026-04-27
   ae54f7cfe46ec0d24ade661d77f007360ab48bda:
     tag: v1.1.16
+    expires_at: 2026-05-12
+  06192244f17880c9bf69ccd8de5b2e8785822be5:
+    tag: v1.1.17
+    expires_at: 2026-05-18
+  1cad58d595b729a71ca2254cdf5b43dd6f42d4bb:
+    tag: v1.1.18
 scacap/action-surefire-report:
   '*':
     keep: true
   5609ce4db72c09db044803b344a8968fd1f315da:
     tag: v1.9.1
 scala-steward-org/scala-steward-action:
-  53d486a68877f4a6d1e110e8058fe21e593db356:
-    tag: v2.77.0
-    expires_at: 2026-02-26
   f60ccd18bc9d8083e6809d9dc3db4a69a71d856c:
     tag: v2.78.0
 scalacenter/sbt-dependency-submission:
@@ -585,6 +586,10 @@ sigstore/cosign-installer:
   faadad0cce49287aee09b3a48701e75088a2c6ad:
     expires_at: 2026-12-31
     tag: v4.0.0
+slsa-framework/source-actions:
+  dea965cdca5e0cb422bf7b2653c9d15f678ad01c:
+    expires_at: 2026-12-31
+    tag: v0.1.0
 snok/install-poetry:
   76e04a911780d5b312d89783f7b1cd627778900a:
     tag: v1
@@ -607,9 +612,6 @@ taiki-e/install-action:
   '*':
     keep: true
 tcort/github-action-markdown-link-check:
-  f3d33029dca1c4a24b87e2df648f9f4604ef6533:
-    tag: v1.1.1
-    expires_at: 2026-02-23
   e7c7a18363c842693fadde5d41a3bd3573a7a225:
     tag: v1.1.2
 test-summary/action:
