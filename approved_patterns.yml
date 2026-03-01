@@ -5,6 +5,7 @@
 - astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244
 - astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867
 - astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b
+- astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098
 - bytedeco/javacpp-presets/.github/actions/*@*
 - dtolnay/rust-toolchain@stable
 - golangci/*@*
@@ -124,6 +125,7 @@
 - jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5
 - jidicula/clang-format-action@*
 - Jimver/cuda-toolkit@6008063726ffe3309d1b22e413d9e88fed91a2f2
+- Jimver/cuda-toolkit@b6fc3a9f3f15256d9d94ffe1254f9c5a2565cde6
 - jlumbroso/free-disk-space@*
 - jrouly/scalafmt-native-action@14620cde093e5ff6bfbbecd4f638370024287b9d
 - jrouly/scalafmt-native-action@*

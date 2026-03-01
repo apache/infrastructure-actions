@@ -19,7 +19,7 @@ jobs:
         if: false
       - uses: ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c  # v2.3.0
         if: false
-      - uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b  # v7.3.0
+      - uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098  # v7.3.1
         if: false
       - uses: rust-lang/crates-io-auth-action@b7e9a28eded4986ec6b1fa40eeee8f8f165559ec  # v1.0.3
         if: false
@@ -103,7 +103,7 @@ jobs:
         if: false
       - uses: jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5  # v2
         if: false
-      - uses: Jimver/cuda-toolkit@6008063726ffe3309d1b22e413d9e88fed91a2f2  # v0.2.29
+      - uses: Jimver/cuda-toolkit@b6fc3a9f3f15256d9d94ffe1254f9c5a2565cde6  # v0.2.30
         if: false
       - uses: jrouly/scalafmt-native-action@14620cde093e5ff6bfbbecd4f638370024287b9d  # v4
         if: false

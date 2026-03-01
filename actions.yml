@@ -21,6 +21,9 @@ astral-sh/setup-uv:
     expires_at: 2026-05-15
   eac588ad8def6316056a12d4907a9d4d84ff7a3b:
     tag: v7.3.0
+    expires_at: 2026-05-24
+  5a095e7a2014a4212f075830d4f7277575a9d098:
+    tag: v7.3.1
 dtolnay/rust-toolchain:
   stable:
     keep: true
@@ -372,6 +375,9 @@ jidicula/clang-format-action:
 Jimver/cuda-toolkit:
   6008063726ffe3309d1b22e413d9e88fed91a2f2:
     tag: v0.2.29
+    expires_at: 2026-05-24
+  b6fc3a9f3f15256d9d94ffe1254f9c5a2565cde6:
+    tag: v0.2.30
 jlumbroso/free-disk-space:
   '*':
     keep: true
