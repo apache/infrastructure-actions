@@ -626,6 +626,9 @@ taiki-e/install-action:
 tcort/github-action-markdown-link-check:
   e7c7a18363c842693fadde5d41a3bd3573a7a225:
     tag: v1.1.2
+terraform-linters/setup-tflint:
+  4cb9feea73331a35b422df102992a03a44a3bb33
+    tag: v6.2.1
 test-summary/action:
   '*':
     keep: true
