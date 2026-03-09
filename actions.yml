@@ -244,9 +244,6 @@ coursier/cache-action:
 coursier/setup-action:
   '*':
     keep: true
-  0ed4d7e7c42eae80e14370990582092c749253c4:
-    tag: v2.0.0
-    expires_at: 2026-03-09
   7fdbcb2ec74047d6f6270a85967bc8ff1cebe626:
     tag: v2.0.1
     expires_at: 2026-03-28
