@@ -103,10 +103,6 @@ PyO3/maturin-action:
 TobKed/label-when-approved-action:
   '*':
     keep: true
-VirtusLab/scala-cli-setup:
-  68bd9c30954d20e6cb6ddaf01b3b38336f25df4b:
-    expires_at: 2026-03-10
-    tag: v1.10.1
 actions-cool/check-user-permission:
   '*':
     keep: true
@@ -573,12 +569,6 @@ scacap/action-surefire-report:
 scala-steward-org/scala-steward-action:
   f60ccd18bc9d8083e6809d9dc3db4a69a71d856c:
     tag: v2.78.0
-scalacenter/sbt-dependency-submission:
-  64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3:
-    tag: v3.1.0
-    expires_at: 2026-03-10
-  #f43202114d7522a4b233e052f82c2eea8d658134:
-  #  tag: v3.2.1
 scottbrenner/puppet-lint-action:
   '*':
     keep: true

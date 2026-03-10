@@ -32,7 +32,6 @@
 - Kesin11/actions-timeline@e018cfefea60b4f44266998551211a35a58b8097
 - PyO3/maturin-action@*
 - TobKed/label-when-approved-action@*
-- VirtusLab/scala-cli-setup@68bd9c30954d20e6cb6ddaf01b3b38336f25df4b
 - actions-cool/check-user-permission@*
 - actions-cool/issues-helper@*
 - actions-cool/maintain-one-comment@*
@@ -191,7 +190,6 @@
 - scacap/action-surefire-report@*
 - scacap/action-surefire-report@5609ce4db72c09db044803b344a8968fd1f315da
 - scala-steward-org/scala-steward-action@f60ccd18bc9d8083e6809d9dc3db4a69a71d856c
-- scalacenter/sbt-dependency-submission@64084844d2b0a9b6c3765f33acde2fbe3f5ae7d3
 - scottbrenner/puppet-lint-action@*
 - securego/gosec@*
 - shivammathur/setup-php@*
