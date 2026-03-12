@@ -206,6 +206,7 @@
 - taiki-e/install-action@*
 - tcort/github-action-markdown-link-check@e7c7a18363c842693fadde5d41a3bd3573a7a225
 - terraform-linters/setup-tflint@4cb9feea73331a35b422df102992a03a44a3bb33
+- testlens-app/setup-testlens@*
 - test-summary/action@*
 - timonvs/pr-labeler-action@*
 - untitaker/hyperlink@e66bb17cc9ae341677431edec3b893a0aa6ac747
