@@ -23,7 +23,7 @@ jobs:
         if: false
       - uses: rust-lang/crates-io-auth-action@b7e9a28eded4986ec6b1fa40eeee8f8f165559ec  # v1.0.3
         if: false
-      - uses: dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637  # v2.5.0
+      - uses: dorny/test-reporter@3d76b34a4535afbd0600d347b09a6ee5deb3ed7f  # v2.6.0
         if: false
       - uses: DavidAnson/markdownlint-cli2-action@07035fd053f7be764496c0f8d8f9f41f98305101  # v22.0.0
         if: false
