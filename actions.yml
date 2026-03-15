@@ -13,9 +13,6 @@ ana06/get-changed-files:
   25f79e676e7ea1868813e21465014798211fad8c:
     tag: v2.3.0
 astral-sh/setup-uv:
-  1e862dfacbd1d6d858c55d9b792c756523627244:
-    tag: v7.1.4
-    expires_at: 2026-03-15
   681c641aba71e4a1c380be3ab5e12ad51f415867:
     tag: v7.1.6
     expires_at: 2026-05-15
