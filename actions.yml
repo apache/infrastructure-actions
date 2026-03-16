@@ -251,6 +251,9 @@ cpp-linter/cpp-linter-action:
 crate-ci/typos:
   '*':
     keep: true
+crowdin/github-action:
+  ce33ce793a5cbc401d9cd748716e03fc90c001f1:
+    tag: v2.15.2
 crazy-max/ghaction-import-gpg:
   e89d40939c28e39f97cf32126055eeae86ba74ec:
     tag: v6.3.0
