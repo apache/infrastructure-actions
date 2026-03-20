@@ -689,6 +689,9 @@ golangci/golangci-lint-action:
     expires_at: 2026-04-24
   1481404843c368bc19ca9406f87d6e0fc97bdcfd:
     tag: v7.0.0
+    expires_at: 2026-06-12
+  1e7e51e771db61008b38414a730f564565cf7c20:
+    tag: v9.2.0
 mlugg/setup-zig:
   8d6198c65fb0feaa111df26e6b467fea8345e46f:
     tag: v2.0.5
