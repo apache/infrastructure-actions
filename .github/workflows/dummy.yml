@@ -17,6 +17,8 @@ jobs:
     steps:
       - uses: 1Password/load-secrets-action@8d0d610af187e78a2772c2d18d627f4c52d3fbfb  # v3.1.0
         if: false
+      - uses: advanced-security/dismiss-alerts@046d6b48d2e43cf563f96f67332c47c432eff83e  # v2.0.2
+        if: false
       - uses: ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c  # v2.3.0
         if: false
       - uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098  # v7.3.1
