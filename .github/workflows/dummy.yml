@@ -15,7 +15,7 @@ jobs:
   dummy:
     runs-on: ubuntu-latest
     steps:
-      - uses: 1Password/load-secrets-action@8d0d610af187e78a2772c2d18d627f4c52d3fbfb  # v3.1.0
+      - uses: 1Password/load-secrets-action@dafbe7cb03502b260e2b2893c753c352eee545bf  # v3.2.1
         if: false
       - uses: advanced-security/dismiss-alerts@046d6b48d2e43cf563f96f67332c47c432eff83e  # v2.0.2
         if: false
