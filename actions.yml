@@ -161,6 +161,9 @@ biomejs/setup-biome:
 browser-actions/setup-firefox:
   5914774dda97099441f02628f8d46411fcfbd208:
     tag: v1.7.0
+    expires_at: 2026-06-12
+  fcf821c621167805dd63a29662bd7cb5676c81a8:
+    tag: v1.7.1
 browser-actions/setup-geckodriver:
   5ef1526ed36211ab6cb531ec1cfb11f924ca2dee:
 bufbuild/buf-breaking-action:
