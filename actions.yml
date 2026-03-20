@@ -124,7 +124,7 @@ amannn/action-semantic-pull-request:
 aquasecurity/trivy-action:
   57a97c7e7821a5776cebc9bb87c984fa69cba8f1:
     expires_at: 2050-01-01
-    tag: "v0.35.0"
+    tag: v0.35.0
 arduino/setup-protoc:
   '*':
     keep: true
@@ -357,6 +357,9 @@ helm/chart-testing-action:
 helm/kind-action:
   92086f6be054225fa813e0a4b13787fc9088faab:
     tag: v1.13.0
+    expires_at: 2026-06-12
+  ef37e7f390d99f746eb8b610417061a60e82a6cc:
+    tag: v1.14.0
 houseabsolute/actions-rust-cross:
   '*':
     keep: true
