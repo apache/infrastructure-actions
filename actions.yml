@@ -295,6 +295,18 @@ docker://jekyll/jekyll:
 docker://pandoc/core:
   sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93:
     tag: 3.7.0.2
+docker/build-push-action:
+  10e90e3645eae34f1e60eeb005ba3a3d33f178e8:
+    tag: v6.19.2
+docker/login-action:
+  c94ce9fb468520275223c153574b00df6fe4bcc9:
+    tag: v3.7.0
+docker/metadata-action:
+  c299e40c65443455700f0fdfc63efafe5b349051:
+    tag: v5.10.0
+docker/setup-buildx-action:
+  8d2750c68a42422c14e847fe6c8ac0403b4cbd6f:
+    tag: v3.12.0
 docker/setup-qemu-action:
   29109295f81e9208d7d86ff1c6c12d2833863392:
     tag: v3.6.0
