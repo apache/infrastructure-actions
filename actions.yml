@@ -270,6 +270,9 @@ crate-ci/typos:
 crazy-max/ghaction-import-gpg:
   e89d40939c28e39f97cf32126055eeae86ba74ec:
     tag: v6.3.0
+    expires_at: 2026-06-12
+  2dc316deee8e90f13e1a351ab510b4d5bc0c82cd:
+    tag: v7.0.0
 damccorm/tag-ur-it:
   6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5:
 dawidd6/action-download-artifact:
