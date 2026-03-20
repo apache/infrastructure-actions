@@ -496,6 +496,9 @@ orhun/git-cliff-action:
     expires_at: 2026-03-31
   e16f179f0be49ecdfe63753837f20b9531642772:
     tag: v4.7.0
+    expires_at: 2026-06-12
+  c93ef52f3d0ddcdcc9bd5447d98d458a11cd4f72:
+    tag: v4.7.1
 ossf/scorecard-action:
   '*':
     keep: true
