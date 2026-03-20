@@ -159,7 +159,7 @@ jobs:
         if: false
       - uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310  # v1
         if: false
-      - uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a  # v2.1.1
+      - uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95  # v3.0.1
         if: false
       - uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20  # v9.2.0
         if: false
