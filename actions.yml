@@ -9,6 +9,9 @@
     expires_at: 2026-04-24
   8d0d610af187e78a2772c2d18d627f4c52d3fbfb:
     tag: v3.1.0
+    expires_at: 2026-06-12
+  dafbe7cb03502b260e2b2893c753c352eee545bf:
+    tag: v3.2.1
 advanced-security/dismiss-alerts:
   046d6b48d2e43cf563f96f67332c47c432eff83e:
     tag: v2.0.2
