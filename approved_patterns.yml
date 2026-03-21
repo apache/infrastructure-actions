@@ -234,6 +234,7 @@
 - wei/curl@*
 - xpol/setup-lua@*
 - slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
+- slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95
 - golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84
 - golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd
 - golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20

@@ -703,6 +703,9 @@ xpol/setup-lua:
 slackapi/slack-github-action:
   91efab103c0de0a537f72a35f6b8cda0ee76bf0a:
     tag: v2.1.1
+    expires_at: 2026-06-13
+  af78098f536edbc4de71162a307590698245be95:
+    tag: v3.0.1
 golangci/golangci-lint-action:
   55c2c1448f86e01eaae002a5a3a9624417608d84:
     tag: v6.5.2
