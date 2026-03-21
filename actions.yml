@@ -354,6 +354,9 @@ gradle/actions/setup-gradle:
     expires_at: 2026-05-24
   0723195856401067f7a2779048b490ace7a47d7c:
     tag: v5.0.2
+gradle/actions/wrapper-validation:
+  0723195856401067f7a2779048b490ace7a47d7c:
+    tag: v5.0.2
 gr2m/twitter-together:
   '*':
     keep: true
