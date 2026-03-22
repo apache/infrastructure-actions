@@ -43,6 +43,8 @@ jobs:
         if: false
       - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
         if: false
+      - uses: azure/setup-kubectl@776406bce94f63e41d621b960d78ee25c8b76ede  # v4.0.1
+        if: false
       - uses: bazel-contrib/setup-bazel@083175551ceeceebc757ebee2127fde78840ca77  # 0.18.0
         if: false
       - uses: betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619  # v1.21.1
@@ -129,7 +131,7 @@ jobs:
         if: false
       - uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411  # v2.8.0
         if: false
-      - uses: manusa/actions-setup-minikube@8234275e0386fe1cdaf519d28c90f4f03fad89e4  # v2.15.0
+      - uses: manusa/actions-setup-minikube@96202dee4ae1c2f46a62fe197273aaf22b83f42d  # v2.16.1
         if: false
       - uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad  # v0.0.9
         if: false
