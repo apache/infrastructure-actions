@@ -125,11 +125,11 @@ jobs:
         if: false
       - uses: jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d  # v1.2
         if: false
-      - uses: leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248  # v6.0.0
+      - uses: leafo/gh-actions-luarocks@4c082a5fad45388feaeb0798dbd82dbd7dc65bca  # v5
         if: false
       - uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411  # v2.8.0
         if: false
-      - uses: manusa/actions-setup-minikube@96202dee4ae1c2f46a62fe197273aaf22b83f42d  # v2.16.1
+      - uses: manusa/actions-setup-minikube@8234275e0386fe1cdaf519d28c90f4f03fad89e4  # v2.15.0
         if: false
       - uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad  # v0.0.9
         if: false
