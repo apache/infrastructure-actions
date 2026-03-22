@@ -543,6 +543,9 @@ opentofu/setup-opentofu:
     expires_at: 2026-04-24
   9d84900f3238fab8cd84ce47d658d25dd008be2f:
     tag: v1.0.8
+    expires_at: 2026-06-14
+  fc711fa910b93cba0f3fbecaafc9f42fd0c411cb:
+    tag: v2.0.0
 oracle-actions/setup-java:
   '*':
     keep: true
