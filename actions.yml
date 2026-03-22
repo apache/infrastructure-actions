@@ -151,6 +151,9 @@ aws-actions/configure-aws-credentials:
 azure/setup-helm:
   1a275c3b69536ee54be43f2070a358922e12c8d4:
     tag: v4.3.1
+azure/setup-kubectl:
+  776406bce94f63e41d621b960d78ee25c8b76ede:
+    tag: v4.0.1
 bazel-contrib/setup-bazel:
   8d2cb86a3680a820c3e219597279ce3f80d17a47:
     tag: 0.15.0
