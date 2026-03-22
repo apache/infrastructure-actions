@@ -292,6 +292,9 @@ dawidd6/action-download-artifact:
 dawidd6/action-send-mail:
   6d98ae34d733f9a723a9e04e94f2f24ba05e1402:
     tag: v6
+    expires_at: 2026-06-14
+  d38f3f7cd391cdebfe0d38efc3998b935e951c4f:
+    tag: v16
 delaguardo/setup-graalvm:
   '*':
     keep: true
