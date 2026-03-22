@@ -24,6 +24,7 @@
 - dorny/test-reporter@dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3
 - dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637
 - dorny/test-reporter@3d76b34a4535afbd0600d347b09a6ee5deb3ed7f
+- dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451
 - DavidAnson/markdownlint-cli2-action@30a0e04f1870d58f8d717450cc6134995f993c63
 - DavidAnson/markdownlint-cli2-action@07035fd053f7be764496c0f8d8f9f41f98305101
 - EnricoMi/publish-unit-test-result-action@*
