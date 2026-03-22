@@ -339,6 +339,9 @@ docker/setup-qemu-action:
 dorny/paths-filter:
   de90cc6fb38fc0963ad72b210f1f284cd68cea36:
     tag: v3.0.2
+    expires_at: 2026-06-14
+  fbd0ab8f3e69293af611ebaee6363fc25e6d187d:
+    tag: v4.0.1
 easimon/maximize-build-space:
   '*':
     keep: true
