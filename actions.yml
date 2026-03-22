@@ -635,9 +635,6 @@ scacap/action-surefire-report:
 scalacenter/sbt-dependency-submission:
   f43202114d7522a4b233e052f82c2eea8d658134:
     tag: v3.2.1
-scala-steward-org/scala-steward-action:
-  f60ccd18bc9d8083e6809d9dc3db4a69a71d856c:
-    tag: v2.78.0
 scottbrenner/puppet-lint-action:
   '*':
     keep: true
