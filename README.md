@@ -8,6 +8,7 @@ This repository hosts GitHub Actions developed by the ASF community and approved
   - [Adding a New Action](#adding-a-new-action-to-the-allow-list)
   - [Reviewing](#reviewing)
   - [Adding a New Version](#adding-a-new-version-to-the-allow-list)
+    - [Dependabot Cooldown Period](#dependabot-cooldown-period)
   - [Manual Version Addition](#manual-addition-of-specific-versions)
   - [Removing a Version](#removing-a-version-manually)
 
@@ -99,6 +100,23 @@ In most cases, new versions are automatically added through Dependabot:
 - This grace period gives projects sufficient time to update their workflows
 
 Projects are encouraged to help review updates to actions they use. Please have a look at the diff and mention in your approval what you have checked and why you think the action is safe.
+
+#### Dependabot Cooldown Period
+
+This repository uses a [Dependabot cooldown period](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#cooldown) of 4 days. After a Dependabot PR is merged or closed, Dependabot will wait 4 days before opening the next PR for the same ecosystem. This helps keep the volume of update PRs manageable and gives reviewers time to catch up.
+
+> [!TIP]
+> We recommend that ASF projects configure a similar cooldown in their own `dependabot.yml` to avoid being overwhelmed by update PRs and to catch up with approved actions here:
+> ```yaml
+> updates:
+>   - package-ecosystem: "github-actions"
+>     directory: "/"
+>     schedule:
+>       interval: "weekly"
+>     cooldown:
+>       default: 4
+> ```
+> Adjust the `default` value (in days) to match your project's review capacity.
 
 ### Manual Addition of Specific Versions
 
