@@ -36,3 +36,4 @@ Please check all boxes that currently apply:
 - [ ] The action has a clearly defined license
 - [ ] The action is actively developed or maintained
 - [ ] The action has CI/unit tests configured
+- [ ] Compiled JavaScript in `dist/` matches a clean rebuild (verify with `uv run utils/verify-action-build.py org/repo@hash`)

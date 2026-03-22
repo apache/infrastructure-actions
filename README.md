@@ -101,6 +101,49 @@ In most cases, new versions are automatically added through Dependabot:
 
 Projects are encouraged to help review updates to actions they use. Please have a look at the diff and mention in your approval what you have checked and why you think the action is safe.
 
+#### Verifying Compiled JavaScript
+
+Many GitHub Actions ship pre-compiled JavaScript in their `dist/` directory. To verify that the published compiled JS matches a clean rebuild from source, use the verification script:
+
+```bash
+uv run utils/verify-action-build.py org/repo@commit_hash
+```
+
+For example:
+
+```bash
+uv run utils/verify-action-build.py dorny/test-reporter@dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3
+```
+
+The script will:
+1. Clone the action at the specified commit inside an isolated Docker container
+2. Save the original `dist/` files as published in the repository
+3. Rebuild the action from source (`npm ci && npm run build`)
+4. Reformat both versions of the JavaScript for readable comparison
+5. Show a colored diff of any differences
+
+A clean result confirms that the compiled JS was built from the declared source. Any differences will be flagged for manual inspection.
+
+#### Batch-Reviewing Dependabot PRs
+
+To review all open dependabot PRs at once, run:
+
+```bash
+uv run utils/verify-action-build.py --check-dependabot-prs
+```
+
+This will:
+1. List all open PRs from dependabot
+2. For each PR, extract the action reference from the diff
+3. Run the full build verification (rebuild in Docker, compare compiled JS)
+4. Show source changes between the previously approved version and the new one
+5. If verification passes, ask whether to approve and merge the PR
+6. On merge, add a review comment documenting what was verified
+
+> [!NOTE]
+> **Prerequisites:** `docker`, `uv`, and `gh` (GitHub CLI, authenticated via `gh auth login`).
+> The build runs in a `node:20-slim` container so no local Node.js installation is needed.
+
 #### Dependabot Cooldown Period
 
 This repository uses a [Dependabot cooldown period](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#cooldown) of 4 days. After a Dependabot PR is merged or closed, Dependabot will wait 4 days before opening the next PR for the same ecosystem. This helps keep the volume of update PRs manageable and gives reviewers time to catch up.
