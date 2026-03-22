@@ -107,6 +107,7 @@
 - docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
 - docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd
 - docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392
+- docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a
 - dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
 - easimon/maximize-build-space@*
 - editorconfig-checker/action-editorconfig-checker@4b6cd6190d435e7e084fb35e36a096e98506f7b9

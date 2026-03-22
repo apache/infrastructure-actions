@@ -324,6 +324,9 @@ docker/setup-buildx-action:
 docker/setup-qemu-action:
   29109295f81e9208d7d86ff1c6c12d2833863392:
     tag: v3.6.0
+    expires_at: 2026-06-14
+  ce360397dd3f832beb865e1373c09c0e9f86d70a:
+    tag: v4.0.0
 dorny/paths-filter:
   de90cc6fb38fc0963ad72b210f1f284cd68cea36:
     tag: v3.0.2
