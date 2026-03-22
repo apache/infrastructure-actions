@@ -166,6 +166,9 @@ biomejs/setup-biome:
     expires_at: 2026-04-24
   29711cbb52afee00eb13aeb30636592f9edc0088:
     tag: v2.7.0
+    expires_at: 2026-06-14
+  4c91541eaada48f67d7dbd7833600ce162b68f51:
+    tag: v2.7.1
 browser-actions/setup-firefox:
   5914774dda97099441f02628f8d46411fcfbd208:
     tag: v1.7.0
