@@ -212,7 +212,6 @@
 - scacap/action-surefire-report@*
 - scacap/action-surefire-report@5609ce4db72c09db044803b344a8968fd1f315da
 - scalacenter/sbt-dependency-submission@f43202114d7522a4b233e052f82c2eea8d658134
-- scala-steward-org/scala-steward-action@f60ccd18bc9d8083e6809d9dc3db4a69a71d856c
 - scottbrenner/puppet-lint-action@*
 - securego/gosec@*
 - shivammathur/setup-php@*
