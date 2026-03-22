@@ -703,6 +703,9 @@ tcort/github-action-markdown-link-check:
 terraform-linters/setup-tflint:
   4cb9feea73331a35b422df102992a03a44a3bb33:
     tag: v6.2.1
+    expires_at: 2026-06-14
+  b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93:
+    tag: v6.2.2
 testlens-app/setup-testlens:
   '*':
     keep: true
