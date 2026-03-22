@@ -312,6 +312,9 @@ docker/login-action:
 docker/metadata-action:
   c299e40c65443455700f0fdfc63efafe5b349051:
     tag: v5.10.0
+    expires_at: 2026-06-14
+  030e881283bb7a6894de51c315a6bfe6a94e05cf:
+    tag: v6.0.0
 docker/setup-buildx-action:
   8d2750c68a42422c14e847fe6c8ac0403b4cbd6f:
     tag: v3.12.0
