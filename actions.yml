@@ -318,6 +318,9 @@ docker/metadata-action:
 docker/setup-buildx-action:
   8d2750c68a42422c14e847fe6c8ac0403b4cbd6f:
     tag: v3.12.0
+    expires_at: 2026-06-14
+  4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd:
+    tag: v4.0.0
 docker/setup-qemu-action:
   29109295f81e9208d7d86ff1c6c12d2833863392:
     tag: v3.6.0
