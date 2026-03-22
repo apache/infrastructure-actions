@@ -775,3 +775,6 @@ posit-dev/setup-air:
 runs-on/action:
   cd2b598b0515d39d78c38a02d529db87d2196d1e:
     tag: v2.0.3
+    expires_at: 2026-06-14
+  742bf56072eb4845a0f94b3394673e4903c90ff0:
+    tag: v2.1.0
