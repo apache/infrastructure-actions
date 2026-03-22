@@ -176,6 +176,7 @@
 - mvasigh/dispatch-action@*
 - nanasess/setup-chromedriver@*
 - ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b
+- ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd
 - nick-fields/retry@*
 - nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654
 - ocaml/setup-ocaml@*
