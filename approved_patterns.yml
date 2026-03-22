@@ -102,6 +102,7 @@
 - docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
 - docker://pandoc/core@sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93
 - docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+- docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
 - docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
 - docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2
 - docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051
