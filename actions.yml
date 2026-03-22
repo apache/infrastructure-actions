@@ -396,6 +396,9 @@ graalvm/setup-graalvm:
     expires_at: 2026-04-24
   54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1:
     tag: v1.4.5
+    expires_at: 2026-06-14
+  f744c72a42b1995d7b0cbc314bde4bace7ac1fe1:
+    tag: v1.5.0
 gradle/wrapper-validation-action:
   '*':
     keep: true
