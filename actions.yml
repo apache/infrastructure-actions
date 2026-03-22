@@ -513,6 +513,9 @@ manusa/actions-setup-minikube:
     keep: true
   8234275e0386fe1cdaf519d28c90f4f03fad89e4:
     tag: v2.15.0
+    expires_at: 2026-06-14
+  96202dee4ae1c2f46a62fe197273aaf22b83f42d:
+    tag: v2.16.1
 maxim-lobanov/setup-xcode:
   '*':
     keep: true
