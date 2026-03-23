@@ -697,6 +697,12 @@ snok/install-poetry:
 softprops/action-gh-release:
   '*':
     keep: true
+SonarSource/sonarqube-scan-action:
+  a31c9398be7ace6bbfaf30c0bd5d415f843d45e9:
+    tag: v7.0.0
+SonarSource/sonarqube-scan-action/install-build-wrapper:
+  a31c9398be7ace6bbfaf30c0bd5d415f843d45e9:
+    tag: v7.0.0
 stCarolas/setup-maven:
   '*':
     keep: true
