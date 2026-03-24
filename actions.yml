@@ -787,3 +787,6 @@ runs-on/action:
     expires_at: 2026-06-14
   742bf56072eb4845a0f94b3394673e4903c90ff0:
     tag: v2.1.0
+JetBrains/qodana-action:
+  89eb4357efd2b52e639f3216e63edaf33b82622b:
+    tag: v2025.3.2
