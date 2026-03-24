@@ -241,6 +241,8 @@
 - slsa-framework/source-actions@dea965cdca5e0cb422bf7b2653c9d15f678ad01c
 - snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a
 - softprops/action-gh-release@*
+- SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
+- SonarSource/sonarqube-scan-action/install-build-wrapper@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
 - stCarolas/setup-maven@*
 - subosito/flutter-action@*
 - swatinem/rust-cache@*
