@@ -112,6 +112,7 @@
 - google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
 - google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
 - gr2m/twitter-together@*
+- graalvm/setup-graalvm@7f488cf82a3629ee755e4e97342c01d6bed318fa
 - graalvm/setup-graalvm@eec48106e0bf45f2976c2ff0c3e22395cced8243
 - graalvm/setup-graalvm@790e28947b79a9c09c3391c0f18bf8d0f102ed69
 - graalvm/setup-graalvm@54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1
