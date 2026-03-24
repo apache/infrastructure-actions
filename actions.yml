@@ -339,6 +339,9 @@ gr2m/twitter-together:
   '*':
     keep: true
 graalvm/setup-graalvm:
+  7f488cf82a3629ee755e4e97342c01d6bed318fa:
+    tag: v1.3.5
+    expires_at: 2026-04-24
   eec48106e0bf45f2976c2ff0c3e22395cced8243:
     tag: v1.4.2
     expires_at: 2026-03-31
