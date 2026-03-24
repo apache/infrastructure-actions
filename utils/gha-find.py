@@ -55,7 +55,7 @@ except FileNotFoundError:
     print("The 'gh' CLI tool is not installed or not in your PATH.")
     sys.exit(1)
 
-
+print(f"Usage of {args.search}:\n")
 for item in data:
     repo = item["repository"]["nameWithOwner"]
     flow = item["path"]
