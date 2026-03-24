@@ -409,6 +409,9 @@ jarvusinnovations/background-action:
 jasonetco/create-an-issue:
   1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5:
     tag: v2
+JetBrains/qodana-action:
+  89eb4357efd2b52e639f3216e63edaf33b82622b:
+    tag: v2025.3.2
 jidicula/clang-format-action:
   '*':
     keep: true
