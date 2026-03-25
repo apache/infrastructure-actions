@@ -15,7 +15,7 @@ jobs:
   dummy:
     runs-on: ubuntu-latest
     steps:
-      - uses: 1Password/load-secrets-action@dafbe7cb03502b260e2b2893c753c352eee545bf  # v3.2.1
+      - uses: 1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259  # v4.0.0
         if: false
       - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185  # v3
         if: false
