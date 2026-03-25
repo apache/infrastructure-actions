@@ -136,6 +136,7 @@
 - hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5
 - hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
 - hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85
+- helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f
 - helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f
 - helm/kind-action@92086f6be054225fa813e0a4b13787fc9088faab
 - helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc
@@ -270,7 +271,6 @@
 - untitaker/hyperlink@fb5bb9c5011a3d143a54b4b30aedc30ec5bc0f89
 - uraimo/run-on-arch-action@d94c13912ea685de38fccc1109385b83fd79427d
 - vapier/coverity-scan-action@2068473c7bdf8c2fb984a6a40ae76ee7facd7a85
-- vhelm/chart-releaser-action@*
 - vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
 - vishalsinha21/dynamic-checklist@*
 - wei/curl@*
