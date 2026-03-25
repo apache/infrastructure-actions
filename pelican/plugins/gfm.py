@@ -160,7 +160,7 @@ class GFMReader(pelican.readers.BaseReader):
             i = 0 # See https://github.com/apache/infrastructure-pelican/issues/70
             for i in range(len(lines)):
                 line = lines[i]
-                match = GFMReader..match(line)
+                match = GFMReader.RE_METADATA.match(line)
                 if match:
                     name = match.group(1).strip().lower()
                     if name != 'slug':
