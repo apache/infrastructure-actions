@@ -409,6 +409,9 @@ hashicorp/setup-terraform:
     expires_at: 2026-06-12
   5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85:
     tag: v4.0.0
+helm/chart-releaser-action:
+  cae68fefc6b5f367a0275617c9f83181ba54714f:
+    tag: v1.7.0
 helm/chart-testing-action:
   6ec842c01de15ebb84c8627d2744a0c2f2755c9f:
     tag: v2.8.0
@@ -811,9 +814,6 @@ uraimo/run-on-arch-action:
 vapier/coverity-scan-action:
   2068473c7bdf8c2fb984a6a40ae76ee7facd7a85:
     tag: v1.8.0
-vhelm/chart-releaser-action:
-  '*':
-    keep: true
 vimtor/action-zip:
   5f1c4aa587ea41db1110df6a99981dbe19cee310:
     tag: v1
