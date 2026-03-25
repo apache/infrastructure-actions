@@ -109,6 +109,4 @@ All 15 unique action refs are on the ASF allowlist
 ## Dependencies
 
 - Python 3 (pre-installed on GitHub-hosted runners)
-- PyYAML (pre-installed on `ubuntu-latest` runners)
-
-No additional dependencies are required.
+- ruyaml (installed automatically by the action)

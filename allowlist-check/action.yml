@@ -31,6 +31,9 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Install ruyaml
+      shell: bash
+      run: pip install ruyaml
     - name: Verify all action refs are allowlisted
       shell: bash
       run: python3 "${{ github.action_path }}/check_asf_allowlist.py" "${{ github.action_path }}/../approved_patterns.yml"
