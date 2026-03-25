@@ -20,7 +20,7 @@ description: >
   Verify that all GitHub Actions uses: refs in the caller's workflow files
   are on the ASF Infrastructure approved allowlist. Fails with a clear error
   listing any refs that are not allowlisted.
-author: Apache Software Foundation
+author: kevinjqliu
 
 inputs:
   scan-glob:
