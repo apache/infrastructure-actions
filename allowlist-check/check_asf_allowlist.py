@@ -78,12 +78,14 @@ def collect_action_refs(
 ) -> dict[str, list[str]]:
     """Collect all third-party action refs from YAML files.
 
+    Skips local (./) and Docker (docker://) refs, as these are not
+    subject to the org-level allowlist.
+
     Args:
         scan_glob: Glob pattern for files to scan.
 
     Returns:
         dict: Mapping of each action ref to the list of file paths that use it.
-            Local (./) and Docker (docker://) refs are excluded.
     """
 
     action_refs = {}
