@@ -79,7 +79,7 @@ jobs:
         if: false
       - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d  # v4.0.1
         if: false
-      - uses: dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451  # v2.7.0
+      - uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2  # v3.0.0
         if: false
       - uses: editorconfig-checker/action-editorconfig-checker@4b6cd6190d435e7e084fb35e36a096e98506f7b9  # v2.1.0
         if: false
