@@ -261,23 +261,11 @@ class TestCollectActionRefs(unittest.TestCase):
         refs = collect_action_refs(scan_glob)
         self.assertEqual(refs, {})
 
-    def test_invalid_yaml_skipped(self):
+    def test_invalid_yaml_errors(self):
         self._write_workflow("bad.yml", ":\n  - :\n  invalid: [")
-        self._write_workflow(
-            "good.yml",
-            """\
-            name: CI
-            on: push
-            jobs:
-              build:
-                runs-on: ubuntu-latest
-                steps:
-                  - uses: actions/checkout@v4
-            """,
-        )
         scan_glob = os.path.join(self.tmpdir, ".github/**/*.yml")
-        refs = collect_action_refs(scan_glob)
-        self.assertIn("actions/checkout@v4", refs)
+        with self.assertRaises(SystemExit):
+            collect_action_refs(scan_glob)
 
     def test_tracks_multiple_files(self):
         self._write_workflow(

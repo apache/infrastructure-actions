@@ -57,7 +57,7 @@ def find_action_refs(node: Any) -> Generator[str, None, None]:
     """Recursively find all `uses:` values from a parsed YAML tree.
 
     Args:
-        node: A parsed YAML node (any type returned by yaml.safe_load)
+        node: A parsed YAML node (any type returned by ruyaml)
 
     Yields:
         str: Each `uses:` string value found in the tree
@@ -93,8 +93,8 @@ def collect_action_refs(
             with open(filepath) as f:
                 content = yaml.load(f)
         except ruyaml.YAMLError as exc:
-            print(f"::warning file={filepath}::Skipping file with invalid YAML: {exc}")
-            continue
+            print(f"::error file={filepath}::Failed to parse YAML: {exc}")
+            sys.exit(1)
         if not content:
             continue
         for ref in find_action_refs(content):

@@ -88,7 +88,8 @@ Actions from these GitHub organizations are implicitly trusted and don't need to
 
 - **Local refs** (`./`) — paths within the same repo are not subject to the org allowlist
 - **Docker refs** (`docker://`) — container actions pulled directly from a registry
-- **Empty/unparseable YAML files** — skipped with a warning
+- **Empty YAML files** — skipped
+- **Malformed YAML files** — fails with an error
 
 ### Violation output
 
