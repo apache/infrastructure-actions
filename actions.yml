@@ -717,6 +717,9 @@ sbt/setup-sbt:
     expires_at: 2026-06-10
   dd1ef7d7798fab5ce802a6adab3b782817b8c2d0:
     tag: v1.1.20
+    expires_at: 2026-06-17
+  508b753e53cb6095967669e0911487d2b9bc9f41:
+    tag: v1.1.22
 scacap/action-surefire-report:
   '*':
     keep: true
