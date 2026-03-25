@@ -410,8 +410,8 @@ hashicorp/setup-terraform:
   5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85:
     tag: v4.0.0
 helm/chart-releaser-action:
-  '*':
-    keep: true
+  cae68fefc6b5f367a0275617c9f83181ba54714f:
+    tag: v1.7.0
 helm/chart-testing-action:
   6ec842c01de15ebb84c8627d2744a0c2f2755c9f:
     tag: v2.8.0
