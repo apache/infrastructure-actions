@@ -47,6 +47,7 @@ correctness of the action.
 
   - [ASF Infrastructure Pelican Action](/pelican/README.md): Generate and publish project websites with GitHub Actions
   - [Stash Action](/stash/README.md): Manage large build caches
+  - [ASF Allowlist Check](/allowlist-check/README.md): Verify workflow action refs are on the ASF allowlist
 
 ## Management of Organization-wide GitHub Actions Allow List
 
