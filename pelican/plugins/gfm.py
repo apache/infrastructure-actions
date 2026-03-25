@@ -136,7 +136,7 @@ class GFMReader(pelican.readers.BaseReader):
     # Note: name starts in column 0, no whitespace before colon, will be
     #       made lower-case, and value will be stripped
     #
-    RE_METADATA = re.compile('^([A-za-z]+): (.*)$')
+    RE_METADATA = re.compile('^([A-Za-z]+): (.*)$')
 
     def read_source(self, source_path):
         "Read metadata and content from the source."
@@ -160,7 +160,7 @@ class GFMReader(pelican.readers.BaseReader):
             i = 0 # See https://github.com/apache/infrastructure-pelican/issues/70
             for i in range(len(lines)):
                 line = lines[i]
-                match = GFMReader.RE_METADATA.match(line)
+                match = GFMReader..match(line)
                 if match:
                     name = match.group(1).strip().lower()
                     if name != 'slug':
