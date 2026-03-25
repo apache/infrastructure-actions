@@ -33,8 +33,9 @@ import fnmatch
 import glob
 import os
 import sys
+from typing import Any, Generator
 
-import yaml
+import ruyaml
 
 # actions/*, github/*, apache/* are implicitly trusted by GitHub/ASF
 # See ../README.md ("Management of Organization-wide GitHub Actions Allow List")
@@ -52,8 +53,15 @@ SKIPPED_PREFIXES = ("./", "docker://")
 USES_KEY = "uses"
 
 
-def find_action_refs(node):
-    """Recursively find all `uses:` values from a parsed YAML tree."""
+def find_action_refs(node: Any) -> Generator[str, None, None]:
+    """Recursively find all `uses:` values from a parsed YAML tree.
+
+    Args:
+        node: A parsed YAML node (any type returned by yaml.safe_load)
+
+    Yields:
+        str: Each `uses:` string value found in the tree
+    """
     if isinstance(node, dict):
         for key, value in node.items():
             if key == USES_KEY and isinstance(value, str):
@@ -65,21 +73,26 @@ def find_action_refs(node):
             yield from find_action_refs(item)
 
 
-def collect_action_refs(scan_glob=None):
-    """Collect all third-party action refs from YAML files under .github/.
+def collect_action_refs(
+    scan_glob: str = DEFAULT_GITHUB_YAML_GLOB,
+) -> dict[str, list[str]]:
+    """Collect all third-party action refs from YAML files.
 
-    Returns a dict mapping each action ref to the list of file paths that use it.
-    Local refs (./) are excluded.
+    Args:
+        scan_glob: Glob pattern for files to scan.
+
+    Returns:
+        dict: Mapping of each action ref to the list of file paths that use it.
+            Local (./) and Docker (docker://) refs are excluded.
     """
-    if scan_glob is None:
-        scan_glob = os.environ.get("GITHUB_YAML_GLOB", DEFAULT_GITHUB_YAML_GLOB)
 
     action_refs = {}
     for filepath in sorted(glob.glob(scan_glob, recursive=True)):
         try:
+            yaml = ruyaml.YAML()
             with open(filepath) as f:
-                content = yaml.safe_load(f)
-        except yaml.YAMLError as exc:
+                content = yaml.load(f)
+        except ruyaml.YAMLError as exc:
             print(f"::warning file={filepath}::Skipping file with invalid YAML: {exc}")
             continue
         if not content:
@@ -91,7 +104,7 @@ def collect_action_refs(scan_glob=None):
     return action_refs
 
 
-def load_allowlist(allowlist_path):
+def load_allowlist(allowlist_path: str) -> list[str]:
     """Load the ASF approved_patterns.yml file.
 
     The file is a flat YAML list of entries like:
@@ -101,18 +114,31 @@ def load_allowlist(allowlist_path):
 
     Python's fnmatch.fnmatch matches "/" with "*" (unlike shell globs),
     so these patterns work directly without transformation.
+
+    Args:
+        allowlist_path: Path to the approved_patterns.yml file
+
+    Returns:
+        list[str]: List of allowlist patterns (empty list if file is empty)
     """
+    yaml = ruyaml.YAML()
     with open(allowlist_path) as f:
-        result = yaml.safe_load(f)
+        result = yaml.load(f)
     return result if result else []
 
 
-def is_allowed(action_ref, allowlist):
+def is_allowed(action_ref: str, allowlist: list[str]) -> bool:
     """Check whether a single action ref is allowed.
 
-    An action ref is allowed if:
-    - Its owner (the part before the first '/') is in TRUSTED_OWNERS, or
-    - It matches any pattern in the allowlist via fnmatch.
+    An action ref is allowed if its owner is in TRUSTED_OWNERS or it
+    matches any pattern in the allowlist via fnmatch.
+
+    Args:
+        action_ref: The action reference string (e.g., "owner/action@ref")
+        allowlist: List of allowlist patterns to match against
+
+    Returns:
+        bool: True if the action ref is allowed
     """
     owner = action_ref.split("/")[0]
     if owner in TRUSTED_OWNERS:
@@ -127,7 +153,8 @@ def main():
 
     allowlist_path = sys.argv[1]
     allowlist = load_allowlist(allowlist_path)
-    action_refs = collect_action_refs()
+    scan_glob = os.environ.get("GITHUB_YAML_GLOB", DEFAULT_GITHUB_YAML_GLOB)
+    action_refs = collect_action_refs(scan_glob)
 
     violations = []
     for action_ref, filepaths in sorted(action_refs.items()):
@@ -136,7 +163,9 @@ def main():
                 violations.append((filepath, action_ref))
 
     if violations:
-        print(f"::error::Found {len(violations)} action ref(s) not on the ASF allowlist:")
+        print(
+            f"::error::Found {len(violations)} action ref(s) not on the ASF allowlist:"
+        )
         for filepath, action_ref in violations:
             print(f"::error file={filepath}::{action_ref} is not on the ASF allowlist")
         sys.exit(1)
