@@ -125,7 +125,19 @@ def generate_workflow(actions: ActionsYAML) -> str:
     # Github Workflow 'yaml' has slight deviations from the yaml spec. (e.g. keys with no values)
     # Because of that it's much easier to generate this as a string rather
     # then use pyyaml to dump this from a dict.
-    header = """name: Dummy Workflow
+    header = """# This file was generated from /actions.yml by gateway/gateway.py.
+# It will be regenerated and committed as part of various workflows.
+# DO NOT UPDATE MANUALLY. Update /actions.yml instead.
+
+# This workflow has two purposes:
+# - dependabot will propose updates to this file, which after
+# review will automatically flow into /actions.yml through a
+# workflow
+# - GHA will periodically 'run' this workflow (skipping every
+# step), which will fail when any of the listed actions have
+# a transitive action dependency that is not allowlisted
+# (or is not anymore).
+name: Dummy Workflow
 
 on:
   workflow_dispatch:
@@ -256,7 +268,9 @@ def update_patterns(pattern_path: Path, list_path: Path):
     """
     actions: ActionsYAML = load_yaml(list_path)
     patterns = create_pattern(actions)
-    comment = f"# This file was generated from {list_path} by gateway/gateway.py. DO NOT UPDATE MANUALLY.\n"
+    comment = f"""# This file was generated from {list_path} by gateway/gateway.py.
+# It will be regenerated and committed as part of various workflows.
+# DO NOT UPDATE MANUALLY. Update /actions.yml instead.\n"""
     patterns_str = comment + to_yaml_string(patterns)
     gha_print(patterns_str, "Generated Patterns")
     write_str(pattern_path, patterns_str)
