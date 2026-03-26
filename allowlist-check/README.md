@@ -101,6 +101,8 @@ When violations are found, the action fails with exit code 1 and prints:
 ::error file=.github/workflows/release.yml::other-org/other-action@abc123 is not on the ASF allowlist
 ```
 
+To resolve a violation, open a PR in this repo to [add the action](../README.md#adding-a-new-action-to-the-allow-list) or [add a new version](../README.md#adding-a-new-version-to-the-allow-list) to the allowlist.
+
 When all refs pass:
 
 ```
