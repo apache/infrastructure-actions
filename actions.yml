@@ -52,6 +52,10 @@ arduino/setup-protoc:
   '*':
     keep: true
 astral-sh/setup-uv:
+  eb1897b8dc4b5d5bfe39a428a8f2304605e0983c:
+    # needed for helm/chart-testing-action @ v2.8.0
+    tag: v7.0.0
+    expires_at: 2026-06-30
   681c641aba71e4a1c380be3ab5e12ad51f415867:
     tag: v7.1.6
     expires_at: 2026-05-15
