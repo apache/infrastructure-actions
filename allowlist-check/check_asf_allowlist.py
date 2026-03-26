@@ -170,6 +170,11 @@ def main():
         )
         for filepath, action_ref in violations:
             print(f"::error file={filepath}::{action_ref} is not on the ASF allowlist")
+        print(
+            "::error::To resolve, open a PR in apache/infrastructure-actions to add"
+            " the action or version to the allowlist:"
+            " https://github.com/apache/infrastructure-actions#adding-a-new-action-to-the-allow-list"
+        )
         sys.exit(1)
     else:
         print(f"All {len(action_refs)} unique action refs are on the ASF allowlist")
