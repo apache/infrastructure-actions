@@ -1,0 +1,12 @@
+[project]
+name = "infrastructure-actions-utils"
+version = "0.1.0"
+description = "Utility scripts for ASF GitHub Actions management"
+requires-python = ">=3.11"
+dependencies = [
+    "jsbeautifier>=1.15",
+    "rich>=13.0",
+]
+
+[project.scripts]
+verify-action-build = "verify_action_build:main"
