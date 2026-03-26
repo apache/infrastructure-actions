@@ -12,6 +12,8 @@
 - al-cheb/configure-pagefile-action@9b6da52fb72a3c6147c1aad2df22d8d905681adc
 - amannn/action-semantic-pull-request@*
 - ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c
+- anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
+- anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2
 - arduino/setup-protoc@*
 - astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867
 - astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b
