@@ -134,8 +134,6 @@
 - gradle/develocity-actions/maven-publish-build-scan@974e8dbcbda40db6828fc35f349c80a7c0e71529
 - gradle/develocity-actions/setup-maven@4a2aed82eea165ba2d5c494fc2a8730d7fdff229
 - gradle/develocity-actions/setup-maven@974e8dbcbda40db6828fc35f349c80a7c0e71529
-- gradle/wrapper-validation-action@*
-- gradle/wrapper-validation-action@f9c9c575b8b21b6485636a91ffecd10e558c62f6
 - gsactions/commit-message-checker@*
 - hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5
 - hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
