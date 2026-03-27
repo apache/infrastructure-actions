@@ -15,6 +15,7 @@
 - anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
 - anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2
 - arduino/setup-protoc@*
+- astral-sh/setup-uv@eb1897b8dc4b5d5bfe39a428a8f2304605e0983c
 - astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867
 - astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b
 - astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098
@@ -278,3 +279,4 @@
 - vishalsinha21/dynamic-checklist@*
 - wei/curl@*
 - xpol/setup-lua@*
+- zizmorcore/zizmor-action@71321a20a9ded102f6e9ce5718a2fcec2c4f70d8
