@@ -33,6 +33,7 @@ Add a workflow file to your project (e.g., `.github/workflows/asf-allowlist-chec
 name: "ASF Allowlist Check"
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - ".github/**"
