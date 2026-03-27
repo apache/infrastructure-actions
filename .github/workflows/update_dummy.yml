@@ -29,17 +29,18 @@ jobs:
           # We have to use a PAT to commit the workflow file
           token: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }}
 
-      - run: pip install ruyaml 
+      - run: pipx install uv
 
-      - name: Update Workflow 
-        shell: python 
+      - name: Update Workflow
         run: |
+          uv run python << 'PYEOF'
           import sys
           sys.path.append("./gateway/")
 
           import gateway as g
           g.update_workflow(".github/workflows/dummy.yml", "actions.yml")
           g.update_patterns("approved_patterns.yml", "actions.yml")
+          PYEOF
 
       - name: Commit and push changes
         if: ${{ github.event_name != 'pull_request' }}
