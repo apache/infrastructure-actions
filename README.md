@@ -8,7 +8,6 @@ This repository hosts GitHub Actions developed by the ASF community and approved
   - [Adding a New Action](#adding-a-new-action-to-the-allow-list)
   - [Reviewing](#reviewing)
   - [Adding a New Version](#adding-a-new-version-to-the-allow-list)
-    - [Dependabot Cooldown Period](#dependabot-cooldown-period)
   - [Manual Version Addition](#manual-addition-of-specific-versions)
   - [Removing a Version](#removing-a-version-manually)
 
@@ -143,23 +142,6 @@ This will:
 > [!NOTE]
 > **Prerequisites:** `docker`, `uv`, and `gh` (GitHub CLI, authenticated via `gh auth login`).
 > The build runs in a `node:20-slim` container so no local Node.js installation is needed.
-
-#### Dependabot Cooldown Period
-
-This repository uses a [Dependabot cooldown period](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#cooldown) of 7 days. After a Dependabot PR is merged or closed, Dependabot will wait 7 days before opening the next PR for the same ecosystem. This helps keep the volume of update PRs manageable and gives reviewers time to catch up.
-
-> [!TIP]
-> We recommend that ASF projects configure a similar cooldown in their own `dependabot.yml` to avoid being overwhelmed by update PRs and to catch up with approved actions here:
-> ```yaml
-> updates:
->   - package-ecosystem: "github-actions"
->     directory: "/"
->     schedule:
->       interval: "weekly"
->     cooldown:
->       default-days: 7
-> ```
-> Adjust the `default-days` value to match your project's review capacity.
 
 ### Manual Addition of Specific Versions
 
