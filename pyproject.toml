@@ -7,5 +7,10 @@ dependencies = [
     "ruyaml>=0.91.0",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
 [tool.uv]
 exclude-newer = "4 days"
