@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # Converted this:
 # $(which gh) search code --owner apache --language yaml --json repository,path --jq '.[] | .repository.nameWithOwner + " -- " + .path' $1
 # To the below:
