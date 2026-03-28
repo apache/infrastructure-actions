@@ -331,9 +331,6 @@ erisu/apache-rat-action:
 erisu/license-checker-action:
   99cffa11264fe545fd0baa6c13bca5a00ae608f2:
     tag: v2.0.1
-gaurav-nelson/github-action-markdown-link-check:
-  '*':
-    keep: true
 geekyeggo/delete-artifact:
   '*':
     keep: true
