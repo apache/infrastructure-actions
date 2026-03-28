@@ -1,0 +1,36 @@
+name: Check Approved Actions Limit
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - approved_patterns.yml
+  pull_request:
+    paths:
+      - approved_patterns.yml
+      - .github/workflows/check_approved_limit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  check-limit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Check approved actions count
+        run: |
+          # The org-wide approved_patterns list has a hard limit of 1000 entries.
+          # We fail at 800 to give ourselves room to act before hitting the wall.
+          # See https://github.com/apache/infrastructure-actions/issues/602
+          LIMIT=800
+          COUNT=$(grep -c '^- ' approved_patterns.yml)
+          echo "Approved actions count: $COUNT / 1000 (warning threshold: $LIMIT)"
+          if [ "$COUNT" -ge "$LIMIT" ]; then
+            echo "::error::Approved actions count ($COUNT) has reached the warning threshold of $LIMIT. The org-wide limit is 1000. Time to clean up unused actions or explore workarounds. See https://github.com/apache/infrastructure-actions/issues/602"
+            exit 1
+          fi
