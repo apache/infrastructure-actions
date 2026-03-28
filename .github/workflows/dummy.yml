@@ -179,7 +179,7 @@ jobs:
         if: false
       - uses: runs-on/action@742bf56072eb4845a0f94b3394673e4903c90ff0  # v2.1.0
         if: false
-      - uses: rust-lang/crates-io-auth-action@b7e9a28eded4986ec6b1fa40eeee8f8f165559ec  # v1.0.3
+      - uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe  # v1.0.4
         if: false
       - uses: sbt/setup-sbt@508b753e53cb6095967669e0911487d2b9bc9f41  # v1.1.22
         if: false
