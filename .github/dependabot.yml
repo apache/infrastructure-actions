@@ -37,3 +37,9 @@ updates:
     open-pull-requests-limit: 50
     cooldown:
       default: 4
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default: 4

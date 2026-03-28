@@ -29,17 +29,18 @@ jobs:
         with:
           persist-credentials: true
 
-      - run: pip install ruyaml 
+      - run: pipx install uv
 
       - name: Update actions.yml
-        shell: python 
         run: |
+          uv run python << 'PYEOF'
           import sys
           sys.path.append("./gateway/")
 
           import gateway as g
           g.update_actions(".github/workflows/dummy.yml", "actions.yml")
           g.update_patterns("approved_patterns.yml", "actions.yml")
+          PYEOF
 
       - name: Commit and push changes
         if: ${{ github.event_name != 'pull_request' }}
