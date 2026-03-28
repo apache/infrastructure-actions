@@ -1,3 +1,15 @@
+# This file was generated from /actions.yml by gateway/gateway.py.
+# It will be regenerated and committed as part of various workflows.
+# DO NOT UPDATE MANUALLY. Update /actions.yml instead.
+
+# This workflow has two purposes:
+# - dependabot will propose updates to this file, which after
+# review will automatically flow into /actions.yml through a
+# workflow
+# - GHA will periodically 'run' this workflow (skipping every
+# step), which will fail when any of the listed actions have
+# a transitive action dependency that is not allowlisted
+# (or is not anymore).
 name: Dummy Workflow
 
 on:
