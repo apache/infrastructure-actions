@@ -31,6 +31,7 @@
 - azure/setup-kubectl@15650b3ad78fff148532a140b8a4c821796b2d7b
 - bazel-contrib/setup-bazel@8d2cb86a3680a820c3e219597279ce3f80d17a47
 - bazel-contrib/setup-bazel@083175551ceeceebc757ebee2127fde78840ca77
+- bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86
 - betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619
 - biomejs/setup-biome@454fa0d884737805f48d7dc236c1761a0ac3cc13
 - biomejs/setup-biome@29711cbb52afee00eb13aeb30636592f9edc0088
