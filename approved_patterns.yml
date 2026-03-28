@@ -128,12 +128,15 @@
 - gradle/actions/dependency-submission@017a9effdb900e5b5b2fddfb590a105619dca3c3
 - gradle/actions/dependency-submission@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2
 - gradle/actions/dependency-submission@0723195856401067f7a2779048b490ace7a47d7c
+- gradle/actions/dependency-submission@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f
 - gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3
 - gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2
 - gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
+- gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f
 - gradle/actions/wrapper-validation@017a9effdb900e5b5b2fddfb590a105619dca3c3
 - gradle/actions/wrapper-validation@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2
 - gradle/actions/wrapper-validation@0723195856401067f7a2779048b490ace7a47d7c
+- gradle/actions/wrapper-validation@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f
 - gradle/develocity-actions/maven-publish-build-scan@4a2aed82eea165ba2d5c494fc2a8730d7fdff229
 - gradle/develocity-actions/maven-publish-build-scan@974e8dbcbda40db6828fc35f349c80a7c0e71529
 - gradle/develocity-actions/setup-maven@4a2aed82eea165ba2d5c494fc2a8730d7fdff229

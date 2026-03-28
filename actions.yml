@@ -384,6 +384,9 @@ gradle/actions/dependency-submission:
     expires_at: 2026-05-24
   0723195856401067f7a2779048b490ace7a47d7c:
     tag: v5.0.2
+    expires_at: 2026-06-20
+  39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f:
+    tag: v6.0.1
 gradle/actions/setup-gradle:
   017a9effdb900e5b5b2fddfb590a105619dca3c3:
     tag: v4.4.2
@@ -393,6 +396,9 @@ gradle/actions/setup-gradle:
     expires_at: 2026-05-24
   0723195856401067f7a2779048b490ace7a47d7c:
     tag: v5.0.2
+    expires_at: 2026-06-20
+  39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f:
+    tag: v6.0.1
 gradle/actions/wrapper-validation:
   017a9effdb900e5b5b2fddfb590a105619dca3c3:
     tag: v4.4.2
@@ -402,6 +408,9 @@ gradle/actions/wrapper-validation:
     expires_at: 2026-05-24
   0723195856401067f7a2779048b490ace7a47d7c:
     tag: v5.0.2
+    expires_at: 2026-06-20
+  39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f:
+    tag: v6.0.1
 gradle/develocity-actions/maven-publish-build-scan:
   4a2aed82eea165ba2d5c494fc2a8730d7fdff229:
     tag: v1.4
