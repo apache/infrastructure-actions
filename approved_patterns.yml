@@ -161,6 +161,7 @@
 - jidicula/clang-format-action@*
 - Jimver/cuda-toolkit@6008063726ffe3309d1b22e413d9e88fed91a2f2
 - Jimver/cuda-toolkit@b6fc3a9f3f15256d9d94ffe1254f9c5a2565cde6
+- Jimver/cuda-toolkit@406fa58d8abbf1bad2edd217b58b073dd2f548e4
 - jlumbroso/free-disk-space@*
 - jrouly/scalafmt-native-action@14620cde093e5ff6bfbbecd4f638370024287b9d
 - jrouly/scalafmt-native-action@*
