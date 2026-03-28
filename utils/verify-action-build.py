@@ -39,8 +39,13 @@ output = Console()
 ACTIONS_YML = Path(__file__).resolve().parent.parent / "actions.yml"
 
 
-def parse_action_ref(ref: str) -> tuple[str, str, str]:
-    """Parse org/repo@hash into (org, repo, hash)."""
+def parse_action_ref(ref: str) -> tuple[str, str, str, str]:
+    """Parse org/repo[/sub_path]@hash into (org, repo, sub_path, hash).
+
+    sub_path is empty string for top-level actions (e.g. ``dorny/test-reporter@abc``),
+    or a relative path for monorepo sub-actions (e.g. ``gradle/actions/setup-gradle@abc``
+    yields sub_path="setup-gradle").
+    """
     if "@" not in ref:
         console.print(f"[red]Error:[/red] invalid format '{ref}', expected org/repo@hash")
         sys.exit(1)
@@ -50,7 +55,8 @@ def parse_action_ref(ref: str) -> tuple[str, str, str]:
         console.print(f"[red]Error:[/red] invalid action path '{action_path}', expected org/repo")
         sys.exit(1)
     org, repo = parts[0], parts[1]
-    return org, repo, commit_hash
+    sub_path = "/".join(parts[2:])  # empty string when there's no sub-path
+    return org, repo, sub_path, commit_hash
 
 
 def run(cmd: list[str], status: str | None = None, **kwargs) -> subprocess.CompletedProcess:
@@ -499,36 +505,86 @@ ARG COMMIT_HASH
 
 RUN git clone "$REPO_URL" . && git checkout "$COMMIT_HASH"
 
-# Detect action type from action.yml or action.yaml
-RUN ACTION_FILE=$(ls action.yml action.yaml 2>/dev/null | head -1); \
+# Detect action type from action.yml or action.yaml.
+# For monorepo sub-actions (SUB_PATH set), check <sub_path>/action.yml first,
+# falling back to the root action.yml.
+ARG SUB_PATH=""
+RUN if [ -n "$SUB_PATH" ] && [ -f "$SUB_PATH/action.yml" ]; then \
+      ACTION_FILE="$SUB_PATH/action.yml"; \
+    elif [ -n "$SUB_PATH" ] && [ -f "$SUB_PATH/action.yaml" ]; then \
+      ACTION_FILE="$SUB_PATH/action.yaml"; \
+    else \
+      ACTION_FILE=$(ls action.yml action.yaml 2>/dev/null | head -1); \
+    fi; \
     if [ -n "$ACTION_FILE" ]; then \
       grep -E '^\\s+using:' "$ACTION_FILE" | head -1 | sed 's/.*using:\\s*//' | tr -d "'\\\"" > /action-type.txt; \
+      MAIN_PATH=$(grep -E '^\\s+main:' "$ACTION_FILE" | head -1 | sed 's/.*main:\\s*//' | tr -d "'\\\"\\ "); \
+      echo "$MAIN_PATH" > /main-path.txt; \
     else \
       echo "unknown" > /action-type.txt; \
+      echo "" > /main-path.txt; \
     fi
 
-# Save original dist files before rebuild
-RUN if [ -d dist ]; then cp -r dist /original-dist; else mkdir /original-dist; fi
+# Detect the output directory from the main: path.
+# For monorepo actions the main: field may use relative paths like ../dist/sub/main/index.js
+# Resolve relative to the sub-action directory to get the actual repo-root-relative path.
+RUN MAIN_PATH=$(cat /main-path.txt); \
+    OUT_DIR="dist"; \
+    if [ -n "$MAIN_PATH" ] && [ -n "$SUB_PATH" ]; then \
+      RESOLVED=$(cd "$SUB_PATH" 2>/dev/null && realpath --relative-to=/action "$MAIN_PATH" 2>/dev/null || echo ""); \
+      if [ -n "$RESOLVED" ]; then \
+        OUT_DIR=$(echo "$RESOLVED" | cut -d'/' -f1); \
+      fi; \
+    elif [ -n "$MAIN_PATH" ]; then \
+      DIR_PART=$(echo "$MAIN_PATH" | sed 's|/[^/]*$||'); \
+      if [ "$DIR_PART" != "$MAIN_PATH" ] && [ -n "$DIR_PART" ]; then \
+        OUT_DIR=$(echo "$DIR_PART" | cut -d'/' -f1); \
+      fi; \
+    fi; \
+    echo "$OUT_DIR" > /out-dir.txt
 
-# Delete compiled JS from dist/ before rebuild to ensure a clean build
-RUN if [ -d dist ]; then find dist -name '*.js' -print -delete > /deleted-js.log 2>&1; else echo 'no dist/ directory' > /deleted-js.log; fi
+# Save original output files before rebuild
+RUN OUT_DIR=$(cat /out-dir.txt); \
+    if [ -d "$OUT_DIR" ]; then cp -r "$OUT_DIR" /original-dist; else mkdir /original-dist; fi
 
-# Detect and install with the correct package manager
-RUN if [ -f yarn.lock ]; then \
+# Delete compiled JS from output dir before rebuild to ensure a clean build
+RUN OUT_DIR=$(cat /out-dir.txt); \
+    if [ -d "$OUT_DIR" ]; then find "$OUT_DIR" -name '*.js' -print -delete > /deleted-js.log 2>&1; else echo "no $OUT_DIR/ directory" > /deleted-js.log; fi
+
+# Detect the build directory — where package.json lives.
+# Some repos (e.g. gradle/actions) keep sources in a subdirectory with its own package.json.
+# Also check for a root-level build script (e.g. a 'build' shell script).
+RUN BUILD_DIR="."; \
+    if [ ! -f package.json ]; then \
+      for candidate in sources src; do \
+        if [ -f "$candidate/package.json" ]; then \
+          BUILD_DIR="$candidate"; \
+          break; \
+        fi; \
+      done; \
+    fi; \
+    echo "$BUILD_DIR" > /build-dir.txt
+
+# Detect and install with the correct package manager (in the build directory)
+RUN BUILD_DIR=$(cat /build-dir.txt); \
+    cd "$BUILD_DIR" && \
+    if [ -f yarn.lock ]; then \
       corepack prepare --activate 2>/dev/null; \
       yarn install 2>/dev/null || true; \
-      echo "pkg-manager: yarn" >> /build-info.log; \
+      echo "pkg-manager: yarn (in $BUILD_DIR)" >> /build-info.log; \
     elif [ -f pnpm-lock.yaml ]; then \
       corepack prepare --activate 2>/dev/null; \
       pnpm install 2>/dev/null || true; \
-      echo "pkg-manager: pnpm" >> /build-info.log; \
+      echo "pkg-manager: pnpm (in $BUILD_DIR)" >> /build-info.log; \
     else \
       npm ci 2>/dev/null || npm install 2>/dev/null || true; \
-      echo "pkg-manager: npm" >> /build-info.log; \
+      echo "pkg-manager: npm (in $BUILD_DIR)" >> /build-info.log; \
     fi
 
-# Detect which run command to use
-RUN if [ -f yarn.lock ]; then \
+# Detect which run command to use (in the build directory)
+RUN BUILD_DIR=$(cat /build-dir.txt); \
+    cd "$BUILD_DIR" && \
+    if [ -f yarn.lock ]; then \
       echo "yarn" > /run-cmd; \
     elif [ -f pnpm-lock.yaml ]; then \
       echo "pnpm" > /run-cmd; \
@@ -536,33 +592,47 @@ RUN if [ -f yarn.lock ]; then \
       echo "npm" > /run-cmd; \
     fi
 
-# Build: try 'build' script first, then 'package' if dist/ is still empty,
-# fall back to direct ncc if no scripts produced output
-RUN RUN_CMD=$(cat /run-cmd); \
+# Build: first try a root-level build script (some repos like gradle/actions use one),
+# then try npm/yarn/pnpm build in the build directory, then package, then ncc fallback.
+# If the build directory is a subdirectory, copy its output dir to root afterwards.
+RUN OUT_DIR=$(cat /out-dir.txt); \
+    BUILD_DIR=$(cat /build-dir.txt); \
+    RUN_CMD=$(cat /run-cmd); \
     BUILD_DONE=false; \
-    if $RUN_CMD run build 2>/dev/null; then \
-      echo "build-step: $RUN_CMD run build" >> /build-info.log; \
-      if [ -d dist ] && ls dist/*.js >/dev/null 2>&1; then BUILD_DONE=true; fi; \
+    if [ -x build ] && ./build dist 2>/dev/null; then \
+      echo "build-step: ./build dist" >> /build-info.log; \
+      if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -name '*.js' -print -quit | grep -q .; then BUILD_DONE=true; fi; \
     fi && \
     if [ "$BUILD_DONE" = "false" ]; then \
-      if $RUN_CMD run package 2>/dev/null; then \
-        echo "build-step: $RUN_CMD run package" >> /build-info.log; \
+      cd "$BUILD_DIR" && \
+      if $RUN_CMD run build 2>/dev/null; then \
+        echo "build-step: $RUN_CMD run build (in $BUILD_DIR)" >> /build-info.log; \
+      elif $RUN_CMD run package 2>/dev/null; then \
+        echo "build-step: $RUN_CMD run package (in $BUILD_DIR)" >> /build-info.log; \
       elif npx ncc build --source-map 2>/dev/null; then \
-        echo "build-step: npx ncc build --source-map" >> /build-info.log; \
+        echo "build-step: npx ncc build --source-map (in $BUILD_DIR)" >> /build-info.log; \
+      fi && \
+      cd /action && \
+      if [ "$BUILD_DIR" != "." ] && [ -d "$BUILD_DIR/$OUT_DIR" ] && [ ! -d "$OUT_DIR" ]; then \
+        cp -r "$BUILD_DIR/$OUT_DIR" "$OUT_DIR"; \
+        echo "copied $BUILD_DIR/$OUT_DIR -> $OUT_DIR" >> /build-info.log; \
       fi; \
+      if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -name '*.js' -print -quit | grep -q .; then BUILD_DONE=true; fi; \
     fi
 
-# Save rebuilt dist files
-RUN if [ -d dist ]; then cp -r dist /rebuilt-dist; else mkdir /rebuilt-dist; fi
+# Save rebuilt output files
+RUN OUT_DIR=$(cat /out-dir.txt); \
+    if [ -d "$OUT_DIR" ]; then cp -r "$OUT_DIR" /rebuilt-dist; else mkdir /rebuilt-dist; fi
 """
 
 
 def build_in_docker(
-    org: str, repo: str, commit_hash: str, work_dir: Path
-) -> tuple[Path, Path, str]:
+    org: str, repo: str, commit_hash: str, work_dir: Path,
+    sub_path: str = "",
+) -> tuple[Path, Path, str, str]:
     """Build the action in a Docker container and extract original + rebuilt dist.
 
-    Returns (original_dir, rebuilt_dir, action_type).
+    Returns (original_dir, rebuilt_dir, action_type, out_dir_name).
     """
     repo_url = f"https://github.com/{org}/{repo}.git"
     container_name = f"verify-action-{org}-{repo}-{commit_hash[:12]}"
@@ -577,13 +647,17 @@ def build_in_docker(
 
     image_tag = f"verify-action:{org}-{repo}-{commit_hash[:12]}"
 
-    repo_link = f"[link=https://github.com/{org}/{repo}]{org}/{repo}[/link]"
+    action_display = f"{org}/{repo}"
+    if sub_path:
+        action_display += f"/{sub_path}"
+
+    repo_link = f"[link=https://github.com/{org}/{repo}]{action_display}[/link]"
     commit_link = f"[link=https://github.com/{org}/{repo}/commit/{commit_hash}]{commit_hash}[/link]"
 
     info_table = Table(show_header=False, box=None, padding=(0, 1))
     info_table.add_column(style="bold")
     info_table.add_column()
-    info_table.add_row("Repository", repo_link)
+    info_table.add_row("Action", repo_link)
     info_table.add_row("Commit", commit_link)
     console.print()
     console.print(Panel(info_table, title="Action Build Verification", border_style="blue"))
@@ -599,6 +673,8 @@ def build_in_docker(
                 f"REPO_URL={repo_url}",
                 "--build-arg",
                 f"COMMIT_HASH={commit_hash}",
+                "--build-arg",
+                f"SUB_PATH={sub_path}",
                 "-t",
                 image_tag,
                 "-f",
@@ -638,6 +714,17 @@ def build_in_docker(
             )
             console.print("  [green]✓[/green] Artifacts extracted")
 
+            # Extract the detected output directory name
+            out_dir_result = subprocess.run(
+                ["docker", "cp", f"{container_name}:/out-dir.txt", str(work_dir / "out-dir.txt")],
+                capture_output=True,
+            )
+            out_dir_name = "dist"
+            if out_dir_result.returncode == 0:
+                out_dir_name = (work_dir / "out-dir.txt").read_text().strip() or "dist"
+                if out_dir_name != "dist":
+                    console.print(f"  [green]✓[/green] Detected output directory: [bold]{out_dir_name}/[/bold]")
+
             # Extract and display the deletion log
             deleted_log = subprocess.run(
                 ["docker", "cp", f"{container_name}:/deleted-js.log", str(work_dir / "deleted-js.log")],
@@ -645,8 +732,8 @@ def build_in_docker(
             )
             if deleted_log.returncode == 0:
                 log_content = (work_dir / "deleted-js.log").read_text().strip()
-                if log_content == "no dist/ directory":
-                    console.print("  [yellow]![/yellow] No dist/ directory found before rebuild")
+                if log_content.startswith("no ") and log_content.endswith(" directory"):
+                    console.print(f"  [yellow]![/yellow] No {out_dir_name}/ directory found before rebuild")
                 else:
                     deleted_files = [l for l in log_content.splitlines() if l.strip()]
                     console.print(f"  [green]✓[/green] Deleted {len(deleted_files)} compiled JS file(s) before rebuild:")
@@ -674,11 +761,12 @@ def build_in_docker(
             )
             console.print("  [green]✓[/green] Cleanup complete")
 
-    return original_dir, rebuilt_dir, action_type
+    return original_dir, rebuilt_dir, action_type, out_dir_name
 
 
 def diff_js_files(
-    original_dir: Path, rebuilt_dir: Path, org: str, repo: str, commit_hash: str
+    original_dir: Path, rebuilt_dir: Path, org: str, repo: str, commit_hash: str,
+    out_dir_name: str = "dist",
 ) -> bool:
     """Diff JS files between original and rebuilt, return True if identical."""
     blob_url = f"https://github.com/{org}/{repo}/blob/{commit_hash}"
@@ -700,7 +788,7 @@ def diff_js_files(
 
     if not all_files:
         console.print(
-            "\n[yellow]No compiled JavaScript found in dist/ — "
+            f"\n[yellow]No compiled JavaScript found in {out_dir_name}/ — "
             "this action may ship source JS directly (e.g. with node_modules/)[/yellow]"
         )
         return True
@@ -751,7 +839,7 @@ def diff_js_files(
         orig_file = original_dir / rel_path
         built_file = rebuilt_dir / rel_path
 
-        file_link = f"[link={blob_url}/dist/{rel_path}]{rel_path}[/link]"
+        file_link = f"[link={blob_url}/{out_dir_name}/{rel_path}]{rel_path}[/link]"
 
         if rel_path not in original_files:
             console.print(f"  [green]+[/green] {file_link} [dim](only in rebuilt)[/dim]")
@@ -896,11 +984,13 @@ def _format_diff_text(lines: list[str]) -> Text:
 
 def verify_single_action(action_ref: str) -> bool:
     """Verify a single action reference. Returns True if verification passed."""
-    org, repo, commit_hash = parse_action_ref(action_ref)
+    org, repo, sub_path, commit_hash = parse_action_ref(action_ref)
 
     with tempfile.TemporaryDirectory(prefix="verify-action-") as tmp:
         work_dir = Path(tmp)
-        original_dir, rebuilt_dir, action_type = build_in_docker(org, repo, commit_hash, work_dir)
+        original_dir, rebuilt_dir, action_type, out_dir_name = build_in_docker(
+            org, repo, commit_hash, work_dir, sub_path=sub_path,
+        )
 
         # Non-JavaScript actions (docker, composite) don't have compiled JS to verify
         is_js_action = action_type.startswith("node") or action_type in ("unknown",)
@@ -916,7 +1006,9 @@ def verify_single_action(action_ref: str) -> bool:
             )
             all_match = True
         else:
-            all_match = diff_js_files(original_dir, rebuilt_dir, org, repo, commit_hash)
+            all_match = diff_js_files(
+                original_dir, rebuilt_dir, org, repo, commit_hash, out_dir_name,
+            )
 
         # Check for previously approved versions and offer to diff
         approved = find_approved_versions(org, repo)
@@ -950,27 +1042,35 @@ def verify_single_action(action_ref: str) -> bool:
     return all_match
 
 
-def extract_action_ref_from_pr(pr_number: int) -> str | None:
-    """Extract the new action org/repo@hash from a dependabot PR diff."""
+def extract_action_refs_from_pr(pr_number: int) -> list[str]:
+    """Extract all new action org/repo[/sub]@hash refs from a dependabot PR diff.
+
+    Returns a deduplicated list of action references found in added lines.
+    """
     result = subprocess.run(
         ["gh", "pr", "diff", str(pr_number)],
         capture_output=True,
         text=True,
     )
     if result.returncode != 0:
-        return None
+        return []
 
     import re
 
+    seen: set[str] = set()
+    refs: list[str] = []
     for line in result.stdout.splitlines():
-        # Match lines like: +      - uses: org/repo@hash  # tag
+        # Match lines like: +      - uses: org/repo/sub@hash  # tag
         match = re.search(r"^\+.*uses:\s+([^@\s]+)@([0-9a-f]{40})", line)
         if match:
             action_path = match.group(1)
             commit_hash = match.group(2)
-            return f"{action_path}@{commit_hash}"
+            ref = f"{action_path}@{commit_hash}"
+            if ref not in seen:
+                seen.add(ref)
+                refs.append(ref)
 
-    return None
+    return refs
 
 
 def get_gh_user() -> str:
@@ -1092,20 +1192,55 @@ def check_dependabot_prs() -> None:
         console.print()
         console.rule(f"[bold]PR #{pr['number']}: {pr['title']}[/bold]")
 
-        # Extract action reference from PR diff
-        with console.status("[bold blue]Extracting action reference from PR...[/bold blue]"):
-            action_ref = extract_action_ref_from_pr(pr["number"])
+        # Extract all action references from PR diff
+        with console.status("[bold blue]Extracting action references from PR...[/bold blue]"):
+            action_refs = extract_action_refs_from_pr(pr["number"])
 
-        if not action_ref:
+        if not action_refs:
             console.print(
                 f"  [yellow]Could not extract action reference from PR #{pr['number']} — skipping[/yellow]"
             )
             continue
 
-        console.print(f"  Action: [bold]{action_ref}[/bold]")
+        for ref in action_refs:
+            console.print(f"  Action: [bold]{ref}[/bold]")
+
+        # Group refs by org/repo@hash to detect monorepo sub-actions
+        # For a PR with gradle/actions/setup-gradle@abc and gradle/actions/dependency-submission@abc,
+        # we verify once via the first ref, passing all sub-paths as siblings
+        refs_by_base: dict[str, list[str]] = {}
+        for ref in action_refs:
+            org, repo, sub_path, commit_hash = parse_action_ref(ref)
+            base_key = f"{org}/{repo}@{commit_hash}"
+            refs_by_base.setdefault(base_key, []).append(sub_path)
 
         # Run verification
-        passed = verify_single_action(action_ref)
+        passed = True
+        for base_key, sub_paths in refs_by_base.items():
+            org_repo, commit_hash = base_key.rsplit("@", 1)
+            if any(sub_paths):
+                # Monorepo with sub-actions — verify each sub-action directly
+                console.print()
+                console.print(
+                    Panel(
+                        f"[cyan]Monorepo action — verifying "
+                        f"{len(sub_paths)} sub-action(s): "
+                        f"{', '.join(sp for sp in sub_paths if sp)}[/cyan]",
+                        border_style="cyan",
+                        title="MONOREPO",
+                    )
+                )
+                for sp in sub_paths:
+                    if sp:
+                        sub_ref = f"{org_repo}/{sp}@{commit_hash}"
+                    else:
+                        sub_ref = f"{org_repo}@{commit_hash}"
+                    if not verify_single_action(sub_ref):
+                        passed = False
+            else:
+                # Simple single action (no sub-path)
+                if not verify_single_action(f"{org_repo}@{commit_hash}"):
+                    passed = False
 
         if not passed:
             console.print(
@@ -1124,12 +1259,13 @@ def check_dependabot_prs() -> None:
             continue
 
         # Add review comment and merge
+        verified_list = "\n".join(f"- `{ref}`" for ref in action_refs)
         comment = (
             f"Reviewed by @{gh_user} using `verify-action-build.py`.\n\n"
-            f"Verified `{action_ref}`:\n"
+            f"Verified:\n{verified_list}\n\n"
             f"- All CI/status checks were passing\n"
             f"- No review changes were requested\n"
-            f"- Compiled JavaScript in dist/ was rebuilt in an isolated Docker container "
+            f"- Compiled JavaScript was rebuilt in an isolated Docker container "
             f"and compared against the published version\n"
             f"- Source changes between the previously approved version and this commit "
             f"were reviewed\n\n"
