@@ -8,6 +8,7 @@ This repository hosts GitHub Actions developed by the ASF community and approved
   - [Adding a New Action](#adding-a-new-action-to-the-allow-list)
   - [Reviewing](#reviewing)
   - [Adding a New Version](#adding-a-new-version-to-the-allow-list)
+    - [Automated Verification in CI](#automated-verification-in-ci)
     - [Dependabot Cooldown Period](#dependabot-cooldown-period)
   - [Manual Version Addition](#manual-addition-of-specific-versions)
   - [Removing a Version](#removing-a-version-manually)
@@ -155,6 +156,18 @@ uv run utils/verify-action-build.py --no-gh --check-dependabot-prs
 ```
 
 The `--no-gh` mode supports all the same features as the default `gh`-based mode.
+
+#### Automated Verification in CI
+
+Dependabot PRs that modify `dummy.yml` are automatically verified by the `verify_dependabot_action.yml` workflow. It extracts the action reference from the PR, rebuilds the compiled JavaScript in Docker, and compares it against the published version. The workflow reports success or failure but does **not** auto-approve or merge — a human reviewer must still approve.
+
+To verify a specific PR locally (non-interactively), use:
+
+```bash
+uv run utils/verify-action-build.py --ci --from-pr 123
+```
+
+The `--ci` flag skips all interactive prompts (auto-selects the newest approved version for diffing, auto-accepts exclusions, disables paging). The `--from-pr` flag extracts the action reference from the given PR number.
 
 > [!NOTE]
 > **Prerequisites:** `docker` and `uv`. When using the default mode (without `--no-gh`), `gh` (GitHub CLI, authenticated via `gh auth login`) is also required. The build runs in a `node:20-slim` container so no local Node.js installation is needed.

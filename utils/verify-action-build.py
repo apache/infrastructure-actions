@@ -394,7 +394,7 @@ def find_approval_info(action_hash: str, gh: GitHubClient | None = None) -> dict
 
 def show_approved_versions(
     org: str, repo: str, new_hash: str, approved: list[dict],
-    gh: GitHubClient | None = None,
+    gh: GitHubClient | None = None, ci_mode: bool = False,
 ) -> str | None:
     """Display approved versions and ask if user wants to diff against one.
 
@@ -438,6 +438,15 @@ def show_approved_versions(
     other_versions = [v for v in approved if v["hash"] != new_hash]
     if not other_versions:
         return None
+
+    if ci_mode:
+        # Auto-select the newest (last) approved version
+        selected = other_versions[-1]
+        console.print(
+            f"  Auto-selected approved version: [cyan]{selected.get('tag', '')}[/cyan] "
+            f"({selected['hash'][:12]})"
+        )
+        return selected["hash"]
 
     if not Confirm.ask(
         "\nWould you like to see the diff between an approved version and the one being checked?",
@@ -526,7 +535,8 @@ def show_commits_between(
 
 
 def diff_approved_vs_new(
-    org: str, repo: str, approved_hash: str, new_hash: str, work_dir: Path
+    org: str, repo: str, approved_hash: str, new_hash: str, work_dir: Path,
+    ci_mode: bool = False,
 ) -> None:
     """Diff source files between an approved version and the new version."""
     console.print()
@@ -624,7 +634,7 @@ def diff_approved_vs_new(
             if any(d in str(f) for f in all_files):
                 console.print(f"    [dim]⊘ {d}/ (not part of the action runtime)[/dim]")
 
-        if not Confirm.ask("  Proceed with these exclusions?", console=console, default=True):
+        if not ci_mode and not Confirm.ask("  Proceed with these exclusions?", console=console, default=True):
             console.print("  [yellow]Aborted by user[/yellow]")
             return
 
@@ -645,7 +655,7 @@ def diff_approved_vs_new(
         if rel_path not in approved_files:
             console.print(f"  [cyan]+[/cyan] {rel_path} [dim](new file)[/dim]")
             new_content = new_file.read_text(errors="replace")
-            result = show_colored_diff(rel_path, "", new_content, from_label="approved", to_label="new", border="cyan")
+            result = show_colored_diff(rel_path, "", new_content, from_label="approved", to_label="new", border="cyan", ci_mode=ci_mode)
             if result == "skip_file":
                 skipped_by_user.append((rel_path, "new file"))
             elif result == "quit":
@@ -655,7 +665,7 @@ def diff_approved_vs_new(
         if rel_path not in new_files:
             console.print(f"  [cyan]-[/cyan] {rel_path} [dim](removed)[/dim]")
             approved_content = approved_file.read_text(errors="replace")
-            result = show_colored_diff(rel_path, approved_content, "", from_label="approved", to_label="new", border="cyan")
+            result = show_colored_diff(rel_path, approved_content, "", from_label="approved", to_label="new", border="cyan", ci_mode=ci_mode)
             if result == "skip_file":
                 skipped_by_user.append((rel_path, "removed"))
             elif result == "quit":
@@ -669,7 +679,7 @@ def diff_approved_vs_new(
             console.print(f"  [green]✓[/green] {rel_path} [green](identical)[/green]")
         else:
             console.print(f"  [cyan]~[/cyan] {rel_path} [cyan](changed — expected between versions)[/cyan]")
-            result = show_colored_diff(rel_path, approved_content, new_content, from_label="approved", to_label="new", border="cyan")
+            result = show_colored_diff(rel_path, approved_content, new_content, from_label="approved", to_label="new", border="cyan", ci_mode=ci_mode)
             if result == "skip_file":
                 skipped_by_user.append((rel_path, "changed"))
             elif result == "quit":
@@ -1115,6 +1125,7 @@ def show_colored_diff(
     from_label: str = "original",
     to_label: str = "rebuilt",
     border: str = "red",
+    ci_mode: bool = False,
 ) -> str:
     """Show a colored unified diff between two strings, paged for large diffs.
 
@@ -1140,8 +1151,8 @@ def show_colored_diff(
     page_size = max(terminal_height, 20)
     title = f"[bold]{filename}[/bold]"
 
-    if len(diff_lines) <= page_size:
-        # Small diff — show in a single panel
+    if ci_mode or len(diff_lines) <= page_size:
+        # Small diff or CI mode — show in a single panel
         diff_text = _format_diff_text(diff_lines)
         console.print(Panel(diff_text, title=title, border_style=border, padding=(0, 1)))
         return "continue"
@@ -1201,7 +1212,7 @@ def _format_diff_text(lines: list[str]) -> Text:
     return diff_text
 
 
-def verify_single_action(action_ref: str, gh: GitHubClient | None = None) -> bool:
+def verify_single_action(action_ref: str, gh: GitHubClient | None = None, ci_mode: bool = False) -> bool:
     """Verify a single action reference. Returns True if verification passed."""
     org, repo, sub_path, commit_hash = parse_action_ref(action_ref)
 
@@ -1232,10 +1243,10 @@ def verify_single_action(action_ref: str, gh: GitHubClient | None = None) -> boo
         # Check for previously approved versions and offer to diff
         approved = find_approved_versions(org, repo)
         if approved:
-            selected_hash = show_approved_versions(org, repo, commit_hash, approved, gh=gh)
+            selected_hash = show_approved_versions(org, repo, commit_hash, approved, gh=gh, ci_mode=ci_mode)
             if selected_hash:
                 show_commits_between(org, repo, selected_hash, commit_hash, gh=gh)
-                diff_approved_vs_new(org, repo, selected_hash, commit_hash, work_dir)
+                diff_approved_vs_new(org, repo, selected_hash, commit_hash, work_dir, ci_mode=ci_mode)
         elif not is_js_action:
             console.print(
                 "  [dim]No previously approved versions found — "
@@ -1507,7 +1518,7 @@ def check_dependabot_prs(gh: GitHubClient) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Verify compiled JS in a GitHub Action matches a local rebuild.",
-        usage="uv run %(prog)s [org/repo@commit_hash | --check-dependabot-prs]",
+        usage="uv run %(prog)s [org/repo@commit_hash | --check-dependabot-prs | --from-pr N]",
     )
     parser.add_argument(
         "action_ref",
@@ -1529,7 +1540,20 @@ def main() -> None:
         default=os.environ.get("GITHUB_TOKEN"),
         help="GitHub token for API access (default: $GITHUB_TOKEN env var). Required with --no-gh",
     )
+    parser.add_argument(
+        "--from-pr",
+        type=int,
+        metavar="N",
+        help="Extract action reference from PR #N and verify it",
+    )
+    parser.add_argument(
+        "--ci",
+        action="store_true",
+        help="Non-interactive mode: skip all prompts, auto-select defaults (for CI pipelines)",
+    )
     args = parser.parse_args()
+
+    ci_mode = args.ci
 
     if not shutil.which("docker"):
         console.print("[red]Error:[/red] docker is required but not found in PATH")
@@ -1553,10 +1577,19 @@ def main() -> None:
             sys.exit(1)
         gh = GitHubClient(token=args.github_token)
 
-    if args.check_dependabot_prs:
+    if args.from_pr:
+        action_refs = extract_action_refs_from_pr(args.from_pr, gh=gh)
+        if not action_refs:
+            console.print(f"[red]Error:[/red] could not extract action reference from PR #{args.from_pr}")
+            sys.exit(1)
+        for ref in action_refs:
+            console.print(f"  Extracted action reference from PR #{args.from_pr}: [bold]{ref}[/bold]")
+        passed = all(verify_single_action(ref, gh=gh, ci_mode=ci_mode) for ref in action_refs)
+        sys.exit(0 if passed else 1)
+    elif args.check_dependabot_prs:
         check_dependabot_prs(gh=gh)
     elif args.action_ref:
-        passed = verify_single_action(args.action_ref, gh=gh)
+        passed = verify_single_action(args.action_ref, gh=gh, ci_mode=ci_mode)
         sys.exit(0 if passed else 1)
     else:
         parser.print_help()

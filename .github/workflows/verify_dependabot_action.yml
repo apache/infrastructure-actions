@@ -1,0 +1,27 @@
+name: Verify Dependabot Action Build
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/dummy.yml
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  verify:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - run: pipx install uv
+
+      - name: Verify action build
+        run: |
+          uv run utils/verify-action-build.py --ci --from-pr ${{ github.event.pull_request.number }}
+        env:
+          GH_TOKEN: ${{ github.token }}
