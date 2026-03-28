@@ -1395,7 +1395,8 @@ def check_dependabot_prs(gh: GitHubClient) -> None:
 
     for pr in prs:
         console.print()
-        console.rule(f"[bold]PR #{pr['number']}: {pr['title']}[/bold]")
+        pr_link = f"[link=https://github.com/apache/infrastructure-actions/pull/{pr['number']}]#{pr['number']}[/link]"
+        console.rule(f"[bold]PR {pr_link}: {pr['title']}[/bold]")
 
         # Extract all action references from PR diff
         with console.status("[bold blue]Extracting action references from PR...[/bold blue]"):
@@ -1403,7 +1404,7 @@ def check_dependabot_prs(gh: GitHubClient) -> None:
 
         if not action_refs:
             console.print(
-                f"  [yellow]Could not extract action reference from PR #{pr['number']} — skipping[/yellow]"
+                f"  [yellow]Could not extract action reference from PR {pr_link} — skipping[/yellow]"
             )
             continue
 
@@ -1449,18 +1450,18 @@ def check_dependabot_prs(gh: GitHubClient) -> None:
 
         if not passed:
             console.print(
-                f"\n  [red]Verification failed for PR #{pr['number']} — skipping merge[/red]"
+                f"\n  [red]Verification failed for PR {pr_link} — skipping merge[/red]"
             )
             failed.append(pr)
             continue
 
         # Ask to merge
         if not Confirm.ask(
-            f"\n  Merge PR #{pr['number']}?",
+            f"\n  Merge PR {pr_link}?",
             console=console,
             default=True,
         ):
-            console.print(f"  [dim]Skipped merging PR #{pr['number']}[/dim]")
+            console.print(f"  [dim]Skipped merging PR {pr_link}[/dim]")
             continue
 
         # Add review comment and merge
@@ -1481,14 +1482,14 @@ def check_dependabot_prs(gh: GitHubClient) -> None:
         if not gh.approve_pr(pr["number"], comment):
             console.print(f"  [yellow]Warning: could not add review comment[/yellow]")
 
-        console.print(f"  [dim]Merging PR #{pr['number']}...[/dim]")
+        console.print(f"  [dim]Merging PR {pr_link}...[/dim]")
         success, err = gh.merge_pr(pr["number"])
         if success:
-            console.print(f"  [green]✓ PR #{pr['number']} merged successfully[/green]")
+            console.print(f"  [green]✓ PR {pr_link} merged successfully[/green]")
             reviewed.append(pr)
         else:
             console.print(
-                f"  [red]Failed to merge PR #{pr['number']}: {err}[/red]"
+                f"  [red]Failed to merge PR {pr_link}: {err}[/red]"
             )
             failed.append(pr)
 
