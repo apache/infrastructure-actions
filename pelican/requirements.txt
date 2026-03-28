@@ -7,6 +7,6 @@ ezt==1.1
 PyYAML==6.0.2
 certifi==2024.7.4
 idna==3.7
-charset-normalizer==2.0.4
+charset-normalizer==3.4.6
 urllib3==2.6.3
 requests==2.33.0
