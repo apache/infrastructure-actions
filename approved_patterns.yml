@@ -104,7 +104,7 @@
 - dorny/test-reporter@3d76b34a4535afbd0600d347b09a6ee5deb3ed7f
 - dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451
 - dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
-- dtolnay/rust-toolchain@stable
+- dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8
 - easimon/maximize-build-space@*
 - editorconfig-checker/action-editorconfig-checker@4b6cd6190d435e7e084fb35e36a096e98506f7b9
 - EnricoMi/publish-unit-test-result-action@*
