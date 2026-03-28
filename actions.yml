@@ -722,6 +722,9 @@ runs-on/action:
 rust-lang/crates-io-auth-action:
   b7e9a28eded4986ec6b1fa40eeee8f8f165559ec:
     tag: v1.0.3
+    expires_at: 2026-06-20
+  bbd81622f20ce9e2dd9622e3218b975523e45bbe:
+    tag: v1.0.4
 rustsec/*:
   '*':
     keep: true
