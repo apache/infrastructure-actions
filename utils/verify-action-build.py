@@ -2,6 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = [
 #     "jsbeautifier>=1.15",
+#     "requests>=2.31",
 #     "rich>=13.0",
 # ]
 # ///
@@ -19,6 +20,8 @@ Usage:
 import argparse
 import difflib
 import json
+import os
+import re
 import shutil
 import subprocess
 import sys
@@ -26,6 +29,7 @@ import tempfile
 from pathlib import Path
 
 import jsbeautifier
+import requests
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Confirm
@@ -37,6 +41,227 @@ output = Console()
 
 # Path to the actions.yml file relative to the script
 ACTIONS_YML = Path(__file__).resolve().parent.parent / "actions.yml"
+
+GITHUB_API = "https://api.github.com"
+
+
+def _detect_repo() -> str:
+    """Detect the GitHub repo from the git remote origin URL."""
+    result = subprocess.run(
+        ["git", "remote", "get-url", "origin"],
+        capture_output=True, text=True, cwd=ACTIONS_YML.parent,
+    )
+    if result.returncode == 0:
+        url = result.stdout.strip()
+        # Handle SSH (git@github.com:org/repo.git) and HTTPS (https://github.com/org/repo.git)
+        match = re.search(r"github\.com[:/](.+?)(?:\.git)?$", url)
+        if match:
+            return match.group(1)
+    return "apache/infrastructure-actions"
+
+
+class GitHubClient:
+    """Abstraction over GitHub API — uses either gh CLI or requests with a token."""
+
+    def __init__(self, token: str | None = None, repo: str | None = None):
+        self.repo = repo or _detect_repo()
+        self.token = token
+        self._use_requests = token is not None
+
+    def _headers(self) -> dict:
+        return {
+            "Authorization": f"token {self.token}",
+            "Accept": "application/vnd.github+json",
+        }
+
+    def _gh_api(self, endpoint: str) -> dict | list | None:
+        """Call gh api and return parsed JSON, or None on failure."""
+        result = subprocess.run(
+            ["gh", "api", endpoint],
+            capture_output=True, text=True,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return json.loads(result.stdout)
+        return None
+
+    def _get(self, endpoint: str) -> dict | list | None:
+        """GET from GitHub API using requests or gh CLI."""
+        if self._use_requests:
+            resp = requests.get(f"{GITHUB_API}/{endpoint}", headers=self._headers())
+            if resp.ok:
+                return resp.json()
+            return None
+        return self._gh_api(endpoint)
+
+    def get_commit_pulls(self, owner: str, repo: str, commit_sha: str) -> list[dict]:
+        """Get PRs associated with a commit."""
+        data = self._get(f"repos/{owner}/{repo}/commits/{commit_sha}/pulls")
+        return data if isinstance(data, list) else []
+
+    def compare_commits(self, owner: str, repo: str, base: str, head: str) -> list[dict]:
+        """Get commits between two refs."""
+        data = self._get(f"repos/{owner}/{repo}/compare/{base}...{head}")
+        if isinstance(data, dict):
+            return data.get("commits", [])
+        return []
+
+    def get_pr_diff(self, pr_number: int) -> str | None:
+        """Get the diff for a PR."""
+        if self._use_requests:
+            resp = requests.get(
+                f"{GITHUB_API}/repos/{self.repo}/pulls/{pr_number}",
+                headers={**self._headers(), "Accept": "application/vnd.github.v3.diff"},
+            )
+            return resp.text if resp.ok else None
+        result = subprocess.run(
+            ["gh", "pr", "diff", str(pr_number)],
+            capture_output=True, text=True,
+        )
+        return result.stdout if result.returncode == 0 else None
+
+    def get_authenticated_user(self) -> str:
+        """Get the login of the authenticated user."""
+        if self._use_requests:
+            resp = requests.get(f"{GITHUB_API}/user", headers=self._headers())
+            if resp.ok:
+                return resp.json().get("login", "unknown")
+            return "unknown"
+        result = subprocess.run(
+            ["gh", "api", "user", "--jq", ".login"],
+            capture_output=True, text=True,
+        )
+        return result.stdout.strip() if result.returncode == 0 else "unknown"
+
+    def list_open_prs(self, author: str = "app/dependabot") -> list[dict]:
+        """List open PRs by author with status check info."""
+        if self._use_requests:
+            prs = []
+            page = 1
+            while True:
+                resp = requests.get(
+                    f"{GITHUB_API}/repos/{self.repo}/pulls",
+                    headers=self._headers(),
+                    params={"state": "open", "per_page": 50, "page": page},
+                )
+                if not resp.ok:
+                    break
+                batch = resp.json()
+                if not batch:
+                    break
+                for pr in batch:
+                    pr_login = pr.get("user", {}).get("login", "")
+                    if author.startswith("app/"):
+                        expected = author.split("/", 1)[1] + "[bot]"
+                        if pr_login != expected:
+                            continue
+                    elif pr_login != author:
+                        continue
+                    prs.append({
+                        "number": pr["number"],
+                        "title": pr["title"],
+                        "headRefName": pr["head"]["ref"],
+                        "url": pr["html_url"],
+                        "reviewDecision": self._get_review_decision(pr["number"]),
+                        "statusCheckRollup": self._get_status_checks(pr["head"]["sha"]),
+                    })
+                page += 1
+            return prs
+        result = subprocess.run(
+            [
+                "gh", "pr", "list",
+                "--author", author,
+                "--state", "open",
+                "--json", "number,title,headRefName,url,reviewDecision,statusCheckRollup",
+                "--limit", "50",
+            ],
+            capture_output=True, text=True,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return json.loads(result.stdout)
+        return []
+
+    def _get_review_decision(self, pr_number: int) -> str | None:
+        """Get the review decision for a PR via GraphQL."""
+        resp = requests.post(
+            f"{GITHUB_API}/graphql",
+            headers=self._headers(),
+            json={
+                "query": """query($owner:String!, $repo:String!, $number:Int!) {
+                    repository(owner:$owner, name:$repo) {
+                        pullRequest(number:$number) { reviewDecision }
+                    }
+                }""",
+                "variables": {
+                    "owner": self.repo.split("/")[0],
+                    "repo": self.repo.split("/")[1],
+                    "number": pr_number,
+                },
+            },
+        )
+        if resp.ok:
+            data = resp.json()
+            return (
+                data.get("data", {})
+                .get("repository", {})
+                .get("pullRequest", {})
+                .get("reviewDecision")
+            )
+        return None
+
+    def _get_status_checks(self, sha: str) -> list[dict]:
+        """Get combined status checks for a commit SHA."""
+        data = self._get(f"repos/{self.repo}/commits/{sha}/check-runs")
+        if isinstance(data, dict):
+            return [
+                {
+                    "name": cr.get("name"),
+                    "conclusion": (cr.get("conclusion") or "").upper(),
+                    "status": (cr.get("status") or "").upper(),
+                }
+                for cr in data.get("check_runs", [])
+            ]
+        return []
+
+    def approve_pr(self, pr_number: int, comment: str) -> bool:
+        """Approve a PR with a review comment."""
+        if self._use_requests:
+            resp = requests.post(
+                f"{GITHUB_API}/repos/{self.repo}/pulls/{pr_number}/reviews",
+                headers=self._headers(),
+                json={"body": comment, "event": "APPROVE"},
+            )
+            return resp.ok
+        result = subprocess.run(
+            ["gh", "pr", "review", str(pr_number), "--approve", "--body", comment],
+            capture_output=True, text=True,
+        )
+        return result.returncode == 0
+
+    def merge_pr(self, pr_number: int) -> tuple[bool, str]:
+        """Merge a PR and delete the branch. Returns (success, error_msg)."""
+        if self._use_requests:
+            resp = requests.put(
+                f"{GITHUB_API}/repos/{self.repo}/pulls/{pr_number}/merge",
+                headers=self._headers(),
+                json={"merge_method": "merge"},
+            )
+            if not resp.ok:
+                return False, resp.text
+            # Delete the head branch
+            pr_data = self._get(f"repos/{self.repo}/pulls/{pr_number}")
+            if isinstance(pr_data, dict):
+                branch = pr_data.get("head", {}).get("ref")
+                if branch:
+                    requests.delete(
+                        f"{GITHUB_API}/repos/{self.repo}/git/refs/heads/{branch}",
+                        headers=self._headers(),
+                    )
+            return True, ""
+        result = subprocess.run(
+            ["gh", "pr", "merge", str(pr_number), "--merge", "--delete-branch"],
+            capture_output=True, text=True,
+        )
+        return result.returncode == 0, result.stderr.strip()
 
 
 def parse_action_ref(ref: str) -> tuple[str, str, str, str]:
@@ -83,8 +308,6 @@ def find_approved_versions(org: str, repo: str) -> list[dict]:
     if not ACTIONS_YML.exists():
         return []
 
-    import re
-
     content = ACTIONS_YML.read_text()
     lines = content.splitlines()
 
@@ -129,7 +352,7 @@ def find_approved_versions(org: str, repo: str) -> list[dict]:
     return approved
 
 
-def find_approval_info(action_hash: str) -> dict | None:
+def find_approval_info(action_hash: str, gh: GitHubClient | None = None) -> dict | None:
     """Find who approved a hash and when, by searching git history and PRs."""
     # Find the commit that added this hash to actions.yml
     result = subprocess.run(
@@ -152,29 +375,26 @@ def find_approval_info(action_hash: str) -> dict | None:
         "subject": subject,
     }
 
+    if gh is None:
+        return info
+
     # Try to find the PR that merged this commit
-    pr_result = subprocess.run(
-        ["gh", "api", f"repos/apache/infrastructure-actions/commits/{commit_hash}/pulls",
-         "--jq", ".[0] | {number, title, merged_by: .merged_by.login, merged_at: .merged_at}"],
-        capture_output=True,
-        text=True,
-    )
-    if pr_result.returncode == 0 and pr_result.stdout.strip():
-        try:
-            pr_info = json.loads(pr_result.stdout.strip())
-            if pr_info.get("number"):
-                info["pr_number"] = pr_info["number"]
-                info["pr_title"] = pr_info.get("title", "")
-                info["merged_by"] = pr_info.get("merged_by", "")
-                info["merged_at"] = pr_info.get("merged_at", "")
-        except json.JSONDecodeError:
-            pass
+    owner, repo_name = gh.repo.split("/", 1)
+    pulls = gh.get_commit_pulls(owner, repo_name, commit_hash)
+    if pulls:
+        pr_info = pulls[0]
+        if pr_info.get("number"):
+            info["pr_number"] = pr_info["number"]
+            info["pr_title"] = pr_info.get("title", "")
+            info["merged_by"] = (pr_info.get("merged_by") or {}).get("login", "")
+            info["merged_at"] = pr_info.get("merged_at", "")
 
     return info
 
 
 def show_approved_versions(
-    org: str, repo: str, new_hash: str, approved: list[dict]
+    org: str, repo: str, new_hash: str, approved: list[dict],
+    gh: GitHubClient | None = None,
 ) -> str | None:
     """Display approved versions and ask if user wants to diff against one.
 
@@ -194,7 +414,7 @@ def show_approved_versions(
         if entry["hash"] == new_hash:
             continue
 
-        approval = find_approval_info(entry["hash"])
+        approval = find_approval_info(entry["hash"], gh=gh)
 
         tag = entry.get("tag", "")
         hash_link = f"[link=https://github.com/{org}/{repo}/commit/{entry['hash']}]{entry['hash'][:12]}[/link]"
@@ -257,31 +477,30 @@ def show_approved_versions(
 
 
 def show_commits_between(
-    org: str, repo: str, old_hash: str, new_hash: str
+    org: str, repo: str, old_hash: str, new_hash: str,
+    gh: GitHubClient | None = None,
 ) -> None:
     """Show the list of commits between two hashes using GitHub compare API."""
     console.print()
     compare_url = f"https://github.com/{org}/{repo}/compare/{old_hash[:12]}...{new_hash[:12]}?file-filters%5B%5D=%21dist"
     console.rule("[bold]Commits Between Versions[/bold]")
 
-    result = subprocess.run(
-        ["gh", "api", f"repos/{org}/{repo}/compare/{old_hash}...{new_hash}",
-         "--jq", ".commits[] | {sha: .sha, message: (.commit.message | split(\"\\n\") | .[0]), author: .commit.author.name, date: .commit.author.date}"],
-        capture_output=True,
-        text=True,
-    )
-
-    if result.returncode != 0 or not result.stdout.strip():
+    raw_commits = gh.compare_commits(org, repo, old_hash, new_hash) if gh else []
+    if not raw_commits and not gh:
+        # Fallback: should not happen if gh is always provided, but kept for safety
         console.print(f"  [yellow]Could not fetch commits. View on GitHub:[/yellow]")
         console.print(f"  [link={compare_url}]{compare_url}[/link]")
         return
 
-    commits = []
-    for line in result.stdout.strip().splitlines():
-        try:
-            commits.append(json.loads(line))
-        except json.JSONDecodeError:
-            continue
+    commits = [
+        {
+            "sha": c.get("sha", ""),
+            "message": (c.get("commit", {}).get("message", "") or "").split("\n")[0],
+            "author": c.get("commit", {}).get("author", {}).get("name", ""),
+            "date": c.get("commit", {}).get("author", {}).get("date", ""),
+        }
+        for c in raw_commits
+    ]
 
     if not commits:
         console.print(f"  [dim]No commits found between these versions[/dim]")
@@ -982,7 +1201,7 @@ def _format_diff_text(lines: list[str]) -> Text:
     return diff_text
 
 
-def verify_single_action(action_ref: str) -> bool:
+def verify_single_action(action_ref: str, gh: GitHubClient | None = None) -> bool:
     """Verify a single action reference. Returns True if verification passed."""
     org, repo, sub_path, commit_hash = parse_action_ref(action_ref)
 
@@ -1013,9 +1232,9 @@ def verify_single_action(action_ref: str) -> bool:
         # Check for previously approved versions and offer to diff
         approved = find_approved_versions(org, repo)
         if approved:
-            selected_hash = show_approved_versions(org, repo, commit_hash, approved)
+            selected_hash = show_approved_versions(org, repo, commit_hash, approved, gh=gh)
             if selected_hash:
-                show_commits_between(org, repo, selected_hash, commit_hash)
+                show_commits_between(org, repo, selected_hash, commit_hash, gh=gh)
                 diff_approved_vs_new(org, repo, selected_hash, commit_hash, work_dir)
         elif not is_js_action:
             console.print(
@@ -1042,24 +1261,20 @@ def verify_single_action(action_ref: str) -> bool:
     return all_match
 
 
-def extract_action_refs_from_pr(pr_number: int) -> list[str]:
+def extract_action_refs_from_pr(pr_number: int, gh: GitHubClient | None = None) -> list[str]:
     """Extract all new action org/repo[/sub]@hash refs from a dependabot PR diff.
 
     Returns a deduplicated list of action references found in added lines.
     """
-    result = subprocess.run(
-        ["gh", "pr", "diff", str(pr_number)],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
+    if gh is None:
         return []
-
-    import re
+    diff_text = gh.get_pr_diff(pr_number)
+    if not diff_text:
+        return []
 
     seen: set[str] = set()
     refs: list[str] = []
-    for line in result.stdout.splitlines():
+    for line in diff_text.splitlines():
         # Match lines like: +      - uses: org/repo/sub@hash  # tag
         match = re.search(r"^\+.*uses:\s+([^@\s]+)@([0-9a-f]{40})", line)
         if match:
@@ -1073,41 +1288,20 @@ def extract_action_refs_from_pr(pr_number: int) -> list[str]:
     return refs
 
 
-def get_gh_user() -> str:
+def get_gh_user(gh: GitHubClient | None = None) -> str:
     """Get the currently authenticated GitHub username."""
-    result = subprocess.run(
-        ["gh", "api", "user", "--jq", ".login"],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode == 0:
-        return result.stdout.strip()
-    return "unknown"
+    if gh is None:
+        return "unknown"
+    return gh.get_authenticated_user()
 
 
-def check_dependabot_prs() -> None:
+def check_dependabot_prs(gh: GitHubClient) -> None:
     """List open dependabot PRs, verify each, and optionally merge."""
     console.print()
     console.rule("[bold]Dependabot PR Review[/bold]")
 
     with console.status("[bold blue]Fetching open dependabot PRs...[/bold blue]"):
-        result = subprocess.run(
-            [
-                "gh", "pr", "list",
-                "--author", "app/dependabot",
-                "--state", "open",
-                "--json", "number,title,headRefName,url,reviewDecision,statusCheckRollup",
-                "--limit", "50",
-            ],
-            capture_output=True,
-            text=True,
-        )
-
-    if result.returncode != 0 or not result.stdout.strip():
-        console.print("[yellow]Could not fetch dependabot PRs[/yellow]")
-        return
-
-    all_prs = json.loads(result.stdout)
+        all_prs = gh.list_open_prs(author="app/dependabot")
 
     if not all_prs:
         console.print("[green]No open dependabot PRs found[/green]")
@@ -1184,7 +1378,7 @@ def check_dependabot_prs() -> None:
     ):
         return
 
-    gh_user = get_gh_user()
+    gh_user = get_gh_user(gh=gh)
     reviewed: list[dict] = []
     failed: list[dict] = []
 
@@ -1194,7 +1388,7 @@ def check_dependabot_prs() -> None:
 
         # Extract all action references from PR diff
         with console.status("[bold blue]Extracting action references from PR...[/bold blue]"):
-            action_refs = extract_action_refs_from_pr(pr["number"])
+            action_refs = extract_action_refs_from_pr(pr["number"], gh=gh)
 
         if not action_refs:
             console.print(
@@ -1235,11 +1429,11 @@ def check_dependabot_prs() -> None:
                         sub_ref = f"{org_repo}/{sp}@{commit_hash}"
                     else:
                         sub_ref = f"{org_repo}@{commit_hash}"
-                    if not verify_single_action(sub_ref):
+                    if not verify_single_action(sub_ref, gh=gh):
                         passed = False
             else:
                 # Simple single action (no sub-path)
-                if not verify_single_action(f"{org_repo}@{commit_hash}"):
+                if not verify_single_action(f"{org_repo}@{commit_hash}", gh=gh):
                     passed = False
 
         if not passed:
@@ -1273,26 +1467,17 @@ def check_dependabot_prs() -> None:
         )
 
         console.print(f"  [dim]Adding review comment...[/dim]")
-        comment_result = subprocess.run(
-            ["gh", "pr", "review", str(pr["number"]), "--approve", "--body", comment],
-            capture_output=True,
-            text=True,
-        )
-        if comment_result.returncode != 0:
-            console.print(f"  [yellow]Warning: could not add review comment: {comment_result.stderr.strip()}[/yellow]")
+        if not gh.approve_pr(pr["number"], comment):
+            console.print(f"  [yellow]Warning: could not add review comment[/yellow]")
 
         console.print(f"  [dim]Merging PR #{pr['number']}...[/dim]")
-        merge_result = subprocess.run(
-            ["gh", "pr", "merge", str(pr["number"]), "--merge", "--delete-branch"],
-            capture_output=True,
-            text=True,
-        )
-        if merge_result.returncode == 0:
+        success, err = gh.merge_pr(pr["number"])
+        if success:
             console.print(f"  [green]✓ PR #{pr['number']} merged successfully[/green]")
             reviewed.append(pr)
         else:
             console.print(
-                f"  [red]Failed to merge PR #{pr['number']}: {merge_result.stderr.strip()}[/red]"
+                f"  [red]Failed to merge PR #{pr['number']}: {err}[/red]"
             )
             failed.append(pr)
 
@@ -1334,19 +1519,44 @@ def main() -> None:
         action="store_true",
         help="Review open dependabot PRs: verify each action, optionally approve and merge",
     )
+    parser.add_argument(
+        "--no-gh",
+        action="store_true",
+        help="Use the GitHub REST API via requests instead of the gh CLI",
+    )
+    parser.add_argument(
+        "--github-token",
+        default=os.environ.get("GITHUB_TOKEN"),
+        help="GitHub token for API access (default: $GITHUB_TOKEN env var). Required with --no-gh",
+    )
     args = parser.parse_args()
 
     if not shutil.which("docker"):
         console.print("[red]Error:[/red] docker is required but not found in PATH")
         sys.exit(1)
 
-    if args.check_dependabot_prs:
-        if not shutil.which("gh"):
-            console.print("[red]Error:[/red] gh (GitHub CLI) is required for --check-dependabot-prs")
+    # Build the GitHub client
+    if args.no_gh:
+        if not args.github_token:
+            console.print(
+                "[red]Error:[/red] --no-gh requires a GitHub token. "
+                "Pass --github-token TOKEN or set the GITHUB_TOKEN environment variable."
+            )
             sys.exit(1)
-        check_dependabot_prs()
+        gh = GitHubClient(token=args.github_token)
+    else:
+        if not shutil.which("gh"):
+            console.print(
+                "[red]Error:[/red] gh (GitHub CLI) is not installed. "
+                "Either install gh or use --no-gh with a --github-token."
+            )
+            sys.exit(1)
+        gh = GitHubClient(token=args.github_token)
+
+    if args.check_dependabot_prs:
+        check_dependabot_prs(gh=gh)
     elif args.action_ref:
-        passed = verify_single_action(args.action_ref)
+        passed = verify_single_action(args.action_ref, gh=gh)
         sys.exit(0 if passed else 1)
     else:
         parser.print_help()
