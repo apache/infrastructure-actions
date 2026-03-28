@@ -1,4 +1,4 @@
-pelican==4.5.0
+pelican==4.11.0.post0
 markdown==3.8.1
 pelican-sitemap==1.2.2
 soupsieve==2.0
