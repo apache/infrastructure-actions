@@ -507,11 +507,27 @@ RUN ACTION_FILE=$(ls action.yml action.yaml 2>/dev/null | head -1); \
       echo "unknown" > /action-type.txt; \
     fi
 
-# Save original dist files before rebuild
-RUN if [ -d dist ]; then cp -r dist /original-dist; else mkdir /original-dist; fi
+# Detect the output directory from action.yml main: field (e.g. dist/index.js -> dist, lib/index.js -> lib)
+RUN ACTION_FILE=$(ls action.yml action.yaml 2>/dev/null | head -1); \
+    OUT_DIR="dist"; \
+    if [ -n "$ACTION_FILE" ]; then \
+      MAIN_PATH=$(grep -E '^\\s+main:' "$ACTION_FILE" | head -1 | sed 's/.*main:\\s*//' | tr -d "'\\\"\\ "); \
+      if [ -n "$MAIN_PATH" ]; then \
+        DETECTED_DIR=$(echo "$MAIN_PATH" | sed 's|/.*||'); \
+        if [ -n "$DETECTED_DIR" ] && [ "$DETECTED_DIR" != "$MAIN_PATH" ]; then \
+          OUT_DIR="$DETECTED_DIR"; \
+        fi; \
+      fi; \
+    fi; \
+    echo "$OUT_DIR" > /out-dir.txt
 
-# Delete compiled JS from dist/ before rebuild to ensure a clean build
-RUN if [ -d dist ]; then find dist -name '*.js' -print -delete > /deleted-js.log 2>&1; else echo 'no dist/ directory' > /deleted-js.log; fi
+# Save original output files before rebuild
+RUN OUT_DIR=$(cat /out-dir.txt); \
+    if [ -d "$OUT_DIR" ]; then cp -r "$OUT_DIR" /original-dist; else mkdir /original-dist; fi
+
+# Delete compiled JS from output dir before rebuild to ensure a clean build
+RUN OUT_DIR=$(cat /out-dir.txt); \
+    if [ -d "$OUT_DIR" ]; then find "$OUT_DIR" -name '*.js' -print -delete > /deleted-js.log 2>&1; else echo "no $OUT_DIR/ directory" > /deleted-js.log; fi
 
 # Detect and install with the correct package manager
 RUN if [ -f yarn.lock ]; then \
@@ -536,13 +552,14 @@ RUN if [ -f yarn.lock ]; then \
       echo "npm" > /run-cmd; \
     fi
 
-# Build: try 'build' script first, then 'package' if dist/ is still empty,
+# Build: try 'build' script first, then 'package' if output dir is still empty,
 # fall back to direct ncc if no scripts produced output
-RUN RUN_CMD=$(cat /run-cmd); \
+RUN OUT_DIR=$(cat /out-dir.txt); \
+    RUN_CMD=$(cat /run-cmd); \
     BUILD_DONE=false; \
     if $RUN_CMD run build 2>/dev/null; then \
       echo "build-step: $RUN_CMD run build" >> /build-info.log; \
-      if [ -d dist ] && ls dist/*.js >/dev/null 2>&1; then BUILD_DONE=true; fi; \
+      if [ -d "$OUT_DIR" ] && ls "$OUT_DIR"/*.js >/dev/null 2>&1; then BUILD_DONE=true; fi; \
     fi && \
     if [ "$BUILD_DONE" = "false" ]; then \
       if $RUN_CMD run package 2>/dev/null; then \
@@ -552,17 +569,18 @@ RUN RUN_CMD=$(cat /run-cmd); \
       fi; \
     fi
 
-# Save rebuilt dist files
-RUN if [ -d dist ]; then cp -r dist /rebuilt-dist; else mkdir /rebuilt-dist; fi
+# Save rebuilt output files
+RUN OUT_DIR=$(cat /out-dir.txt); \
+    if [ -d "$OUT_DIR" ]; then cp -r "$OUT_DIR" /rebuilt-dist; else mkdir /rebuilt-dist; fi
 """
 
 
 def build_in_docker(
     org: str, repo: str, commit_hash: str, work_dir: Path
-) -> tuple[Path, Path, str]:
+) -> tuple[Path, Path, str, str]:
     """Build the action in a Docker container and extract original + rebuilt dist.
 
-    Returns (original_dir, rebuilt_dir, action_type).
+    Returns (original_dir, rebuilt_dir, action_type, out_dir_name).
     """
     repo_url = f"https://github.com/{org}/{repo}.git"
     container_name = f"verify-action-{org}-{repo}-{commit_hash[:12]}"
@@ -638,6 +656,17 @@ def build_in_docker(
             )
             console.print("  [green]✓[/green] Artifacts extracted")
 
+            # Extract the detected output directory name
+            out_dir_result = subprocess.run(
+                ["docker", "cp", f"{container_name}:/out-dir.txt", str(work_dir / "out-dir.txt")],
+                capture_output=True,
+            )
+            out_dir_name = "dist"
+            if out_dir_result.returncode == 0:
+                out_dir_name = (work_dir / "out-dir.txt").read_text().strip() or "dist"
+                if out_dir_name != "dist":
+                    console.print(f"  [green]✓[/green] Detected output directory: [bold]{out_dir_name}/[/bold]")
+
             # Extract and display the deletion log
             deleted_log = subprocess.run(
                 ["docker", "cp", f"{container_name}:/deleted-js.log", str(work_dir / "deleted-js.log")],
@@ -645,8 +674,8 @@ def build_in_docker(
             )
             if deleted_log.returncode == 0:
                 log_content = (work_dir / "deleted-js.log").read_text().strip()
-                if log_content == "no dist/ directory":
-                    console.print("  [yellow]![/yellow] No dist/ directory found before rebuild")
+                if log_content.startswith("no ") and log_content.endswith(" directory"):
+                    console.print(f"  [yellow]![/yellow] No {out_dir_name}/ directory found before rebuild")
                 else:
                     deleted_files = [l for l in log_content.splitlines() if l.strip()]
                     console.print(f"  [green]✓[/green] Deleted {len(deleted_files)} compiled JS file(s) before rebuild:")
@@ -674,11 +703,12 @@ def build_in_docker(
             )
             console.print("  [green]✓[/green] Cleanup complete")
 
-    return original_dir, rebuilt_dir, action_type
+    return original_dir, rebuilt_dir, action_type, out_dir_name
 
 
 def diff_js_files(
-    original_dir: Path, rebuilt_dir: Path, org: str, repo: str, commit_hash: str
+    original_dir: Path, rebuilt_dir: Path, org: str, repo: str, commit_hash: str,
+    out_dir_name: str = "dist",
 ) -> bool:
     """Diff JS files between original and rebuilt, return True if identical."""
     blob_url = f"https://github.com/{org}/{repo}/blob/{commit_hash}"
@@ -700,7 +730,7 @@ def diff_js_files(
 
     if not all_files:
         console.print(
-            "\n[yellow]No compiled JavaScript found in dist/ — "
+            f"\n[yellow]No compiled JavaScript found in {out_dir_name}/ — "
             "this action may ship source JS directly (e.g. with node_modules/)[/yellow]"
         )
         return True
@@ -751,7 +781,7 @@ def diff_js_files(
         orig_file = original_dir / rel_path
         built_file = rebuilt_dir / rel_path
 
-        file_link = f"[link={blob_url}/dist/{rel_path}]{rel_path}[/link]"
+        file_link = f"[link={blob_url}/{out_dir_name}/{rel_path}]{rel_path}[/link]"
 
         if rel_path not in original_files:
             console.print(f"  [green]+[/green] {file_link} [dim](only in rebuilt)[/dim]")
@@ -900,7 +930,7 @@ def verify_single_action(action_ref: str) -> bool:
 
     with tempfile.TemporaryDirectory(prefix="verify-action-") as tmp:
         work_dir = Path(tmp)
-        original_dir, rebuilt_dir, action_type = build_in_docker(org, repo, commit_hash, work_dir)
+        original_dir, rebuilt_dir, action_type, out_dir_name = build_in_docker(org, repo, commit_hash, work_dir)
 
         # Non-JavaScript actions (docker, composite) don't have compiled JS to verify
         is_js_action = action_type.startswith("node") or action_type in ("unknown",)
@@ -916,7 +946,7 @@ def verify_single_action(action_ref: str) -> bool:
             )
             all_match = True
         else:
-            all_match = diff_js_files(original_dir, rebuilt_dir, org, repo, commit_hash)
+            all_match = diff_js_files(original_dir, rebuilt_dir, org, repo, commit_hash, out_dir_name)
 
         # Check for previously approved versions and offer to diff
         approved = find_approved_versions(org, repo)
