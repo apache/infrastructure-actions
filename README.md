@@ -141,9 +141,23 @@ This will:
 5. If verification passes, ask whether to approve and merge the PR
 6. On merge, add a review comment documenting what was verified
 
+#### Running Without the `gh` CLI
+
+If you prefer not to install the `gh` CLI, you can use `--no-gh` to make all GitHub API calls via Python `requests` instead. In this mode you must provide a GitHub token either via `--github-token` or the `GITHUB_TOKEN` environment variable:
+
+```bash
+# Using the flag:
+uv run utils/verify-action-build.py --no-gh --github-token ghp_... org/repo@commit_hash
+
+# Or via environment variable:
+export GITHUB_TOKEN=ghp_...
+uv run utils/verify-action-build.py --no-gh --check-dependabot-prs
+```
+
+The `--no-gh` mode supports all the same features as the default `gh`-based mode.
+
 > [!NOTE]
-> **Prerequisites:** `docker`, `uv`, and `gh` (GitHub CLI, authenticated via `gh auth login`).
-> The build runs in a `node:20-slim` container so no local Node.js installation is needed.
+> **Prerequisites:** `docker` and `uv`. When using the default mode (without `--no-gh`), `gh` (GitHub CLI, authenticated via `gh auth login`) is also required. The build runs in a `node:20-slim` container so no local Node.js installation is needed.
 
 #### Dependabot Cooldown Period
 

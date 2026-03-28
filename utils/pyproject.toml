@@ -5,6 +5,7 @@ description = "Utility scripts for ASF GitHub Actions management"
 requires-python = ">=3.11"
 dependencies = [
     "jsbeautifier>=1.15",
+    "requests>=2.31",
     "rich>=13.0",
 ]
 
