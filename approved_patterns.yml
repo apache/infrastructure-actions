@@ -111,7 +111,6 @@
 - eps1lon/actions-label-merge-conflict@*
 - erisu/apache-rat-action@46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c
 - erisu/license-checker-action@99cffa11264fe545fd0baa6c13bca5a00ae608f2
-- gaurav-nelson/github-action-markdown-link-check@*
 - geekyeggo/delete-artifact@*
 - golang/govulncheck-action@*
 - golangci/*@*
