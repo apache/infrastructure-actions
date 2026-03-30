@@ -32,6 +32,7 @@ Exits with code 1 if any action ref is not allowlisted.
 import fnmatch
 import glob
 import os
+import shlex
 import sys
 from typing import Any, Generator
 
@@ -148,6 +149,63 @@ def is_allowed(action_ref: str, allowlist: list[str]) -> bool:
     return any(fnmatch.fnmatch(action_ref, pattern) for pattern in allowlist)
 
 
+def build_gh_pr_command(missing_refs: list[str], repo_name: str) -> str:
+    """Build a shell command that creates a PR adding missing actions to the allowlist.
+
+    The generated script forks ``apache/infrastructure-actions``, appends
+    wildcard entries to ``actions.yml``, and opens a pull request — all via
+    the ``gh`` CLI with no manual file editing required.
+
+    Args:
+        missing_refs: Action refs not on the allowlist (e.g. ``["owner/act@sha"]``).
+        repo_name: Value of ``$GITHUB_REPOSITORY`` (may be empty).
+
+    Returns:
+        str: A copy-pasteable shell script.
+    """
+    action_names = sorted({ref.split("@")[0] for ref in missing_refs})
+
+    # Branch name from first action, sanitised for git
+    sanitized = action_names[0].replace("/", "-")
+    if len(action_names) > 1:
+        sanitized += f"-and-{len(action_names) - 1}-more"
+    branch = f"allowlist-add-{sanitized}"
+
+    # YAML entries to append (wildcard — maintainers can pin later)
+    yaml_lines: list[str] = []
+    for name in action_names:
+        yaml_lines.append(f"{name}:")
+        yaml_lines.append("  '*':")
+        yaml_lines.append("    keep: true")
+    yaml_block = "\n".join(yaml_lines)
+
+    summary = ", ".join(action_names)
+    title = f"Add {summary} to the GitHub Actions allowlist"
+
+    body_lines = ["Add the following action(s) to the allowlist:", ""]
+    for name in action_names:
+        body_lines.append(f"- `{name}`")
+    if repo_name:
+        body_lines.extend(["", f"Needed by: `{repo_name}`"])
+    body = "\n".join(body_lines)
+
+    return (
+        f"( set -e; _d=$(mktemp -d); trap 'rm -rf \"$_d\"' EXIT; cd \"$_d\"\n"
+        f"  gh repo clone apache/infrastructure-actions . -- --depth=1\n"
+        f"  gh repo fork --remote\n"
+        f"  git checkout -b {shlex.quote(branch)}\n"
+        f"  cat >> actions.yml << 'ALLOWLIST_YAML'\n"
+        f"{yaml_block}\n"
+        f"ALLOWLIST_YAML\n"
+        f"  git add actions.yml\n"
+        f"  git commit -m {shlex.quote(f'Add {summary} to allowlist')}\n"
+        f"  git push -u origin {shlex.quote(branch)}\n"
+        f"  gh pr create --repo apache/infrastructure-actions"
+        f" --title {shlex.quote(title)}"
+        f" --body {shlex.quote(body)} )\n"
+    )
+
+
 def main():
     if len(sys.argv) != 2:
         print(f"Usage: {sys.argv[0]} <allowlist_path>", file=sys.stderr)
@@ -158,9 +216,21 @@ def main():
     scan_glob = os.environ.get("GITHUB_YAML_GLOB", DEFAULT_GITHUB_YAML_GLOB)
     action_refs = collect_action_refs(scan_glob)
 
+    print(f"Checking {len(action_refs)} unique action ref(s) against the ASF allowlist:\n")
     violations = []
     for action_ref, filepaths in sorted(action_refs.items()):
-        if not is_allowed(action_ref, allowlist):
+        allowed = is_allowed(action_ref, allowlist)
+        owner = action_ref.split("/")[0]
+        if owner in TRUSTED_OWNERS:
+            reason = f"trusted owner ({owner})"
+        elif allowed:
+            reason = "matches allowlist"
+        else:
+            reason = "NOT ON ALLOWLIST"
+        status = "✅" if allowed else "❌"
+        files_str = ", ".join(filepaths)
+        print(f"  {status} {action_ref} — {reason}  ({files_str})")
+        if not allowed:
             for filepath in filepaths:
                 violations.append((filepath, action_ref))
 
@@ -175,6 +245,12 @@ def main():
             " the action or version to the allowlist:"
             " https://github.com/apache/infrastructure-actions#adding-a-new-action-to-the-allow-list"
         )
+
+        missing_refs = sorted({ref for _, ref in violations})
+        repo_name = os.environ.get("GITHUB_REPOSITORY", "")
+        script = build_gh_pr_command(missing_refs, repo_name)
+        print(f"\n::notice::You can create a PR to add the missing entries by running:\n{script}")
+
         sys.exit(1)
     else:
         print(f"All {len(action_refs)} unique action refs are on the ASF allowlist")

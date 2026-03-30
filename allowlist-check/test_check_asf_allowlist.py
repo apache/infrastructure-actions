@@ -20,12 +20,15 @@ import shutil
 import tempfile
 import textwrap
 import unittest
+from unittest.mock import patch
 
 from check_asf_allowlist import (
+    build_gh_pr_command,
     collect_action_refs,
     find_action_refs,
     is_allowed,
     load_allowlist,
+    main,
 )
 
 
@@ -301,6 +304,117 @@ class TestCollectActionRefs(unittest.TestCase):
         # no files written — github_dir exists but is empty
         refs = collect_action_refs(scan_glob)
         self.assertEqual(refs, {})
+
+
+class TestBuildGhPrCommand(unittest.TestCase):
+    """Tests for the generated gh PR command."""
+
+    def test_single_action(self):
+        script = build_gh_pr_command(
+            ["evil-org/evil-action@abc123"], "apache/test-repo"
+        )
+        self.assertIn("gh repo clone apache/infrastructure-actions", script)
+        self.assertIn("gh repo fork --remote", script)
+        self.assertIn("allowlist-add-evil-org-evil-action", script)
+        self.assertIn("evil-org/evil-action:", script)
+        self.assertIn("  '*':", script)
+        self.assertIn("    keep: true", script)
+        self.assertIn("gh pr create --repo apache/infrastructure-actions", script)
+        self.assertIn("apache/test-repo", script)
+
+    def test_multiple_actions(self):
+        script = build_gh_pr_command(
+            ["b-org/b-action@sha1", "a-org/a-action@sha2"], ""
+        )
+        # Actions should be sorted
+        self.assertIn("a-org/a-action:", script)
+        self.assertIn("b-org/b-action:", script)
+        # Branch name mentions first action + "and more"
+        self.assertIn("allowlist-add-a-org-a-action-and-1-more", script)
+        # No repo reference when GITHUB_REPOSITORY is empty
+        self.assertNotIn("Needed by:", script)
+
+    def test_deduplicates_same_action_different_shas(self):
+        script = build_gh_pr_command(
+            ["org/action@sha1", "org/action@sha2"], ""
+        )
+        # Should appear only once in the YAML block
+        self.assertEqual(script.count("org/action:"), 1)
+
+
+class TestMainGhPrCommand(unittest.TestCase):
+    """Tests that main() prints a gh PR command on violations."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.github_dir = os.path.join(self.tmpdir, ".github", "workflows")
+        os.makedirs(self.github_dir)
+
+        filepath = os.path.join(self.github_dir, "ci.yml")
+        with open(filepath, "w") as f:
+            f.write(
+                textwrap.dedent(
+                    """\
+                    name: CI
+                    on: push
+                    jobs:
+                      build:
+                        runs-on: ubuntu-latest
+                        steps:
+                          - uses: actions/checkout@v4
+                          - uses: evil-org/evil-action@abc123
+                    """
+                )
+            )
+
+        self.allowlist_path = os.path.join(self.tmpdir, "allowlist.yml")
+        with open(self.allowlist_path, "w") as f:
+            f.write("")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
+    @patch.dict(os.environ, {"GITHUB_REPOSITORY": "apache/test-repo"})
+    def test_main_prints_pr_command(self):
+        scan_glob = os.path.join(self.tmpdir, ".github/**/*.yml")
+        with (
+            patch.dict(os.environ, {"GITHUB_YAML_GLOB": scan_glob}),
+            patch("sys.argv", ["check_asf_allowlist.py", self.allowlist_path]),
+            patch("sys.stdout") as mock_stdout,
+            self.assertRaises(SystemExit) as cm,
+        ):
+            main()
+
+        self.assertEqual(cm.exception.code, 1)
+        output = "".join(
+            call.args[0] for call in mock_stdout.write.call_args_list
+        )
+        self.assertIn("gh pr create --repo apache/infrastructure-actions", output)
+        self.assertIn("evil-org/evil-action", output)
+        self.assertIn("apache/test-repo", output)
+
+    @patch.dict(os.environ, {"GITHUB_REPOSITORY": "apache/test-repo"})
+    def test_main_prints_verbose_check_output(self):
+        scan_glob = os.path.join(self.tmpdir, ".github/**/*.yml")
+        with (
+            patch.dict(os.environ, {"GITHUB_YAML_GLOB": scan_glob}),
+            patch("sys.argv", ["check_asf_allowlist.py", self.allowlist_path]),
+            patch("sys.stdout") as mock_stdout,
+            self.assertRaises(SystemExit),
+        ):
+            main()
+
+        output = "".join(
+            call.args[0] for call in mock_stdout.write.call_args_list
+        )
+        # Trusted action should show as allowed with reason
+        self.assertIn("actions/checkout@v4", output)
+        self.assertIn("trusted owner", output)
+        # Violation should show as not allowed
+        self.assertIn("evil-org/evil-action@abc123", output)
+        self.assertIn("NOT ON ALLOWLIST", output)
+        # Header line
+        self.assertIn("Checking 2 unique action ref(s)", output)
 
 
 if __name__ == "__main__":
