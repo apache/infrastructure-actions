@@ -58,3 +58,6 @@ Thumbs.db
 approved_patterns.yml
 /gateway/test_out_dummy.yml
 /tmp
+
+# RAT work dir
+utils/.rat/**
