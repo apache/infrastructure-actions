@@ -722,7 +722,8 @@ def diff_approved_vs_new(
 
 
 DOCKERFILE_TEMPLATE = """\
-FROM node:20-slim
+ARG NODE_VERSION=20
+FROM node:${NODE_VERSION}-slim
 
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 RUN corepack enable
@@ -855,9 +856,42 @@ RUN OUT_DIR=$(cat /out-dir.txt); \
 """
 
 
+def detect_node_version(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+    gh: GitHubClient | None = None,
+) -> str:
+    """Detect the Node.js major version from the action's using: field.
+
+    Fetches action.yml from GitHub at the given commit and extracts the
+    node version (e.g. 'node20' -> '20').  Falls back to '20' if detection fails.
+    """
+    # Try action.yml then action.yaml, in sub_path first if given
+    candidates = []
+    if sub_path:
+        candidates.extend([f"{sub_path}/action.yml", f"{sub_path}/action.yaml"])
+    candidates.extend(["action.yml", "action.yaml"])
+
+    for path in candidates:
+        url = f"https://raw.githubusercontent.com/{org}/{repo}/{commit_hash}/{path}"
+        try:
+            resp = requests.get(url, timeout=10)
+            if not resp.ok:
+                continue
+            for line in resp.text.splitlines():
+                match = re.match(r"\s+using:\s*['\"]?(node\d+)['\"]?", line)
+                if match:
+                    version = match.group(1).replace("node", "")
+                    return version
+        except requests.RequestException:
+            continue
+
+    return "20"
+
+
 def build_in_docker(
     org: str, repo: str, commit_hash: str, work_dir: Path,
     sub_path: str = "",
+    gh: GitHubClient | None = None,
 ) -> tuple[Path, Path, str, str]:
     """Build the action in a Docker container and extract original + rebuilt dist.
 
@@ -891,6 +925,11 @@ def build_in_docker(
     console.print()
     console.print(Panel(info_table, title="Action Build Verification", border_style="blue"))
 
+    # Detect Node.js version from action.yml before building
+    node_version = detect_node_version(org, repo, commit_hash, sub_path, gh=gh)
+    if node_version != "20":
+        console.print(f"  [green]✓[/green] Detected Node.js version: [bold]node{node_version}[/bold]")
+
     with console.status("[bold blue]Building Docker image...[/bold blue]") as status:
         # Build Docker image
         status.update("[bold blue]Cloning repository and building action...[/bold blue]")
@@ -898,6 +937,8 @@ def build_in_docker(
             [
                 "docker",
                 "build",
+                "--build-arg",
+                f"NODE_VERSION={node_version}",
                 "--build-arg",
                 f"REPO_URL={repo_url}",
                 "--build-arg",
@@ -1219,7 +1260,7 @@ def verify_single_action(action_ref: str, gh: GitHubClient | None = None, ci_mod
     with tempfile.TemporaryDirectory(prefix="verify-action-") as tmp:
         work_dir = Path(tmp)
         original_dir, rebuilt_dir, action_type, out_dir_name = build_in_docker(
-            org, repo, commit_hash, work_dir, sub_path=sub_path,
+            org, repo, commit_hash, work_dir, sub_path=sub_path, gh=gh,
         )
 
         # Non-JavaScript actions (docker, composite) don't have compiled JS to verify
@@ -1287,7 +1328,8 @@ def extract_action_refs_from_pr(pr_number: int, gh: GitHubClient | None = None) 
     refs: list[str] = []
     for line in diff_text.splitlines():
         # Match lines like: +      - uses: org/repo/sub@hash  # tag
-        match = re.search(r"^\+.*uses:\s+([^@\s]+)@([0-9a-f]{40})", line)
+        # Also match 'use:' (common typo for 'uses:')
+        match = re.search(r"^\+.*uses?:\s+([^@\s]+)@([0-9a-f]{40})", line)
         if match:
             action_path = match.group(1)
             commit_hash = match.group(2)
