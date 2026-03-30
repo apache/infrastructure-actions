@@ -40,3 +40,17 @@ Generated-by: <Agent information>
 Always use `--web` when creating PRs (e.g. `gh pr create --web ...`). This opens the PR in the
 browser and gives the author a chance to review the title, description, and diff before submitting.
 Do not create PRs directly from the CLI without `--web`.
+
+### PR templates
+
+This repository uses multiple PR templates located in `.github/PULL_REQUEST_TEMPLATE/`:
+
+- **`action_approval.md`** — Use for requests to add a new GitHub Action to the allow list. Includes
+  fields for the action name, URL, pinned version hash, permissions, related actions, and a review
+  checklist.
+- **`code_change.md`** — Use for all other changes: new utilities, bug fixes, enhancements, workflow
+  or CI changes, and documentation updates.
+
+When creating a PR via `gh pr create --web`, GitHub will present a template chooser. Select the
+template that matches the type of change. When opening a PR URL directly, you can append
+`&template=action_approval.md` or `&template=code_change.md` to pre-fill the appropriate template.

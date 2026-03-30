@@ -2,12 +2,12 @@
 
 ## Overview
 
-<!-- Please describe the proposed action; what it does and why this is needed. 
-     It will help if you can tell us which project is interested in this action 
+<!-- Please describe the proposed action; what it does and why this is needed.
+     It will help if you can tell us which project is interested in this action
      and why.
 -->
 
-**Name of action:** 
+**Name of action:**
 
 **URL of action:**
 
@@ -16,13 +16,13 @@
 
 ## Permissions
 
-<!-- Describe the permissions required and whether these permissions can have 
-     security or provenance implications such as write access to code or read 
+<!-- Describe the permissions required and whether these permissions can have
+     security or provenance implications such as write access to code or read
      access to credentials. -->
 
 ## Related Actions
 
-<!-- If this action is similar to an existing, allowed action (please do check!), 
+<!-- If this action is similar to an existing, allowed action (please do check!),
      let us know how this one differs and is a better option for your use case.
      -->
 
