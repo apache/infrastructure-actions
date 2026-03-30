@@ -54,3 +54,9 @@ This repository uses multiple PR templates located in `.github/PULL_REQUEST_TEMP
 When creating a PR via `gh pr create --web`, GitHub will present a template chooser. Select the
 template that matches the type of change. When opening a PR URL directly, you can append
 `&template=action_approval.md` or `&template=code_change.md` to pre-fill the appropriate template.
+
+## License headers
+
+All files must include the Apache License 2.0 header where the file format supports it. Use the
+appropriate comment syntax for the file type (e.g., `<!-- -->` for Markdown/HTML, `#` for YAML/Python,
+`//` for JavaScript/Go). See existing files in the repository for examples of the correct format.
