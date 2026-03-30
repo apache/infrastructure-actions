@@ -698,7 +698,6 @@ pypa/gh-action-pypi-publish:
     keep: true
     tag: v1.13.0
   76f52bc884231f62b9a034ebfe128415bbaabdfc:
-    keep: true
     tag: v1.12.4
     expires_at: 2026-06-10
 pyTooling/Actions:
