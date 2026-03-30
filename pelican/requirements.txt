@@ -16,15 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-pelican==4.11.0.post0
-markdown==3.10.2
-pelican-sitemap==1.2.2
-soupsieve==2.8.3
-beautifulsoup4==4.14.3
-ezt==1.1
-PyYAML==6.0.3
-certifi==2026.2.25
-idna==3.11
-charset-normalizer==3.4.7
-urllib3==2.6.3
-requests==2.33.1
+pelican>=4.11,<4.12
+markdown>=3.8,<4.0
+pelican-sitemap>=1.2,<2.0
+beautifulsoup4>=4.12,<5.0
+ezt>=1.1,<2.0
+PyYAML>=6.0,<7.0
+requests>=2.32,<3.0
