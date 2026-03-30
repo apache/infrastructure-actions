@@ -676,8 +676,9 @@ pypa/gh-action-pip-audit:
     tag: v1.1.0
     expires_at: 2026-03-31
 pypa/gh-action-pypi-publish:
-  release/v1*:
+  ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e:
     keep: true
+    tag: v1.13.0
 pyTooling/Actions:
   '*':
     keep: true
