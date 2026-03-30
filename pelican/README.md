@@ -18,6 +18,8 @@
 -->
 # ASF Infrastructure Pelican Action
 
+**Note** Starting a branch and draft PR for systemic upgrades to the Pelican Action.
+
 **Note** This Action simplifies managing a project website. More information is available at <a href="https://infra.apache.org/asf-pelican.html" target="_blank">infra.apache.org/asf-pelican.html</a>.
 
 ## Inputs
