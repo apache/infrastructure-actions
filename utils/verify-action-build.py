@@ -54,8 +54,9 @@ from rich.prompt import Confirm
 from rich.table import Table
 from rich.text import Text
 
-console = Console(stderr=True)
-output = Console()
+_force_color = os.environ.get("CI") is not None
+console = Console(stderr=True, force_terminal=_force_color)
+output = Console(force_terminal=_force_color)
 
 # Path to the actions.yml file relative to the script
 ACTIONS_YML = Path(__file__).resolve().parent.parent / "actions.yml"
