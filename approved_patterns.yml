@@ -41,13 +41,11 @@
 - astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098
 - astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
 - awalsh128/cache-apt-pkgs-action@*
-- aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8
 - aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708
 - aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7
 - azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4
 - azure/setup-kubectl@776406bce94f63e41d621b960d78ee25c8b76ede
 - azure/setup-kubectl@15650b3ad78fff148532a140b8a4c821796b2d7b
-- bazel-contrib/setup-bazel@8d2cb86a3680a820c3e219597279ce3f80d17a47
 - bazel-contrib/setup-bazel@083175551ceeceebc757ebee2127fde78840ca77
 - bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86
 - betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619
@@ -95,7 +93,6 @@
 - crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec
 - crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd
 - damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
-- DavidAnson/markdownlint-cli2-action@30a0e04f1870d58f8d717450cc6134995f993c63
 - DavidAnson/markdownlint-cli2-action@07035fd053f7be764496c0f8d8f9f41f98305101
 - DavidAnson/markdownlint-cli2-action@ce4853d43830c74c1753b39f3cf40f71c2031eb9
 - dawidd6/action-download-artifact@*
@@ -139,7 +136,6 @@
 - google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
 - gr2m/twitter-together@*
 - graalvm/setup-graalvm@7f488cf82a3629ee755e4e97342c01d6bed318fa
-- graalvm/setup-graalvm@eec48106e0bf45f2976c2ff0c3e22395cced8243
 - graalvm/setup-graalvm@790e28947b79a9c09c3391c0f18bf8d0f102ed69
 - graalvm/setup-graalvm@54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1
 - graalvm/setup-graalvm@f744c72a42b1995d7b0cbc314bde4bace7ac1fe1
@@ -208,7 +204,6 @@
 - maxim-lobanov/setup-xcode@*
 - medyagh/setup-minikube@*
 - mikepenz/action-junit-report@*
-- mlugg/setup-zig@8d6198c65fb0feaa111df26e6b467fea8345e46f
 - mlugg/setup-zig@fa65c4058643678a4e4a9a60513944a7d8d35440
 - mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29
 - mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
@@ -225,7 +220,6 @@
 - opentofu/setup-opentofu@9d84900f3238fab8cd84ce47d658d25dd008be2f
 - opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb
 - oracle-actions/setup-java@*
-- orhun/git-cliff-action@d77b37db2e3f7398432d34b72a12aa3e2ba87e51
 - orhun/git-cliff-action@e16f179f0be49ecdfe63753837f20b9531642772
 - orhun/git-cliff-action@c93ef52f3d0ddcdcc9bd5447d98d458a11cd4f72
 - ossf/scorecard-action@*
@@ -243,7 +237,6 @@
 - pypa/cibuildwheel@63fd63b352a9a8bdcc24791c9dbee952ee9a8abc
 - pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e
 - pypa/cibuildwheel@ee02a1537ce3071a004a6b08c41e72f0fdc42d9a
-- pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266
 - pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e
 - pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
 - pyTooling/Actions@*
@@ -298,7 +291,6 @@
 - testlens-app/setup-testlens@*
 - timonvs/pr-labeler-action@*
 - TobKed/label-when-approved-action@*
-- untitaker/hyperlink@e66bb17cc9ae341677431edec3b893a0aa6ac747
 - untitaker/hyperlink@fb5bb9c5011a3d143a54b4b30aedc30ec5bc0f89
 - uraimo/run-on-arch-action@d94c13912ea685de38fccc1109385b83fd79427d
 - vapier/coverity-scan-action@2068473c7bdf8c2fb984a6a40ae76ee7facd7a85

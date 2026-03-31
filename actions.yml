@@ -89,9 +89,6 @@ awalsh128/cache-apt-pkgs-action:
   '*':
     keep: true
 aws-actions/configure-aws-credentials:
-  00943011d9042930efac3dcd3a170e4273319bc8:
-    tag: v5.1.0
-    expires_at: 2026-03-31
   61815dcd50bd041e203e49132bacad1fd04d2708:
     tag: v5.1.1
     expires_at: 2026-05-22
@@ -107,9 +104,6 @@ azure/setup-kubectl:
   15650b3ad78fff148532a140b8a4c821796b2d7b:
     tag: v5.0.0
 bazel-contrib/setup-bazel:
-  8d2cb86a3680a820c3e219597279ce3f80d17a47:
-    tag: 0.15.0
-    expires_at: 2026-03-31
   083175551ceeceebc757ebee2127fde78840ca77:
     tag: 0.18.0
     expires_at: 2026-06-20
@@ -248,9 +242,6 @@ crazy-max/ghaction-import-gpg:
 damccorm/tag-ur-it:
   6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5:
 DavidAnson/markdownlint-cli2-action:
-  30a0e04f1870d58f8d717450cc6134995f993c63:
-    tag: v21.0.0
-    expires_at: 2026-03-31
   07035fd053f7be764496c0f8d8f9f41f98305101:
     tag: v22.0.0
     expires_at: 2026-06-20
@@ -380,9 +371,6 @@ graalvm/setup-graalvm:
   7f488cf82a3629ee755e4e97342c01d6bed318fa:
     tag: v1.3.5
     expires_at: 2026-04-24
-  eec48106e0bf45f2976c2ff0c3e22395cced8243:
-    tag: v1.4.2
-    expires_at: 2026-03-31
   790e28947b79a9c09c3391c0f18bf8d0f102ed69:
     tag: v1.4.4
     expires_at: 2026-04-24
@@ -585,9 +573,6 @@ mikepenz/action-junit-report:
   '*':
     keep: true
 mlugg/setup-zig:
-  8d6198c65fb0feaa111df26e6b467fea8345e46f:
-    tag: v2.0.5
-    expires_at: 2026-03-31
   fa65c4058643678a4e4a9a60513944a7d8d35440:
     tag: v2.1.0
     expires_at: 2026-04-24
@@ -636,9 +621,6 @@ oracle-actions/setup-java:
   '*':
     keep: true
 orhun/git-cliff-action:
-  d77b37db2e3f7398432d34b72a12aa3e2ba87e51:
-    tag: v4.6.0
-    expires_at: 2026-03-31
   e16f179f0be49ecdfe63753837f20b9531642772:
     tag: v4.7.0
     expires_at: 2026-06-12
@@ -689,10 +671,6 @@ pypa/cibuildwheel:
     expires_at: 2026-06-14
   ee02a1537ce3071a004a6b08c41e72f0fdc42d9a:
     tag: v3.4.0
-pypa/gh-action-pip-audit:
-  1220774d901786e6f652ae159f7b6bc8fea6d266:
-    tag: v1.1.0
-    expires_at: 2026-03-31
 pypa/gh-action-pypi-publish:
   ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e:
     keep: true
@@ -859,9 +837,6 @@ TobKed/label-when-approved-action:
   '*':
     keep: true
 untitaker/hyperlink:
-  e66bb17cc9ae341677431edec3b893a0aa6ac747:
-    tag: 0.1.44
-    expires_at: 2026-03-31
   fb5bb9c5011a3d143a54b4b30aedc30ec5bc0f89:
     tag: 0.2.0
 uraimo/run-on-arch-action:
