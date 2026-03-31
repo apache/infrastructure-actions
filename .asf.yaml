@@ -20,6 +20,8 @@ github:
   del_branch_on_merge: true
   features:
     issues: true
+  protected_branches:
+    main: {}
 
 notifications:
   commits: commits@infra.apache.org
