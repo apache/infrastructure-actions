@@ -217,10 +217,24 @@ If you need to add a specific version of an already approved action (especially 
 ```yaml
 existing/action:
   '<exact-commit-sha>':
-    expires_at: 2025-01-01
     keep: true
     tag: vX.Y.Z
 ```
+
+if this is the newest version of the action (make sure to remove the `keep: true` from the
+previously newest version and add `expires_at: <date>` to it, if you want to set an expiration date for it),
+
+or
+
+```yaml
+existing/action:
+  '<exact-commit-sha>':
+    expires_at: 2025-01-01
+    tag: vX.Y.Z
+```
+
+If you add older version of the action and want to set an expiration date for it.
+
 
 3. **Create a PR** against the `main` branch
 4. **Include in your PR description**:
