@@ -39,6 +39,15 @@ jobs:
       - run: pipx install uv
 
       - name: Verify action build
-        run: uv run utils/verify-action-build.py --ci --from-pr "${{ github.event.pull_request.number }}"
+        run: |
+          # Disable workflow command processing so that strings like
+          # "##[add-matcher]" or "::error::" in action diffs are not
+          # interpreted as GitHub Actions commands.
+          stop_token="$(uuidgen)"
+          echo "::stop-commands::${stop_token}"
+          uv run utils/verify-action-build.py --ci --from-pr "${{ github.event.pull_request.number }}"
+          rc=$?
+          echo "::${stop_token}::"
+          exit $rc
         env:
           GH_TOKEN: ${{ github.token }}
