@@ -194,6 +194,8 @@ The `--no-gh` mode supports all the same features as the default `gh`-based mode
 
 Dependabot PRs that modify `dummy.yml` are automatically verified by the `verify_dependabot_action.yml` workflow. It extracts the action reference from the PR, rebuilds the compiled JavaScript in Docker, and compares it against the published version. The workflow reports success or failure but does **not** auto-approve or merge — a human reviewer must still approve.
 
+The script exits with code **1** (failure) when something is unexpectedly broken — for example, the action cannot be compiled, the rebuilt JavaScript is invalid, or required tools are missing. In all other cases it exits with code **0** and produces reviewable diffs: a large diff does not by itself cause an error (e.g. major version bumps will naturally have big diffs). It is always up to a human reviewer to inspect the output, assess the changes, and decide whether the update is safe to approve.
+
 To verify a specific PR locally (non-interactively), use:
 
 ```bash
