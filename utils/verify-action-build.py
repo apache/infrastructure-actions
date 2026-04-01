@@ -61,6 +61,12 @@ _is_ci = os.environ.get("CI") is not None
 console = Console(stderr=True, force_terminal=_is_ci, force_interactive=not _is_ci if _is_ci else None)
 output = Console(force_terminal=_is_ci)
 
+def link(url: str, text: str) -> str:
+    """Return Rich-markup hyperlink, falling back to plain text in CI."""
+    if _is_ci:
+        return text
+    return f"[link={url}]{text}[/link]"
+
 # Path to the actions.yml file relative to the script
 ACTIONS_YML = Path(__file__).resolve().parent.parent / "actions.yml"
 
@@ -440,7 +446,7 @@ def show_approved_versions(
         approval = find_approval_info(entry["hash"], gh=gh)
 
         tag = entry.get("tag", "")
-        hash_link = f"[link=https://github.com/{org}/{repo}/commit/{entry['hash']}]{entry['hash'][:12]}[/link]"
+        hash_link = link(f"https://github.com/{org}/{repo}/commit/{entry['hash']}", entry['hash'][:12])
 
         approved_by = ""
         approved_on = ""
@@ -451,7 +457,7 @@ def show_approved_versions(
             approved_on = (approval.get("merged_at") or approval.get("date", ""))[:10]
             if "pr_number" in approval:
                 pr_num = approval["pr_number"]
-                pr_link = f"[link=https://github.com/apache/infrastructure-actions/pull/{pr_num}]#{pr_num}[/link]"
+                pr_link = link(f"https://github.com/apache/infrastructure-actions/pull/{pr_num}", f"#{pr_num}")
 
         table.add_row(tag, hash_link, approved_by, approved_on, pr_link)
 
@@ -521,7 +527,7 @@ def show_commits_between(
     if not raw_commits and not gh:
         # Fallback: should not happen if gh is always provided, but kept for safety
         console.print(f"  [yellow]Could not fetch commits. View on GitHub:[/yellow]")
-        console.print(f"  [link={compare_url}]{compare_url}[/link]")
+        console.print(f"  {link(compare_url, compare_url)}")
         return
 
     commits = [
@@ -546,14 +552,14 @@ def show_commits_between(
 
     for c in commits:
         sha = c.get("sha", "")
-        commit_link = f"[link=https://github.com/{org}/{repo}/commit/{sha}]{sha[:12]}[/link]"
+        commit_link = link(f"https://github.com/{org}/{repo}/commit/{sha}", sha[:12])
         author = c.get("author", "")
         date = c.get("date", "")[:10]
         message = c.get("message", "")
         table.add_row(commit_link, author, date, message)
 
     console.print(table)
-    console.print(f"\n  Full comparison (dist/ excluded): [link={compare_url}]{compare_url}[/link]")
+    console.print(f"\n  Full comparison (dist/ excluded): {link(compare_url, compare_url)}")
     console.print(f"  [dim]{len(commits)} commit(s) between versions — dist/ is generated, source changes shown separately below[/dim]")
 
 
@@ -937,8 +943,8 @@ def build_in_docker(
     if sub_path:
         action_display += f"/{sub_path}"
 
-    repo_link = f"[link=https://github.com/{org}/{repo}]{action_display}[/link]"
-    commit_link = f"[link=https://github.com/{org}/{repo}/commit/{commit_hash}]{commit_hash}[/link]"
+    repo_link = link(f"https://github.com/{org}/{repo}", action_display)
+    commit_link = link(f"https://github.com/{org}/{repo}/commit/{commit_hash}", commit_hash)
 
     info_table = Table(show_header=False, box=None, padding=(0, 1))
     info_table.add_column(style="bold")
@@ -1132,7 +1138,7 @@ def diff_js_files(
         orig_file = original_dir / rel_path
         built_file = rebuilt_dir / rel_path
 
-        file_link = f"[link={blob_url}/{out_dir_name}/{rel_path}]{rel_path}[/link]"
+        file_link = link(f"{blob_url}/{out_dir_name}/{rel_path}", str(rel_path))
 
         if rel_path not in original_files:
             console.print(f"  [green]+[/green] {file_link} [dim](only in rebuilt)[/dim]")
@@ -1419,7 +1425,7 @@ def check_dependabot_prs(gh: GitHubClient) -> None:
         exc_table.add_column("Reason", style="yellow")
 
         for pr, reason in excluded_prs:
-            pr_link = f"[link={pr['url']}]#{pr['number']}[/link]"
+            pr_link = link(pr["url"], f"#{pr['number']}")
             exc_table.add_row(pr_link, pr["title"], reason)
 
         console.print(exc_table)
@@ -1443,7 +1449,7 @@ def check_dependabot_prs(gh: GitHubClient) -> None:
     table.add_column("PR", min_width=8)
 
     for pr in prs:
-        pr_link = f"[link={pr['url']}]#{pr['number']}[/link]"
+        pr_link = link(pr["url"], f"#{pr['number']}")
         table.add_row(str(pr["number"]), pr["title"], pr_link)
 
     console.print(table)
@@ -1462,7 +1468,7 @@ def check_dependabot_prs(gh: GitHubClient) -> None:
 
     for pr in prs:
         console.print()
-        pr_link = f"[link=https://github.com/apache/infrastructure-actions/pull/{pr['number']}]#{pr['number']}[/link]"
+        pr_link = link(f"https://github.com/apache/infrastructure-actions/pull/{pr['number']}", f"#{pr['number']}")
         console.rule(f"[bold]PR {pr_link}: {pr['title']}[/bold]")
 
         # Extract all action references from PR diff
