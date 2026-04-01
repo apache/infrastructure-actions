@@ -170,6 +170,8 @@ jobs:
         if: false
       - uses: leafo/gh-actions-luarocks@4c082a5fad45388feaeb0798dbd82dbd7dc65bca  # v5
         if: false
+      - uses: lhotari/sandboxed-trivy-action@555963036b2012b44c1071508a236e569db28ebb  # v1.0.1
+        if: false
       - uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411  # v2.8.0
         if: false
       - uses: manusa/actions-setup-minikube@96202dee4ae1c2f46a62fe197273aaf22b83f42d  # v2.16.1
