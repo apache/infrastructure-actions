@@ -569,6 +569,9 @@ matlab-actions/setup-matlab:
 maxim-lobanov/setup-xcode:
   '*':
     keep: true
+matlab-actions/run-tests:
+  4a3d2e8bdc811f72defb8122e46a009312acc198:
+    tag: v2.3.1
 medyagh/setup-minikube:
   '*':
     keep: true
