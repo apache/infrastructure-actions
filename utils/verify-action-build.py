@@ -33,6 +33,9 @@ rebuilds it, and diffs the published compiled JS against the locally built outpu
 
 Usage:
     uv run verify-action-build.py dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451
+
+Security review checklist:
+    https://github.com/apache/infrastructure-actions#security-review-checklist
 """
 
 import argparse
@@ -54,14 +57,15 @@ from rich.prompt import Confirm
 from rich.table import Table
 from rich.text import Text
 
-_force_color = os.environ.get("CI") is not None
-console = Console(stderr=True, force_terminal=_force_color)
-output = Console(force_terminal=_force_color)
+_is_ci = os.environ.get("CI") is not None
+console = Console(stderr=True, force_terminal=_is_ci, force_interactive=not _is_ci if _is_ci else None)
+output = Console(force_terminal=_is_ci)
 
 # Path to the actions.yml file relative to the script
 ACTIONS_YML = Path(__file__).resolve().parent.parent / "actions.yml"
 
 GITHUB_API = "https://api.github.com"
+SECURITY_CHECKLIST_URL = "https://github.com/apache/infrastructure-actions#security-review-checklist"
 
 
 def _detect_repo() -> str:
@@ -1314,16 +1318,18 @@ def verify_single_action(action_ref: str, gh: GitHubClient | None = None, ci_mod
             )
 
     console.print()
+    checklist_hint = f"\n[dim]Security review checklist: {SECURITY_CHECKLIST_URL}[/dim]"
     if all_match:
         if is_js_action:
             result_msg = "[green bold]All compiled JavaScript matches the rebuild[/green bold]"
         else:
             result_msg = f"[green bold]{action_type} action — no compiled JS to verify[/green bold]"
-        console.print(Panel(result_msg, border_style="green", title="RESULT"))
+        console.print(Panel(result_msg + checklist_hint, border_style="green", title="RESULT"))
     else:
         console.print(
             Panel(
-                "[red bold]Differences detected between published and rebuilt JS[/red bold]",
+                "[red bold]Differences detected between published and rebuilt JS[/red bold]"
+                + checklist_hint,
                 border_style="red",
                 title="RESULT",
             )
@@ -1577,10 +1583,16 @@ def check_dependabot_prs(gh: GitHubClient) -> None:
         )
 
 
+def _exit(code: int) -> None:
+    console.print(f"Exit code: {code}")
+    sys.exit(code)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Verify compiled JS in a GitHub Action matches a local rebuild.",
         usage="uv run %(prog)s [org/repo@commit_hash | --check-dependabot-prs | --from-pr N]",
+        epilog=f"Security review checklist: {SECURITY_CHECKLIST_URL}",
     )
     parser.add_argument(
         "action_ref",
@@ -1619,7 +1631,7 @@ def main() -> None:
 
     if not shutil.which("docker"):
         console.print("[red]Error:[/red] docker is required but not found in PATH")
-        sys.exit(1)
+        _exit(1)
 
     # Build the GitHub client
     if args.no_gh:
@@ -1628,7 +1640,7 @@ def main() -> None:
                 "[red]Error:[/red] --no-gh requires a GitHub token. "
                 "Pass --github-token TOKEN or set the GITHUB_TOKEN environment variable."
             )
-            sys.exit(1)
+            _exit(1)
         gh = GitHubClient(token=args.github_token)
     else:
         if not shutil.which("gh"):
@@ -1636,26 +1648,26 @@ def main() -> None:
                 "[red]Error:[/red] gh (GitHub CLI) is not installed. "
                 "Either install gh or use --no-gh with a --github-token."
             )
-            sys.exit(1)
+            _exit(1)
         gh = GitHubClient(token=args.github_token)
 
     if args.from_pr:
         action_refs = extract_action_refs_from_pr(args.from_pr, gh=gh)
         if not action_refs:
             console.print(f"[red]Error:[/red] could not extract action reference from PR #{args.from_pr}")
-            sys.exit(1)
+            _exit(1)
         for ref in action_refs:
             console.print(f"  Extracted action reference from PR #{args.from_pr}: [bold]{ref}[/bold]")
         passed = all(verify_single_action(ref, gh=gh, ci_mode=ci_mode) for ref in action_refs)
-        sys.exit(0 if passed else 1)
+        _exit(0 if passed else 1)
     elif args.check_dependabot_prs:
         check_dependabot_prs(gh=gh)
     elif args.action_ref:
         passed = verify_single_action(args.action_ref, gh=gh, ci_mode=ci_mode)
-        sys.exit(0 if passed else 1)
+        _exit(0 if passed else 1)
     else:
         parser.print_help()
-        sys.exit(1)
+        _exit(1)
 
 
 if __name__ == "__main__":
