@@ -549,6 +549,9 @@ leafo/gh-actions-luarocks:
     tag: v5
   4c082a5fad45388feaeb0798dbd82dbd7dc65bca:
     tag: v5
+lhotari/sandboxed-trivy-action:
+  555963036b2012b44c1071508a236e569db28ebb:
+    tag: v1.0.1
 lycheeverse/lychee-action:
   8646ba30535128ac92d33dfc9133794bfdd9b411:
     tag: v2.8.0
