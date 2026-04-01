@@ -563,15 +563,15 @@ manusa/actions-setup-minikube:
     expires_at: 2026-06-14
   96202dee4ae1c2f46a62fe197273aaf22b83f42d:
     tag: v2.16.1
+matlab-actions/run-tests:
+  4a3d2e8bdc811f72defb8122e46a009312acc198:
+    tag: v2.3.1
 matlab-actions/setup-matlab:
   aa8bbc7b76daa63c5d456d1430cbd6cb5b626ab4:
     tag: v2.7.0
 maxim-lobanov/setup-xcode:
   '*':
     keep: true
-matlab-actions/run-tests:
-  4a3d2e8bdc811f72defb8122e46a009312acc198:
-    tag: v2.3.1
 medyagh/setup-minikube:
   '*':
     keep: true
