@@ -58,8 +58,9 @@ from rich.table import Table
 from rich.text import Text
 
 _is_ci = os.environ.get("CI") is not None
-console = Console(stderr=True, force_terminal=_is_ci, force_interactive=not _is_ci if _is_ci else None)
-output = Console(force_terminal=_is_ci)
+_ci_console_options = {"force_interactive": False, "width": 200} if _is_ci else {}
+console = Console(stderr=True, force_terminal=_is_ci, **_ci_console_options)
+output = Console(force_terminal=_is_ci, **_ci_console_options)
 
 # Path to the actions.yml file relative to the script
 ACTIONS_YML = Path(__file__).resolve().parent.parent / "actions.yml"
