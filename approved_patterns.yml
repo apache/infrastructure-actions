@@ -202,6 +202,7 @@
 - manusa/actions-setup-minikube@*
 - manusa/actions-setup-minikube@8234275e0386fe1cdaf519d28c90f4f03fad89e4
 - manusa/actions-setup-minikube@96202dee4ae1c2f46a62fe197273aaf22b83f42d
+- matlab-actions/run-tests@4a3d2e8bdc811f72defb8122e46a009312acc198
 - matlab-actions/setup-matlab@aa8bbc7b76daa63c5d456d1430cbd6cb5b626ab4
 - maxim-lobanov/setup-xcode@*
 - medyagh/setup-minikube@*
