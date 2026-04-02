@@ -20,7 +20,7 @@ parser.add_argument("-t", "--token", help="GitHub Token")
 parser.add_argument("-s", "--search", help="Action search string", required=True)
 args = parser.parse_args()
 
-if not os.environ["GH_TOKEN"]:
+if not os.environ.get("GH_TOKEN", None):
     if not args.token:
         print("No Token found!")
         sys.exit(1)
