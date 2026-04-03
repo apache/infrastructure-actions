@@ -17,7 +17,7 @@
 # under the License.
 #
 pelican==4.11.0.post0
-markdown==3.8.1
+markdown==3.10.2
 pelican-sitemap==1.2.2
 soupsieve==2.8.3
 beautifulsoup4==4.14.3
