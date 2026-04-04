@@ -20,13 +20,17 @@ import shutil
 import tempfile
 import textwrap
 import unittest
+from unittest.mock import patch
 
 from check_asf_allowlist import (
+    build_gh_pr_command,
     collect_action_refs,
     find_action_refs,
     is_allowed,
     load_allowlist,
+    main,
 )
+from insert_actions import insert_actions
 
 
 class TestFindActionRefs(unittest.TestCase):
@@ -301,6 +305,168 @@ class TestCollectActionRefs(unittest.TestCase):
         # no files written — github_dir exists but is empty
         refs = collect_action_refs(scan_glob)
         self.assertEqual(refs, {})
+
+
+class TestInsertActions(unittest.TestCase):
+    """Tests for the insert_actions helper script."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.actions_yml = os.path.join(self.tmpdir, "actions.yml")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
+    def test_inserts_alphabetically(self):
+        with open(self.actions_yml, "w") as f:
+            f.write("aaa/action:\n  'sha1':\n    keep: true\nzzz/action:\n  'sha2':\n    keep: true\n")
+        insert_actions(self.actions_yml, ["mmm/middle@sha3"])
+        content = open(self.actions_yml).read()
+        lines = content.splitlines()
+        top_keys = [l for l in lines if not l.startswith(" ") and l.endswith(":")]
+        self.assertEqual(top_keys, ["aaa/action:", "mmm/middle:", "zzz/action:"])
+
+    def test_does_not_overwrite_existing(self):
+        with open(self.actions_yml, "w") as f:
+            f.write("org/action:\n  'existing-sha':\n    keep: true\n")
+        insert_actions(self.actions_yml, ["org/action@new-sha"])
+        content = open(self.actions_yml).read()
+        self.assertIn("existing-sha", content)
+        self.assertNotIn("new-sha", content)
+
+    def test_multiple_refs_same_action(self):
+        with open(self.actions_yml, "w") as f:
+            f.write("")
+        insert_actions(self.actions_yml, ["org/act@sha1", "org/act@sha2"])
+        content = open(self.actions_yml).read()
+        self.assertIn("sha1", content)
+        self.assertIn("sha2", content)
+        self.assertEqual(content.count("org/act:"), 1)
+
+    def test_case_insensitive_sort(self):
+        with open(self.actions_yml, "w") as f:
+            f.write("Bbb/action:\n  'sha1':\n    keep: true\n")
+        insert_actions(self.actions_yml, ["aaa/action@sha2"])
+        content = open(self.actions_yml).read()
+        self.assertTrue(content.index("aaa/action:") < content.index("Bbb/action:"))
+
+
+class TestBuildGhPrCommand(unittest.TestCase):
+    """Tests for the generated gh PR command."""
+
+    def test_single_action(self):
+        script = build_gh_pr_command(
+            "evil-org/evil-action", ["evil-org/evil-action@abc123"], "apache/test-repo"
+        )
+        self.assertIn("gh repo fork apache/infrastructure-actions --clone", script)
+        self.assertIn("allowlist-add-evil-org-evil-action", script)
+        self.assertIn("insert_actions.py", script)
+        self.assertIn("evil-org/evil-action@abc123", script)
+        self.assertIn("gh pr create --repo apache/infrastructure-actions", script)
+        self.assertIn("apache/test-repo", script)
+
+    def test_no_repo_name(self):
+        script = build_gh_pr_command(
+            "some-org/some-action", ["some-org/some-action@sha1"], ""
+        )
+        self.assertNotIn("Needed by:", script)
+
+    def test_multiple_shas_same_action(self):
+        script = build_gh_pr_command(
+            "org/action", ["org/action@sha1", "org/action@sha2"], ""
+        )
+        self.assertIn("org/action@sha1", script)
+        self.assertIn("org/action@sha2", script)
+        self.assertIn("allowlist-add-org-action", script)
+
+    def test_downloads_inserter_from_raw_github(self):
+        """The generated script must download insert_actions.py."""
+        script = build_gh_pr_command(
+            "zoo/action", ["zoo/action@abc123"], ""
+        )
+        self.assertIn(
+            "https://raw.githubusercontent.com/apache/infrastructure-actions/"
+            "main/allowlist-check/insert_actions.py",
+            script,
+        )
+        self.assertIn("curl -fsSL", script)
+        self.assertIn("python3 -", script)
+
+
+class TestMainGhPrCommand(unittest.TestCase):
+    """Tests that main() prints a gh PR command on violations."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.github_dir = os.path.join(self.tmpdir, ".github", "workflows")
+        os.makedirs(self.github_dir)
+
+        filepath = os.path.join(self.github_dir, "ci.yml")
+        with open(filepath, "w") as f:
+            f.write(
+                textwrap.dedent(
+                    """\
+                    name: CI
+                    on: push
+                    jobs:
+                      build:
+                        runs-on: ubuntu-latest
+                        steps:
+                          - uses: actions/checkout@v4
+                          - uses: evil-org/evil-action@abc123
+                    """
+                )
+            )
+
+        self.allowlist_path = os.path.join(self.tmpdir, "allowlist.yml")
+        with open(self.allowlist_path, "w") as f:
+            f.write("")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
+    @patch.dict(os.environ, {"GITHUB_REPOSITORY": "apache/test-repo"})
+    def test_main_prints_pr_command(self):
+        scan_glob = os.path.join(self.tmpdir, ".github/**/*.yml")
+        with (
+            patch.dict(os.environ, {"GITHUB_YAML_GLOB": scan_glob}),
+            patch("sys.argv", ["check_asf_allowlist.py", self.allowlist_path]),
+            patch("sys.stdout") as mock_stdout,
+            self.assertRaises(SystemExit) as cm,
+        ):
+            main()
+
+        self.assertEqual(cm.exception.code, 1)
+        output = "".join(
+            call.args[0] for call in mock_stdout.write.call_args_list
+        )
+        self.assertIn("gh pr create --repo apache/infrastructure-actions", output)
+        self.assertIn("evil-org/evil-action", output)
+        self.assertIn("apache/test-repo", output)
+        self.assertIn("Please create one PR per action", output)
+
+    @patch.dict(os.environ, {"GITHUB_REPOSITORY": "apache/test-repo"})
+    def test_main_prints_verbose_check_output(self):
+        scan_glob = os.path.join(self.tmpdir, ".github/**/*.yml")
+        with (
+            patch.dict(os.environ, {"GITHUB_YAML_GLOB": scan_glob}),
+            patch("sys.argv", ["check_asf_allowlist.py", self.allowlist_path]),
+            patch("sys.stdout") as mock_stdout,
+            self.assertRaises(SystemExit),
+        ):
+            main()
+
+        output = "".join(
+            call.args[0] for call in mock_stdout.write.call_args_list
+        )
+        # Trusted action should show as allowed with reason
+        self.assertIn("actions/checkout@v4", output)
+        self.assertIn("trusted owner", output)
+        # Violation should show as not allowed
+        self.assertIn("evil-org/evil-action@abc123", output)
+        self.assertIn("NOT ON ALLOWLIST", output)
+        # Header line
+        self.assertIn("Checking 2 unique action ref(s)", output)
 
 
 if __name__ == "__main__":

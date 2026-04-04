@@ -32,6 +32,7 @@ Exits with code 1 if any action ref is not allowlisted.
 import fnmatch
 import glob
 import os
+import shlex
 import sys
 from typing import Any, Generator
 
@@ -148,6 +149,54 @@ def is_allowed(action_ref: str, allowlist: list[str]) -> bool:
     return any(fnmatch.fnmatch(action_ref, pattern) for pattern in allowlist)
 
 
+def build_gh_pr_command(action_name: str, refs: list[str], repo_name: str) -> str:
+    """Build a shell command that creates a PR adding one action to the allowlist.
+
+    The generated script forks ``apache/infrastructure-actions``, inserts
+    pinned version entries into ``actions.yml`` in alphabetical order, and
+    opens a pull request — all via the ``gh`` CLI with no manual file editing
+    required.
+
+    Args:
+        action_name: The action name (e.g. ``"owner/action"``).
+        refs: Full action refs for this action (e.g. ``["owner/action@sha"]``).
+        repo_name: Value of ``$GITHUB_REPOSITORY`` (may be empty).
+
+    Returns:
+        str: A copy-pasteable shell script.
+    """
+    branch = f"allowlist-add-{action_name.replace('/', '-')}"
+    title = f"Add {action_name} to the GitHub Actions allowlist"
+
+    body_lines = [f"Add `{action_name}` to the allowlist:", ""]
+    for ref in sorted(refs):
+        body_lines.append(f"- `{ref}`")
+    if repo_name:
+        body_lines.extend(["", f"Needed by: `{repo_name}`"])
+    body = "\n".join(body_lines)
+
+    ref_args = " ".join(shlex.quote(r) for r in sorted(refs))
+
+    inserter_url = (
+        "https://raw.githubusercontent.com/apache/infrastructure-actions/"
+        "main/allowlist-check/insert_actions.py"
+    )
+
+    return (
+        f"( set -e; _d=$(mktemp -d); trap 'rm -rf \"$_d\"' EXIT; cd \"$_d\"\n"
+        f"  gh repo fork apache/infrastructure-actions --clone -- --depth=1\n"
+        f"  cd infrastructure-actions\n"
+        f"  git checkout -b {shlex.quote(branch)}\n"
+        f"  curl -fsSL {shlex.quote(inserter_url)} | python3 - actions.yml {ref_args}\n"
+        f"  git add actions.yml\n"
+        f"  git commit -m {shlex.quote(f'Add {action_name} to allowlist')}\n"
+        f"  git push -u origin {shlex.quote(branch)}\n"
+        f"  gh pr create --repo apache/infrastructure-actions --head \"$(gh api user -q .login):{shlex.quote(branch)}\""
+        f" --title {shlex.quote(title)}"
+        f" --body {shlex.quote(body)} )\n"
+    )
+
+
 def main():
     if len(sys.argv) != 2:
         print(f"Usage: {sys.argv[0]} <allowlist_path>", file=sys.stderr)
@@ -158,9 +207,21 @@ def main():
     scan_glob = os.environ.get("GITHUB_YAML_GLOB", DEFAULT_GITHUB_YAML_GLOB)
     action_refs = collect_action_refs(scan_glob)
 
+    print(f"Checking {len(action_refs)} unique action ref(s) against the ASF allowlist:\n")
     violations = []
     for action_ref, filepaths in sorted(action_refs.items()):
-        if not is_allowed(action_ref, allowlist):
+        allowed = is_allowed(action_ref, allowlist)
+        owner = action_ref.split("/")[0]
+        if owner in TRUSTED_OWNERS:
+            reason = f"trusted owner ({owner})"
+        elif allowed:
+            reason = "matches allowlist"
+        else:
+            reason = "NOT ON ALLOWLIST"
+        status = "✅" if allowed else "❌"
+        files_str = ", ".join(filepaths)
+        print(f"  {status} {action_ref} — {reason}  ({files_str})")
+        if not allowed:
             for filepath in filepaths:
                 violations.append((filepath, action_ref))
 
@@ -175,6 +236,24 @@ def main():
             " the action or version to the allowlist:"
             " https://github.com/apache/infrastructure-actions#adding-a-new-action-to-the-allow-list"
         )
+
+        missing_refs = sorted({ref for _, ref in violations})
+        repo_name = os.environ.get("GITHUB_REPOSITORY", "")
+
+        # Group by action name so we can suggest one PR per action
+        by_action: dict[str, list[str]] = {}
+        for ref in missing_refs:
+            name = ref.split("@")[0]
+            by_action.setdefault(name, []).append(ref)
+
+        print(
+            "\n::notice::Please create one PR per action."
+            " You can create the PRs by running the commands below:"
+        )
+        for action_name in sorted(by_action):
+            script = build_gh_pr_command(action_name, by_action[action_name], repo_name)
+            print(f"\n# {action_name}\n{script}")
+
         sys.exit(1)
     else:
         print(f"All {len(action_refs)} unique action refs are on the ASF allowlist")
