@@ -34,8 +34,14 @@ runs:
     - name: Install ruyaml
       shell: bash
       run: pip install ruyaml
+    - name: Fetch latest approved_patterns.yml from main
+      shell: bash
+      run: |
+        curl -sSfL \
+          "https://raw.githubusercontent.com/apache/infrastructure-actions/main/approved_patterns.yml" \
+          -o "${{ runner.temp }}/approved_patterns.yml"
     - name: Verify all action refs are allowlisted
       shell: bash
-      run: python3 "${{ github.action_path }}/check_asf_allowlist.py" "${{ github.action_path }}/../approved_patterns.yml"
+      run: python3 "${{ github.action_path }}/check_asf_allowlist.py" "${{ runner.temp }}/approved_patterns.yml"
       env:
         GITHUB_YAML_GLOB: ${{ inputs.scan-glob }}
