@@ -502,8 +502,11 @@ jlumbroso/free-disk-space:
 jrouly/scalafmt-native-action:
   14620cde093e5ff6bfbbecd4f638370024287b9d:
     tag: v4
+    expires_at: 2026-06-27
   '*':
     keep: true
+  a9c8e1032a02004c425d53ef8ce420fe2179eba7:
+    tag: v5
 julia-actions/julia-buildpkg:
   '*':
     keep: true

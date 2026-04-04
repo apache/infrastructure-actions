@@ -181,6 +181,7 @@
 - jlumbroso/free-disk-space@*
 - jrouly/scalafmt-native-action@14620cde093e5ff6bfbbecd4f638370024287b9d
 - jrouly/scalafmt-native-action@*
+- jrouly/scalafmt-native-action@a9c8e1032a02004c425d53ef8ce420fe2179eba7
 - julia-actions/julia-buildpkg@*
 - julia-actions/julia-docdeploy@*
 - julia-actions/julia-processcoverage@*
