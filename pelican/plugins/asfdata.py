@@ -99,21 +99,59 @@ def remove_part(reference, part):
             remove_part(reference[refs], part)
 
 
-# trim out parts of a data source that don't match part = True
-def where_parts(reference, part):
+# does the part match the where clause?
+# This can be:
+#   where: key
+# In this case, the key lookup value must be True
+# or:
+#   where: key eq|ne|in|notin value(s)
+# The key lookup value must equal or not equal the value, or
+# must be (not) one of the space-separated values (respectively)
+def partMatches(actual, cond, expected):
+    if cond is None and expected is None:
+        return actual # Is it True?
+    if cond == 'eq':
+        return actual == expected
+    if cond == 'ne':
+        return actual != expected
+    if cond == 'in':
+        return actual in expected
+    if cond == 'notin':
+        return actual not in expected
+    raise Exception(f"Unexpected condition {cond}") # pylint: disable=broad-exception-raised
+
+# trim out parts of a data source that don't match the part condition (default == True)
+def where_parts(reference, where_clause):
+    items = where_clause.split()
+    key = items.pop(0)
+    if len(items) == 0:
+        cond = None
+        expected = None
+    elif len(items) >= 2:
+        cond = items.pop(0)
+        if cond in ['ne', 'eq'] and len(items) == 1: # should only be one item left
+            expected = items.pop(0)
+        elif cond in ['in', 'notin']:
+            expected = items
+        else:
+            # TODO: choose better exception
+            raise Exception(f"Unexpected condition '{cond}' or extra param: {len(items)}")  # pylint: disable=broad-exception-raised
+    else:
+        # TODO: choose better exception
+        raise Exception("'where' expects 1 parameter optionally followed by at least 2 parameters") # pylint: disable=broad-exception-raised
     # currently only works on True parts
     # if we trim as we go we invalidate the iterator. Instead create a deletion list.
     filtered = [ ]
     # first find the list that needs to be trimmed.
     for refs in reference:
-        if not reference[refs][part]:
+        if not partMatches(reference[refs][key], cond, expected):
             filtered.append(refs)
     # remove the parts to be trimmed.
     for refs in filtered:
         del reference[refs]
 
 
-# perform alphabetation. HTTP Server is special and is put before 'A'
+# perform alphabetization. HTTP Server is special and is put before 'A'
 def alpha_part(reference, part):
     for refs in reference:
         name = reference[refs][part]
@@ -160,7 +198,7 @@ def add_logo(reference, part):
 def sequence_dict(seq, reference):
     sequence = [ ]
     for refs in reference:
-        # converting dicts into objects with attrributes. Ignore non-dict content.
+        # converting dicts into objects with attributes. Ignore non-dict content.
         if isinstance(reference[refs], dict):
             # put the key of the dict  into the dictionary
             reference[refs]['key_id'] = refs
@@ -311,10 +349,11 @@ def process_sequence(metadata, seq, sequence, load, debug):
             # determine the project or podling logo
             reference = add_logo(reference, sequence['logo'])
             if seq == 'featured_pods':
-                # for podlings strip "Apache" from the beginning and "(incubating)" from the end.
+                # for podlings strip "Apache " from the beginning and " (Incubating)" from the end.
                 # this is Sally's request
+                # It mainly applies to data fetched from https://projects.apache.org/json/foundation/podlings.json
                 for item in reference:
-                    setattr(item, 'name', ' '.join(item.name.split(' ')[1:-1]))
+                    setattr(item, 'name', item.name.replace('Apache ', '').replace(' (Incubating)', ''))
         else:
             print(f'{seq} - logo requires an existing sequence')
 
@@ -420,7 +459,7 @@ def process_distributions(project, src, sort_revision, debug):
                 fsize = listing[-6]
             # date is close enough
             dtm = dtm1.strftime("%m/%d/%Y")
-            # covert to number of MB
+            # convert to number of MB
             if float(fsize) > 524288:
                 fsize = ('%.2f' % bytesto(fsize, 'm')) + ' MB'
             else:
@@ -549,6 +588,7 @@ def process_blog(feed, count, words, debug):
             {
                 'id': get_element_text(entry, 'id'),
                 'title': get_element_text(entry, 'title'),
+                'date': get_element_text(entry, 'published'),
                 'content': content_text
             }
         )
@@ -558,6 +598,7 @@ def process_blog(feed, count, words, debug):
 
     return [ Blog(href=s['id'],
                   title=s['title'],
+                  date=s['date'],
                   content=s['content'])
              for s in v]
 

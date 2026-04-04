@@ -1,0 +1,237 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# This file was generated from /actions.yml by gateway/gateway.py.
+# It will be regenerated and committed as part of various workflows.
+# DO NOT UPDATE MANUALLY. Update /actions.yml instead.
+
+# This workflow has two purposes:
+# - dependabot will propose updates to this file, which after
+# review will automatically flow into /actions.yml through a
+# workflow
+# - GHA will periodically 'run' this workflow (skipping every
+# step), which will fail when any of the listed actions have
+# a transitive action dependency that is not allowlisted
+# (or is not anymore).
+name: Dummy Workflow
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/dummy.yml
+  push:
+    paths:
+      - .github/workflows/dummy.yml
+
+permissions: {}
+
+jobs:
+  dummy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: 1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259  # v4.0.0
+        if: false
+      - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185  # v3
+        if: false
+      - uses: advanced-security/dismiss-alerts@046d6b48d2e43cf563f96f67332c47c432eff83e  # v2.0.2
+        if: false
+      - uses: al-cheb/configure-pagefile-action@9b6da52fb72a3c6147c1aad2df22d8d905681adc  # v1.5
+        if: false
+      - uses: ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c  # v2.3.0
+        if: false
+      - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610  # v0.24.0
+        if: false
+      - uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2  # v7.4.0
+        if: false
+      - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57  # v8.0.0
+        if: false
+      - uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # v6.0.0
+        if: false
+      - uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2  # v5.0.0
+        if: false
+      - uses: azure/setup-kubectl@15650b3ad78fff148532a140b8a4c821796b2d7b  # v5.0.0
+        if: false
+      - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86  # 0.19.0
+        if: false
+      - uses: betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619  # v1.21.1
+        if: false
+      - uses: biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51  # v2.7.1
+        if: false
+      - uses: browser-actions/setup-firefox@fcf821c621167805dd63a29662bd7cb5676c81a8  # v1.7.1
+        if: false
+      - uses: browser-actions/setup-geckodriver@5ef1526ed36211ab6cb531ec1cfb11f924ca2dee
+        if: false
+      - uses: burnett01/rsync-deployments@dc0d5d44c4728aad3f02154a87309809e62a960f  # 8.0.4
+        if: false
+      - uses: carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3  # v1.0.10
+        if: false
+      - uses: commit-check/commit-check-action@443fb6a114414358496e6243105294c3b11610c5  # v2.4.2
+        if: false
+      - uses: coursier/cache-action@90c37294538be80a558fd665531fcdc2b467b475  # v8.1.0
+        if: false
+      - uses: coursier/setup-action@fd1707a76b027efdfb66ca79318b4d29b72e5a02  # v3.0.0
+        if: false
+      - uses: cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8  # v2.15.1
+        if: false
+      - uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd  # v7.0.0
+        if: false
+      - uses: damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
+        if: false
+      - uses: DavidAnson/markdownlint-cli2-action@ce4853d43830c74c1753b39f3cf40f71c2031eb9  # v23.0.0
+        if: false
+      - uses: dawidd6/action-send-mail@d38f3f7cd391cdebfe0d38efc3998b935e951c4f  # v16
+        if: false
+      - uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294  # v7.0.0
+        if: false
+      - uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2  # v4.0.0
+        if: false
+      - uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf  # v6.0.0
+        if: false
+      - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd  # v4.0.0
+        if: false
+      - uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a  # v4.0.0
+        if: false
+      - uses: docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
+        if: false
+      - uses: docker://pandoc/core@sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93  # 3.7.0.2
+        if: false
+      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d  # v4.0.1
+        if: false
+      - uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2  # v3.0.0
+        if: false
+      - uses: editorconfig-checker/action-editorconfig-checker@840e866d93b8e032123c23bac69dece044d4d84c  # v2.2.0
+        if: false
+      - uses: erisu/apache-rat-action@46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c  # v2.0.0
+        if: false
+      - uses: erisu/license-checker-action@99cffa11264fe545fd0baa6c13bca5a00ae608f2  # v2.0.1
+        if: false
+      - uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20  # v9.2.0
+        if: false
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3.0.0
+        if: false
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3.0.1
+        if: false
+      - uses: graalvm/setup-graalvm@f744c72a42b1995d7b0cbc314bde4bace7ac1fe1  # v1.5.0
+        if: false
+      - uses: gradle/actions/dependency-submission@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f  # v6.0.1
+        if: false
+      - uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f  # v6.0.1
+        if: false
+      - uses: gradle/actions/wrapper-validation@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f  # v6.0.1
+        if: false
+      - uses: gradle/develocity-actions/maven-publish-build-scan@974e8dbcbda40db6828fc35f349c80a7c0e71529  # v2.1
+        if: false
+      - uses: gradle/develocity-actions/setup-maven@974e8dbcbda40db6828fc35f349c80a7c0e71529  # v2.1
+        if: false
+      - uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5  # v3.3.0
+        if: false
+      - uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85  # v4.0.0
+        if: false
+      - uses: helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f  # v1.7.0
+        if: false
+      - uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f  # v2.8.0
+        if: false
+      - uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc  # v1.14.0
+        if: false
+      - uses: ilammy/setup-nasm@72793074d3c8cdda771dba85f6deafe00623038b  # v1.5.2
+        if: false
+      - uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f  # v4.8.0
+        if: false
+      - uses: jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5  # v2
+        if: false
+      - uses: JetBrains/qodana-action@89eb4357efd2b52e639f3216e63edaf33b82622b  # v2025.3.2
+        if: false
+      - uses: Jimver/cuda-toolkit@3d45d157f327c09c04b50ee6ccdea2d9d017ec76  # v0.2.35
+        if: false
+      - uses: jrouly/scalafmt-native-action@a9c8e1032a02004c425d53ef8ce420fe2179eba7  # v5
+        if: false
+      - uses: JustinBeckwith/linkinator-action@f62ba0c110a76effb2ee6022cc6ce4ab161085e3  # v2.4
+        if: false
+      - uses: jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d  # v1.2
+        if: false
+      - uses: Kesin11/actions-timeline@e018cfefea60b4f44266998551211a35a58b8097  # v3.0.0
+        if: false
+      - uses: leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248  # v6.0.0
+        if: false
+      - uses: lhotari/sandboxed-trivy-action@555963036b2012b44c1071508a236e569db28ebb  # v1.0.1
+        if: false
+      - uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411  # v2.8.0
+        if: false
+      - uses: manusa/actions-setup-minikube@96202dee4ae1c2f46a62fe197273aaf22b83f42d  # v2.16.1
+        if: false
+      - uses: matlab-actions/run-tests@4a3d2e8bdc811f72defb8122e46a009312acc198  # v2.3.1
+        if: false
+      - uses: matlab-actions/setup-matlab@aa8bbc7b76daa63c5d456d1430cbd6cb5b626ab4  # v2.7.0
+        if: false
+      - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29  # v2.2.1
+        if: false
+      - uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad  # v0.0.9
+        if: false
+      - uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd  # v1.21.0
+        if: false
+      - uses: nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654  # v3.0.0
+        if: false
+      - uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb  # v2.0.0
+        if: false
+      - uses: orhun/git-cliff-action@c93ef52f3d0ddcdcc9bd5447d98d458a11cd4f72  # v4.7.1
+        if: false
+      - uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9  # v5.0.0
+        if: false
+      - uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e  # v15
+        if: false
+      - uses: posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237  # v1.0.0
+        if: false
+      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd  # v3.0.1
+        if: false
+      - uses: pypa/cibuildwheel@ee02a1537ce3071a004a6b08c41e72f0fdc42d9a  # v3.4.0
+        if: false
+      - uses: runs-on/action@742bf56072eb4845a0f94b3394673e4903c90ff0  # v2.1.0
+        if: false
+      - uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe  # v1.0.4
+        if: false
+      - uses: sbt/setup-sbt@508b753e53cb6095967669e0911487d2b9bc9f41  # v1.1.22
+        if: false
+      - uses: scacap/action-surefire-report@5609ce4db72c09db044803b344a8968fd1f315da  # v1.9.1
+        if: false
+      - uses: scalacenter/sbt-dependency-submission@f43202114d7522a4b233e052f82c2eea8d658134  # v3.2.1
+        if: false
+      - uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95  # v3.0.1
+        if: false
+      - uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a  # v1
+        if: false
+      - uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9  # v7.0.0
+        if: false
+      - uses: SonarSource/sonarqube-scan-action/install-build-wrapper@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9  # v7.0.0
+        if: false
+      - uses: tcort/github-action-markdown-link-check@e7c7a18363c842693fadde5d41a3bd3573a7a225  # v1.1.2
+        if: false
+      - uses: terraform-linters/setup-tflint@b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93  # v6.2.2
+        if: false
+      - uses: untitaker/hyperlink@fb5bb9c5011a3d143a54b4b30aedc30ec5bc0f89  # 0.2.0
+        if: false
+      - uses: uraimo/run-on-arch-action@d94c13912ea685de38fccc1109385b83fd79427d  # v3.0.1
+        if: false
+      - uses: vapier/coverity-scan-action@2068473c7bdf8c2fb984a6a40ae76ee7facd7a85  # v1.8.0
+        if: false
+      - uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310  # v1
+        if: false
+      - uses: zizmorcore/zizmor-action@71321a20a9ded102f6e9ce5718a2fcec2c4f70d8  # v0.5.2
+        if: false
+      - run: echo Success!

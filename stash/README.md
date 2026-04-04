@@ -45,7 +45,8 @@ To restore a stash before your build process, use the `infrastructure-actions/st
 ```yaml
 steps:
 - uses: actions/checkout@v2
-- uses: infrastructure-actions/stash/restore@v1
+- uses: apache/infrastructure-actions/stash/restore@e88c4936fdeeb13c0910747af0bd07d992a81f9b
+- ```
   with:
     key: 'cache-key'
     path: 'path/to/cache'
@@ -55,7 +56,7 @@ After your build completes, save the stash using the `infrastructure-actions/sta
 
 ```yaml
 steps:
-- uses: infrastructure-actions/stash/save@v1
+- uses: apache/infrastructure-actions/stash/save@e88c4936fdeeb13c0910747af0bd07d992a81f9b
   with:
     key: 'cache-key'
     path: 'path/to/cache'

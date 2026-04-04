@@ -1,0 +1,885 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# Main configuration file. We manually add trusted actions here.
+# Version updates can be triggered by merging dependabot PRs
+# into .github/workflows/dummy-workflow.yml . This will also
+# update expiry dates for previous versions.
+# Versions that are known to be problematic should be removed explicitly manually.
+1Password/load-secrets-action:
+  13f58eec611f8e5db52ec16247f58c508398f3e6:
+    tag: v3.0.0
+    expires_at: 2026-04-24
+  8d0d610af187e78a2772c2d18d627f4c52d3fbfb:
+    tag: v3.1.0
+    expires_at: 2026-06-12
+  dafbe7cb03502b260e2b2893c753c352eee545bf:
+    tag: v3.2.1
+    expires_at: 2026-06-17
+  92467eb28f72e8255933372f1e0707c567ce2259:
+    tag: v4.0.0
+actions-cool/check-user-permission:
+  '*':
+    keep: true
+actions-cool/issues-helper:
+  '*':
+    keep: true
+actions-cool/maintain-one-comment:
+  '*':
+    keep: true
+addnab/docker-run-action:
+  4f65fabd2431ebc8d299f8e5a018d79a769ae185:
+    tag: v3
+AdoptOpenJDK/install-jdk:
+  '*':
+    keep: true
+advanced-security/dismiss-alerts:
+  046d6b48d2e43cf563f96f67332c47c432eff83e:
+    tag: v2.0.2
+al-cheb/configure-pagefile-action:
+  9b6da52fb72a3c6147c1aad2df22d8d905681adc:
+    tag: v1.5
+amannn/action-semantic-pull-request:
+  '*':
+    keep: true
+ana06/get-changed-files:
+  25f79e676e7ea1868813e21465014798211fad8c:
+    tag: v2.3.0
+anchore/sbom-action:
+  e22c389904149dbc22b58101806040fa8d37a610:
+    tag: v0.24.0
+anchore/scan-action:
+  e1165082ffb1fe366ebaf02d8526e7c4989ea9d2:
+    tag: v7.4.0
+arduino/setup-protoc:
+  '*':
+    keep: true
+astral-sh/setup-uv:
+  eb1897b8dc4b5d5bfe39a428a8f2304605e0983c:
+    # needed for helm/chart-testing-action @ v2.8.0
+    tag: v7.0.0
+    expires_at: 2026-06-27
+  681c641aba71e4a1c380be3ab5e12ad51f415867:
+    tag: v7.1.6
+    expires_at: 2026-05-15
+  eac588ad8def6316056a12d4907a9d4d84ff7a3b:
+    tag: v7.3.0
+    expires_at: 2026-05-24
+  5a095e7a2014a4212f075830d4f7277575a9d098:
+    tag: v7.3.1
+    expires_at: 2026-06-14
+  37802adc94f370d6bfd71619e3f0bf239e1f3b78:
+    tag: v7.6.0
+    expires_at: 2026-06-27
+  cec208311dfd045dd5311c1add060b2062131d57:
+    tag: v8.0.0
+awalsh128/cache-apt-pkgs-action:
+  '*':
+    keep: true
+aws-actions/configure-aws-credentials:
+  61815dcd50bd041e203e49132bacad1fd04d2708:
+    tag: v5.1.1
+    expires_at: 2026-05-22
+  8df5847569e6427dd6c4fb1cf565c83acfa8afa7:
+    tag: v6.0.0
+azure/setup-helm:
+  1a275c3b69536ee54be43f2070a358922e12c8d4:
+    tag: v4.3.1
+    expires_at: 2026-06-25
+  dda3372f752e03dde6b3237bc9431cdc2f7a02a2:
+    tag: v5.0.0
+azure/setup-kubectl:
+  776406bce94f63e41d621b960d78ee25c8b76ede:
+    tag: v4.0.1
+    expires_at: 2026-06-20
+  15650b3ad78fff148532a140b8a4c821796b2d7b:
+    tag: v5.0.0
+bazel-contrib/setup-bazel:
+  083175551ceeceebc757ebee2127fde78840ca77:
+    tag: 0.18.0
+    expires_at: 2026-06-20
+  c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86:
+    tag: 0.19.0
+betahuhn/repo-file-sync-action:
+  8b92be3375cf1d1b0cd579af488a9255572e4619:
+    tag: v1.21.1
+biomejs/setup-biome:
+  454fa0d884737805f48d7dc236c1761a0ac3cc13:
+    tag: v2.6.0
+    expires_at: 2026-04-24
+  29711cbb52afee00eb13aeb30636592f9edc0088:
+    tag: v2.7.0
+    expires_at: 2026-06-14
+  4c91541eaada48f67d7dbd7833600ce162b68f51:
+    tag: v2.7.1
+BobAnkh/auto-generate-changelog:
+  '*':
+    keep: true
+browser-actions/setup-firefox:
+  5914774dda97099441f02628f8d46411fcfbd208:
+    tag: v1.7.0
+    expires_at: 2026-06-12
+  fcf821c621167805dd63a29662bd7cb5676c81a8:
+    tag: v1.7.1
+browser-actions/setup-geckodriver:
+  5ef1526ed36211ab6cb531ec1cfb11f924ca2dee:
+bufbuild/buf-breaking-action:
+  '*':
+    keep: true
+bufbuild/buf-lint-action:
+  '*':
+    keep: true
+bufbuild/buf-setup-action:
+  '*':
+    keep: true
+burnett01/rsync-deployments:
+  0dc935cdecc5f5e571865e60d2a6cdc673704823:
+    tag: '5.2'
+    expires_at: 2026-04-17
+  7659d600d8bdd035bb5cdfba1d4bd0dd4a307ca6:
+    tag: 8.0.3
+    expires_at: 2026-05-22
+  dc0d5d44c4728aad3f02154a87309809e62a960f:
+    tag: 8.0.4
+burrunan/gradle-cache-action:
+  '*':
+    keep: true
+bytedeco/javacpp-presets:
+  '*':
+    keep: true
+carloscastrojumo/github-cherry-pick-action:
+  503773289f4a459069c832dc628826685b75b4b3:
+    tag: v1.0.10
+carlosperate/arm-none-eabi-gcc-action:
+  '*':
+    keep: true
+check-spelling/check-spelling:
+  '*':
+    keep: true
+chromaui/action:
+  '*':
+    keep: true
+cicirello/javadoc-cleanup:
+  '*':
+    keep: true
+clechasseur/rs-cargo:
+  '*':
+    keep: true
+codecov/codecov-action:
+  '*':
+    keep: true
+codelytv/pr-size-labeler:
+  '*':
+    keep: true
+codspeedhq/action:
+  '*':
+    keep: true
+commit-check/commit-check-action:
+  a0193b1ca486178b85d7a1db145af34cd227f81f:
+    tag: v2.1.1
+    expires_at: 2026-04-24
+  be79b5cd5953c8afd4266004c5bbb1431f544df1:
+    tag: v2.2.1
+    expires_at: 2026-06-12
+  443fb6a114414358496e6243105294c3b11610c5:
+    tag: v2.4.2
+conda-incubator/setup-miniconda:
+  '*':
+    keep: true
+container-tools/kind-action:
+  '*':
+    keep: true
+container-tools/microshift-action:
+  '*':
+    keep: true
+coursier/cache-action:
+  e47d7d35a0d3a2c7f649ca5c63dfc2bbfaa002e7:
+    tag: v8.0.1
+    expires_at: 2026-06-10
+  c5ca79321d170b8a18c288d9cadc2a6037166d0f:
+    tag: v8.0.0
+    expires_at: 2026-06-10
+  bebeeb0e6f48ebad66d3783946588ecf43114433:
+    tag: v7.0.0
+    expires_at: 2026-06-10
+  4e2615869d13561d626ed48655e1a39e5b192b3c:
+    tag: 6.4.7
+    expires_at: 2026-04-28
+  90c37294538be80a558fd665531fcdc2b467b475:
+    tag: v8.1.0
+coursier/setup-action:
+  '*':
+    keep: true
+  f7be3eb3dcef84a4e16fc8cd75c87beb2e5cbcc9:
+    tag: v2.0.2
+    expires_at: 2026-05-15
+  7acb5c9ea69bc1a1bb185ec45ebce2ac114f3628:
+    tag: v2.0.3
+    expires_at: 2026-06-13
+  fd1707a76b027efdfb66ca79318b4d29b72e5a02:
+    tag: v3.0.0
+cpp-linter/cpp-linter-action:
+  0f6d1b8d7e38b584cbee606eb23d850c217d54f8:
+    tag: v2.15.1
+crate-ci/typos:
+  '*':
+    keep: true
+crazy-max/ghaction-import-gpg:
+  e89d40939c28e39f97cf32126055eeae86ba74ec:
+    tag: v6.3.0
+    expires_at: 2026-06-12
+  2dc316deee8e90f13e1a351ab510b4d5bc0c82cd:
+    tag: v7.0.0
+damccorm/tag-ur-it:
+  6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5:
+DavidAnson/markdownlint-cli2-action:
+  07035fd053f7be764496c0f8d8f9f41f98305101:
+    tag: v22.0.0
+    expires_at: 2026-06-20
+  ce4853d43830c74c1753b39f3cf40f71c2031eb9:
+    tag: v23.0.0
+dawidd6/action-download-artifact:
+  '*':
+    keep: true
+dawidd6/action-send-mail:
+  6d98ae34d733f9a723a9e04e94f2f24ba05e1402:
+    tag: v6
+    expires_at: 2026-06-14
+  d38f3f7cd391cdebfe0d38efc3998b935e951c4f:
+    tag: v16
+delaguardo/setup-graalvm:
+  '*':
+    keep: true
+dlang-community/setup-dlang:
+  '*':
+    keep: true
+docker/build-push-action:
+  10e90e3645eae34f1e60eeb005ba3a3d33f178e8:
+    tag: v6.19.2
+    expires_at: 2026-06-14
+  d08e5c354a6adb9ed34480a06d141179aa583294:
+    tag: v7.0.0
+docker/login-action:
+  c94ce9fb468520275223c153574b00df6fe4bcc9:
+    tag: v3.7.0
+    expires_at: 2026-06-14
+  b45d80f862d83dbcd57f89517bcf500b2ab88fb2:
+    tag: v4.0.0
+docker/metadata-action:
+  c299e40c65443455700f0fdfc63efafe5b349051:
+    tag: v5.10.0
+    expires_at: 2026-06-14
+  030e881283bb7a6894de51c315a6bfe6a94e05cf:
+    tag: v6.0.0
+docker/setup-buildx-action:
+  8d2750c68a42422c14e847fe6c8ac0403b4cbd6f:
+    tag: v3.12.0
+    expires_at: 2026-06-14
+  4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd:
+    tag: v4.0.0
+docker/setup-qemu-action:
+  29109295f81e9208d7d86ff1c6c12d2833863392:
+    tag: v3.6.0
+    expires_at: 2026-06-14
+  ce360397dd3f832beb865e1373c09c0e9f86d70a:
+    tag: v4.0.0
+docker://jekyll/jekyll:
+  sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625:
+docker://pandoc/core:
+  sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93:
+    tag: 3.7.0.2
+dorny/paths-filter:
+  de90cc6fb38fc0963ad72b210f1f284cd68cea36:
+    tag: v3.0.2
+    expires_at: 2026-06-14
+  fbd0ab8f3e69293af611ebaee6363fc25e6d187d:
+    tag: v4.0.1
+dorny/test-reporter:
+  dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3:
+    tag: v2.1.1
+    expires_at: 2026-04-24
+  b082adf0eced0765477756c2a610396589b8c637:
+    tag: v2.5.0
+    expires_at: 2026-06-12
+  3d76b34a4535afbd0600d347b09a6ee5deb3ed7f:
+    tag: v2.6.0
+    expires_at: 2026-06-14
+  df6247429542221bc30d46a036ee47af1102c451:
+    tag: v2.7.0
+    expires_at: 2026-06-17
+  a43b3a5f7366b97d083190328d2c652e1a8b6aa2:
+    tag: v3.0.0
+dtolnay/rust-toolchain:
+  29eef336d9b2848a0b548edc03f92a220660cdb8:
+    keep: true
+    tag: stable
+easimon/maximize-build-space:
+  '*':
+    keep: true
+editorconfig-checker/action-editorconfig-checker:
+  4b6cd6190d435e7e084fb35e36a096e98506f7b9:
+    tag: v2.1.0
+    expires_at: 2026-06-27
+  840e866d93b8e032123c23bac69dece044d4d84c:
+    tag: v2.2.0
+EnricoMi/publish-unit-test-result-action:
+  '*':
+    keep: true
+eps1lon/actions-label-merge-conflict:
+  '*':
+    keep: true
+erisu/apache-rat-action:
+  46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c:
+    tag: v2.0.0
+erisu/license-checker-action:
+  99cffa11264fe545fd0baa6c13bca5a00ae608f2:
+    tag: v2.0.1
+geekyeggo/delete-artifact:
+  '*':
+    keep: true
+golang/govulncheck-action:
+  '*':
+    keep: true
+golangci/*:
+  '*':
+    keep: true
+golangci/golangci-lint-action:
+  55c2c1448f86e01eaae002a5a3a9624417608d84:
+    tag: v6.5.2
+    expires_at: 2026-04-24
+  1481404843c368bc19ca9406f87d6e0fc97bdcfd:
+    tag: v7.0.0
+    expires_at: 2026-06-12
+  1e7e51e771db61008b38414a730f564565cf7c20:
+    tag: v9.2.0
+google-github-actions/auth:
+  7c6bc770dae815cd3e89ee6cdf493a5fab2cc093:
+    tag: v3.0.0
+google-github-actions/setup-gcloud:
+  aa5489c8933f4cc7a4f7d45035b3b1440c9c10db:
+    tag: v3.0.1
+gr2m/twitter-together:
+  '*':
+    keep: true
+graalvm/setup-graalvm:
+  7f488cf82a3629ee755e4e97342c01d6bed318fa:
+    tag: v1.3.5
+    expires_at: 2026-04-24
+  790e28947b79a9c09c3391c0f18bf8d0f102ed69:
+    tag: v1.4.4
+    expires_at: 2026-04-24
+  54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1:
+    tag: v1.4.5
+    expires_at: 2026-06-14
+  f744c72a42b1995d7b0cbc314bde4bace7ac1fe1:
+    tag: v1.5.0
+gradle/actions/dependency-submission:
+  017a9effdb900e5b5b2fddfb590a105619dca3c3:
+    tag: v4.4.2
+    expires_at: 2026-04-24
+  4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2:
+    tag: v5.0.0
+    expires_at: 2026-05-24
+  0723195856401067f7a2779048b490ace7a47d7c:
+    tag: v5.0.2
+    expires_at: 2026-06-20
+  39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f:
+    tag: v6.0.1
+gradle/actions/setup-gradle:
+  017a9effdb900e5b5b2fddfb590a105619dca3c3:
+    tag: v4.4.2
+    expires_at: 2026-04-24
+  4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2:
+    tag: v5.0.0
+    expires_at: 2026-05-24
+  0723195856401067f7a2779048b490ace7a47d7c:
+    tag: v5.0.2
+    expires_at: 2026-06-20
+  39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f:
+    tag: v6.0.1
+gradle/actions/wrapper-validation:
+  017a9effdb900e5b5b2fddfb590a105619dca3c3:
+    tag: v4.4.2
+    expires_at: 2026-04-24
+  4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2:
+    tag: v5.0.0
+    expires_at: 2026-05-24
+  0723195856401067f7a2779048b490ace7a47d7c:
+    tag: v5.0.2
+    expires_at: 2026-06-20
+  39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f:
+    tag: v6.0.1
+gradle/develocity-actions/maven-publish-build-scan:
+  4a2aed82eea165ba2d5c494fc2a8730d7fdff229:
+    tag: v1.4
+    expires_at: 2026-04-24
+  974e8dbcbda40db6828fc35f349c80a7c0e71529:
+    tag: v2.1
+gradle/develocity-actions/setup-maven:
+  4a2aed82eea165ba2d5c494fc2a8730d7fdff229:
+    tag: v1.4
+    expires_at: 2026-04-24
+  974e8dbcbda40db6828fc35f349c80a7c0e71529:
+    tag: v2.1
+gsactions/commit-message-checker:
+  '*':
+    keep: true
+hadolint/hadolint-action:
+  2332a7b74a6de0dda2e2221d575162eba76ba5e5:
+    tag: v3.3.0
+hashicorp/setup-terraform:
+  b9cd54a3c349d3f38e8881555d616ced269862dd:
+    tag: v3
+    expires_at: 2026-06-12
+  5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85:
+    tag: v4.0.0
+helm/chart-releaser-action:
+  cae68fefc6b5f367a0275617c9f83181ba54714f:
+    tag: v1.7.0
+helm/chart-testing-action:
+  6ec842c01de15ebb84c8627d2744a0c2f2755c9f:
+    tag: v2.8.0
+helm/kind-action:
+  92086f6be054225fa813e0a4b13787fc9088faab:
+    tag: v1.13.0
+    expires_at: 2026-06-12
+  ef37e7f390d99f746eb8b610417061a60e82a6cc:
+    tag: v1.14.0
+houseabsolute/actions-rust-cross:
+  '*':
+    keep: true
+ilammy/msvc-dev-cmd:
+  '*':
+    keep: true
+ilammy/setup-nasm:
+  72793074d3c8cdda771dba85f6deafe00623038b:
+    tag: v1.5.2
+JamesIves/github-pages-deploy-action:
+  4a3abc783e1a24aeb44c16e869ad83caf6b4cc23:
+    tag: v4.7.4
+    expires_at: 2026-04-24
+  d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
+    tag: v4.8.0
+jarvusinnovations/background-action:
+  '*':
+    keep: true
+jasonetco/create-an-issue:
+  1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5:
+    tag: v2
+JetBrains/qodana-action:
+  89eb4357efd2b52e639f3216e63edaf33b82622b:
+    tag: v2025.3.2
+jidicula/clang-format-action:
+  '*':
+    keep: true
+Jimver/cuda-toolkit:
+  6008063726ffe3309d1b22e413d9e88fed91a2f2:
+    tag: v0.2.29
+    expires_at: 2026-05-24
+  b6fc3a9f3f15256d9d94ffe1254f9c5a2565cde6:
+    tag: v0.2.30
+    expires_at: 2026-06-20
+  406fa58d8abbf1bad2edd217b58b073dd2f548e4:
+    tag: v0.2.34
+    expires_at: 2026-06-27
+  3d45d157f327c09c04b50ee6ccdea2d9d017ec76:
+    tag: v0.2.35
+jlumbroso/free-disk-space:
+  '*':
+    keep: true
+jrouly/scalafmt-native-action:
+  14620cde093e5ff6bfbbecd4f638370024287b9d:
+    tag: v4
+    expires_at: 2026-06-27
+  '*':
+    keep: true
+  a9c8e1032a02004c425d53ef8ce420fe2179eba7:
+    tag: v5
+julia-actions/julia-buildpkg:
+  '*':
+    keep: true
+julia-actions/julia-docdeploy:
+  '*':
+    keep: true
+julia-actions/julia-processcoverage:
+  '*':
+    keep: true
+julia-actions/julia-runtest:
+  '*':
+    keep: true
+julia-actions/setup-julia:
+  '*':
+    keep: true
+juliaregistries/tagbot:
+  '*':
+    keep: true
+JustinBeckwith/linkinator-action:
+  af984b9f30f63e796ae2ea5be5e07cb587f1bbd9:
+    tag: v2.3
+    expires_at: 2026-05-22
+  f62ba0c110a76effb2ee6022cc6ce4ab161085e3:
+    tag: v2.4
+jwgmeligmeyling/checkstyle-github-action:
+  '*':
+    keep: true
+jwgmeligmeyling/pmd-github-action:
+  322e346bd76a0757c4d54ff9209e245965aa066d:
+    tag: v1.2
+jwgmeligmeyling/spotbugs-github-action:
+  '*':
+    keep: true
+Kesin11/actions-timeline:
+  54d513e0b5ff1158f1cf8321108d666a5a6c1fca:
+    tag: v2.2.5
+    expires_at: 2026-05-22
+  e018cfefea60b4f44266998551211a35a58b8097:
+    tag: v3.0.0
+kiegroup/github-action-build-chain:
+  '*':
+    keep: true
+korandoru/hawkeye:
+  '*':
+    keep: true
+leafo/gh-actions-lua:
+  '*':
+    keep: true
+leafo/gh-actions-luarocks:
+  97053c556d6ce2c8e26eb7ac93743437c7af7248:
+    expires_at: 2026-08-01
+    tag: v5
+  4c082a5fad45388feaeb0798dbd82dbd7dc65bca:
+    tag: v5
+lhotari/sandboxed-trivy-action:
+  555963036b2012b44c1071508a236e569db28ebb:
+    tag: v1.0.1
+lycheeverse/lychee-action:
+  8646ba30535128ac92d33dfc9133794bfdd9b411:
+    tag: v2.8.0
+manusa/actions-setup-minikube:
+  b589f2d61bf96695c546929c72b38563e856059d:
+    tag: v2.14.0
+    expires_at: 2026-05-22
+  '*':
+    keep: true
+  8234275e0386fe1cdaf519d28c90f4f03fad89e4:
+    tag: v2.15.0
+    expires_at: 2026-06-14
+  96202dee4ae1c2f46a62fe197273aaf22b83f42d:
+    tag: v2.16.1
+matlab-actions/run-tests:
+  4a3d2e8bdc811f72defb8122e46a009312acc198:
+    tag: v2.3.1
+matlab-actions/setup-matlab:
+  aa8bbc7b76daa63c5d456d1430cbd6cb5b626ab4:
+    tag: v2.7.0
+maxim-lobanov/setup-xcode:
+  '*':
+    keep: true
+medyagh/setup-minikube:
+  '*':
+    keep: true
+mikepenz/action-junit-report:
+  '*':
+    keep: true
+mlugg/setup-zig:
+  fa65c4058643678a4e4a9a60513944a7d8d35440:
+    tag: v2.1.0
+    expires_at: 2026-04-24
+  d1434d08867e3ee9daa34448df10607b98908d29:
+    tag: v2.2.1
+mozilla-actions/sccache-action:
+  7d986dd989559c6ecdb630a3fd2557667be217ad:
+    tag: v0.0.9
+msys2/setup-msys2:
+  '*':
+    keep: true
+mvasigh/dispatch-action:
+  '*':
+    keep: true
+nanasess/setup-chromedriver:
+  '*':
+    keep: true
+ncipollo/release-action:
+  b7eabc95ff50cbeeedec83973935c8f306dfcd0b:
+    tag: v1.20.0
+    expires_at: 2026-06-14
+  339a81892b84b4eeb0f6e744e4574d79d0d9b8dd:
+    tag: v1.21.0
+nick-fields/retry:
+  '*':
+    keep: true
+nwtgck/actions-netlify:
+  4cbaf4c08f1a7bfa537d6113472ef4424e4eb654:
+    tag: v3.0.0
+ocaml/setup-ocaml:
+  '*':
+    keep: true
+olafurpg/setup-scala:
+  '*':
+    keep: true
+opentofu/setup-opentofu:
+  000eeb8522f0572907c393e8151076c205fdba1b:
+    tag: v1.0.6
+    expires_at: 2026-04-24
+  9d84900f3238fab8cd84ce47d658d25dd008be2f:
+    tag: v1.0.8
+    expires_at: 2026-06-14
+  fc711fa910b93cba0f3fbecaafc9f42fd0c411cb:
+    tag: v2.0.0
+oracle-actions/setup-java:
+  '*':
+    keep: true
+orhun/git-cliff-action:
+  e16f179f0be49ecdfe63753837f20b9531642772:
+    tag: v4.7.0
+    expires_at: 2026-06-12
+  c93ef52f3d0ddcdcc9bd5447d98d458a11cd4f72:
+    tag: v4.7.1
+ossf/scorecard-action:
+  '*':
+    keep: true
+peaceiris/actions-gh-pages:
+  '*':
+    keep: true
+peaceiris/actions-hugo:
+  '*':
+    keep: true
+peaceiris/actions-mdbook:
+  '*':
+    keep: true
+peter-evans/create-or-update-comment:
+  e8674b075228eee787fea43ef493e45ece1004c9:
+    tag: v5.0.0
+peter-evans/create-pull-request:
+  '*':
+    keep: true
+phoenix-actions/test-reporting:
+  f957cd93fc2d848d556fa0d03c57bc79127b6b5e:
+    tag: v15
+pnpm/action-setup:
+  '*':
+    keep: true
+posit-dev/setup-air:
+  63e80dedb6d275c94a3841e15e5ff8691e1ab237:
+    tag: v1.0.0
+potiuk/cancel-workflow-runs:
+  '*':
+    keep: true
+pre-commit/action:
+  2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd:
+    tag: v3.0.1
+PyO3/maturin-action:
+  '*':
+    keep: true
+pypa/cibuildwheel:
+  63fd63b352a9a8bdcc24791c9dbee952ee9a8abc:
+    tag: v3.3.0
+    expires_at: 2026-04-24
+  298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e:
+    tag: v3.3.1
+    expires_at: 2026-06-14
+  ee02a1537ce3071a004a6b08c41e72f0fdc42d9a:
+    tag: v3.4.0
+pypa/gh-action-pypi-publish:
+  ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e:
+    keep: true
+    tag: v1.13.0
+  76f52bc884231f62b9a034ebfe128415bbaabdfc:
+    tag: v1.12.4
+    expires_at: 2026-06-10
+pyTooling/Actions:
+  '*':
+    keep: true
+pytooling/actions:
+  '*':
+    keep: true
+pytooling/actions/with-post-step:
+  '*':
+    keep: true
+quarto-dev/quarto-actions:
+  '*':
+    keep: true
+quarto-dev/quarto-actions/*:
+  '*':
+    keep: true
+r-lib/actions/*:
+  '*':
+    keep: true
+reactivecircus/android-emulator-runner:
+  '*':
+    keep: true
+readthedocs/actions:
+  '*':
+    keep: true
+readthedocs/actions/preview:
+  '*':
+    keep: true
+release-drafter/release-drafter:
+  '*':
+    keep: true
+ruby/setup-ruby:
+  '*':
+    keep: true
+runs-on/action:
+  cd2b598b0515d39d78c38a02d529db87d2196d1e:
+    tag: v2.0.3
+    expires_at: 2026-06-14
+  742bf56072eb4845a0f94b3394673e4903c90ff0:
+    tag: v2.1.0
+rust-lang/crates-io-auth-action:
+  b7e9a28eded4986ec6b1fa40eeee8f8f165559ec:
+    tag: v1.0.3
+    expires_at: 2026-06-20
+  bbd81622f20ce9e2dd9622e3218b975523e45bbe:
+    tag: v1.0.4
+rustsec/*:
+  '*':
+    keep: true
+sbt/setup-sbt:
+  3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd:
+    tag: v1.1.14
+    expires_at: 2026-04-06
+  a627500d27445f8c5021755a439829b6e78e3358:
+    tag: v1.1.15
+    expires_at: 2026-04-27
+  ae54f7cfe46ec0d24ade661d77f007360ab48bda:
+    tag: v1.1.16
+    expires_at: 2026-05-12
+  06192244f17880c9bf69ccd8de5b2e8785822be5:
+    tag: v1.1.17
+    expires_at: 2026-05-18
+  1cad58d595b729a71ca2254cdf5b43dd6f42d4bb:
+    tag: v1.1.18
+    expires_at: 2026-05-26
+  6bec67c98f542b9e17369bfca0ec822ac1363194:
+    tag: v1.1.19
+    expires_at: 2026-06-10
+  dd1ef7d7798fab5ce802a6adab3b782817b8c2d0:
+    tag: v1.1.20
+    expires_at: 2026-06-17
+  508b753e53cb6095967669e0911487d2b9bc9f41:
+    tag: v1.1.22
+scacap/action-surefire-report:
+  '*':
+    keep: true
+  5609ce4db72c09db044803b344a8968fd1f315da:
+    tag: v1.9.1
+scalacenter/sbt-dependency-submission:
+  f43202114d7522a4b233e052f82c2eea8d658134:
+    tag: v3.2.1
+scottbrenner/puppet-lint-action:
+  '*':
+    keep: true
+securego/gosec:
+  '*':
+    keep: true
+shivammathur/setup-php:
+  '*':
+    keep: true
+shogo82148/actions-setup-perl:
+  '*':
+    keep: true
+shufo/auto-assign-reviewer-by-files:
+  '*':
+    keep: true
+sigstore/cosign-installer:
+  faadad0cce49287aee09b3a48701e75088a2c6ad:
+    expires_at: 2026-12-31
+    tag: v4.0.0
+slackapi/slack-github-action:
+  91efab103c0de0a537f72a35f6b8cda0ee76bf0a:
+    tag: v2.1.1
+    expires_at: 2026-06-13
+  af78098f536edbc4de71162a307590698245be95:
+    tag: v3.0.1
+slsa-framework/source-actions:
+  dea965cdca5e0cb422bf7b2653c9d15f678ad01c:
+    expires_at: 2026-12-31
+    tag: v0.1.0
+snok/install-poetry:
+  76e04a911780d5b312d89783f7b1cd627778900a:
+    tag: v1
+softprops/action-gh-release:
+  '*':
+    keep: true
+SonarSource/sonarqube-scan-action:
+  a31c9398be7ace6bbfaf30c0bd5d415f843d45e9:
+    tag: v7.0.0
+SonarSource/sonarqube-scan-action/install-build-wrapper:
+  a31c9398be7ace6bbfaf30c0bd5d415f843d45e9:
+    tag: v7.0.0
+stCarolas/setup-maven:
+  '*':
+    keep: true
+subosito/flutter-action:
+  '*':
+    keep: true
+swatinem/rust-cache:
+  '*':
+    keep: true
+swift-actions/setup-swift:
+  '*':
+    keep: true
+taiki-e/install-action:
+  '*':
+    keep: true
+tcort/github-action-markdown-link-check:
+  e7c7a18363c842693fadde5d41a3bd3573a7a225:
+    tag: v1.1.2
+terraform-linters/setup-tflint:
+  4cb9feea73331a35b422df102992a03a44a3bb33:
+    tag: v6.2.1
+    expires_at: 2026-06-14
+  b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93:
+    tag: v6.2.2
+test-summary/action:
+  '*':
+    keep: true
+testlens-app/setup-testlens:
+  '*':
+    keep: true
+timonvs/pr-labeler-action:
+  '*':
+    keep: true
+TobKed/label-when-approved-action:
+  '*':
+    keep: true
+untitaker/hyperlink:
+  fb5bb9c5011a3d143a54b4b30aedc30ec5bc0f89:
+    tag: 0.2.0
+uraimo/run-on-arch-action:
+  d94c13912ea685de38fccc1109385b83fd79427d:
+    tag: v3.0.1
+vapier/coverity-scan-action:
+  2068473c7bdf8c2fb984a6a40ae76ee7facd7a85:
+    tag: v1.8.0
+vimtor/action-zip:
+  5f1c4aa587ea41db1110df6a99981dbe19cee310:
+    tag: v1
+vishalsinha21/dynamic-checklist:
+  '*':
+    keep: true
+wei/curl:
+  '*':
+    keep: true
+xpol/setup-lua:
+  '*':
+    keep: true
+zizmorcore/zizmor-action:
+  71321a20a9ded102f6e9ce5718a2fcec2c4f70d8:
+    tag: v0.5.2
