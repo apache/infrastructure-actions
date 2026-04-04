@@ -490,6 +490,9 @@ Jimver/cuda-toolkit:
     expires_at: 2026-06-20
   406fa58d8abbf1bad2edd217b58b073dd2f548e4:
     tag: v0.2.34
+    expires_at: 2026-06-27
+  3d45d157f327c09c04b50ee6ccdea2d9d017ec76:
+    tag: v0.2.35
 jlumbroso/free-disk-space:
   '*':
     keep: true
