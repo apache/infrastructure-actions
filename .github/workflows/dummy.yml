@@ -158,7 +158,7 @@ jobs:
         if: false
       - uses: JetBrains/qodana-action@89eb4357efd2b52e639f3216e63edaf33b82622b  # v2025.3.2
         if: false
-      - uses: Jimver/cuda-toolkit@406fa58d8abbf1bad2edd217b58b073dd2f548e4  # v0.2.34
+      - uses: Jimver/cuda-toolkit@3d45d157f327c09c04b50ee6ccdea2d9d017ec76  # v0.2.35
         if: false
       - uses: jrouly/scalafmt-native-action@14620cde093e5ff6bfbbecd4f638370024287b9d  # v4
         if: false
