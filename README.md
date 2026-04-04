@@ -204,6 +204,10 @@ uv run utils/verify-action-build.py --ci --from-pr 123
 
 The `--ci` flag skips all interactive prompts (auto-selects the newest approved version for diffing, auto-accepts exclusions, disables paging). The `--from-pr` flag extracts the action reference from the given PR number.
 
+Additional flags:
+- `--no-cache` — rebuild the Docker image from scratch without using the layer cache.
+- `--show-build-steps` — display a summary of Docker build steps on successful builds (the summary is always shown on failure).
+
 > [!NOTE]
 > **Prerequisites:** `docker` and `uv`. When using the default mode (without `--no-gh`), `gh` (GitHub CLI, authenticated via `gh auth login`) is also required. The build runs in a `node:20-slim` container so no local Node.js installation is needed.
 

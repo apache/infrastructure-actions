@@ -918,10 +918,41 @@ def detect_node_version(
     return "20"
 
 
+def _print_docker_build_steps(build_result: subprocess.CompletedProcess[str]) -> None:
+    """Parse and display Docker build step summaries from --progress=plain output."""
+    build_output = build_result.stderr + build_result.stdout
+    step_names: dict[str, str] = {}   # step_id -> description
+    step_status: dict[str, str] = {}  # step_id -> "DONE 1.2s" / "CACHED"
+    for line in build_output.splitlines():
+        # Step description:  #5 [3/12] RUN apt-get update ...
+        m = re.match(r"^#(\d+)\s+(\[.+)", line)
+        if m:
+            step_names[m.group(1)] = m.group(2)
+            continue
+        # Done / cached:  #5 DONE 1.2s   or   #5 CACHED
+        m = re.match(r"^#(\d+)\s+(DONE\s+[\d.]+s|CACHED)", line)
+        if m:
+            step_status[m.group(1)] = m.group(2)
+
+    if step_names:
+        console.print()
+        console.rule("[bold blue]Docker build steps[/bold blue]")
+        for sid in sorted(step_names, key=lambda x: int(x)):
+            name = step_names[sid]
+            status_str = step_status.get(sid, "")
+            if "CACHED" in status_str:
+                console.print(f"  [dim]✓ {name} (cached)[/dim]")
+            else:
+                console.print(f"  [green]✓[/green] {name} [dim]{status_str}[/dim]")
+        console.print()
+
+
 def build_in_docker(
     org: str, repo: str, commit_hash: str, work_dir: Path,
     sub_path: str = "",
     gh: GitHubClient | None = None,
+    cache: bool = True,
+    show_build_steps: bool = False,
 ) -> tuple[Path, Path, str, str]:
     """Build the action in a Docker container and extract original + rebuilt dist.
 
@@ -960,34 +991,47 @@ def build_in_docker(
     if node_version != "20":
         console.print(f"  [green]✓[/green] Detected Node.js version: [bold]node{node_version}[/bold]")
 
-    with console.status("[bold blue]Building Docker image...[/bold blue]") as status:
-        # Build Docker image
-        status.update("[bold blue]Cloning repository and building action...[/bold blue]")
-        run(
-            [
-                "docker",
-                "build",
-                "--build-arg",
-                f"NODE_VERSION={node_version}",
-                "--build-arg",
-                f"REPO_URL={repo_url}",
-                "--build-arg",
-                f"COMMIT_HASH={commit_hash}",
-                "--build-arg",
-                f"SUB_PATH={sub_path}",
-                "-t",
-                image_tag,
-                "-f",
-                str(dockerfile_path),
-                str(work_dir),
-            ],
-            capture_output=True,
+    # Build Docker image, capturing output so we can summarise the steps afterwards
+    docker_build_cmd = [
+        "docker",
+        "build",
+        "--progress=plain",
+        "--build-arg",
+        f"NODE_VERSION={node_version}",
+        "--build-arg",
+        f"REPO_URL={repo_url}",
+        "--build-arg",
+        f"COMMIT_HASH={commit_hash}",
+        "--build-arg",
+        f"SUB_PATH={sub_path}",
+        "-t",
+        image_tag,
+        "-f",
+        str(dockerfile_path),
+        str(work_dir),
+    ]
+    if not cache:
+        docker_build_cmd.insert(3, "--no-cache")
+
+    with console.status("[bold blue]Building Docker image...[/bold blue]"):
+        build_result = subprocess.run(
+            docker_build_cmd, capture_output=True, text=True,
         )
-        console.print("  [green]✓[/green] Docker image built")
+        if build_result.returncode != 0:
+            # Show full output on failure so the user can diagnose
+            console.print("[red]Docker build failed. Output:[/red]")
+            console.print(build_result.stdout)
+            console.print(build_result.stderr)
+            _print_docker_build_steps(build_result)
+            raise subprocess.CalledProcessError(build_result.returncode, docker_build_cmd)
+
+    if show_build_steps:
+        _print_docker_build_steps(build_result)
+
+    with console.status("[bold blue]Extracting build artifacts...[/bold blue]") as status:
 
         # Extract original and rebuilt dist from container
         try:
-            status.update("[bold blue]Extracting build artifacts...[/bold blue]")
             run(
                 ["docker", "create", "--name", container_name, image_tag],
                 capture_output=True,
@@ -1283,7 +1327,10 @@ def _format_diff_text(lines: list[str]) -> Text:
     return diff_text
 
 
-def verify_single_action(action_ref: str, gh: GitHubClient | None = None, ci_mode: bool = False) -> bool:
+def verify_single_action(
+    action_ref: str, gh: GitHubClient | None = None, ci_mode: bool = False,
+    cache: bool = True, show_build_steps: bool = False,
+) -> bool:
     """Verify a single action reference. Returns True if verification passed."""
     org, repo, sub_path, commit_hash = parse_action_ref(action_ref)
 
@@ -1291,6 +1338,7 @@ def verify_single_action(action_ref: str, gh: GitHubClient | None = None, ci_mod
         work_dir = Path(tmp)
         original_dir, rebuilt_dir, action_type, out_dir_name = build_in_docker(
             org, repo, commit_hash, work_dir, sub_path=sub_path, gh=gh,
+            cache=cache, show_build_steps=show_build_steps,
         )
 
         # Non-JavaScript actions (docker, composite) don't have compiled JS to verify
@@ -1380,7 +1428,7 @@ def get_gh_user(gh: GitHubClient | None = None) -> str:
     return gh.get_authenticated_user()
 
 
-def check_dependabot_prs(gh: GitHubClient) -> None:
+def check_dependabot_prs(gh: GitHubClient, cache: bool = True, show_build_steps: bool = False) -> None:
     """List open dependabot PRs, verify each, and optionally merge."""
     console.print()
     console.rule("[bold]Dependabot PR Review[/bold]")
@@ -1515,11 +1563,11 @@ def check_dependabot_prs(gh: GitHubClient) -> None:
                         sub_ref = f"{org_repo}/{sp}@{commit_hash}"
                     else:
                         sub_ref = f"{org_repo}@{commit_hash}"
-                    if not verify_single_action(sub_ref, gh=gh):
+                    if not verify_single_action(sub_ref, gh=gh, cache=cache, show_build_steps=show_build_steps):
                         passed = False
             else:
                 # Simple single action (no sub-path)
-                if not verify_single_action(f"{org_repo}@{commit_hash}", gh=gh):
+                if not verify_single_action(f"{org_repo}@{commit_hash}", gh=gh, cache=cache, show_build_steps=show_build_steps):
                     passed = False
 
         if not passed:
@@ -1632,9 +1680,21 @@ def main() -> None:
         action="store_true",
         help="Non-interactive mode: skip all prompts, auto-select defaults (for CI pipelines)",
     )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Build Docker image from scratch without using layer cache",
+    )
+    parser.add_argument(
+        "--show-build-steps",
+        action="store_true",
+        help="Show Docker build step summary on successful builds (always shown on failure)",
+    )
     args = parser.parse_args()
 
     ci_mode = args.ci
+    cache = not args.no_cache
+    show_build_steps = args.show_build_steps
 
     if not shutil.which("docker"):
         console.print("[red]Error:[/red] docker is required but not found in PATH")
@@ -1665,12 +1725,12 @@ def main() -> None:
             _exit(1)
         for ref in action_refs:
             console.print(f"  Extracted action reference from PR #{args.from_pr}: [bold]{ref}[/bold]")
-        passed = all(verify_single_action(ref, gh=gh, ci_mode=ci_mode) for ref in action_refs)
+        passed = all(verify_single_action(ref, gh=gh, ci_mode=ci_mode, cache=cache, show_build_steps=show_build_steps) for ref in action_refs)
         _exit(0 if passed else 1)
     elif args.check_dependabot_prs:
-        check_dependabot_prs(gh=gh)
+        check_dependabot_prs(gh=gh, cache=cache, show_build_steps=show_build_steps)
     elif args.action_ref:
-        passed = verify_single_action(args.action_ref, gh=gh, ci_mode=ci_mode)
+        passed = verify_single_action(args.action_ref, gh=gh, ci_mode=ci_mode, cache=cache, show_build_steps=show_build_steps)
         _exit(0 if passed else 1)
     else:
         parser.print_help()
