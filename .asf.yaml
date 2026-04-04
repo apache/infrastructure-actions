@@ -28,7 +28,9 @@ github:
       required_pull_request_reviews:
         dismiss_stale_reviews: false
         required_approving_review_count: 1
-
+        bypass_pull_request_allowances:
+          users:
+            - asfgit
 notifications:
   commits: commits@infra.apache.org
   issues: issues@infra.apache.org
