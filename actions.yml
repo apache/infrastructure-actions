@@ -334,6 +334,9 @@ easimon/maximize-build-space:
 editorconfig-checker/action-editorconfig-checker:
   4b6cd6190d435e7e084fb35e36a096e98506f7b9:
     tag: v2.1.0
+    expires_at: 2026-06-27
+  840e866d93b8e032123c23bac69dece044d4d84c:
+    tag: v2.2.0
 EnricoMi/publish-unit-test-result-action:
   '*':
     keep: true

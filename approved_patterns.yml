@@ -124,6 +124,7 @@
 - dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8
 - easimon/maximize-build-space@*
 - editorconfig-checker/action-editorconfig-checker@4b6cd6190d435e7e084fb35e36a096e98506f7b9
+- editorconfig-checker/action-editorconfig-checker@840e866d93b8e032123c23bac69dece044d4d84c
 - EnricoMi/publish-unit-test-result-action@*
 - eps1lon/actions-label-merge-conflict@*
 - erisu/apache-rat-action@46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c
