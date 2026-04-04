@@ -73,7 +73,7 @@ astral-sh/setup-uv:
   eb1897b8dc4b5d5bfe39a428a8f2304605e0983c:
     # needed for helm/chart-testing-action @ v2.8.0
     tag: v7.0.0
-    expires_at: 2026-06-30
+    expires_at: 2026-06-27
   681c641aba71e4a1c380be3ab5e12ad51f415867:
     tag: v7.1.6
     expires_at: 2026-05-15
@@ -85,6 +85,9 @@ astral-sh/setup-uv:
     expires_at: 2026-06-14
   37802adc94f370d6bfd71619e3f0bf239e1f3b78:
     tag: v7.6.0
+    expires_at: 2026-06-27
+  cec208311dfd045dd5311c1add060b2062131d57:
+    tag: v8.0.0
 awalsh128/cache-apt-pkgs-action:
   '*':
     keep: true
