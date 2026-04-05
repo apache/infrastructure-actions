@@ -40,6 +40,7 @@ Security review checklist:
 
 import argparse
 import difflib
+import hashlib
 import json
 import os
 import re
@@ -807,6 +808,15 @@ RUN MAIN_PATH=$(cat /main-path.txt); \
 RUN OUT_DIR=$(cat /out-dir.txt); \
     if [ -d "$OUT_DIR" ]; then cp -r "$OUT_DIR" /original-dist; else mkdir /original-dist; fi
 
+# Detect if node_modules/ is committed (vendored dependencies pattern)
+RUN if [ -d "node_modules" ]; then \
+      echo "true" > /has-node-modules.txt; \
+      cp -r node_modules /original-node-modules; \
+    else \
+      echo "false" > /has-node-modules.txt; \
+      mkdir /original-node-modules; \
+    fi
+
 # Delete compiled JS from output dir before rebuild to ensure a clean build
 RUN OUT_DIR=$(cat /out-dir.txt); \
     if [ -d "$OUT_DIR" ]; then find "$OUT_DIR" -name '*.js' -print -delete > /deleted-js.log 2>&1; else echo "no $OUT_DIR/ directory" > /deleted-js.log; fi
@@ -824,6 +834,30 @@ RUN BUILD_DIR="."; \
       done; \
     fi; \
     echo "$BUILD_DIR" > /build-dir.txt
+
+# For actions with vendored node_modules, delete and reinstall with --production
+# before the normal build step (which will also install devDeps for building).
+RUN if [ "$(cat /has-node-modules.txt)" = "true" ]; then \
+      rm -rf node_modules && \
+      BUILD_DIR=$(cat /build-dir.txt) && \
+      cd "$BUILD_DIR" && \
+      if [ -f yarn.lock ]; then \
+        corepack prepare --activate 2>/dev/null; \
+        yarn install --production 2>/dev/null || yarn install 2>/dev/null || true; \
+        echo "node_modules-reinstall: yarn --production (in $BUILD_DIR)" >> /build-info.log; \
+      elif [ -f pnpm-lock.yaml ]; then \
+        corepack prepare --activate 2>/dev/null; \
+        pnpm install --prod 2>/dev/null || pnpm install 2>/dev/null || true; \
+        echo "node_modules-reinstall: pnpm --prod (in $BUILD_DIR)" >> /build-info.log; \
+      else \
+        npm ci --production 2>/dev/null || npm install --production 2>/dev/null || true; \
+        echo "node_modules-reinstall: npm --production (in $BUILD_DIR)" >> /build-info.log; \
+      fi && \
+      cd /action && \
+      cp -r node_modules /rebuilt-node-modules; \
+    else \
+      mkdir /rebuilt-node-modules; \
+    fi
 
 # Detect and install with the correct package manager (in the build directory)
 RUN BUILD_DIR=$(cat /build-dir.txt); \
@@ -953,10 +987,11 @@ def build_in_docker(
     gh: GitHubClient | None = None,
     cache: bool = True,
     show_build_steps: bool = False,
-) -> tuple[Path, Path, str, str]:
+) -> tuple[Path, Path, str, str, bool, Path, Path]:
     """Build the action in a Docker container and extract original + rebuilt dist.
 
-    Returns (original_dir, rebuilt_dir, action_type, out_dir_name).
+    Returns (original_dir, rebuilt_dir, action_type, out_dir_name,
+             has_node_modules, original_node_modules, rebuilt_node_modules).
     """
     repo_url = f"https://github.com/{org}/{repo}.git"
     container_name = f"verify-action-{org}-{repo}-{commit_hash[:12]}"
@@ -1093,6 +1128,35 @@ def build_in_docker(
             if action_type_result.returncode == 0:
                 action_type = (work_dir / "action-type.txt").read_text().strip()
                 console.print(f"  [green]✓[/green] Action type: [bold]{action_type}[/bold]")
+
+            # Extract node_modules flag and directories
+            original_node_modules = work_dir / "original-node-modules"
+            rebuilt_node_modules = work_dir / "rebuilt-node-modules"
+            original_node_modules.mkdir(exist_ok=True)
+            rebuilt_node_modules.mkdir(exist_ok=True)
+            has_node_modules = False
+
+            has_nm_result = subprocess.run(
+                ["docker", "cp", f"{container_name}:/has-node-modules.txt",
+                 str(work_dir / "has-node-modules.txt")],
+                capture_output=True,
+            )
+            if has_nm_result.returncode == 0:
+                has_node_modules = (work_dir / "has-node-modules.txt").read_text().strip() == "true"
+
+            if has_node_modules:
+                status.update("[bold blue]Extracting node_modules artifacts...[/bold blue]")
+                run(
+                    ["docker", "cp", f"{container_name}:/original-node-modules/.",
+                     str(original_node_modules)],
+                    capture_output=True,
+                )
+                run(
+                    ["docker", "cp", f"{container_name}:/rebuilt-node-modules/.",
+                     str(rebuilt_node_modules)],
+                    capture_output=True,
+                )
+                console.print("  [green]✓[/green] Vendored node_modules detected and extracted")
         finally:
             status.update("[bold blue]Cleaning up Docker resources...[/bold blue]")
             subprocess.run(
@@ -1105,7 +1169,148 @@ def build_in_docker(
             )
             console.print("  [green]✓[/green] Cleanup complete")
 
-    return original_dir, rebuilt_dir, action_type, out_dir_name
+    return (original_dir, rebuilt_dir, action_type, out_dir_name,
+            has_node_modules, original_node_modules, rebuilt_node_modules)
+
+
+def diff_node_modules(
+    original_dir: Path, rebuilt_dir: Path, org: str, repo: str, commit_hash: str,
+) -> bool:
+    """Compare original vs rebuilt node_modules. Return True if they match."""
+    blob_url = f"https://github.com/{org}/{repo}/blob/{commit_hash}/node_modules"
+
+    # Metadata files that legitimately differ between installs
+    noisy_files = {".package-lock.json", ".yarn-integrity"}
+    noisy_dirs = {".cache", ".package-lock.json"}
+
+    def collect_files(base: Path) -> dict[Path, str]:
+        """Collect all files under base with their SHA256 hashes."""
+        result = {}
+        for f in sorted(base.rglob("*")):
+            if not f.is_file():
+                continue
+            rel = f.relative_to(base)
+            # Skip noisy metadata
+            if rel.name in noisy_files:
+                continue
+            if any(part in noisy_dirs for part in rel.parts):
+                continue
+            result[rel] = hashlib.sha256(f.read_bytes()).hexdigest()
+        return result
+
+    console.print()
+    console.rule("[bold]Comparing vendored node_modules[/bold]")
+
+    with console.status("[dim]Hashing files...[/dim]"):
+        original_files = collect_files(original_dir)
+        rebuilt_files = collect_files(rebuilt_dir)
+
+    original_set = set(original_files.keys())
+    rebuilt_set = set(rebuilt_files.keys())
+
+    only_in_original = sorted(original_set - rebuilt_set)
+    only_in_rebuilt = sorted(rebuilt_set - original_set)
+    common = sorted(original_set & rebuilt_set)
+
+    # Compare packages (top-level dirs)
+    original_packages = sorted({p.parts[0] for p in original_set if len(p.parts) > 1})
+    rebuilt_packages = sorted({p.parts[0] for p in rebuilt_set if len(p.parts) > 1})
+    pkg_only_orig = set(original_packages) - set(rebuilt_packages)
+    pkg_only_rebuilt = set(rebuilt_packages) - set(original_packages)
+
+    console.print(
+        f"  [dim]Original: {len(original_files)} files in {len(original_packages)} packages[/dim]"
+    )
+    console.print(
+        f"  [dim]Rebuilt:  {len(rebuilt_files)} files in {len(rebuilt_packages)} packages[/dim]"
+    )
+
+    all_match = True
+
+    if pkg_only_orig:
+        all_match = False
+        console.print(f"\n  [red]Packages only in original ({len(pkg_only_orig)}):[/red]")
+        for pkg in sorted(pkg_only_orig):
+            console.print(f"    [red]-[/red] {pkg}")
+
+    if pkg_only_rebuilt:
+        all_match = False
+        console.print(f"\n  [red]Packages only in rebuilt ({len(pkg_only_rebuilt)}):[/red]")
+        for pkg in sorted(pkg_only_rebuilt):
+            console.print(f"    [green]+[/green] {pkg}")
+
+    # Check for extra files only in original (potential injected files)
+    extra_in_orig = [f for f in only_in_original if f.parts[0] not in pkg_only_orig]
+    if extra_in_orig:
+        all_match = False
+        console.print(f"\n  [red]Files only in original (not from extra packages) — {len(extra_in_orig)}:[/red]")
+        for f in extra_in_orig[:20]:
+            file_link = link(f"{blob_url}/{f}", str(f))
+            console.print(f"    [red]-[/red] {file_link}")
+        if len(extra_in_orig) > 20:
+            console.print(f"    [dim]... and {len(extra_in_orig) - 20} more[/dim]")
+
+    extra_in_rebuilt = [f for f in only_in_rebuilt if f.parts[0] not in pkg_only_rebuilt]
+    if extra_in_rebuilt:
+        # Files only in rebuilt but not original — not necessarily malicious,
+        # could be a version difference, but worth noting
+        console.print(f"\n  [yellow]Files only in rebuilt (not from extra packages) — {len(extra_in_rebuilt)}:[/yellow]")
+        for f in extra_in_rebuilt[:20]:
+            console.print(f"    [green]+[/green] {f}")
+        if len(extra_in_rebuilt) > 20:
+            console.print(f"    [dim]... and {len(extra_in_rebuilt) - 20} more[/dim]")
+
+    # Compare common files by hash
+    mismatched = []
+    for rel_path in common:
+        if original_files[rel_path] != rebuilt_files[rel_path]:
+            mismatched.append(rel_path)
+
+    # Filter mismatched: ignore package.json fields that change between installs
+    real_mismatches = []
+    for rel_path in mismatched:
+        if rel_path.name == "package.json":
+            # Compare package.json ignoring install-specific fields
+            orig_text = (original_dir / rel_path).read_text(errors="replace")
+            rebuilt_text = (rebuilt_dir / rel_path).read_text(errors="replace")
+            # Strip _resolved, _integrity, _from, _where, _id fields
+            install_fields = {"_resolved", "_integrity", "_from", "_where", "_id",
+                              "_requested", "_requiredBy", "_shasum", "_spec",
+                              "_phantomChildren", "_inBundle"}
+            try:
+                orig_json = json.loads(orig_text)
+                rebuilt_json = json.loads(rebuilt_text)
+                for field in install_fields:
+                    orig_json.pop(field, None)
+                    rebuilt_json.pop(field, None)
+                if orig_json == rebuilt_json:
+                    continue
+            except (json.JSONDecodeError, ValueError):
+                pass
+        real_mismatches.append(rel_path)
+
+    matched_count = len(common) - len(real_mismatches)
+    if real_mismatches:
+        all_match = False
+        console.print(
+            f"\n  [red]Files with different content — {len(real_mismatches)} of {len(common)}:[/red]"
+        )
+        # Show diffs for first few JS files
+        shown = 0
+        for rel_path in real_mismatches:
+            file_link = link(f"{blob_url}/{rel_path}", str(rel_path))
+            console.print(f"    [red]✗[/red] {file_link}")
+            if shown < 5 and rel_path.suffix == ".js":
+                orig_content = (original_dir / rel_path).read_text(errors="replace")
+                rebuilt_content = (rebuilt_dir / rel_path).read_text(errors="replace")
+                show_colored_diff(rel_path, orig_content, rebuilt_content)
+                shown += 1
+        if len(real_mismatches) > 20:
+            console.print(f"    [dim]... showing first 20 of {len(real_mismatches)}[/dim]")
+    else:
+        console.print(f"\n  [green]✓[/green] All {matched_count} common files match")
+
+    return all_match
 
 
 def diff_js_files(
@@ -1336,7 +1541,8 @@ def verify_single_action(
 
     with tempfile.TemporaryDirectory(prefix="verify-action-") as tmp:
         work_dir = Path(tmp)
-        original_dir, rebuilt_dir, action_type, out_dir_name = build_in_docker(
+        (original_dir, rebuilt_dir, action_type, out_dir_name,
+         has_node_modules, original_node_modules, rebuilt_node_modules) = build_in_docker(
             org, repo, commit_hash, work_dir, sub_path=sub_path, gh=gh,
             cache=cache, show_build_steps=show_build_steps,
         )
@@ -1359,6 +1565,15 @@ def verify_single_action(
                 original_dir, rebuilt_dir, org, repo, commit_hash, out_dir_name,
             )
 
+            # If no compiled JS was found in dist/ but node_modules is vendored,
+            # verify node_modules instead
+            if has_node_modules:
+                nm_match = diff_node_modules(
+                    original_node_modules, rebuilt_node_modules,
+                    org, repo, commit_hash,
+                )
+                all_match = all_match and nm_match
+
         # Check for previously approved versions and offer to diff
         approved = find_approved_versions(org, repo)
         if approved:
@@ -1376,7 +1591,10 @@ def verify_single_action(
     checklist_hint = f"\n[dim]Security review checklist: {SECURITY_CHECKLIST_URL}[/dim]"
     if all_match:
         if is_js_action:
-            result_msg = "[green bold]All compiled JavaScript matches the rebuild[/green bold]"
+            if has_node_modules:
+                result_msg = "[green bold]Vendored node_modules matches fresh install[/green bold]"
+            else:
+                result_msg = "[green bold]All compiled JavaScript matches the rebuild[/green bold]"
         else:
             result_msg = f"[green bold]{action_type} action — no compiled JS to verify[/green bold]"
         console.print(Panel(result_msg + checklist_hint, border_style="green", title="RESULT"))
