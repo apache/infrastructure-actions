@@ -887,7 +887,7 @@ RUN BUILD_DIR=$(cat /build-dir.txt); \
     fi
 
 # Build: first try a root-level build script (some repos like gradle/actions use one),
-# then try npm/yarn/pnpm build in the build directory, then package, then ncc fallback.
+# then try npm/yarn/pnpm build in the build directory, then package, then start, then ncc fallback.
 # If the build directory is a subdirectory, copy its output dir to root afterwards.
 RUN OUT_DIR=$(cat /out-dir.txt); \
     BUILD_DIR=$(cat /build-dir.txt); \
@@ -903,6 +903,8 @@ RUN OUT_DIR=$(cat /out-dir.txt); \
         echo "build-step: $RUN_CMD run build (in $BUILD_DIR)" >> /build-info.log; \
       elif $RUN_CMD run package 2>/dev/null; then \
         echo "build-step: $RUN_CMD run package (in $BUILD_DIR)" >> /build-info.log; \
+      elif $RUN_CMD run start 2>/dev/null; then \
+        echo "build-step: $RUN_CMD run start (in $BUILD_DIR)" >> /build-info.log; \
       elif npx ncc build --source-map 2>/dev/null; then \
         echo "build-step: npx ncc build --source-map (in $BUILD_DIR)" >> /build-info.log; \
       fi && \
