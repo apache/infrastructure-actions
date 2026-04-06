@@ -28,4 +28,4 @@ dependencies = [
 ]
 
 [project.scripts]
-verify-action-build = "verify_action_build:main"
+verify-action-build = "verify_action_build.cli:main"

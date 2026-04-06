@@ -16,22 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-[project]
-name = "infrastructure-actions"
-version = "0.1.0"
-description = "ASF GitHub Actions infrastructure"
-requires-python = ">=3.13"
-dependencies = [
-    "ruyaml>=0.91.0",
-]
+"""Verify that compiled JavaScript in a GitHub Action matches a local rebuild.
 
-[dependency-groups]
-dev = [
-    "jsbeautifier>=1.15",
-    "pytest",
-    "requests>=2.31",
-    "rich>=13.0",
-]
+Checks out the action at a given commit hash inside an isolated Docker container,
+rebuilds it, and diffs the published compiled JS against the locally built output.
 
-[tool.uv]
-exclude-newer = "4 days"
+Usage:
+    uv run verify-action-build dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451
+
+Security review checklist:
+    https://github.com/apache/infrastructure-actions#security-review-checklist
+"""
+
+from .cli import main
+
+__all__ = ["main"]
