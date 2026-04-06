@@ -216,9 +216,9 @@ jobs:
         if: false
       - uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a  # v1
         if: false
-      - uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9  # v7.0.0
+      - uses: SonarSource/sonarqube-scan-action@299e4b793aaa83bf2aba7c9c14bedbb485688ec4  # v7.1.0
         if: false
-      - uses: SonarSource/sonarqube-scan-action/install-build-wrapper@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9  # v7.0.0
+      - uses: SonarSource/sonarqube-scan-action/install-build-wrapper@299e4b793aaa83bf2aba7c9c14bedbb485688ec4  # v7.1.0
         if: false
       - uses: tcort/github-action-markdown-link-check@e7c7a18363c842693fadde5d41a3bd3573a7a225  # v1.1.2
         if: false
