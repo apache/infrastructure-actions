@@ -43,18 +43,19 @@ import difflib
 import hashlib
 import json
 import os
+import platform
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
+
 from pathlib import Path
 
 import jsbeautifier
 import requests
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Confirm
 from rich.table import Table
 from rich.text import Text
 
@@ -68,6 +69,24 @@ def link(url: str, text: str) -> str:
     if _is_ci:
         return text
     return f"[link={url}]{text}[/link]"
+
+
+class UserQuit(Exception):
+    """Raised when user enters 'q' to quit."""
+
+
+def ask_confirm(prompt: str, default: bool = True) -> bool:
+    """Ask a y/n/q confirmation. Returns True/False, raises UserQuit on 'q'."""
+    suffix = " [Y/n/q]" if default else " [y/N/q]"
+    try:
+        answer = console.input(f"{prompt}{suffix} ").strip().lower()
+    except EOFError:
+        raise UserQuit
+    if answer == "q":
+        raise UserQuit
+    if not answer:
+        return default
+    return answer in ("y", "yes")
 
 # Path to the actions.yml file relative to the script
 ACTIONS_YML = Path(__file__).resolve().parent.parent / "actions.yml"
@@ -479,11 +498,12 @@ def show_approved_versions(
         )
         return selected["hash"]
 
-    if not Confirm.ask(
-        "\nWould you like to see the diff between an approved version and the one being checked?",
-        console=console,
-        default=True,
-    ):
+    try:
+        if not ask_confirm(
+            "\nWould you like to see the diff between an approved version and the one being checked?",
+        ):
+            return None
+    except UserQuit:
         return None
 
     # If there's only one other version, use it directly
@@ -505,14 +525,16 @@ def show_approved_versions(
 
     while True:
         try:
-            choice = console.input(f"\nEnter number [{default_idx}]: ").strip()
+            choice = console.input(f"\nEnter number [{default_idx}], or 'q' to skip: ").strip()
+            if choice.lower() == "q":
+                return None
             if not choice:
                 return other_versions[default_idx - 1]["hash"]
             idx = int(choice) - 1
             if 0 <= idx < len(other_versions):
                 return other_versions[idx]["hash"]
         except (ValueError, EOFError):
-            pass
+            return None
         console.print("[red]Invalid choice, try again[/red]")
 
 
@@ -665,9 +687,14 @@ def diff_approved_vs_new(
             if any(d in str(f) for f in all_files):
                 console.print(f"    [dim]⊘ {d}/ (not part of the action runtime)[/dim]")
 
-        if not ci_mode and not Confirm.ask("  Proceed with these exclusions?", console=console, default=True):
-            console.print("  [yellow]Aborted by user[/yellow]")
-            return
+        if not ci_mode:
+            try:
+                if not ask_confirm("  Proceed with these exclusions?"):
+                    console.print("  [yellow]Aborted by user[/yellow]")
+                    return
+            except UserQuit:
+                console.print("  [yellow]Aborted by user[/yellow]")
+                return
 
     skipped_by_user: list[tuple[Path, str]] = []  # (path, reason)
     quit_all = False
@@ -1534,12 +1561,933 @@ def _format_diff_text(lines: list[str]) -> Text:
     return diff_text
 
 
+def fetch_action_yml(org: str, repo: str, commit_hash: str, sub_path: str = "") -> str | None:
+    """Fetch action.yml content from GitHub at a specific commit."""
+    candidates = []
+    if sub_path:
+        candidates.extend([f"{sub_path}/action.yml", f"{sub_path}/action.yaml"])
+    candidates.extend(["action.yml", "action.yaml"])
+
+    for path in candidates:
+        url = f"https://raw.githubusercontent.com/{org}/{repo}/{commit_hash}/{path}"
+        try:
+            resp = requests.get(url, timeout=10)
+            if resp.ok:
+                return resp.text
+        except requests.RequestException:
+            continue
+    return None
+
+
+def fetch_file_from_github(org: str, repo: str, commit_hash: str, path: str) -> str | None:
+    """Fetch a file's content from GitHub at a specific commit."""
+    url = f"https://raw.githubusercontent.com/{org}/{repo}/{commit_hash}/{path}"
+    try:
+        resp = requests.get(url, timeout=10)
+        if resp.ok:
+            return resp.text
+    except requests.RequestException:
+        pass
+    return None
+
+
+def extract_composite_uses(action_yml_content: str) -> list[dict]:
+    """Extract all uses: references from composite action steps.
+
+    Returns a list of dicts with keys: raw (full string), org, repo, sub_path,
+    ref, is_hash_pinned, is_local, line_num.
+    """
+    results = []
+    for i, line in enumerate(action_yml_content.splitlines(), 1):
+        match = re.search(r"uses:\s+(.+?)(?:\s*#.*)?$", line.strip())
+        if not match:
+            continue
+        raw = match.group(1).strip().strip("'\"")
+
+        # Local action reference (e.g., ./.github/actions/foo)
+        if raw.startswith("./"):
+            results.append({
+                "raw": raw, "org": "", "repo": "", "sub_path": "",
+                "ref": "", "is_hash_pinned": True, "is_local": True,
+                "line_num": i,
+            })
+            continue
+
+        # Docker reference
+        if raw.startswith("docker://"):
+            results.append({
+                "raw": raw, "org": "", "repo": "", "sub_path": "",
+                "ref": "", "is_hash_pinned": True, "is_local": False,
+                "line_num": i, "is_docker": True,
+            })
+            continue
+
+        # Standard action reference: org/repo[/sub]@ref
+        if "@" not in raw:
+            continue
+        action_path, ref = raw.rsplit("@", 1)
+        parts = action_path.split("/")
+        if len(parts) < 2:
+            continue
+        org, repo = parts[0], parts[1]
+        sub_path = "/".join(parts[2:])
+        is_hash = bool(re.match(r"^[0-9a-f]{40}$", ref))
+
+        results.append({
+            "raw": raw, "org": org, "repo": repo, "sub_path": sub_path,
+            "ref": ref, "is_hash_pinned": is_hash, "is_local": False,
+            "line_num": i,
+        })
+
+    return results
+
+
+def _detect_action_type_from_yml(action_yml_content: str) -> str:
+    """Extract the using: field from an action.yml string."""
+    for line in action_yml_content.splitlines():
+        m = re.match(r"\s+using:\s*['\"]?(\S+?)['\"]?\s*$", line)
+        if m:
+            return m.group(1)
+    return "unknown"
+
+
+def analyze_nested_actions(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+    ci_mode: bool = False, gh: GitHubClient | None = None,
+    _depth: int = 0, _visited: set | None = None,
+    _checked: list | None = None,
+) -> tuple[list[str], list[dict]]:
+    """Analyze actions referenced in composite steps, recursing into ALL types.
+
+    Returns (warnings, checked_actions) where checked_actions is a list of dicts
+    describing each nested action that was inspected (for the summary).
+
+    For every nested action (composite, node, docker) the function:
+      - Checks hash-pinning
+      - Checks our approved list
+      - Detects the nested action type
+      - For composite nested actions: recurses into their steps
+      - For node nested actions: reports the node version and dist/ presence
+      - For docker nested actions: reports the docker image
+    """
+    MAX_DEPTH = 3
+    warnings: list[str] = []
+
+    if _visited is None:
+        _visited = set()
+    if _checked is None:
+        _checked = []
+
+    action_key = f"{org}/{repo}/{sub_path}@{commit_hash}"
+    if action_key in _visited:
+        return warnings, _checked
+    _visited.add(action_key)
+
+    indent = "  " * (_depth + 1)
+
+    action_yml = fetch_action_yml(org, repo, commit_hash, sub_path)
+    if not action_yml:
+        warnings.append(f"Could not fetch action.yml for {org}/{repo}@{commit_hash[:12]}")
+        return warnings, _checked
+
+    uses_refs = extract_composite_uses(action_yml)
+    if not uses_refs:
+        return warnings, _checked
+
+    if _depth == 0:
+        console.print()
+        console.rule("[bold]Nested Action Analysis[/bold]")
+
+    for ref_info in uses_refs:
+        raw = ref_info["raw"]
+        line = ref_info["line_num"]
+
+        if ref_info.get("is_local"):
+            console.print(f"{indent}[dim]line {line}:[/dim] [cyan]{raw}[/cyan] [dim](local action)[/dim]")
+            _checked.append({
+                "action": raw, "type": "local", "pinned": True,
+                "approved": True, "status": "ok",
+            })
+            continue
+
+        if ref_info.get("is_docker"):
+            console.print(f"{indent}[dim]line {line}:[/dim] [cyan]{raw}[/cyan] [dim](docker reference)[/dim]")
+            _checked.append({
+                "action": raw, "type": "docker-ref", "pinned": True,
+                "approved": True, "status": "ok",
+            })
+            continue
+
+        r_org, r_repo, r_sub = ref_info["org"], ref_info["repo"], ref_info["sub_path"]
+        ref_str = ref_info["ref"]
+        display_name = f"{r_org}/{r_repo}"
+        if r_sub:
+            display_name += f"/{r_sub}"
+
+        checked_entry: dict = {
+            "action": display_name, "ref": ref_str,
+            "pinned": ref_info["is_hash_pinned"],
+            "approved": False, "type": "unknown", "status": "ok",
+            "depth": _depth + 1,
+        }
+
+        if ref_info["is_hash_pinned"]:
+            # Check if this hash is in our approved_patterns / actions.yml
+            approved = find_approved_versions(r_org, r_repo)
+            approved_hashes = {v["hash"] for v in approved}
+            is_approved = ref_str in approved_hashes
+            checked_entry["approved"] = is_approved
+
+            # Try to resolve the tag via comment
+            tag_comment = ""
+            for yml_line in action_yml.splitlines():
+                if ref_str in yml_line and "#" in yml_line:
+                    tag_comment = yml_line.split("#", 1)[1].strip()
+                    break
+            checked_entry["tag"] = tag_comment
+
+            if is_approved:
+                console.print(
+                    f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
+                    f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{display_name}@{ref_str[:12]}[/link] "
+                    f"[green](hash-pinned, in our approved list)[/green]"
+                )
+            else:
+                tag_display = f" [dim]# {tag_comment}[/dim]" if tag_comment else ""
+                console.print(
+                    f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
+                    f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{display_name}@{ref_str[:12]}[/link]"
+                    f"{tag_display} [yellow](hash-pinned, NOT in our approved list)[/yellow]"
+                )
+                warnings.append(
+                    f"Nested action {display_name}@{ref_str[:12]} is not in our approved actions list"
+                )
+                checked_entry["status"] = "warn"
+
+            # GitHub-official orgs whose actions are trusted — skip recursive
+            # deep-dive but still report type for informational purposes.
+            TRUSTED_ORGS = {"actions", "github"}
+            is_trusted = r_org in TRUSTED_ORGS
+            checked_entry["trusted"] = is_trusted
+
+            # Fetch and inspect the nested action regardless of type
+            if _depth < MAX_DEPTH:
+                nested_yml = fetch_action_yml(r_org, r_repo, ref_str, r_sub)
+                if nested_yml:
+                    nested_type = _detect_action_type_from_yml(nested_yml)
+                    checked_entry["type"] = nested_type
+
+                    if is_trusted:
+                        console.print(
+                            f"{indent}  [dim]↳ {nested_type} action "
+                            f"(trusted org '{r_org}' — skipping deep inspection)[/dim]"
+                        )
+                    elif nested_type == "composite":
+                        console.print(
+                            f"{indent}  [dim]↳ {nested_type} action — analyzing nested steps...[/dim]"
+                        )
+                        nested_warnings, _ = analyze_nested_actions(
+                            r_org, r_repo, ref_str, r_sub,
+                            ci_mode=ci_mode, gh=gh,
+                            _depth=_depth + 1, _visited=_visited,
+                            _checked=_checked,
+                        )
+                        warnings.extend(nested_warnings)
+                    elif nested_type.startswith("node"):
+                        node_ver = nested_type.replace("node", "")
+                        # Check for compiled JS — try the main: path from action.yml
+                        has_dist = False
+                        main_path = ""
+                        for yml_line in nested_yml.splitlines():
+                            main_m = re.match(r"\s+main:\s*['\"]?(\S+?)['\"]?\s*$", yml_line)
+                            if main_m:
+                                main_path = main_m.group(1)
+                                break
+                        if main_path:
+                            main_check = fetch_file_from_github(r_org, r_repo, ref_str, main_path)
+                            has_dist = main_check is not None
+                        else:
+                            # Fallback: check dist/index.js
+                            dist_check = fetch_file_from_github(r_org, r_repo, ref_str, "dist/index.js")
+                            has_dist = dist_check is not None
+                        if has_dist:
+                            dist_status = f"[green]has {main_path or 'dist/'}[/green]"
+                        else:
+                            dist_status = "[dim]no compiled JS found[/dim]"
+                        console.print(
+                            f"{indent}  [dim]↳ {nested_type} action (Node.js {node_ver}), {dist_status}[/dim]"
+                        )
+                        # Check for nested uses: (some node actions are wrappers)
+                        nested_uses = extract_composite_uses(nested_yml)
+                        if nested_uses:
+                            console.print(
+                                f"{indent}  [dim]↳ node action also references "
+                                f"{len(nested_uses)} other action(s) — inspecting...[/dim]"
+                            )
+                            nested_warnings, _ = analyze_nested_actions(
+                                r_org, r_repo, ref_str, r_sub,
+                                ci_mode=ci_mode, gh=gh,
+                                _depth=_depth + 1, _visited=_visited,
+                                _checked=_checked,
+                            )
+                            warnings.extend(nested_warnings)
+                    elif nested_type == "docker":
+                        # Check the docker image reference
+                        for yml_line in nested_yml.splitlines():
+                            img_m = re.search(r"image:\s*['\"]?(\S+?)['\"]?\s*$", yml_line.strip())
+                            if img_m:
+                                image = img_m.group(1)
+                                if image.startswith("Dockerfile") or image.startswith("./"):
+                                    console.print(
+                                        f"{indent}  [dim]↳ docker action (local Dockerfile)[/dim]"
+                                    )
+                                elif "@sha256:" in image:
+                                    console.print(
+                                        f"{indent}  [dim]↳ docker action, image digest-pinned[/dim]"
+                                    )
+                                else:
+                                    console.print(
+                                        f"{indent}  [dim]↳ docker action, image: {image}[/dim]"
+                                    )
+                                break
+                    else:
+                        console.print(
+                            f"{indent}  [dim]↳ {nested_type} action[/dim]"
+                        )
+        else:
+            console.print(
+                f"{indent}[dim]line {line}:[/dim] [red]✗[/red] "
+                f"{display_name}@{ref_str} [red bold](NOT hash-pinned — uses tag/branch!)[/red bold]"
+            )
+            warnings.append(
+                f"Nested action {display_name}@{ref_str} is NOT pinned to a commit hash"
+            )
+            checked_entry["status"] = "fail"
+
+        _checked.append(checked_entry)
+
+    return warnings, _checked
+
+
+def analyze_dockerfile(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+) -> list[str]:
+    """Analyze Dockerfiles in the action for security concerns.
+
+    Returns a list of warning strings.
+    """
+    warnings: list[str] = []
+
+    # Try common Dockerfile locations
+    candidates = ["Dockerfile"]
+    if sub_path:
+        candidates.insert(0, f"{sub_path}/Dockerfile")
+
+    found_dockerfile = False
+    for path in candidates:
+        content = fetch_file_from_github(org, repo, commit_hash, path)
+        if content is None:
+            continue
+        found_dockerfile = True
+
+        console.print()
+        console.rule(f"[bold]Dockerfile Analysis ({path})[/bold]")
+
+        lines = content.splitlines()
+        from_lines = []
+        suspicious_cmds = []
+
+        for i, line in enumerate(lines, 1):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+
+            # Check FROM lines for pinning
+            from_match = re.match(r"FROM\s+(.+?)(?:\s+AS\s+\S+)?$", stripped, re.IGNORECASE)
+            if from_match:
+                image = from_match.group(1).strip()
+                from_lines.append((i, image))
+                # Check if it uses a digest
+                if "@sha256:" in image:
+                    console.print(
+                        f"  [green]✓[/green] [dim]line {i}:[/dim] FROM {image} "
+                        f"[green](digest-pinned)[/green]"
+                    )
+                elif ":" in image and not image.endswith(":latest"):
+                    tag = image.split(":")[-1]
+                    console.print(
+                        f"  [yellow]~[/yellow] [dim]line {i}:[/dim] FROM {image} "
+                        f"[yellow](tag-pinned to '{tag}', but not digest-pinned)[/yellow]"
+                    )
+                    warnings.append(f"Dockerfile FROM {image} is tag-pinned, not digest-pinned")
+                else:
+                    console.print(
+                        f"  [red]✗[/red] [dim]line {i}:[/dim] FROM {image} "
+                        f"[red bold](unpinned or :latest!)[/red bold]"
+                    )
+                    warnings.append(f"Dockerfile FROM {image} is not pinned")
+                continue
+
+            # Flag potentially suspicious commands
+            lower = stripped.lower()
+            if any(cmd in lower for cmd in ["curl ", "wget ", "git clone"]):
+                if "requirements" not in lower and "pip" not in lower:
+                    suspicious_cmds.append((i, stripped))
+            # Check for network fetches to unusual places
+            if re.search(r"https?://(?!github\.com|pypi\.org|registry\.npmjs\.org|dl-cdn\.alpinelinux\.org)", lower):
+                url_match = re.search(r"(https?://\S+)", stripped)
+                if url_match:
+                    suspicious_cmds.append((i, f"External URL: {url_match.group(1)}"))
+
+        if suspicious_cmds:
+            console.print()
+            console.print("  [yellow]Potentially suspicious commands:[/yellow]")
+            for line_num, cmd in suspicious_cmds:
+                console.print(f"    [dim]line {line_num}:[/dim] [yellow]{cmd}[/yellow]")
+                warnings.append(f"Dockerfile line {line_num}: {cmd[:80]}")
+        elif from_lines:
+            console.print(f"  [green]✓[/green] No suspicious commands detected")
+
+    if not found_dockerfile:
+        # Check action.yml for docker image references
+        action_yml = fetch_action_yml(org, repo, commit_hash, sub_path)
+        if action_yml:
+            for line in action_yml.splitlines():
+                m = re.search(r"image:\s*['\"]?(docker://\S+)['\"]?", line.strip())
+                if m:
+                    console.print()
+                    console.rule("[bold]Docker Image Analysis[/bold]")
+                    image = m.group(1)
+                    console.print(f"  [dim]Docker image reference:[/dim] {image}")
+                    if "@sha256:" in image:
+                        console.print(f"  [green]✓[/green] Image is digest-pinned")
+                    else:
+                        console.print(f"  [yellow]![/yellow] Image is NOT digest-pinned")
+                        warnings.append(f"Docker image {image} is not digest-pinned")
+
+    return warnings
+
+
+def analyze_scripts(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+) -> list[str]:
+    """Analyze scripts referenced by the action for suspicious patterns.
+
+    Returns a list of warning strings.
+    """
+    warnings: list[str] = []
+    action_yml = fetch_action_yml(org, repo, commit_hash, sub_path)
+    if not action_yml:
+        return warnings
+
+    # Collect script files referenced in the action
+    script_files: set[str] = set()
+
+    # Look for scripts in run: blocks and in COPY/references
+    for line in action_yml.splitlines():
+        stripped = line.strip()
+        # Skip lines that are GitHub Actions expressions
+        if "${{" in stripped and "}}" in stripped:
+            continue
+        # Python/shell scripts in run blocks
+        for ext in (".py", ".sh", ".bash", ".rb", ".pl"):
+            matches = re.findall(r"(?<![.\w])[\w][\w./-]*" + re.escape(ext) + r"\b", stripped)
+            for m in matches:
+                # Clean up the path
+                clean = m.lstrip("./").strip("'\"")
+                # Skip GitHub Actions context references (e.g. steps.foo.outputs.py)
+                if "steps." in clean or "outputs." in clean or "inputs." in clean:
+                    continue
+                # Skip URLs (e.g. upload.pypi.org -> upload.py match)
+                if re.search(r"https?://.*" + re.escape(m), stripped):
+                    continue
+                if clean and ("/" not in clean or clean.count("/") <= 2):
+                    script_files.add(clean)
+
+    # Also look for scripts referenced in Dockerfile
+    dockerfile_content = fetch_file_from_github(org, repo, commit_hash, "Dockerfile")
+    if sub_path:
+        sub_df = fetch_file_from_github(org, repo, commit_hash, f"{sub_path}/Dockerfile")
+        if sub_df:
+            dockerfile_content = sub_df
+    if dockerfile_content:
+        for line in dockerfile_content.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("COPY") or stripped.startswith("ADD"):
+                for ext in (".py", ".sh", ".bash"):
+                    matches = re.findall(r"[\w./-]+" + re.escape(ext), stripped)
+                    for m in matches:
+                        # Strip absolute container paths to get the source filename
+                        clean = m.strip().lstrip("/")
+                        # Remove container directory prefixes (e.g. /app/foo.sh -> foo.sh)
+                        if "/" in clean:
+                            clean = clean.rsplit("/", 1)[-1]
+                        if clean:
+                            script_files.add(clean)
+            if stripped.startswith("ENTRYPOINT") or stripped.startswith("CMD"):
+                for ext in (".py", ".sh", ".bash"):
+                    matches = re.findall(r"[\w./-]+" + re.escape(ext), stripped)
+                    for m in matches:
+                        clean = m.strip().lstrip("/")
+                        if "/" in clean:
+                            clean = clean.rsplit("/", 1)[-1]
+                        if clean:
+                            script_files.add(clean)
+
+    if not script_files:
+        return warnings
+
+    console.print()
+    console.rule("[bold]Script Analysis[/bold]")
+
+    suspicious_patterns = [
+        (r"eval\s*\(", "eval() call — potential code injection"),
+        (r"exec\s*\(", "exec() call — potential code injection"),
+        (r"subprocess\.call\(.*shell\s*=\s*True", "subprocess with shell=True"),
+        (r"os\.system\s*\(", "os.system() call"),
+        (r"base64\.b64decode|atob\(", "base64 decoding — potential obfuscation"),
+        (r"\\x[0-9a-f]{2}", "hex-escaped strings — potential obfuscation"),
+        (r"requests?\.(get|post|put|delete|patch)\s*\(", "HTTP request (review target URL)"),
+        (r"urllib\.request", "urllib request (review target URL)"),
+        (r"socket\.", "socket operations"),
+    ]
+
+    for script_path in sorted(script_files):
+        base_path = f"{sub_path}/{script_path}" if sub_path else script_path
+        content = fetch_file_from_github(org, repo, commit_hash, base_path)
+        if content is None:
+            # Try without sub_path
+            content = fetch_file_from_github(org, repo, commit_hash, script_path)
+        if content is None:
+            console.print(f"  [dim]⊘ {script_path} (not found at commit)[/dim]")
+            continue
+
+        line_count = len(content.splitlines())
+        console.print(
+            f"  [green]✓[/green] [link=https://github.com/{org}/{repo}/blob/{commit_hash}/{base_path}]"
+            f"{script_path}[/link] [dim]({line_count} lines)[/dim]"
+        )
+
+        # Check for suspicious patterns
+        findings: list[tuple[int, str, str]] = []
+        for i, line in enumerate(content.splitlines(), 1):
+            for pattern, description in suspicious_patterns:
+                if re.search(pattern, line):
+                    findings.append((i, description, line.strip()[:100]))
+
+        if findings:
+            # Group by pattern to avoid flooding
+            seen_patterns: set[str] = set()
+            for line_num, desc, snippet in findings:
+                if desc not in seen_patterns:
+                    seen_patterns.add(desc)
+                    console.print(
+                        f"    [yellow]![/yellow] [dim]line {line_num}:[/dim] "
+                        f"[yellow]{desc}[/yellow]"
+                    )
+                    console.print(f"      [dim]{snippet}[/dim]")
+            if len(findings) > len(seen_patterns):
+                console.print(
+                    f"    [dim]({len(findings)} total findings, "
+                    f"{len(findings) - len(seen_patterns)} similar suppressed)[/dim]"
+                )
+
+    return warnings
+
+
+def analyze_dependency_pinning(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+) -> list[str]:
+    """Analyze dependency files for pinning practices.
+
+    Returns a list of warning strings.
+    """
+    warnings: list[str] = []
+
+    # Check for Python requirements files
+    req_candidates = [
+        "requirements.txt", "requirements/runtime.txt",
+        "requirements/runtime.in", "requirements/runtime-prerequisites.txt",
+        "requirements/runtime-prerequisites.in",
+    ]
+    if sub_path:
+        req_candidates = [f"{sub_path}/{r}" for r in req_candidates] + req_candidates
+
+    found_reqs = False
+    for req_path in req_candidates:
+        content = fetch_file_from_github(org, repo, commit_hash, req_path)
+        if content is None:
+            continue
+
+        if not found_reqs:
+            console.print()
+            console.rule("[bold]Dependency Pinning Analysis[/bold]")
+            found_reqs = True
+
+        lines = content.splitlines()
+        total_deps = 0
+        pinned_deps = 0
+        unpinned_deps = []
+        has_hashes = False
+
+        for line in lines:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#") or stripped.startswith("-"):
+                continue
+            # Skip constraint references
+            if stripped.startswith("-c "):
+                continue
+
+            total_deps += 1
+            # Check for hash pinning
+            if "--hash=" in stripped or "\\$" in stripped:
+                has_hashes = True
+
+            # Check for version pinning (==, ~=, >=)
+            if "==" in stripped:
+                pinned_deps += 1
+            elif "~=" in stripped or ">=" in stripped:
+                pinned_deps += 1
+                # ~= and >= are less strict than ==
+                pkg_name = re.split(r"[~>=<!\s]", stripped)[0]
+                if ".in" in req_path:
+                    pass  # .in files are expected to have loose pins
+                else:
+                    unpinned_deps.append((pkg_name, stripped))
+            else:
+                pkg_name = re.split(r"[~>=<!\s\[]", stripped)[0]
+                if pkg_name and not pkg_name.startswith("("):
+                    unpinned_deps.append((pkg_name, stripped))
+
+        # Determine if this is a .in (input) or .txt (compiled) file
+        is_compiled = req_path.endswith(".txt")
+        file_type = "compiled" if is_compiled else "input"
+
+        if total_deps > 0:
+            pin_pct = (pinned_deps / total_deps) * 100
+            status = "[green]✓[/green]" if pin_pct >= 90 else "[yellow]![/yellow]"
+            console.print(
+                f"  {status} [link=https://github.com/{org}/{repo}/blob/{commit_hash}/{req_path}]"
+                f"{req_path}[/link] [dim]({file_type})[/dim]: "
+                f"{pinned_deps}/{total_deps} deps pinned ({pin_pct:.0f}%)"
+            )
+
+            if unpinned_deps and is_compiled:
+                for pkg, spec in unpinned_deps[:5]:
+                    console.print(f"    [yellow]![/yellow] [dim]{spec}[/dim]")
+                    warnings.append(f"{req_path}: {pkg} not strictly pinned")
+                if len(unpinned_deps) > 5:
+                    console.print(f"    [dim]... and {len(unpinned_deps) - 5} more[/dim]")
+
+    # Check for package.json
+    pkg_json_path = f"{sub_path}/package.json" if sub_path else "package.json"
+    content = fetch_file_from_github(org, repo, commit_hash, pkg_json_path)
+    if content:
+        if not found_reqs:
+            console.print()
+            console.rule("[bold]Dependency Pinning Analysis[/bold]")
+            found_reqs = True
+
+        try:
+            pkg = json.loads(content)
+            for dep_type in ("dependencies", "devDependencies"):
+                deps = pkg.get(dep_type, {})
+                if not deps:
+                    continue
+                unpinned = [
+                    (name, ver) for name, ver in deps.items()
+                    if not re.match(r"^\d+\.\d+\.\d+$", ver)  # exact version only
+                ]
+                total = len(deps)
+                pinned = total - len(unpinned)
+                pin_pct = (pinned / total) * 100 if total else 100
+                status = "[green]✓[/green]" if pin_pct >= 80 else "[yellow]![/yellow]"
+                console.print(
+                    f"  {status} {pkg_json_path} [{dep_type}]: "
+                    f"{pinned}/{total} deps exact-pinned ({pin_pct:.0f}%)"
+                )
+                if unpinned[:5]:
+                    for name, ver in unpinned[:5]:
+                        console.print(f"    [dim]{name}: {ver}[/dim]")
+        except (json.JSONDecodeError, KeyError):
+            pass
+
+    # Check for lock files existence
+    lock_files = ["package-lock.json", "yarn.lock", "pnpm-lock.yaml"]
+    if sub_path:
+        lock_files = [f"{sub_path}/{lf}" for lf in lock_files] + lock_files
+    for lf_path in lock_files:
+        content = fetch_file_from_github(org, repo, commit_hash, lf_path)
+        if content is not None:
+            if not found_reqs:
+                console.print()
+                console.rule("[bold]Dependency Pinning Analysis[/bold]")
+                found_reqs = True
+            console.print(f"  [green]✓[/green] Lock file present: {lf_path}")
+            break
+
+    return warnings
+
+
+def analyze_action_metadata(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+) -> list[str]:
+    """Analyze action.yml metadata for security-relevant fields.
+
+    Checks: permissions requests, environment variable usage, inline shell
+    commands in run: blocks, github_token exposure, and GITHUB_ENV writes.
+    """
+    warnings: list[str] = []
+    action_yml = fetch_action_yml(org, repo, commit_hash, sub_path)
+    if not action_yml:
+        return warnings
+
+    console.print()
+    console.rule("[bold]Action Metadata Analysis[/bold]")
+
+    lines = action_yml.splitlines()
+
+    # --- Check inputs for secrets / sensitive defaults ---
+    sensitive_input_patterns = [
+        (r"default:\s*\$\{\{\s*secrets\.", "input defaults to a secret"),
+        (r"default:\s*\$\{\{\s*github\.token", "input defaults to github.token"),
+    ]
+    for i, line in enumerate(lines, 1):
+        for pattern, desc in sensitive_input_patterns:
+            if re.search(pattern, line):
+                console.print(
+                    f"  [yellow]![/yellow] [dim]line {i}:[/dim] "
+                    f"[yellow]{desc}[/yellow]"
+                )
+                console.print(f"    [dim]{line.strip()[:100]}[/dim]")
+                warnings.append(f"action.yml line {i}: {desc}")
+
+    # --- Analyze inline run: blocks ---
+    in_run_block = False
+    run_lines: list[tuple[int, str]] = []
+    dangerous_shell_patterns = [
+        (r"curl\s+.*\|\s*(ba)?sh", "pipe-to-shell (curl | sh) — high risk"),
+        (r"wget\s+.*\|\s*(ba)?sh", "pipe-to-shell (wget | sh) — high risk"),
+        (r'\$\{\{\s*inputs\.', "direct input interpolation in shell (injection risk)"),
+        (r'GITHUB_ENV', "writes to GITHUB_ENV (can affect subsequent steps)"),
+        (r'GITHUB_PATH', "writes to GITHUB_PATH (can affect subsequent steps)"),
+        (r'GITHUB_OUTPUT', None),  # Normal — just note it
+    ]
+
+    shell_findings: list[tuple[int, str, str]] = []
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if re.match(r"run:\s*\|", stripped) or re.match(r"run:\s+\S", stripped):
+            in_run_block = True
+            continue
+        if in_run_block:
+            # End of run block: next key at same/lower indent
+            if stripped and not line[0].isspace():
+                in_run_block = False
+            elif stripped and re.match(r"\s+\w+:", line) and not line.startswith("        "):
+                # New YAML key at step level
+                if not stripped.startswith("#") and not stripped.startswith("-"):
+                    in_run_block = False
+
+        if in_run_block or (re.match(r"\s+run:\s+", line)):
+            for pattern, desc in dangerous_shell_patterns:
+                if desc is None:
+                    continue
+                if re.search(pattern, line):
+                    shell_findings.append((i, desc, stripped[:100]))
+
+    if shell_findings:
+        # Deduplicate by description
+        seen: set[str] = set()
+        shown = 0
+        for line_num, desc, snippet in shell_findings:
+            key = desc
+            if key not in seen:
+                seen.add(key)
+                console.print(
+                    f"  [yellow]![/yellow] [dim]line {line_num}:[/dim] "
+                    f"[yellow]{desc}[/yellow]"
+                )
+                console.print(f"    [dim]{snippet}[/dim]")
+                if "high risk" in desc or "injection" in desc:
+                    warnings.append(f"action.yml line {line_num}: {desc}")
+                shown += 1
+        if len(shell_findings) > shown:
+            console.print(
+                f"  [dim]({len(shell_findings)} total shell findings, "
+                f"{len(shell_findings) - shown} similar suppressed)[/dim]"
+            )
+    else:
+        console.print("  [green]✓[/green] No dangerous shell patterns in run: blocks")
+
+    # --- Check for environment variable exposure ---
+    env_secrets = []
+    for i, line in enumerate(lines, 1):
+        if re.search(r"\$\{\{\s*secrets\.", line):
+            env_secrets.append((i, line.strip()[:100]))
+    if env_secrets:
+        console.print(f"  [dim]ℹ[/dim] Secrets referenced in {len(env_secrets)} place(s):")
+        for line_num, snippet in env_secrets[:5]:
+            console.print(f"    [dim]line {line_num}: {snippet}[/dim]")
+    else:
+        console.print("  [green]✓[/green] No secrets referenced")
+
+    # --- Count total steps and run blocks ---
+    step_count = sum(1 for line in lines if re.match(r"\s+- name:", line))
+    run_count = sum(1 for line in lines if re.match(r"\s+run:", line.rstrip()))
+    uses_count = sum(1 for line in lines if re.match(r"\s+uses:", line.rstrip()))
+    console.print(
+        f"  [dim]ℹ[/dim] {step_count} step(s): "
+        f"{uses_count} uses: action(s) + {run_count} run: block(s)"
+    )
+
+    return warnings
+
+
+def analyze_repo_metadata(
+    org: str, repo: str, commit_hash: str,
+) -> list[str]:
+    """Check repo-level signals: license, recent commits, contributor count."""
+    warnings: list[str] = []
+
+    console.print()
+    console.rule("[bold]Repository Metadata[/bold]")
+
+    # Check for LICENSE file
+    for license_name in ("LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING"):
+        content = fetch_file_from_github(org, repo, commit_hash, license_name)
+        if content is not None:
+            # Try to identify the license type from first few lines
+            first_lines = content[:500].lower()
+            license_type = "unknown"
+            for name, pattern in [
+                ("MIT", "mit license"),
+                ("Apache 2.0", "apache license"),
+                ("BSD", "bsd"),
+                ("GPL", "gnu general public"),
+                ("ISC", "isc license"),
+                ("MPL", "mozilla public"),
+            ]:
+                if pattern in first_lines:
+                    license_type = name
+                    break
+            console.print(f"  [green]✓[/green] License: {license_name} ({license_type})")
+            break
+    else:
+        console.print(f"  [yellow]![/yellow] No LICENSE file found")
+        warnings.append("No LICENSE file found in repository")
+
+    # Check for security policy
+    for sec_name in ("SECURITY.md", ".github/SECURITY.md"):
+        content = fetch_file_from_github(org, repo, commit_hash, sec_name)
+        if content is not None:
+            console.print(f"  [green]✓[/green] Security policy: {sec_name}")
+            break
+    else:
+        console.print(f"  [dim]ℹ[/dim] No SECURITY.md found")
+
+    # Show the org/owner for trust signal
+    well_known_orgs = {
+        "actions", "github", "google-github-actions", "aws-actions",
+        "azure", "docker", "hashicorp", "pypa", "gradle",
+    }
+    if org in well_known_orgs:
+        console.print(f"  [green]✓[/green] Well-known org: [bold]{org}[/bold]")
+    else:
+        console.print(f"  [dim]ℹ[/dim] Org: {org} (not in well-known list)")
+
+    return warnings
+
+
+def show_verification_summary(
+    org: str, repo: str, commit_hash: str, sub_path: str,
+    action_type: str, is_js_action: bool, all_match: bool,
+    non_js_warnings: list[str] | None,
+    checked_actions: list[dict] | None,
+    checks_performed: list[tuple[str, str, str]],
+    ci_mode: bool = False,
+) -> None:
+    """Show a structured summary of all checks performed.
+
+    checks_performed is a list of (check_name, status, detail) where
+    status is one of "pass", "warn", "fail", "skip", "info".
+    """
+    console.print()
+    console.rule("[bold]Verification Summary[/bold]")
+
+    display_name = f"{org}/{repo}"
+    if sub_path:
+        display_name += f"/{sub_path}"
+
+    action_url = f"https://github.com/{org}/{repo}/tree/{commit_hash}"
+    if sub_path:
+        action_url += f"/{sub_path}"
+
+    # Summary table
+    table = Table(show_header=True, border_style="blue", title=f"[bold]{display_name}@{commit_hash[:12]}[/bold]")
+    table.add_column("Check", style="bold", min_width=30)
+    table.add_column("Status", min_width=6, justify="center")
+    table.add_column("Detail", max_width=60)
+
+    status_icons = {
+        "pass": "[green]✓[/green]",
+        "warn": "[yellow]![/yellow]",
+        "fail": "[red]✗[/red]",
+        "skip": "[dim]⊘[/dim]",
+        "info": "[dim]ℹ[/dim]",
+    }
+
+    for check_name, status, detail in checks_performed:
+        icon = status_icons.get(status, "[dim]?[/dim]")
+        table.add_row(check_name, icon, detail)
+
+    console.print(table)
+
+    # Show nested actions sub-table if any were checked
+    if checked_actions:
+        console.print()
+        nested_table = Table(
+            show_header=True, border_style="cyan",
+            title="[bold]Nested Actions Inspected[/bold]",
+        )
+        nested_table.add_column("Action", min_width=30)
+        nested_table.add_column("Type", min_width=10)
+        nested_table.add_column("Pinned", justify="center")
+        nested_table.add_column("Approved", justify="center")
+        nested_table.add_column("Trusted", justify="center")
+
+        for entry in checked_actions:
+            action_name = entry.get("action", "?")
+            atype = entry.get("type", "?")
+            tag = entry.get("tag", "")
+            if tag:
+                action_name += f" ({tag})"
+            pinned_icon = "[green]✓[/green]" if entry.get("pinned") else "[red]✗[/red]"
+            approved_icon = "[green]✓[/green]" if entry.get("approved") else "[yellow]—[/yellow]"
+            if entry.get("type") in ("local", "docker-ref"):
+                approved_icon = "[dim]n/a[/dim]"
+            if entry.get("trusted"):
+                trusted_icon = "[green]✓[/green]"
+            elif entry.get("type") in ("local", "docker-ref"):
+                trusted_icon = "[dim]n/a[/dim]"
+            else:
+                trusted_icon = "[dim]—[/dim]"
+            nested_table.add_row(action_name, atype, pinned_icon, approved_icon, trusted_icon)
+
+        console.print(nested_table)
+
+
 def verify_single_action(
     action_ref: str, gh: GitHubClient | None = None, ci_mode: bool = False,
     cache: bool = True, show_build_steps: bool = False,
 ) -> bool:
     """Verify a single action reference. Returns True if verification passed."""
     org, repo, sub_path, commit_hash = parse_action_ref(action_ref)
+
+    # Track all checks performed for the summary
+    checks_performed: list[tuple[str, str, str]] = []
+    non_js_warnings: list[str] = []
+    checked_actions: list[dict] = []
 
     with tempfile.TemporaryDirectory(prefix="verify-action-") as tmp:
         work_dir = Path(tmp)
@@ -1549,6 +2497,8 @@ def verify_single_action(
             cache=cache, show_build_steps=show_build_steps,
         )
 
+        checks_performed.append(("Action type detection", "info", action_type))
+
         # Non-JavaScript actions (docker, composite) don't have compiled JS to verify
         is_js_action = action_type.startswith("node") or action_type in ("unknown",)
         if not is_js_action:
@@ -1556,16 +2506,111 @@ def verify_single_action(
             console.print(
                 Panel(
                     f"[yellow]This is a [bold]{action_type}[/bold] action, not a JavaScript action.\n"
-                    f"Build verification of compiled JS is not applicable.[/yellow]",
+                    f"Build verification of compiled JS is not applicable — "
+                    f"running composite/docker-specific checks instead.[/yellow]",
                     border_style="yellow",
-                    title="SKIPPED",
+                    title="NON-JS ACTION",
                 )
             )
             all_match = True
+            checks_performed.append(("JS build verification", "skip", f"not applicable for {action_type}"))
+
+            # Run nested action analysis (for ALL action types, not just composite)
+            nested_warnings, checked_actions = analyze_nested_actions(
+                org, repo, commit_hash, sub_path,
+                ci_mode=ci_mode, gh=gh,
+            )
+            non_js_warnings.extend(nested_warnings)
+            if checked_actions:
+                unpinned = sum(1 for a in checked_actions if not a.get("pinned"))
+                unapproved = sum(
+                    1 for a in checked_actions
+                    if not a.get("approved") and a.get("type") not in ("local", "docker-ref")
+                )
+                status = "pass"
+                detail = f"{len(checked_actions)} action(s) inspected"
+                if unpinned:
+                    status = "fail"
+                    detail += f", {unpinned} NOT hash-pinned"
+                elif unapproved:
+                    status = "warn"
+                    detail += f", {unapproved} not in approved list"
+                checks_performed.append(("Nested action analysis", status, detail))
+            else:
+                checks_performed.append(("Nested action analysis", "info", "no nested uses: found"))
+
+            if action_type in ("composite", "docker"):
+                docker_warnings = analyze_dockerfile(org, repo, commit_hash, sub_path)
+                non_js_warnings.extend(docker_warnings)
+                if docker_warnings:
+                    checks_performed.append(("Dockerfile analysis", "warn", f"{len(docker_warnings)} warning(s)"))
+                else:
+                    # Check if Dockerfile exists
+                    df_exists = fetch_file_from_github(org, repo, commit_hash, "Dockerfile") is not None
+                    if df_exists:
+                        checks_performed.append(("Dockerfile analysis", "pass", "no issues found"))
+                    else:
+                        checks_performed.append(("Dockerfile analysis", "skip", "no Dockerfile"))
+
+            script_warnings = analyze_scripts(org, repo, commit_hash, sub_path)
+            non_js_warnings.extend(script_warnings)
+            checks_performed.append((
+                "Script analysis",
+                "warn" if script_warnings else "pass",
+                f"{len(script_warnings)} warning(s)" if script_warnings else "no suspicious patterns",
+            ))
+
+            dep_warnings = analyze_dependency_pinning(org, repo, commit_hash, sub_path)
+            non_js_warnings.extend(dep_warnings)
+            checks_performed.append((
+                "Dependency pinning",
+                "warn" if dep_warnings else "pass",
+                f"{len(dep_warnings)} warning(s)" if dep_warnings else "dependencies pinned",
+            ))
+
+            # Action metadata analysis (permissions, shell, env)
+            metadata_warnings = analyze_action_metadata(org, repo, commit_hash, sub_path)
+            non_js_warnings.extend(metadata_warnings)
+            checks_performed.append((
+                "Action metadata (shell/env/secrets)",
+                "warn" if metadata_warnings else "pass",
+                f"{len(metadata_warnings)} warning(s)" if metadata_warnings else "no issues",
+            ))
+
+            # Repo metadata (license, security policy, org trust)
+            repo_warnings = analyze_repo_metadata(org, repo, commit_hash)
+            non_js_warnings.extend(repo_warnings)
+            checks_performed.append((
+                "Repository metadata",
+                "warn" if repo_warnings else "pass",
+                f"{len(repo_warnings)} warning(s)" if repo_warnings else "ok",
+            ))
+
+            # Show warnings summary
+            if non_js_warnings:
+                console.print()
+                console.print(
+                    Panel(
+                        "\n".join(f"  [yellow]![/yellow] {w}" for w in non_js_warnings),
+                        title=f"[yellow bold]{len(non_js_warnings)} Warning(s)[/yellow bold]",
+                        border_style="yellow",
+                        padding=(0, 1),
+                    )
+                )
+            else:
+                console.print()
+                console.print(
+                    "  [green]✓[/green] All checks passed with no warnings"
+                )
         else:
             all_match = diff_js_files(
                 original_dir, rebuilt_dir, org, repo, commit_hash, out_dir_name,
             )
+            checks_performed.append((
+                "JS build verification",
+                "pass" if all_match else "fail",
+                "compiled JS matches rebuild" if all_match else "DIFFERENCES DETECTED",
+            ))
 
             # If no compiled JS was found in dist/ but node_modules is vendored,
             # verify node_modules instead
@@ -1579,16 +2624,31 @@ def verify_single_action(
         # Check for previously approved versions and offer to diff
         approved = find_approved_versions(org, repo)
         if approved:
+            checks_performed.append(("Approved versions", "info", f"{len(approved)} version(s) on file"))
             selected_hash = show_approved_versions(org, repo, commit_hash, approved, gh=gh, ci_mode=ci_mode)
             if selected_hash:
                 show_commits_between(org, repo, selected_hash, commit_hash, gh=gh)
                 diff_approved_vs_new(org, repo, selected_hash, commit_hash, work_dir, ci_mode=ci_mode)
-        elif not is_js_action:
-            console.print(
-                "  [dim]No previously approved versions found — "
-                "this appears to be a new action[/dim]"
-            )
+                checks_performed.append(("Source diff vs approved", "info", f"compared against {selected_hash[:12]}"))
+        else:
+            checks_performed.append(("Approved versions", "info", "new action (none on file)"))
+            if not is_js_action:
+                console.print(
+                    "  [dim]No previously approved versions found — "
+                    "this appears to be a new action[/dim]"
+                )
 
+    # Show verification summary
+    show_verification_summary(
+        org, repo, commit_hash, sub_path,
+        action_type, is_js_action, all_match,
+        non_js_warnings if not is_js_action else None,
+        checked_actions if checked_actions else None,
+        checks_performed,
+        ci_mode=ci_mode,
+    )
+
+    # Final result banner
     console.print()
     checklist_hint = f"\n[dim]Security review checklist: {SECURITY_CHECKLIST_URL}[/dim]"
     if all_match:
@@ -1598,8 +2658,17 @@ def verify_single_action(
             else:
                 result_msg = "[green bold]All compiled JavaScript matches the rebuild[/green bold]"
         else:
-            result_msg = f"[green bold]{action_type} action — no compiled JS to verify[/green bold]"
-        console.print(Panel(result_msg + checklist_hint, border_style="green", title="RESULT"))
+            if non_js_warnings:
+                result_msg = (
+                    f"[yellow bold]{action_type} action — {len(non_js_warnings)} warning(s) "
+                    f"found during analysis (review above)[/yellow bold]"
+                )
+            else:
+                result_msg = (
+                    f"[green bold]{action_type} action — all checks passed[/green bold]"
+                )
+        border = "yellow" if not is_js_action and non_js_warnings else "green"
+        console.print(Panel(result_msg + checklist_hint, border_style=border, title="RESULT"))
     else:
         console.print(
             Panel(
@@ -1614,7 +2683,11 @@ def verify_single_action(
 
 
 def extract_action_refs_from_pr(pr_number: int, gh: GitHubClient | None = None) -> list[str]:
-    """Extract all new action org/repo[/sub]@hash refs from a dependabot PR diff.
+    """Extract all new action org/repo[/sub]@hash refs from a PR diff.
+
+    Looks in two places:
+    1. Workflow files: ``uses: org/repo@hash`` lines
+    2. actions.yml: top-level ``org/repo:`` keys followed by indented commit hashes
 
     Returns a deduplicated list of action references found in added lines.
     """
@@ -1626,8 +2699,15 @@ def extract_action_refs_from_pr(pr_number: int, gh: GitHubClient | None = None) 
 
     seen: set[str] = set()
     refs: list[str] = []
+
+    # Track the current action key from actions.yml for multi-line matching
+    # Format:
+    #   +org/repo:
+    #   +  <40-hex-hash>:
+    actions_yml_key: str | None = None
+
     for line in diff_text.splitlines():
-        # Match lines like: +      - uses: org/repo/sub@hash  # tag
+        # --- Workflow files: uses: org/repo@hash ---
         # Also match 'use:' (common typo for 'uses:')
         match = re.search(r"^\+.*uses?:\s+([^@\s]+)@([0-9a-f]{40})", line)
         if match:
@@ -1637,6 +2717,33 @@ def extract_action_refs_from_pr(pr_number: int, gh: GitHubClient | None = None) 
             if ref not in seen:
                 seen.add(ref)
                 refs.append(ref)
+            continue
+
+        # --- actions.yml: org/repo: as top-level key ---
+        # Match added lines like: +org/repo:  or  +org/repo/sub:
+        key_match = re.match(r"^\+([a-zA-Z0-9_.-]+/[a-zA-Z0-9_./-]+):\s*$", line)
+        if key_match:
+            actions_yml_key = key_match.group(1).rstrip("/")
+            continue
+
+        # Match indented hash under the current key: +  <40-hex>:
+        if actions_yml_key:
+            hash_match = re.match(r"^\+\s+['\"]?([0-9a-f]{40})['\"]?:\s*$", line)
+            if hash_match:
+                commit_hash = hash_match.group(1)
+                ref = f"{actions_yml_key}@{commit_hash}"
+                if ref not in seen:
+                    seen.add(ref)
+                    refs.append(ref)
+                continue
+
+            # Still under the same key if the line is an added indented property
+            # (e.g. +    tag: v1.0.0) — don't reset
+            if re.match(r"^\+\s{4,}", line):
+                continue
+
+            # Any other line resets the key context
+            actions_yml_key = None
 
     return refs
 
@@ -1724,11 +2831,10 @@ def check_dependabot_prs(gh: GitHubClient, cache: bool = True, show_build_steps:
     console.print(table)
     console.print(f"\n  [dim]{len(prs)} eligible PR(s) to review[/dim]")
 
-    if not Confirm.ask(
-        "\n  Review these PRs?",
-        console=console,
-        default=True,
-    ):
+    try:
+        if not ask_confirm("\n  Review these PRs?"):
+            return
+    except UserQuit:
         return
 
     gh_user = get_gh_user(gh=gh)
@@ -1798,13 +2904,13 @@ def check_dependabot_prs(gh: GitHubClient, cache: bool = True, show_build_steps:
             continue
 
         # Ask to merge
-        if not Confirm.ask(
-            f"\n  Merge PR {pr_link}?",
-            console=console,
-            default=True,
-        ):
-            console.print(f"  [dim]Skipped merging PR {pr_link}[/dim]")
-            continue
+        try:
+            if not ask_confirm(f"\n  Merge PR {pr_link}?"):
+                console.print(f"  [dim]Skipped merging PR {pr_link}[/dim]")
+                continue
+        except UserQuit:
+            console.print(f"  [dim]Quitting review[/dim]")
+            break
 
         # Add review comment and merge
         verified_list = "\n".join(f"- `{ref}`" for ref in action_refs)
