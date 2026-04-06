@@ -24,10 +24,10 @@ import subprocess
 from rich.console import Console
 
 _is_ci = os.environ.get("CI") is not None
-_ci_console_options = {"force_interactive": False, "width": 200} if _is_ci else {}
+_ci_console_options: dict = {"force_interactive": False, "force_terminal": True, "width": 200} if _is_ci else {}
 
-console = Console(stderr=True, force_terminal=_is_ci, **_ci_console_options)
-output = Console(force_terminal=_is_ci, **_ci_console_options)
+console = Console(stderr=True, **_ci_console_options)
+output = Console(**_ci_console_options)
 
 
 def link(url: str, text: str) -> str:
