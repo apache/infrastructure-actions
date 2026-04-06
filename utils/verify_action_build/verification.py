@@ -19,6 +19,7 @@
 """Verification orchestration and summary display."""
 
 import tempfile
+import webbrowser
 from pathlib import Path
 
 from rich.panel import Panel
@@ -110,6 +111,55 @@ def show_verification_summary(
             nested_table.add_row(action_name, atype, pinned_icon, approved_icon, trusted_icon)
 
         console.print(nested_table)
+
+
+def offer_open_and_approve(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+    ci_mode: bool = False,
+) -> str | None:
+    """Offer to open the action in a browser and/or approve it.
+
+    Returns "approve" if the user chose to approve, None otherwise.
+    """
+    if ci_mode:
+        return None
+
+    action_url = f"https://github.com/{org}/{repo}/tree/{commit_hash}"
+    if sub_path:
+        action_url += f"/{sub_path}"
+
+    urls = [
+        ("Source tree", action_url),
+        ("Commit", f"https://github.com/{org}/{repo}/commit/{commit_hash}"),
+        ("Repository", f"https://github.com/{org}/{repo}"),
+    ]
+
+    console.print()
+    console.print("[bold]Quick links:[/bold]")
+    for label, url in urls:
+        console.print(f"  [link={url}]{label}: {url}[/link]")
+
+    console.print()
+    console.print(
+        "  [bold]o[/bold] = open in browser, "
+        "[bold]a[/bold] = approve action, "
+        "[bold]Enter[/bold]/[bold]q[/bold] = done"
+    )
+
+    while True:
+        try:
+            choice = console.input("  > ").strip().lower()
+        except EOFError:
+            break
+        if choice == "o":
+            webbrowser.open(action_url)
+            console.print("  [dim]Opened in browser[/dim]")
+            continue
+        if choice == "a":
+            return "approve"
+        break
+
+    return None
 
 
 def verify_single_action(
@@ -302,5 +352,7 @@ def verify_single_action(
                 title="RESULT",
             )
         )
+
+    offer_open_and_approve(org, repo, commit_hash, sub_path, ci_mode=ci_mode)
 
     return all_match
