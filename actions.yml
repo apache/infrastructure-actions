@@ -817,9 +817,15 @@ softprops/action-gh-release:
 SonarSource/sonarqube-scan-action:
   a31c9398be7ace6bbfaf30c0bd5d415f843d45e9:
     tag: v7.0.0
+    expires_at: 2026-06-29
+  299e4b793aaa83bf2aba7c9c14bedbb485688ec4:
+    tag: v7.1.0
 SonarSource/sonarqube-scan-action/install-build-wrapper:
   a31c9398be7ace6bbfaf30c0bd5d415f843d45e9:
     tag: v7.0.0
+    expires_at: 2026-06-29
+  299e4b793aaa83bf2aba7c9c14bedbb485688ec4:
+    tag: v7.1.0
 stCarolas/setup-maven:
   '*':
     keep: true
