@@ -22,7 +22,7 @@ Checks out the action at a given commit hash inside an isolated Docker container
 rebuilds it, and diffs the published compiled JS against the locally built output.
 
 Usage:
-    uv run verify-action-build dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451
+    uv run --directory utils verify-action-build dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451
 
 Security review checklist:
     https://github.com/apache/infrastructure-actions#security-review-checklist

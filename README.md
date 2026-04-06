@@ -126,13 +126,13 @@ Projects are encouraged to help review updates to actions they use. Please have 
 Many GitHub Actions ship pre-compiled JavaScript in their `dist/` directory. To verify that the published compiled JS matches a clean rebuild from source, use the verification script:
 
 ```bash
-uv run utils/verify-action-build.py org/repo@commit_hash
+uv run --directory utils verify-action-build org/repo@commit_hash
 ```
 
 For example:
 
 ```bash
-uv run utils/verify-action-build.py dorny/test-reporter@dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3
+uv run --directory utils verify-action-build dorny/test-reporter@dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3
 ```
 
 The script will:
@@ -164,7 +164,7 @@ For the full approval policy and requirements, see the [ASF GitHub Actions Polic
 To review all open dependabot PRs at once, run:
 
 ```bash
-uv run utils/verify-action-build.py --check-dependabot-prs
+uv run --directory utils verify-action-build --check-dependabot-prs
 ```
 
 This will:
@@ -181,11 +181,11 @@ If you prefer not to install the `gh` CLI, you can use `--no-gh` to make all Git
 
 ```bash
 # Using the flag:
-uv run utils/verify-action-build.py --no-gh --github-token ghp_... org/repo@commit_hash
+uv run --directory utils verify-action-build --no-gh --github-token ghp_... org/repo@commit_hash
 
 # Or via environment variable:
 export GITHUB_TOKEN=ghp_...
-uv run utils/verify-action-build.py --no-gh --check-dependabot-prs
+uv run --directory utils verify-action-build --no-gh --check-dependabot-prs
 ```
 
 The `--no-gh` mode supports all the same features as the default `gh`-based mode.
@@ -199,7 +199,7 @@ The script exits with code **1** (failure) when something is unexpectedly broken
 To verify a specific PR locally (non-interactively), use:
 
 ```bash
-uv run utils/verify-action-build.py --ci --from-pr 123
+uv run --directory utils verify-action-build --ci --from-pr 123
 ```
 
 The `--ci` flag skips all interactive prompts (auto-selects the newest approved version for diffing, auto-accepts exclusions, disables paging). The `--from-pr` flag extracts the action reference from the given PR number.
