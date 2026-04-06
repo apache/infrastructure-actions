@@ -16,18 +16,16 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-"""Verify that compiled JavaScript in a GitHub Action matches a local rebuild.
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "jsbeautifier>=1.15",
+#     "requests>=2.31",
+#     "rich>=13.0",
+# ]
+# ///
+"""Thin wrapper so that ``uv run utils/verify-action-build.py`` keeps working."""
 
-Checks out the action at a given commit hash inside an isolated Docker container,
-rebuilds it, and diffs the published compiled JS against the locally built output.
+from verify_action_build.cli import main
 
-Usage:
-    uv run utils/verify-action-build.py dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451
-
-Security review checklist:
-    https://github.com/apache/infrastructure-actions#security-review-checklist
-"""
-
-from .cli import main
-
-__all__ = ["main"]
+main()

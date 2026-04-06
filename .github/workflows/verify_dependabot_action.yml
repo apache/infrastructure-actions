@@ -45,7 +45,7 @@ jobs:
           # interpreted as GitHub Actions commands.
           stop_token="$(uuidgen)"
           echo "::stop-commands::${stop_token}"
-          uv run --directory utils verify-action-build --ci --from-pr "${{ github.event.pull_request.number }}"
+          uv run utils/verify-action-build.py --ci --from-pr "${{ github.event.pull_request.number }}"
           rc=$?
           echo "::${stop_token}::"
           exit $rc
