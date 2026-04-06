@@ -142,6 +142,7 @@
 - graalvm/setup-graalvm@790e28947b79a9c09c3391c0f18bf8d0f102ed69
 - graalvm/setup-graalvm@54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1
 - graalvm/setup-graalvm@f744c72a42b1995d7b0cbc314bde4bace7ac1fe1
+- graalvm/setup-graalvm@60c26726de13f8b90771df4bc1641a52a3159994
 - gradle/actions/dependency-submission@017a9effdb900e5b5b2fddfb590a105619dca3c3
 - gradle/actions/dependency-submission@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2
 - gradle/actions/dependency-submission@0723195856401067f7a2779048b490ace7a47d7c
