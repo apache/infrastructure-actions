@@ -64,7 +64,7 @@ runs:
         (
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
           PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install pelican==${{ inputs.version }}
-          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install -r requirements.txt
+          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install -r ${{ github.action_path }}/requirements.txt
         )
         python3 -V
         echo "Pelican version:"
