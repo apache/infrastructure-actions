@@ -17,9 +17,10 @@
 # under the License.
 #
 pelican>=4.11,<4.12
-markdown>=3.8,<4.0
-pelican-sitemap>=1.2,<2.0
-beautifulsoup4>=4.12,<5.0
+markdown>=3.10.2,<4.0
+pelican-sitemap>=1.2.2,<2.0
+beautifulsoup4>=4.14.3,<5.0
 ezt>=1.1,<2.0
-PyYAML>=6.0,<7.0
-requests>=2.32,<3.0
+PyYAML>=6.0.3,<7.0
+requests>=2.33,<3.0
+markupsafe>=2.0.1
