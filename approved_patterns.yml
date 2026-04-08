@@ -161,8 +161,7 @@
 - gradle/develocity-actions/setup-maven@974e8dbcbda40db6828fc35f349c80a7c0e71529
 - gsactions/commit-message-checker@*
 - hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5
-- hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
-- hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85
+- hashicorp/setup-terraform@*
 - helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f
 - helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f
 - helm/kind-action@92086f6be054225fa813e0a4b13787fc9088faab
