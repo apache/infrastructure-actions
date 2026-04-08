@@ -120,7 +120,7 @@ jobs:
         if: false
       - uses: erisu/apache-rat-action@46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c  # v2.0.0
         if: false
-      - uses: erisu/license-checker-action@99cffa11264fe545fd0baa6c13bca5a00ae608f2  # v2.0.1
+      - uses: erisu/license-checker-action@04511f4c052b5773f11e1c65b42cda88235c62ae  # v2.1.0
         if: false
       - uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20  # v9.2.0
         if: false
