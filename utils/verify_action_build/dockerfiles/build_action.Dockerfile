@@ -153,33 +153,45 @@ RUN BUILD_DIR=$(cat /build-dir.txt); \
     fi
 
 # Build: first try a root-level build script (some repos like gradle/actions use one),
-# then try npm/yarn/pnpm build in the build directory, then package, then start, then ncc fallback.
+# then try npm/yarn/pnpm build/package/start in the build directory, then ncc fallback.
+# After each step, check whether the output directory has JS files; if so, stop.
+# Some actions need multiple steps (e.g. "build" compiles TS to lib/, then "package"
+# bundles to dist/), so we continue trying subsequent steps until output appears.
 # If the build directory is a subdirectory, copy its output dir to root afterwards.
 RUN OUT_DIR=$(cat /out-dir.txt); \
     BUILD_DIR=$(cat /build-dir.txt); \
     RUN_CMD=$(cat /run-cmd); \
+    has_output() { [ -d "$OUT_DIR" ] && find "$OUT_DIR" -name '*.js' -print -quit | grep -q .; }; \
     BUILD_DONE=false; \
     if [ -x build ] && ./build dist 2>/dev/null; then \
       echo "build-step: ./build dist" >> /build-info.log; \
-      if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -name '*.js' -print -quit | grep -q .; then BUILD_DONE=true; fi; \
+      if has_output; then BUILD_DONE=true; fi; \
     fi && \
     if [ "$BUILD_DONE" = "false" ]; then \
       cd "$BUILD_DIR" && \
-      if $RUN_CMD run build 2>/dev/null; then \
-        echo "build-step: $RUN_CMD run build (in $BUILD_DIR)" >> /build-info.log; \
-      elif $RUN_CMD run package 2>/dev/null; then \
-        echo "build-step: $RUN_CMD run package (in $BUILD_DIR)" >> /build-info.log; \
-      elif $RUN_CMD run start 2>/dev/null; then \
-        echo "build-step: $RUN_CMD run start (in $BUILD_DIR)" >> /build-info.log; \
-      elif npx ncc build --source-map 2>/dev/null; then \
-        echo "build-step: npx ncc build --source-map (in $BUILD_DIR)" >> /build-info.log; \
-      fi && \
-      cd /action && \
-      if [ "$BUILD_DIR" != "." ] && [ -d "$BUILD_DIR/$OUT_DIR" ] && [ ! -d "$OUT_DIR" ]; then \
-        cp -r "$BUILD_DIR/$OUT_DIR" "$OUT_DIR"; \
-        echo "copied $BUILD_DIR/$OUT_DIR -> $OUT_DIR" >> /build-info.log; \
+      for step in build package start; do \
+        if $RUN_CMD run "$step" 2>/dev/null; then \
+          echo "build-step: $RUN_CMD run $step (in $BUILD_DIR)" >> /build-info.log; \
+          cd /action && \
+          if [ "$BUILD_DIR" != "." ] && [ -d "$BUILD_DIR/$OUT_DIR" ] && [ ! -d "$OUT_DIR" ]; then \
+            cp -r "$BUILD_DIR/$OUT_DIR" "$OUT_DIR"; \
+            echo "copied $BUILD_DIR/$OUT_DIR -> $OUT_DIR" >> /build-info.log; \
+          fi; \
+          if has_output; then BUILD_DONE=true; break; fi; \
+          cd "$BUILD_DIR"; \
+        fi; \
+      done && \
+      if [ "$BUILD_DONE" = "false" ]; then \
+        cd "$BUILD_DIR" && \
+        if npx ncc build --source-map 2>/dev/null; then \
+          echo "build-step: npx ncc build --source-map (in $BUILD_DIR)" >> /build-info.log; \
+        fi && \
+        cd /action && \
+        if [ "$BUILD_DIR" != "." ] && [ -d "$BUILD_DIR/$OUT_DIR" ] && [ ! -d "$OUT_DIR" ]; then \
+          cp -r "$BUILD_DIR/$OUT_DIR" "$OUT_DIR"; \
+          echo "copied $BUILD_DIR/$OUT_DIR -> $OUT_DIR" >> /build-info.log; \
+        fi; \
       fi; \
-      if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -name '*.js' -print -quit | grep -q .; then BUILD_DONE=true; fi; \
     fi
 
 # Save rebuilt output files
