@@ -16,22 +16,3 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-[project]
-name = "infrastructure-actions"
-version = "0.1.0"
-description = "ASF GitHub Actions infrastructure"
-requires-python = ">=3.13"
-dependencies = [
-    "ruyaml>=0.91.0",
-]
-
-[dependency-groups]
-dev = [
-    "jsbeautifier>=1.15",
-    "pytest",
-    "requests>=2.31",
-    "rich>=13.0",
-]
-
-[tool.uv]
-exclude-newer = "4 days"
