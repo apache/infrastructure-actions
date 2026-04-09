@@ -87,6 +87,24 @@ RUN if [ -d "node_modules" ]; then \
 RUN OUT_DIR=$(cat /out-dir.txt); \
     if [ -d "$OUT_DIR" ]; then find "$OUT_DIR" -name '*.js' -print -delete > /deleted-js.log 2>&1; else echo "no $OUT_DIR/ directory" > /deleted-js.log; fi
 
+# If an approved (previous) commit hash is provided, restore the dev-dependency
+# lock files from that commit so the rebuild uses the same toolchain (e.g. same
+# rollup/ncc/webpack version) that produced the original dist/.
+# This avoids false positives when a version bump updates devDependencies but the
+# committed dist/ was built with the old toolchain.
+ARG APPROVED_HASH=""
+RUN if [ -n "$APPROVED_HASH" ]; then \
+      echo "approved-hash: $APPROVED_HASH" >> /build-info.log; \
+      for f in package.json package-lock.json yarn.lock pnpm-lock.yaml; do \
+        if [ -f "$f" ]; then \
+          if git show "$APPROVED_HASH:$f" > "/tmp/approved-$f" 2>/dev/null; then \
+            cp "/tmp/approved-$f" "$f"; \
+            echo "restored: $f from approved $APPROVED_HASH" >> /build-info.log; \
+          fi; \
+        fi; \
+      done; \
+    fi
+
 # Detect the build directory — where package.json lives.
 # Some repos (e.g. gradle/actions) keep sources in a subdirectory with its own package.json.
 # Also check for a root-level build script (e.g. a 'build' shell script).

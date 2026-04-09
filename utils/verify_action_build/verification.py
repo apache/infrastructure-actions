@@ -119,9 +119,14 @@ def verify_single_action(
     """Verify a single action reference. Returns True if verification passed."""
     org, repo, sub_path, commit_hash = parse_action_ref(action_ref)
 
+    # Look up approved versions early — used for the lock-file retry and the
+    # later approved-version diff section.
+    approved = find_approved_versions(org, repo)
+
     checks_performed: list[tuple[str, str, str]] = []
     non_js_warnings: list[str] = []
     checked_actions: list[dict] = []
+    matched_with_approved_lockfile = False
 
     with tempfile.TemporaryDirectory(prefix="verify-action-") as tmp:
         work_dir = Path(tmp)
@@ -234,12 +239,9 @@ def verify_single_action(
             all_match = diff_js_files(
                 original_dir, rebuilt_dir, org, repo, commit_hash, out_dir_name,
             )
-            checks_performed.append((
-                "JS build verification",
-                "pass" if all_match else "fail",
-                "compiled JS matches rebuild" if all_match else "DIFFERENCES DETECTED",
-            ))
 
+            # If no compiled JS was found in dist/ but node_modules is vendored,
+            # verify node_modules instead
             if has_node_modules:
                 nm_match = diff_node_modules(
                     original_node_modules, rebuilt_node_modules,
@@ -247,8 +249,80 @@ def verify_single_action(
                 )
                 all_match = all_match and nm_match
 
+            if not all_match and approved:
+                # The rebuild produced different JS.  This may be caused by a
+                # dev-dependency bump (e.g. rollup, ncc, webpack) where the
+                # committed dist/ was built with the *previous* toolchain but
+                # the lock file now pins a newer version.
+                # Retry the build using the approved version's lock files to
+                # diagnose *why* the rebuild differs — but a match under those
+                # conditions is still reported as a hard failure, because the
+                # committed dist/ does not match a clean rebuild from the
+                # current lock files.
+                prev_hash = approved[0]["hash"]
+                console.print()
+                console.print(
+                    Panel(
+                        f"[yellow]JS mismatch detected — retrying build with dev-dependency "
+                        f"lock files from the previously approved commit "
+                        f"[bold]{prev_hash[:12]}[/bold] to check whether the difference "
+                        f"is caused by a toolchain version bump.[/yellow]",
+                        border_style="yellow",
+                        title="RETRY WITH APPROVED LOCK FILES",
+                    )
+                )
+
+                retry_dir = work_dir / "retry"
+                retry_dir.mkdir(exist_ok=True)
+                (retry_orig, retry_rebuilt, _, _, retry_has_nm,
+                 retry_orig_nm, retry_rebuilt_nm) = build_in_docker(
+                    org, repo, commit_hash, retry_dir, sub_path=sub_path, gh=gh,
+                    cache=cache, show_build_steps=show_build_steps,
+                    approved_hash=prev_hash,
+                )
+
+                retry_match = diff_js_files(
+                    retry_orig, retry_rebuilt, org, repo, commit_hash, out_dir_name,
+                )
+                if retry_has_nm:
+                    retry_nm = diff_node_modules(
+                        retry_orig_nm, retry_rebuilt_nm,
+                        org, repo, commit_hash,
+                    )
+                    retry_match = retry_match and retry_nm
+
+                if retry_match:
+                    matched_with_approved_lockfile = True
+                    console.print()
+                    console.print(
+                        Panel(
+                            "[red bold]The compiled JS only matches when rebuilt with the "
+                            "previously approved version's dev-dependency lock files.[/red bold]\n\n"
+                            "This means the action's [bold]devDependencies[/bold] (build toolchain) "
+                            "changed between versions, but the committed dist/ was built with the "
+                            "old toolchain — so a clean rebuild from the current lock files does "
+                            "[bold]not[/bold] reproduce the committed output.\n\n"
+                            "[bold]Required action:[/bold] the action maintainer must rebuild "
+                            "dist/ with the current lock files and recommit, or roll back the "
+                            "devDependency changes.  This is reported as a failure.",
+                            border_style="red",
+                            title="MATCHED ONLY WITH APPROVED LOCK FILES",
+                        )
+                    )
+
+            if all_match:
+                js_status, js_detail = "pass", "compiled JS matches rebuild"
+            elif matched_with_approved_lockfile:
+                js_status, js_detail = (
+                    "fail",
+                    "only matches with approved lock files (devDeps changed)",
+                )
+            else:
+                js_status, js_detail = "fail", "DIFFERENCES DETECTED"
+            checks_performed.append(("JS build verification", js_status, js_detail))
+
         # Check for previously approved versions and offer to diff
-        approved = find_approved_versions(org, repo)
+        # (reuse the list fetched earlier for the approved_hash build arg)
         if approved:
             checks_performed.append(("Approved versions", "info", f"{len(approved)} version(s) on file"))
             selected_hash = show_approved_versions(org, repo, commit_hash, approved, gh=gh, ci_mode=ci_mode)
@@ -294,10 +368,17 @@ def verify_single_action(
         border = "yellow" if not is_js_action and non_js_warnings else "green"
         console.print(Panel(result_msg + checklist_hint, border_style=border, title="RESULT"))
     else:
+        if matched_with_approved_lockfile:
+            fail_msg = (
+                "[red bold]Compiled JS only matches when rebuilt with the "
+                "previously approved version's lock files — devDependencies "
+                "changed and dist/ was not rebuilt[/red bold]"
+            )
+        else:
+            fail_msg = "[red bold]Differences detected between published and rebuilt JS[/red bold]"
         console.print(
             Panel(
-                "[red bold]Differences detected between published and rebuilt JS[/red bold]"
-                + checklist_hint,
+                fail_msg + checklist_hint,
                 border_style="red",
                 title="RESULT",
             )

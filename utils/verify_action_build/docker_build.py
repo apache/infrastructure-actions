@@ -103,8 +103,13 @@ def build_in_docker(
     gh: GitHubClient | None = None,
     cache: bool = True,
     show_build_steps: bool = False,
+    approved_hash: str = "",
 ) -> tuple[Path, Path, str, str, bool, Path, Path]:
     """Build the action in a Docker container and extract original + rebuilt dist.
+
+    When *approved_hash* is supplied the Docker build restores package lock files
+    from that commit so the rebuild uses the same dev-dependency versions that
+    produced the original dist/.
 
     Returns (original_dir, rebuilt_dir, action_type, out_dir_name,
              has_node_modules, original_node_modules, rebuilt_node_modules).
@@ -153,6 +158,8 @@ def build_in_docker(
         f"COMMIT_HASH={commit_hash}",
         "--build-arg",
         f"SUB_PATH={sub_path}",
+        "--build-arg",
+        f"APPROVED_HASH={approved_hash}",
         "-t",
         image_tag,
         "-f",
