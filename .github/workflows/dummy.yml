@@ -176,7 +176,7 @@ jobs:
         if: false
       - uses: manusa/actions-setup-minikube@96202dee4ae1c2f46a62fe197273aaf22b83f42d  # v2.16.1
         if: false
-      - uses: matlab-actions/run-tests@4a3d2e8bdc811f72defb8122e46a009312acc198  # v2.3.1
+      - uses: matlab-actions/run-tests@4be3345d41da8b1bf8cc5cb01a5e19c4611cb15d  # v3.0.0
         if: false
       - uses: matlab-actions/setup-matlab@aa8bbc7b76daa63c5d456d1430cbd6cb5b626ab4  # v2.7.0
         if: false
