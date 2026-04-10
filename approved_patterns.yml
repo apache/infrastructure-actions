@@ -106,6 +106,7 @@
 - docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
 - docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
 - docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2
+- docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121
 - docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051
 - docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf
 - docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
@@ -129,6 +130,7 @@
 - eps1lon/actions-label-merge-conflict@*
 - erisu/apache-rat-action@46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c
 - erisu/license-checker-action@99cffa11264fe545fd0baa6c13bca5a00ae608f2
+- erisu/license-checker-action@04511f4c052b5773f11e1c65b42cda88235c62ae
 - geekyeggo/delete-artifact@*
 - golang/govulncheck-action@*
 - golangci/*@*
@@ -147,14 +149,17 @@
 - gradle/actions/dependency-submission@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2
 - gradle/actions/dependency-submission@0723195856401067f7a2779048b490ace7a47d7c
 - gradle/actions/dependency-submission@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f
+- gradle/actions/dependency-submission@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e
 - gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3
 - gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2
 - gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
 - gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f
+- gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e
 - gradle/actions/wrapper-validation@017a9effdb900e5b5b2fddfb590a105619dca3c3
 - gradle/actions/wrapper-validation@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2
 - gradle/actions/wrapper-validation@0723195856401067f7a2779048b490ace7a47d7c
 - gradle/actions/wrapper-validation@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f
+- gradle/actions/wrapper-validation@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e
 - gradle/develocity-actions/maven-publish-build-scan@4a2aed82eea165ba2d5c494fc2a8730d7fdff229
 - gradle/develocity-actions/maven-publish-build-scan@974e8dbcbda40db6828fc35f349c80a7c0e71529
 - gradle/develocity-actions/setup-maven@4a2aed82eea165ba2d5c494fc2a8730d7fdff229
@@ -192,6 +197,7 @@
 - juliaregistries/tagbot@*
 - JustinBeckwith/linkinator-action@af984b9f30f63e796ae2ea5be5e07cb587f1bbd9
 - JustinBeckwith/linkinator-action@f62ba0c110a76effb2ee6022cc6ce4ab161085e3
+- JustinBeckwith/linkinator-action@363572b2714d25a059fceb2fa332a98e7ea3baff
 - jwgmeligmeyling/checkstyle-github-action@*
 - jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d
 - jwgmeligmeyling/spotbugs-github-action@*
@@ -209,7 +215,9 @@
 - manusa/actions-setup-minikube@8234275e0386fe1cdaf519d28c90f4f03fad89e4
 - manusa/actions-setup-minikube@96202dee4ae1c2f46a62fe197273aaf22b83f42d
 - matlab-actions/run-tests@4a3d2e8bdc811f72defb8122e46a009312acc198
+- matlab-actions/run-tests@4be3345d41da8b1bf8cc5cb01a5e19c4611cb15d
 - matlab-actions/setup-matlab@aa8bbc7b76daa63c5d456d1430cbd6cb5b626ab4
+- matlab-actions/setup-matlab@c6998d116f15c400d5e16e05318e3450abdcf053
 - maxim-lobanov/setup-xcode@*
 - medyagh/setup-minikube@*
 - mikepenz/action-junit-report@*
@@ -246,6 +254,7 @@
 - pypa/cibuildwheel@63fd63b352a9a8bdcc24791c9dbee952ee9a8abc
 - pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e
 - pypa/cibuildwheel@ee02a1537ce3071a004a6b08c41e72f0fdc42d9a
+- pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084
 - pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e
 - pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
 - pyTooling/Actions@*
