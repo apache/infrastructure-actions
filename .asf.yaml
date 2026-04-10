@@ -20,17 +20,18 @@ github:
   del_branch_on_merge: true
   features:
     issues: true
-  protected_branches:
-    main:
-      required_status_checks:
-        # strict means "Require branches to be up to date before merging".
-        strict: false
-      required_pull_request_reviews:
-        dismiss_stale_reviews: false
-        required_approving_review_count: 1
-      #bypass_pull_request_allowances:
-      #  users:
-      #    - asfgit
+  # revert #642
+  #protected_branches:
+  #  main:
+  #    required_status_checks:
+  #      # strict means "Require branches to be up to date before merging".
+  #      strict: false
+  #    required_pull_request_reviews:
+  #      dismiss_stale_reviews: false
+  #      required_approving_review_count: 1
+  #    #bypass_pull_request_allowances:
+  #    #  users:
+  #    #    - asfgit
 
 notifications:
   commits: commits@infra.apache.org
