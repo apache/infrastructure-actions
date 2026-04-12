@@ -162,13 +162,13 @@ jobs:
         if: false
       - uses: jrouly/scalafmt-native-action@a9c8e1032a02004c425d53ef8ce420fe2179eba7  # v5
         if: false
-      - uses: JustinBeckwith/linkinator-action@363572b2714d25a059fceb2fa332a98e7ea3baff  # v2.4.1
+      - uses: JustinBeckwith/linkinator-action@363572b2714d25a059fceb2fa332a98e7ea3baff  # v2.4
         if: false
       - uses: jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d  # v1.2
         if: false
       - uses: Kesin11/actions-timeline@e018cfefea60b4f44266998551211a35a58b8097  # v3.0.0
         if: false
-      - uses: leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248  # v6.0.0
+      - uses: leafo/gh-actions-luarocks@4c082a5fad45388feaeb0798dbd82dbd7dc65bca  # v5
         if: false
       - uses: lhotari/sandboxed-trivy-action@555963036b2012b44c1071508a236e569db28ebb  # v1.0.1
         if: false
