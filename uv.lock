@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.13"
 
 [options]
-exclude-newer = "2026-04-02T14:49:14.252075Z"
+exclude-newer = "2026-04-08T19:29:44.937930752Z"
 exclude-newer-span = "P4D"
 
 [[package]]
@@ -131,7 +131,7 @@ requires-dist = [{ name = "ruyaml", specifier = ">=0.91.0" }]
 dev = [
     { name = "jsbeautifier", specifier = ">=1.15" },
     { name = "pytest" },
-    { name = "requests", specifier = ">=2.31" },
+    { name = "requests", specifier = ">=2.33.1" },
     { name = "rich", specifier = ">=13.0" },
 ]
 
