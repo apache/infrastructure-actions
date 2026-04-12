@@ -38,13 +38,15 @@ RUN bash bin/build-cmark.sh ${GFM_VERSION}
 # rebase the image to save on image size
 FROM python:${PYTHON_VERSION}
 
-# Use the Pelican version as installed on CI pelican builders (2023-06-02)
-ARG PELICAN_VERSION=4.5.4
 ARG GFM_VERSION=0.28.3.gfm.12 # must agree with copy above
 
 # Where we put GFM and the plugins
 ENV WORKDIR=/opt/pelican-asf
 ENV LIBCMARKDIR=${WORKDIR}/cmark-gfm-${GFM_VERSION}/lib
+# `uv sync` writes a project venv at $WORKDIR/.venv; put its bin dir on
+# PATH so the `pelican` CLI is visible to the pelicanasf wrapper at
+# runtime.
+ENV PATH="/opt/pelican-asf/.venv/bin:$PATH"
 
 RUN apt update && apt upgrade -y
 
@@ -52,9 +54,8 @@ RUN apt update && apt upgrade -y
 # wget is used by pagefind.sh (www-site)
 RUN apt install subversion wget -y
 
-# Need markdown as fallback for gfm as documented in ASF.YAML
-RUN pip install pelican[markdown]==${PELICAN_VERSION}
-# [1] https://github.com/apache/infrastructure-asfyaml/blob/main/README.md#pelican_cms
+# Bootstrap uv — used for every subsequent Python install.
+RUN pip install uv
 
 # Copy the built cmark and ASF
 WORKDIR $LIBCMARKDIR
@@ -62,15 +63,25 @@ COPY --from=pelican-asf $LIBCMARKDIR .
 
 WORKDIR $WORKDIR
 
-COPY requirements.txt .
-# Don't automatically load dependencies; please add them to requirements.txt instead
-RUN pip install -r requirements.txt --no-deps
+# Copy enough of the checkout to let uv build the project. py-modules
+# in pyproject.toml requires plugin_paths.py, and readme = "README.md"
+# requires README.md to be present when setuptools builds the wheel.
+# uv.lock is the source of truth for resolved versions.
+COPY pyproject.toml uv.lock plugin_paths.py README.md ./
 
-# Could perhaps be added to requirements.txt but that would affect other uses
-RUN pip install 'MarkupSafe<2.1.0' # needed for Pelican 4.5.4
+# Install the project and its dev group (which includes Pelican itself)
+# into $WORKDIR/.venv straight from the lockfile. --frozen makes the
+# build fail if uv.lock is out of sync with pyproject.toml, so the image
+# always reflects the committed lockfile rather than re-resolving at
+# build time. The `pelican` CLI ends up at .venv/bin/pelican (already on
+# PATH) and the venv's own Python can import `plugin_paths` as a module
+# — we use that below so user-supplied pelicanconf.py can import any
+# dep that lives in the venv.
+# [1] https://github.com/apache/infrastructure-asfyaml/blob/main/README.md#pelican_cms
+RUN uv sync --frozen
 
-# Now add the local code; do this last to avoid unnecessary rebuilds
-COPY plugin_paths.py .
+# Now add the plugins; these are loaded by Pelican via PLUGIN_PATHS at
+# runtime and are never imported as a Python package.
 COPY plugins plugins
 # Tidy up any old builds
 RUN { find plugins -type d -name __pycache__ -exec rm -rf {} \; ; true; }
@@ -82,11 +93,28 @@ RUN ln -s /site/.authtokens /root/.authtokens
 
 WORKDIR /site
 
-# Create a pelicanasf wrapper to add required arguments
-# The initial hashbang is needed, otherwise docker complains: 'exec format error'
-RUN { echo '#!/usr/bin/env bash' >/usr/local/bin/pelicanasf; chmod +x /usr/local/bin/pelicanasf;}
-# The -b (bind) is needed to allow connections from the host
-RUN echo 'SRC=${1:?source}; shift; python3 -B -m pelican $SRC -b 0.0.0.0 -e "$(python3 $WORKDIR/plugin_paths.py $WORKDIR/plugins)" "$@"' >>/usr/local/bin/pelicanasf;
+# Create a pelicanasf wrapper around the `pelican` CLI (from the project
+# venv) that injects the PLUGIN_PATHS settings computed by plugin_paths.
+# plugin_paths is invoked as a module via the venv's own Python, so the
+# user's pelicanconf.py can import any dep that lives in the venv.
+# The initial hashbang is required, otherwise docker complains with
+# 'exec format error'. -b (bind) allows connections from the host.
+RUN TOOLPY="$WORKDIR/.venv/bin/python" && \
+    { echo '#!/usr/bin/env bash'; \
+      echo 'set -euo pipefail'; \
+      echo "TOOLPY='$TOOLPY'"; \
+      echo "WORKDIR='$WORKDIR'"; \
+      echo 'SRC=${1:?source}; shift'; \
+      echo 'if [[ ! -f pelicanconf.py ]]; then'; \
+      echo '  echo "pelicanasf: pelicanconf.py not found in $(pwd)." >&2'; \
+      echo '  echo "Mount a Pelican website checkout (one containing pelicanconf.py) at /site, e.g." >&2'; \
+      echo '  echo "  docker run --rm -it -p 8000:8000 -v \"\$PWD\":/site <image>" >&2'; \
+      echo '  exit 1'; \
+      echo 'fi'; \
+      echo 'PP=$("$TOOLPY" -m plugin_paths "$WORKDIR/plugins")'; \
+      echo 'exec pelican "$SRC" -b 0.0.0.0 -e "$PP" "$@"'; \
+    } > /usr/local/bin/pelicanasf && \
+    chmod +x /usr/local/bin/pelicanasf
 
 # --autoreload (-r) and --listen (-l)
 ENTRYPOINT [ "pelicanasf", "content", "-rl"]

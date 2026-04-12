@@ -57,21 +57,46 @@ inputs:
 runs:
   using: "composite"
   steps:
+    # Provide a clean, hermetic Python interpreter outside the runner's
+    # system-managed Python. This lets us `pip install uv` without needing
+    # PIP_BREAK_SYSTEM_PACKAGES, and gives the Pelican tool venv a known
+    # Python version to build against.
+    - name: Set up Python
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+      with:
+        python-version: '3.12'
+
     - name: Install Pelican
       shell: bash
       # Install needs to run in separate shell so stdout is restored
       run: |
         (
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
-          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install pelican==${{ inputs.version }}
-          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install -r ${{ github.action_path }}/requirements.txt
+          # Bootstrap uv into the setup-python interpreter.
+          pip install uv
+          # Install Pelican as an isolated uv tool. The action's project is
+          # injected via --with so every Pelican plugin dependency declared in
+          # pyproject.toml lands in the same venv. Optional user requirements
+          # are layered in via --with-requirements.
+          UV_TOOL_ARGS=(--with "${{ github.action_path }}")
+          if [ -n "${{ inputs.requirements }}" ]; then
+            echo "Installing python requirements from ${{ inputs.requirements }}"
+            UV_TOOL_ARGS+=(--with-requirements "${{ inputs.requirements }}")
+          fi
+          uv tool install "pelican[markdown]==${{ inputs.version }}" "${UV_TOOL_ARGS[@]}"
         )
+        # Make the uv tool bin dir visible to later steps and the current
+        # shell. Publish the tool venv's Python so the "Generate website"
+        # step can import plugin_paths from inside the same venv.
+        export PATH="$HOME/.local/bin:$PATH"
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+        echo "PELICAN_TOOL_PY=$(uv tool dir)/pelican/bin/python" >> "$GITHUB_ENV"
         python3 -V
         echo "Pelican version:"
         pelican --version
         if [ "${{ inputs.debug }}" == 'true' ]
         then
-          pip3 list # This a long list
+          uv tool list
         fi
 
     # If the site uses GitHub Flavored Markdown, use this build branch
@@ -111,11 +136,6 @@ runs:
     - name: Generate website from markdown
       shell: bash
       run: |
-        if [ -n "${{ inputs.requirements }}" ]
-        then
-          echo "Installing python requirements from ${{ inputs.requirements }}"
-          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install -r ${{ inputs.requirements }}
-        fi
         if [ "${{ inputs.debug }}" == 'true' ]
         then
           OPTS='-D'
@@ -127,9 +147,11 @@ runs:
           OPTS="$OPTS --fatal ${{ inputs.fatal }}"
         fi
         echo "Getting plugins from action location: ${{ github.action_path }}"
-        PP=$(python3 ${{ github.action_path }}/plugin_paths.py '${{ github.action_path }}/plugins')
+        # Run plugin_paths from the tool venv's Python so pelicanconf.py can
+        # import any dependency that lives alongside Pelican in that venv.
+        PP=$("$PELICAN_TOOL_PY" -m plugin_paths '${{ github.action_path }}/plugins')
         set -x # Show the expanded variables
-        python3 -B -m pelican content -e "$PP" -o ${{ inputs.tempdir }} $OPTS
+        pelican content -e "$PP" -o ${{ inputs.tempdir }} $OPTS
 
     - name: Check out previous branch
       if: ${{ inputs.publish == 'true' }}
