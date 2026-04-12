@@ -41,7 +41,7 @@ jobs:
           token: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }}
 
       - name: Print token details
-        if: ${{ github.event_name != 'pull_request' && secrets.ALLOWLIST_WORKFLOW_TOKEN }}
+        if: ${{ github.event_name != 'pull_request' }}
         env:
           GH_TOKEN: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN }}
         run: |
