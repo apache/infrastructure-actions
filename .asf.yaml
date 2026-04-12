@@ -21,17 +21,13 @@ github:
   features:
     issues: true
   protected_branches:
-  # revert #642
-  #  main:
-  #    required_status_checks:
-  #      # strict means "Require branches to be up to date before merging".
-  #      strict: false
-  #    required_pull_request_reviews:
-  #      dismiss_stale_reviews: false
-  #      required_approving_review_count: 1
-  #    #bypass_pull_request_allowances:
-  #    #  users:
-  #    #    - asfgit
+    main:
+      required_status_checks:
+        # strict means "Require branches to be up to date before merging".
+        strict: false
+      required_pull_request_reviews:
+        dismiss_stale_reviews: false
+        required_approving_review_count: 1
 
 notifications:
   commits: commits@infra.apache.org
