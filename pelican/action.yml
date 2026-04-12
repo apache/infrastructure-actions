@@ -44,9 +44,9 @@ inputs:
     required: false
     default: 'false'
   version:
-    description: "Pelican Version (default 4.5.4)"
+    description: "Pelican Version (default 4.11.0.post0)"
     required: false
-    default: '4.5.4'
+    default: '4.11.0.post0'
   requirements:
     description: "Python requirements file name to install (default: None)"
     required: false
@@ -63,7 +63,8 @@ runs:
       run: |
         (
           test "${{ inputs.debug }}" == 'true' || exec >/dev/null
-          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install pelican==${{ inputs.version }} markdown bs4 ezt requests markupsafe==2.0.1
+          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install pelican==${{ inputs.version }}
+          PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install -r ${{ github.action_path }}/requirements.txt
         )
         python3 -V
         echo "Pelican version:"
