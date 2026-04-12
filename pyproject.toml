@@ -29,7 +29,7 @@ dependencies = [
 dev = [
     "jsbeautifier>=1.15",
     "pytest",
-    "requests>=2.31",
+    "requests>=2.33.1",
     "rich>=13.0",
 ]
 
