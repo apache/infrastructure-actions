@@ -162,7 +162,7 @@ jobs:
         if: false
       - uses: jrouly/scalafmt-native-action@a9c8e1032a02004c425d53ef8ce420fe2179eba7  # v5
         if: false
-      - uses: JustinBeckwith/linkinator-action@363572b2714d25a059fceb2fa332a98e7ea3baff  # v2.4
+      - uses: JustinBeckwith/linkinator-action@363572b2714d25a059fceb2fa332a98e7ea3baff  # v2.4.1
         if: false
       - uses: jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d  # v1.2
         if: false
