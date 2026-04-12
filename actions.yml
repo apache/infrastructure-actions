@@ -354,7 +354,7 @@ erisu/license-checker-action:
     tag: v2.0.1
     expires_at: 2026-09-14
   04511f4c052b5773f11e1c65b42cda88235c62ae:
-    tag: v9.2.0
+    tag: v2.1.0
 geekyeggo/delete-artifact:
   '*':
     keep: true
