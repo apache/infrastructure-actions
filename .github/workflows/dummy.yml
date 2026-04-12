@@ -178,7 +178,7 @@ jobs:
         if: false
       - uses: matlab-actions/run-tests@353aee49b0edf62278c118a51b484d90bf6da1b7  # v3.1.0
         if: false
-      - uses: matlab-actions/setup-matlab@c6998d116f15c400d5e16e05318e3450abdcf053  # v3.0.0
+      - uses: matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f  # v3.0.1
         if: false
       - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29  # v2.2.1
         if: false
