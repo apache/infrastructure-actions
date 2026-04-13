@@ -38,7 +38,9 @@ updates:
     cooldown:
       default-days: 4
   - package-ecosystem: "uv"
-    directory: "/"
+    directories:
+      - "/"
+      - "/pelican/"
     schedule:
       interval: "weekly"
     cooldown:
