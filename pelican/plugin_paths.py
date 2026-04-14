@@ -32,8 +32,8 @@ USAGE:
 
 """
 
-import sys
 import json
+import sys
 
 DEFAULT_PELCONF = 'pelicanconf.py'  # in current dir
 
