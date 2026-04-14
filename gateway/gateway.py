@@ -130,15 +130,15 @@ def gha_print(content: str, title: str = ""):
     print("::endgroup::")
 
 
-def generate_workflow(actions: ActionsYAML) -> str:
+def generate_composite_action(actions: ActionsYAML) -> str:
     """
-    Generate a GitHub workflow file as a string from the actions.yml dictionary.
+    Generate a composite GitHub action file as a string from the actions.yml dictionary.
 
     Args:
         actions: Dictionary of actions and their references
 
     Returns:
-        str: Generated workflow file content
+        str: Generated action file content
     """
     # Github Workflow 'yaml' has slight deviations from the yaml spec. (e.g. keys with no values)
     # Because of that it's much easier to generate this as a string rather
@@ -166,31 +166,22 @@ def generate_workflow(actions: ActionsYAML) -> str:
 # It will be regenerated and committed as part of various workflows.
 # DO NOT UPDATE MANUALLY. Update /actions.yml instead.
 
-# This workflow has two purposes:
+# This action has two purposes:
 # - dependabot will propose updates to this file, which after
 # review will automatically flow into /actions.yml through a
 # workflow
-# - GHA will periodically 'run' this workflow (skipping every
+# - GHA will periodically 'run' this action (skipping every
 # step), which will fail when any of the listed actions have
 # a transitive action dependency that is not allowlisted
 # (or is not anymore).
-name: Dummy Workflow
+# Sadly the error message does not tell you *which* action
+# has a missing transitive dependency, see
+# https://github.com/apache/infrastructure-actions/issues/606
+name: Gateway Action
 
-on:
-  workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/workflows/dummy.yml
-  push:
-    paths:
-      - .github/workflows/dummy.yml
-
-permissions: {}
-
-jobs:
-  dummy:
-    runs-on: ubuntu-latest
-    steps:
+runs:
+  using: "composite"
+  steps:
 """
     steps = []
     for name, refs in actions.items():
@@ -208,26 +199,26 @@ jobs:
         elif len(ref_to_update) == 1:
             ref = ref_to_update[0]
             details = refs[ref]
-            steps.append(f"      - uses: {name}@{ref}" + (f"  # {details['tag']}" if details and 'tag' in details else ''))
-            steps.append( "        if: false")
+            steps.append(f"    - uses: {name}@{ref}" + (f"  # {details['tag']}" if details and 'tag' in details else ''))
+            steps.append( "      if: false")
 
-    return header + "\n".join(steps) + "\n" + "      - run: echo Success!\n"
+    return header + "\n".join(steps) + "\n" + "    - run: echo Success!\n" + "      shell: bash\n"
 
 
 def update_refs(
-    dummy_steps: list[dict[str, str]], action_refs: ActionsYAML
+    composite_steps: list[dict[str, str]], action_refs: ActionsYAML
 ) -> ActionsYAML:
     """
-    Update action references based on steps from a dummy workflow.
+    Update action references based on steps from the composite action.
 
     Args:
-        dummy_steps: List of steps from a dummy workflow
+        composite_steps: List of steps from the composite action
         action_refs: Current action references
 
     Returns:
         ActionsYAML: Updated action references
     """
-    for step in dummy_steps:
+    for step in composite_steps:
         uses = step.get("uses", None)
         if uses is None:
             # The last step is - run:
@@ -256,16 +247,16 @@ def update_refs(
     return action_refs
 
 
-def update_actions(dummy_path: Path, actions_path: Path):
+def update_actions(composite_action_path: Path, actions_path: Path):
     """
-    Update actions file based on a dummy workflow.
+    Update actions file based on the composite actions.
 
     Args:
-        dummy_path: Path to the dummy workflow file
+        composite_action_path: Path to the composite action file
         actions_path: Path to the actions list file
     """
-    dummy = load_yaml(dummy_path)
-    steps: list[dict[str, str]] = dummy["jobs"]["dummy"]["steps"]
+    composite_action = load_yaml(composite_action_path)
+    steps: list[dict[str, str]] = composite_action["runs"]["steps"]
 
     actions: ActionsYAML = load_yaml(actions_path)
 
@@ -332,19 +323,19 @@ def update_patterns(pattern_path: Path, list_path: Path):
     write_str(pattern_path, patterns_str)
 
 
-def update_workflow(dummy_path: Path, list_path: Path):
+def update_workflow(composite_action_path: Path, list_path: Path):
     """
-    Update the dummy workflow file based on the actions list.
+    Update the composite action file based on the actions list.
     This will overwrite the existing file, so any manual changes will be lost!
 
     Args:
-        dummy_path: Path to write the dummy workflow file
+        composite_action_path: Path to write the composite action file
         list_path: Path to the actions list file
     """
     actions: ActionsYAML = load_yaml(list_path)
-    workflow = generate_workflow(actions)
+    workflow = generate_composite_action(actions)
     gha_print(workflow, "Generated Workflow")
-    write_str(dummy_path, workflow)
+    write_str(composite_action_path, workflow)
 
 
 def remove_expired_refs(actions: ActionsYAML):
