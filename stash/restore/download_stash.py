@@ -28,7 +28,7 @@ import os
 import shutil
 import subprocess
 import sys
-from typing import Callable, Mapping
+from collections.abc import Callable, Mapping
 
 
 def run_gh_download(run_id: str, name: str, dest: str, repo: str) -> int:

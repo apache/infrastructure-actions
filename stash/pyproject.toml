@@ -1,0 +1,92 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+[build-system]
+requires = ["setuptools>=82.0.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "apache-stash-action"
+version = "0.1.0"
+description = "GitHub Action for stashing and restoring build caches via workflow artifacts."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [
+    { name = "Apache Software Foundation", email = "dev@infra.apache.org" },
+]
+keywords = ["github-action", "cache", "artifacts", "apache"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Build Tools",
+]
+# The stash action's Python code is stdlib-only at runtime; the external
+# dependencies are the `gh` and `jq` CLIs, which are installed on the
+# GitHub Actions runner and checked for at action start-up.
+dependencies = []
+
+# PEP 735 dependency groups. `dev` holds everything a contributor needs
+# to lint and test the stash helpers locally. pytest is listed so the
+# existing unittest-based tests can be discovered and run via pytest if
+# desired, alongside `python3 test_*.py`.
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+    "mypy>=1.10",
+    "pytest>=8",
+]
+
+[project.urls]
+Homepage = "https://github.com/apache/infrastructure-actions"
+Source = "https://github.com/apache/infrastructure-actions"
+Issues = "https://github.com/apache/infrastructure-actions/issues"
+
+[tool.setuptools]
+py-modules = []
+
+[tool.uv]
+required-version = ">=0.5.0"
+
+[tool.hatch.envs.default]
+installer = "uv"
+dependency-groups = ["dev"]
+
+[tool.hatch.envs.default.scripts]
+lint = "ruff check ."
+fmt = "ruff format ."
+test = "pytest"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
