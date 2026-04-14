@@ -32,6 +32,12 @@ permissions:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        # Applies to every `run:` step in this job; `uses:` steps are
+        # unaffected, so setup-uv's `cache-dependency-glob` below still
+        # resolves from the repository root.
+        working-directory: pelican
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
@@ -49,11 +55,7 @@ jobs:
           cache-dependency-glob: "pelican/uv.lock"
 
       - name: Type testing with mypy
-        run: |
-          cd pelican
-          uv run mypy --ignore-missing-imports .
+        run: uv run mypy --ignore-missing-imports .
 
       - name: Code linting with pylint
-        run: |
-          cd pelican
-          uv run pylint **/*.py
+        run: uv run pylint **/*.py
