@@ -30,7 +30,7 @@ permissions:
   contents: read
 
 jobs:
-  lint:
+  lint-pelican:
     runs-on: ubuntu-latest
     defaults:
       run:
