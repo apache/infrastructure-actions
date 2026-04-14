@@ -79,6 +79,7 @@
 - commit-check/commit-check-action@a0193b1ca486178b85d7a1db145af34cd227f81f
 - commit-check/commit-check-action@be79b5cd5953c8afd4266004c5bbb1431f544df1
 - commit-check/commit-check-action@443fb6a114414358496e6243105294c3b11610c5
+- commit-check/commit-check-action@2fe41833054c561710099d8e3e22bbeab4fe204a
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - container-tools/microshift-action@*
@@ -105,6 +106,7 @@
 - dlang-community/setup-dlang@*
 - docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
 - docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
+- docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f
 - docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
 - docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2
 - docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121
