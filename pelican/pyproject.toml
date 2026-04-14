@@ -72,10 +72,10 @@ dev = [
     "pytest>=8",
     "mypy>=1.10",
     "pylint>=3",
-    "types-PyYAML",
-    "types-requests",
-    "types-beautifulsoup4",
-    "types-markdown",
+    "types-PyYAML>=6.0",
+    "types-requests>=2.33",
+    "types-beautifulsoup4>=4.12",
+    "types-markdown>=3.10",
 ]
 
 [project.urls]
