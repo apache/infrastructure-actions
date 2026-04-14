@@ -45,24 +45,12 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57  # v8.0.0
 
-      - name: Install lint / mypy dependencies
-        run: |
-          # `--no-install-project` skips building `apache-pelican-action`
-          # itself; we only need the runtime dependencies plus the `dev`
-          # group (mypy, pylint and type stubs) to run the checks below.
-          cd pelican
-          uv sync --no-install-project --group dev
-          uv pip list
-
       - name: Type testing with mypy
         run: |
           cd pelican
-          # `--no-sync` stops `uv run` from implicitly building and
-          # installing `apache-pelican-action` into the venv before it
-          # runs mypy — we only want the deps from the previous step.
-          uv run --no-sync mypy --cache-dir /tmp/ --ignore-missing-imports .
+          uv run mypy --cache-dir /tmp/ --ignore-missing-imports .
 
       - name: Code linting with pylint
         run: |
           cd pelican
-          uv run --no-sync pylint **/*.py
+          uv run pylint **/*.py
