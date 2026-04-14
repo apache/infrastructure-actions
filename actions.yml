@@ -268,6 +268,9 @@ dawidd6/action-send-mail:
 delaguardo/setup-graalvm:
   '*':
     keep: true
+dependabot/fetch-metadata:
+  ffa630c65fa7e0ecfa0625b5ceda64399aea1b36:
+    tag: v3.0.0
 dlang-community/setup-dlang:
   '*':
     keep: true
