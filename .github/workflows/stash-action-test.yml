@@ -71,7 +71,7 @@ jobs:
         run: |
           cd stash/restore
           python3 test_get_stash.py
-          bash test_download_stash.sh
+          python3 test_download_stash.py
 
       - name: Test Save
         uses: ./stash/save
