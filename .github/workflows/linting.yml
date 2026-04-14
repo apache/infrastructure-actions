@@ -32,6 +32,16 @@ permissions:
 jobs:
   lint-pelican:
     runs-on: ubuntu-latest
+    # GitHub Actions log output is not a TTY, so tools that autodetect
+    # colors turn them off in CI. Force colorized output via the common
+    # `FORCE_COLOR` convention (honored by pylint, rich, uv, etc.) plus
+    # `PY_COLORS=1` which mypy's `rich`-based pretty printer picks up.
+    # The per-tool flags below (`--output-format=colorized`,
+    # `--color-output`) make the intent explicit and work even for
+    # tools that don't read the env vars.
+    env:
+      FORCE_COLOR: "1"
+      PY_COLORS: "1"
     defaults:
       run:
         # Applies to every `run:` step in this job; `uses:` steps are
@@ -55,7 +65,7 @@ jobs:
           cache-dependency-glob: "pelican/uv.lock"
 
       - name: Type testing with mypy
-        run: uv run mypy --ignore-missing-imports .
+        run: uv run mypy --color-output --pretty --ignore-missing-imports .
 
       - name: Code linting with pylint
-        run: uv run pylint **/*.py
+        run: uv run pylint --output-format=colorized **/*.py
