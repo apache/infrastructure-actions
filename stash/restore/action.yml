@@ -162,53 +162,11 @@ runs:
         STASH_RUN_ID: "${{ steps.check-stash.outputs.stash_run_id }}"
         REPO: "${{ github.repository }}"
         STASH_DIR: "${{ steps.mung.outputs.stash_path }}"
-        INPUTS_CLEAN: "${{ inputs.clean }}"
+        CLEAN: "${{ inputs.clean }}"
         RETRY_COUNT: "${{ inputs.retry-count }}"
         FAIL_ON_DOWNLOAD: "${{ inputs.fail-on-download }}"
       run: |
-        # The default GitHub Actions bash shell runs with `set -eo pipefail`,
-        # which would abort this step the moment `gh run download` or `rm -rf`
-        # returns non-zero. Disable `errexit` explicitly so a single failing
-        # command cannot kill the step — we handle failures ourselves via $?.
-        set +e
-        if [[ "${INPUTS_CLEAN}" == "true" ]]; then
-            if [[ -d "$STASH_DIR" ]]; then
-                echo "Removing existing stash directory: $STASH_DIR"
-                rm -rf "$STASH_DIR"
-            fi
-        fi
-        # Retry up to RETRY_COUNT times when `gh run download` exits with
-        # code 1 (the transient failure mode observed for artifact downloads).
-        download="failed"
-        attempt=1
-        while (( attempt <= RETRY_COUNT )); do
-            echo "Downloading stash (attempt $attempt of $RETRY_COUNT)..."
-            gh run download "$STASH_RUN_ID" \
-                            --name "$STASH_NAME" \
-                            --dir "$STASH_DIR" \
-                            -R "$REPO"
-            rc=$?
-            if (( rc == 0 )); then
-                download="success"
-                break
-            fi
-            if (( rc != 1 )); then
-                echo "::warning ::gh run download failed with exit code $rc; not retrying."
-                break
-            fi
-            echo "::warning ::gh run download failed with exit code 1 on attempt $attempt."
-            attempt=$(( attempt + 1 ))
-        done
-
-        echo "download=$download" >> "$GITHUB_OUTPUT"
-        if [[ "$download" != "success" && "$FAIL_ON_DOWNLOAD" == "true" ]]; then
-            echo "::error ::Stash artifact download failed after $RETRY_COUNT attempt(s) and fail-on-download is true."
-            exit 1
-        fi
-        # Otherwise exit 0 — the `download` output tells downstream steps
-        # whether the stash was restored, and a failed download must not fail
-        # the step unless the caller opted in via fail-on-download.
-        exit 0
+        bash "${{ github.action_path }}/download_stash.sh"
 
     - name: Set stash-hit Output
       id: output
