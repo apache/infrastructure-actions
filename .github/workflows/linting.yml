@@ -51,7 +51,7 @@ jobs:
       - name: Type testing with mypy
         run: |
           cd pelican
-          uv run mypy --cache-dir /tmp/ --ignore-missing-imports .
+          uv run mypy --ignore-missing-imports .
 
       - name: Code linting with pylint
         run: |
