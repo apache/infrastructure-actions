@@ -32,7 +32,7 @@
 # Sadly the error message does not tell you *which* action
 # has a missing transitive dependency, see
 # https://github.com/apache/infrastructure-actions/issues/606
-name: Composite Action
+name: Gateway Action
 
 runs:
   using: "composite"
@@ -73,7 +73,7 @@ runs:
       if: false
     - uses: carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3  # v1.0.10
       if: false
-    - uses: commit-check/commit-check-action@2fe41833054c561710099d8e3e22bbeab4fe204a  # v2.4.2
+    - uses: commit-check/commit-check-action@2fe41833054c561710099d8e3e22bbeab4fe204a  # v2.5.0
       if: false
     - uses: coursier/cache-action@90c37294538be80a558fd665531fcdc2b467b475  # v8.1.0
       if: false
@@ -88,6 +88,8 @@ runs:
     - uses: DavidAnson/markdownlint-cli2-action@ce4853d43830c74c1753b39f3cf40f71c2031eb9  # v23.0.0
       if: false
     - uses: dawidd6/action-send-mail@d38f3f7cd391cdebfe0d38efc3998b935e951c4f  # v16
+      if: false
+    - uses: dependabot/fetch-metadata@ffa630c65fa7e0ecfa0625b5ceda64399aea1b36  # v3.0.0
       if: false
     - uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1.0
       if: false
@@ -159,7 +161,7 @@ runs:
       if: false
     - uses: Kesin11/actions-timeline@e018cfefea60b4f44266998551211a35a58b8097  # v3.0.0
       if: false
-    - uses: leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248 # v6.0.0
+    - uses: leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248  # v6.0.0
       if: false
     - uses: lhotari/sandboxed-trivy-action@555963036b2012b44c1071508a236e569db28ebb  # v1.0.1
       if: false
