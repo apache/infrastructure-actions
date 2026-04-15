@@ -163,7 +163,7 @@ runs:
       if: false
     - uses: leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248  # v6.0.0
       if: false
-    - uses: lhotari/sandboxed-trivy-action@555963036b2012b44c1071508a236e569db28ebb  # v1.0.1
+    - uses: lhotari/sandboxed-trivy-action@f01374b6cc3bf7264ab238293e94f6db7ada6dd0  # v1.0.2
       if: false
     - uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411  # v2.8.0
       if: false
