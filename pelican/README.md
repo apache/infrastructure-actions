@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: apache/infrastructure-actions/pelican@main
+      - uses: apache/infrastructure-actions/pelican@93dfe4693bc118397840e7e4ae447e57a3eea7ee # main
         with:
           destination: master
           gfm: 'true'
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: apache/infrastructure-actions/pelican@main
+      - uses: apache/infrastructure-actions/pelican@93dfe4693bc118397840e7e4ae447e57a3eea7ee # main
         with:
           publish: 'false'
 ```
