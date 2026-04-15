@@ -18,12 +18,9 @@ version: 2
 updates:
   - package-ecosystem: "github-actions"
     commit-message:
-      prefix: "gateway"
+      prefix: "action-allowlist-review"
     directories:
-      - "/"
-      - "/pelican/"
-      - "/stash/restore"
-      - "/stash/save"
+      - "/.github/actions/for-dependabot-triggered-reviews"
     schedule:
       # 'daily' only runs on weekdays
       interval: "cron"
@@ -35,8 +32,18 @@ updates:
       - dependency-name: "cpp-linter/cpp-linter-action"
         versions: ">=2.16"
     open-pull-requests-limit: 50
+  - package-ecosystem: "github-actions"
+    schedule:
+      # 'daily' only runs on weekdays
+      interval: "cron"
+      cronjob: "45 13 * * *"
+    directories:
+      - "/.github/workflows"
+      - "/pelican/"
+      - "/stash/restore"
+      - "/stash/save"
     cooldown:
-      default-days: 4
+      default-days: 7
   - package-ecosystem: "uv"
     directories:
       - "/"
@@ -44,4 +51,4 @@ updates:
     schedule:
       interval: "weekly"
     cooldown:
-      default-days: 4
+      default-days: 7
