@@ -21,10 +21,13 @@ name: Check for transitive failures in current latest actions
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/actions/for-dependabot-triggered-reviews/action.yml
+  schedule:
+    # Run daily to detect when a transitive dependency has fallen out
+    # of the allowlist even without changes to the action file.
+    - cron: "30 5 * * *"
   push:
+    branches:
+      - main
     paths:
       - .github/actions/for-dependabot-triggered-reviews/action.yml
 
