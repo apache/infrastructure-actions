@@ -30,8 +30,24 @@ permissions:
   contents: read
 
 jobs:
-  lint:
+  lint-pelican:
     runs-on: ubuntu-latest
+    # GitHub Actions log output is not a TTY, so tools that autodetect
+    # colors turn them off in CI. Force colorized output via the common
+    # `FORCE_COLOR` convention (honored by pylint, rich, uv, etc.) plus
+    # `PY_COLORS=1` which mypy's `rich`-based pretty printer picks up.
+    # The per-tool flags below (`--output-format=colorized`,
+    # `--color-output`) make the intent explicit and work even for
+    # tools that don't read the env vars.
+    env:
+      FORCE_COLOR: "1"
+      PY_COLORS: "1"
+    defaults:
+      run:
+        # Applies to every `run:` step in this job; `uses:` steps are
+        # unaffected, so setup-uv's `cache-dependency-glob` below still
+        # resolves from the repository root.
+        working-directory: pelican
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
@@ -42,21 +58,14 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          pip list
-          cd pelican
-          pip install -r requirements.txt --no-deps  # Explicit dependency-only installation
-          pip install mypy types-PyYAML types-requests types-beautifulsoup4 types-markdown pylint
-          pip list
+      - name: Set up uv
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57  # v8.0.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: "pelican/uv.lock"
 
       - name: Type testing with mypy
-        run: |
-          cd pelican
-          mypy --cache-dir /tmp/ --install-types --non-interactive
-          mypy --cache-dir /tmp/ --ignore-missing-imports .
+        run: uv run mypy --color-output --pretty --ignore-missing-imports .
 
       - name: Code linting with pylint
-        run: |
-          cd pelican
-          pylint **/*.py
+        run: uv run pylint --output-format=colorized **/*.py

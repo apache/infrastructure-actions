@@ -62,12 +62,20 @@ dependencies = [
 # but the runtime install does not: Pelican itself (installed by the action
 # at runtime via `uv tool install 'pelican[markdown]==<version>'`, with the
 # version controlled by the action's `version` input rather than this file),
-# plus linting and test tooling.
+# plus linting, type-checking and test tooling. The `Linting and MyPy
+# (Pelican)` workflow syncs this group via `uv sync --no-install-project`
+# and runs mypy / pylint out of the resulting venv.
 [dependency-groups]
 dev = [
     "pelican[markdown]>=4.11,<4.12",
     "ruff>=0.6",
     "pytest>=8",
+    "mypy>=1.10",
+    "pylint>=3",
+    "types-PyYAML>=6.0",
+    "types-requests>=2.33",
+    "types-beautifulsoup4>=4.12",
+    "types-markdown>=3.10",
 ]
 
 [project.urls]
