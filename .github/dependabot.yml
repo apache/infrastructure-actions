@@ -19,7 +19,7 @@
 
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
+  - package-ecosystem: "github-actions" # zizmor: ignore[dependabot-cooldown] see #683 and #712
     commit-message:
       prefix: "action-allowlist-review"
     directories:
@@ -35,10 +35,7 @@ updates:
       - dependency-name: "cpp-linter/cpp-linter-action"
         versions:
           - ">=2.16"
-        # zizmor: ignore[dependabot-cooldown] see #683 and #712
     open-pull-requests-limit: 50
-    cooldown:
-      default-days: 7
   - package-ecosystem: "github-actions"
     schedule:
       # 'daily' only runs on weekdays
