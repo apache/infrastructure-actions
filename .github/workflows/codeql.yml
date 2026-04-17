@@ -17,27 +17,40 @@
 # under the License.
 #
 
-name: Check for transitive failures in current latest actions
+name: "CodeQL"
 
 on:
-  workflow_dispatch:
-  schedule:
-    # Run daily to detect when a transitive dependency has fallen out
-    # of the allowlist even without changes to the action file.
-    - cron: "30 5 * * *"
   push:
-    branches:
-      - main
-    paths:
-      - .github/actions/for-dependabot-triggered-reviews/action.yml
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '16 4 * * 1'
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
-  check-for-transitive-failures:
-    runs-on: ubuntu-latest
+  analyze:
+    name: Analyze Actions
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+      security-events: write
+      packages: read
+
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/for-dependabot-triggered-reviews
+    - name: Checkout repository
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+      with:
+        languages: actions
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+      with:
+        category: "/language:actions"

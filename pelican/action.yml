@@ -71,7 +71,7 @@ runs:
       # Install needs to run in separate shell so stdout is restored
       run: |
         (
-          test "${{ inputs.debug }}" == 'true' || exec >/dev/null
+          test "${INPUTS_DEBUG}" == 'true' || exec >/dev/null
           # Bootstrap uv into the setup-python interpreter.
           pip install uv
           # Install Pelican as an isolated uv tool. The action's project is
@@ -79,11 +79,11 @@ runs:
           # pyproject.toml lands in the same venv. Optional user requirements
           # are layered in via --with-requirements.
           UV_TOOL_ARGS=(--with "${{ github.action_path }}")
-          if [ -n "${{ inputs.requirements }}" ]; then
-            echo "Installing python requirements from ${{ inputs.requirements }}"
-            UV_TOOL_ARGS+=(--with-requirements "${{ inputs.requirements }}")
+          if [ -n "${INPUTS_REQUIREMENTS}" ]; then
+            echo "Installing python requirements from ${INPUTS_REQUIREMENTS}"
+            UV_TOOL_ARGS+=(--with-requirements "${INPUTS_REQUIREMENTS}")
           fi
-          uv tool install "pelican[markdown]==${{ inputs.version }}" "${UV_TOOL_ARGS[@]}"
+          uv tool install "pelican[markdown]==${INPUTS_VERSION}" "${UV_TOOL_ARGS[@]}"
         )
         # Make the uv tool bin dir visible to later steps and the current
         # shell. Publish the tool venv's Python so the "Generate website"
@@ -94,10 +94,14 @@ runs:
         python3 -V
         echo "Pelican version:"
         pelican --version
-        if [ "${{ inputs.debug }}" == 'true' ]
+        if [ "${INPUTS_DEBUG}" == 'true' ]
         then
           uv tool list
         fi
+      env:
+        INPUTS_DEBUG: ${{ inputs.debug }}
+        INPUTS_REQUIREMENTS: ${{ inputs.requirements }}
+        INPUTS_VERSION: ${{ inputs.version }}
 
     # If the site uses GitHub Flavored Markdown, use this build branch
     - name: fetch and build libcmark-gfm.so
@@ -106,6 +110,7 @@ runs:
       env:
         WORKDIR: /opt/pelican-asf # where to build GFM
         GFM_VERSION: '0.28.3.gfm.12' # ensure we agree with build-cmark.sh script
+        INPUTS_DEBUG: ${{ inputs.debug }}
       run: |
         # Does the GFM build already exist?
         if [[ -n $LIBCMARKDIR && -d $LIBCMARKDIR ]]
@@ -115,7 +120,7 @@ runs:
         fi
         {
           # disable stdout unless debug is on
-          if [ "${{ inputs.debug }}" == 'true' ]
+          if [ "${INPUTS_DEBUG}" == 'true' ]
           then
             # This envvar is used within build-cmark.sh
             DEBUG_STEPS=1; export DEBUG_STEPS
@@ -136,22 +141,26 @@ runs:
     - name: Generate website from markdown
       shell: bash
       run: |
-        if [ "${{ inputs.debug }}" == 'true' ]
+        if [ "${INPUTS_DEBUG}" == 'true' ]
         then
           OPTS='-D'
         else
           OPTS=''
         fi
-        if [ -n "${{ inputs.fatal }}" ]
+        if [ -n "${INPUTS_FATAL}" ]
         then
-          OPTS="$OPTS --fatal ${{ inputs.fatal }}"
+          OPTS="$OPTS --fatal ${INPUTS_FATAL}"
         fi
         echo "Getting plugins from action location: ${{ github.action_path }}"
         # Run plugin_paths from the tool venv's Python so pelicanconf.py can
         # import any dependency that lives alongside Pelican in that venv.
         PP=$("$PELICAN_TOOL_PY" -m plugin_paths '${{ github.action_path }}/plugins')
         set -x # Show the expanded variables
-        pelican content -e "$PP" -o ${{ inputs.tempdir }} $OPTS
+        pelican content -e "$PP" -o ${INPUTS_TEMPDIR} $OPTS
+      env:
+        INPUTS_DEBUG: ${{ inputs.debug }}
+        INPUTS_FATAL: ${{ inputs.fatal }}
+        INPUTS_TEMPDIR: ${{ inputs.tempdir }}
 
     - name: Check out previous branch
       if: ${{ inputs.publish == 'true' }}
@@ -160,30 +169,32 @@ runs:
         git config --global user.email "private@infra.apache.org"
         git config --global user.name "Build Pelican (action)"
         git remote update
-        if git checkout ${{ inputs.destination }}
+        if git checkout ${INPUTS_DESTINATION}
         then
-          git pull origin ${{ inputs.destination }}
+          git pull origin ${INPUTS_DESTINATION}
         else
           # if none, create it.
-          echo "branch ${{ inputs.destination }} is new; create empty site"
-          git switch --orphan ${{ inputs.destination }}
-          git checkout origin/${{ github.ref_name }} -- .asf.yaml
+          echo "branch ${INPUTS_DESTINATION} is new; create empty site"
+          git switch --orphan ${INPUTS_DESTINATION}
+          git checkout origin/${GITHUB_REF_NAME} -- .asf.yaml
           git add .asf.yaml -f
           git commit -m "Initialise empty site"
-          git push -u origin ${{ inputs.destination }}
+          git push -u origin ${INPUTS_DESTINATION}
         fi
+      env:
+        INPUTS_DESTINATION: ${{ inputs.destination }}
 
     - name: Commit Directly to the branch
       if: ${{ inputs.publish == 'true' }}
       shell: bash
       run: |
         # Remove all existing output so deletions will be captured
-        rm -rf ${{ inputs.output }}
-        git rm --quiet -r --ignore-unmatch --cached ${{ inputs.output }}/*
+        rm -rf ${INPUTS_OUTPUT}
+        git rm --quiet -r --ignore-unmatch --cached ${INPUTS_OUTPUT}/*
         # replace with generated output
-        mv ${{ inputs.tempdir }} ${{ inputs.output }}
+        mv ${INPUTS_TEMPDIR} ${INPUTS_OUTPUT}
         git diff # Show changes
-        git add ${{ inputs.output }}
+        git add ${INPUTS_OUTPUT}
         git status
         if git commit -m "Commit build products"
           then
@@ -192,3 +203,6 @@ runs:
           echo "No change"
           true # ensure step is successful
         fi
+      env:
+        INPUTS_OUTPUT: ${{ inputs.output }}
+        INPUTS_TEMPDIR: ${{ inputs.tempdir }}

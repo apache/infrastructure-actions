@@ -148,10 +148,11 @@ runs:
         STASH_RUN_ID: "${{ steps.check-stash.outputs.stash_run_id }}"
         REPO: "${{ github.repository }}"
         STASH_DIR: "${{ steps.mung.outputs.stash_path }}"
+        INPUTS_CLEAN: ${{ inputs.clean }}
       run: |
         # Catch errors in the download with || to avoid the whole workflow failing
         # when the download times out
-        if [[ "${{ inputs.clean }}" == "true" ]]; then
+        if [[ "${INPUTS_CLEAN}" == "true" ]]; then
             if [[ -d "$STASH_DIR" ]]; then
                 echo "Removing existing stash directory: $STASH_DIR"
                 rm -rf "$STASH_DIR"

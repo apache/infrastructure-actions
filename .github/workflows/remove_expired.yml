@@ -38,12 +38,12 @@ jobs:
         with:
           persist-credentials: true
           # Use PAT so the commit triggers other actions
-          token: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }}
+          token: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }} # zizmor: ignore[secrets-outside-env]
 
       - name: Print token details
         if: ${{ github.event_name != 'pull_request' }}
         env:
-          GH_TOKEN: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN }}
+          GH_TOKEN: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN }} # zizmor: ignore[secrets-outside-env]
         run: |
           echo "::group::Token details"
           echo "Token user and permissions:"
@@ -72,7 +72,7 @@ jobs:
       - name: Commit and push changes
         if: ${{ github.event_name != 'pull_request' }}
         env:
-          GH_TOKEN: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }}
+          GH_TOKEN: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }} # zizmor: ignore[secrets-outside-env]
         run: |
           AUTHOR_NAME=$(gh api /user --jq '.login' 2>/dev/null || echo "asfgit")
           AUTHOR_EMAIL=$(gh api /user --jq '.email // "\(.login)@users.noreply.github.com"' 2>/dev/null || echo "asfgit@users.noreply.github.com")
