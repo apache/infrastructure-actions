@@ -41,6 +41,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           ref: ${{ env.SOURCE }}
+          persist-credentials: false
       - name: Ignore the action checkout
         run: |
           echo "self/" >> .git/info/exclude
@@ -48,13 +49,14 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           path: self
+          persist-credentials: false
       - name: Reset output directory ${{ env.TARGET }}
         run: |
           set +e
           echo $TARGET
           git branch -D $TARGET
           git push origin --delete $TARGET
-          git branch -a | grep ${{ env.TARGET }}
+          git branch -a | grep ${TARGET}
           true
       - name: Should create ${{ env.TARGET }}
         uses: ./self/pelican
@@ -66,7 +68,7 @@ jobs:
           UNIT_TEST_A: This is UNIT_TEST_A
       - name: Check ${{ env.TARGET }} was created
         run: |
-          git checkout ${{ env.TARGET }}
+          git checkout ${TARGET}
           {
             echo "Commit build products"
             echo -n "Initialise empty site"
@@ -92,7 +94,7 @@ jobs:
           UNIT_TEST_A: This is UNIT_TEST_A updated
       - name: Check ${{ env.TARGET }} is present and has been updated
         run: |
-          git checkout ${{ env.TARGET }}
+          git checkout ${TARGET}
           {
             echo "Commit build products"
             echo "Commit build products"
@@ -115,7 +117,7 @@ jobs:
           UNIT_TEST_A: This is UNIT_TEST_A updated
       - name: Check ${{ env.TARGET }} is present and has not been updated
         run: |
-          git checkout ${{ env.TARGET }}
+          git checkout ${TARGET}
           {
             echo "Commit build products"
             echo "Commit build products"
