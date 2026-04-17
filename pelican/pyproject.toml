@@ -74,7 +74,7 @@ dev = [
     "pylint>=3",
     "types-PyYAML>=6.0",
     "types-requests>=2.33",
-    "types-beautifulsoup4>=4.12",
+    "types-beautifulsoup4>=4.12.0.20250516",
     "types-markdown>=3.10",
 ]
 
