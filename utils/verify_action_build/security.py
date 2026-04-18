@@ -256,17 +256,24 @@ def analyze_dockerfile(
         lines = content.splitlines()
         from_lines = []
         suspicious_cmds = []
+        stage_names: set[str] = set()
 
         for i, line in enumerate(lines, 1):
             stripped = line.strip()
             if not stripped or stripped.startswith("#"):
                 continue
 
-            from_match = re.match(r"FROM\s+(.+?)(?:\s+AS\s+\S+)?$", stripped, re.IGNORECASE)
+            from_match = re.match(r"FROM\s+(\S+)(?:\s+AS\s+(\S+))?\s*$", stripped, re.IGNORECASE)
             if from_match:
                 image = from_match.group(1).strip()
+                stage_alias = from_match.group(2)
                 from_lines.append((i, image))
-                if "@sha256:" in image:
+                if image in stage_names:
+                    console.print(
+                        f"  [green]✓[/green] [dim]line {i}:[/dim] FROM {image} "
+                        f"[green](multi-stage reference)[/green]"
+                    )
+                elif "@sha256:" in image:
                     console.print(
                         f"  [green]✓[/green] [dim]line {i}:[/dim] FROM {image} "
                         f"[green](digest-pinned)[/green]"
@@ -284,6 +291,8 @@ def analyze_dockerfile(
                         f"[red bold](unpinned or :latest!)[/red bold]"
                     )
                     warnings.append(f"Dockerfile FROM {image} is not pinned")
+                if stage_alias:
+                    stage_names.add(stage_alias)
                 continue
 
             lower = stripped.lower()

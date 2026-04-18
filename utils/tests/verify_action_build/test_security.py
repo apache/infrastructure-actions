@@ -65,6 +65,18 @@ class TestAnalyzeDockerfile:
             warnings = analyze_dockerfile("org", "repo", "a" * 40)
         assert any("curl" in w.lower() or "evil" in w.lower() for w in warnings)
 
+    def test_multistage_internal_from_no_warnings(self):
+        dockerfile = (
+            "FROM node:20@sha256:abc123 AS builder\n"
+            "RUN npm ci\n"
+            "FROM builder AS runtime\n"
+            "CMD [\"node\", \"index.js\"]\n"
+        )
+        files = {"Dockerfile": dockerfile}
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            warnings = analyze_dockerfile("org", "repo", "a" * 40)
+        assert warnings == []
+
     def test_no_dockerfile_no_warnings(self):
         with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
             with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
