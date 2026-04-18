@@ -69,7 +69,7 @@ runs:
       if: false
     - uses: browser-actions/setup-geckodriver@5ef1526ed36211ab6cb531ec1cfb11f924ca2dee
       if: false
-    - uses: burnett01/rsync-deployments@dc0d5d44c4728aad3f02154a87309809e62a960f  # 8.0.4
+    - uses: burnett01/rsync-deployments@66257cad6bfeb2171d3b6bfa6c9a22279dd9c3a1  # 8.0.5
       if: false
     - uses: carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3  # v1.0.10
       if: false
