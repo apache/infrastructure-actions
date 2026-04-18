@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-from verify_action_build.diff_js import beautify_js
+from verify_action_build.diff_js import _collect_compiled_js, beautify_js
 
 
 class TestBeautifyJs:
@@ -47,3 +47,32 @@ class TestBeautifyJs:
         result1 = beautify_js(code)
         result2 = beautify_js(code)
         assert result1 == result2
+
+
+class TestCollectCompiledJs:
+    def test_picks_up_js_cjs_mjs(self, tmp_path):
+        (tmp_path / "dist").mkdir()
+        (tmp_path / "dist" / "index.js").write_text("// js\n")
+        (tmp_path / "dist" / "index.cjs").write_text("// cjs\n")
+        (tmp_path / "dist" / "index.mjs").write_text("// mjs\n")
+        (tmp_path / "dist" / "index.cjs.map").write_text("{}\n")
+        (tmp_path / "dist" / "readme.md").write_text("ignored\n")
+
+        found = _collect_compiled_js(tmp_path)
+
+        from pathlib import Path
+        assert found == {
+            Path("dist/index.js"),
+            Path("dist/index.cjs"),
+            Path("dist/index.mjs"),
+        }
+
+    def test_empty_dir_returns_empty(self, tmp_path):
+        assert _collect_compiled_js(tmp_path) == set()
+
+    def test_nested_dirs(self, tmp_path):
+        (tmp_path / "dist" / "sub" / "main").mkdir(parents=True)
+        (tmp_path / "dist" / "sub" / "main" / "index.cjs").write_text("// cjs\n")
+
+        from pathlib import Path
+        assert _collect_compiled_js(tmp_path) == {Path("dist/sub/main/index.cjs")}
