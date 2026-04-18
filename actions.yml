@@ -622,10 +622,9 @@ matlab-actions/run-tests:
   4be3345d41da8b1bf8cc5cb01a5e19c4611cb15d:
     tag: v3.0.0
     expires_at: 2026-07-05
+  # The SHA 353aee49b0edf62278c118a51b484d90bf6da1b7 for the v3.1.0 tag was added on Apr 12, 2026 via PR #695
+  # The tag v3.1.0 has been moved on Apr 14, 2026 to 64426f612825c99055c2b4887c08c135ab01be0b/a6c82b97e58e6b95bf49fcc8f5ea82370dcccd12.
   353aee49b0edf62278c118a51b484d90bf6da1b7:
-    # The SHA 353aee49b0edf62278c118a51b484d90bf6da1b7 for this tag was added on Apr 12, 2026 via PR #695
-    # The tag v3.1.0 has been moved on Apr 14, 2026 to 64426f612825c99055c2b4887c08c135ab01be0b/a6c82b97e58e6b95bf49fcc8f5ea82370dcccd12.
-    #tag: v3.1.0
 matlab-actions/setup-matlab:
   aa8bbc7b76daa63c5d456d1430cbd6cb5b626ab4:
     tag: v2.7.0
@@ -829,6 +828,9 @@ scacap/action-surefire-report:
     # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
     ignore_gh_api_errors: true
   5609ce4db72c09db044803b344a8968fd1f315da:
+    # GH API requests from GH hosted runners fail with 403 and the following error message:
+    # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
+    ignore_gh_api_errors: true
     tag: v1.9.1
 scalacenter/sbt-dependency-submission:
   f43202114d7522a4b233e052f82c2eea8d658134:
