@@ -57,7 +57,7 @@ runs:
       if: false
     - uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2  # v5.0.0
       if: false
-    - uses: azure/setup-kubectl@15650b3ad78fff148532a140b8a4c821796b2d7b  # v5.0.0
+    - uses: azure/setup-kubectl@829323503d1be3d00ca8346e5391ca0b07a9ab0d  # v5.1.0
       if: false
     - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86  # 0.19.0
       if: false
