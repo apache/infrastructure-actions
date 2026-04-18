@@ -67,7 +67,7 @@ dependencies = [
 # and runs mypy / pylint out of the resulting venv.
 [dependency-groups]
 dev = [
-    "pelican[markdown]>=4.11,<4.12",
+    "pelican[markdown]>=4.11.0.post0,<4.12",
     "ruff>=0.6",
     "pytest>=8",
     "mypy>=1.10",
