@@ -267,10 +267,10 @@ Additional flags:
 
 #### Dependabot Cooldown Period
 
-This repository uses a [Dependabot cooldown period](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#cooldown) of 4 days. After a Dependabot PR is merged or closed, Dependabot will wait 4 days before opening the next PR for the same ecosystem. This helps keep the volume of update PRs manageable and gives reviewers time to catch up.
+This repository uses a [Dependabot cooldown period](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#cooldown) of 0 days so that maintainers can review before Dependabot opens a PR on project repositories.
 
 > [!TIP]
-> We recommend that ASF projects configure a similar cooldown in their own `dependabot.yml` to avoid being overwhelmed by update PRs and to catch up with approved actions here:
+> We recommend that ASF projects configure a cooldown in their own `dependabot.yml` to avoid being overwhelmed by update PRs and to catch up with approved actions here:
 > ```yaml
 > updates:
 >   - package-ecosystem: "github-actions"
