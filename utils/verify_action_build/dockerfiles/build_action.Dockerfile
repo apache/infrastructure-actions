@@ -83,9 +83,15 @@ RUN if [ -d "node_modules" ]; then \
       mkdir /original-node-modules; \
     fi
 
-# Delete compiled JS from output dir before rebuild to ensure a clean build
+# Delete compiled JS from output dir before rebuild to ensure a clean build.
+# Covers .js, .cjs and .mjs — actions bundled with esbuild/rollup may emit
+# dist/index.cjs (e.g. JustinBeckwith/linkinator-action) or dist/index.mjs.
 RUN OUT_DIR=$(cat /out-dir.txt); \
-    if [ -d "$OUT_DIR" ]; then find "$OUT_DIR" -name '*.js' -print -delete > /deleted-js.log 2>&1; else echo "no $OUT_DIR/ directory" > /deleted-js.log; fi
+    if [ -d "$OUT_DIR" ]; then \
+      find "$OUT_DIR" \( -name '*.js' -o -name '*.cjs' -o -name '*.mjs' \) -print -delete > /deleted-js.log 2>&1; \
+    else \
+      echo "no $OUT_DIR/ directory" > /deleted-js.log; \
+    fi
 
 # If an approved (previous) commit hash is provided, restore the dev-dependency
 # lock files from that commit so the rebuild uses the same toolchain (e.g. same
@@ -179,7 +185,7 @@ RUN BUILD_DIR=$(cat /build-dir.txt); \
 RUN OUT_DIR=$(cat /out-dir.txt); \
     BUILD_DIR=$(cat /build-dir.txt); \
     RUN_CMD=$(cat /run-cmd); \
-    has_output() { [ -d "$OUT_DIR" ] && find "$OUT_DIR" -name '*.js' -print -quit | grep -q .; }; \
+    has_output() { [ -d "$OUT_DIR" ] && find "$OUT_DIR" \( -name '*.js' -o -name '*.cjs' -o -name '*.mjs' \) -print -quit | grep -q .; }; \
     BUILD_DONE=false; \
     if [ -x build ] && ./build dist 2>/dev/null; then \
       echo "build-step: ./build dist" >> /build-info.log; \

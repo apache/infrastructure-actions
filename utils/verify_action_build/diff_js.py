@@ -25,6 +25,22 @@ import jsbeautifier
 from .console import console, link
 from .diff_display import show_colored_diff
 
+# Extensions emitted by action build toolchains. `.js` is the common case
+# (webpack/ncc/tsc); `.cjs` is what esbuild/rollup write when the source
+# package is ESM (type: module) and the action needs a CommonJS bundle for
+# the node runner (e.g. JustinBeckwith/linkinator-action);
+# `.mjs` is the inverse — an ESM bundle for node20+ runners.
+COMPILED_JS_EXTENSIONS = ("*.js", "*.cjs", "*.mjs")
+
+
+def _collect_compiled_js(base: Path) -> set[Path]:
+    """Return relative paths of compiled JS files under base."""
+    found: set[Path] = set()
+    for pattern in COMPILED_JS_EXTENSIONS:
+        for f in base.rglob(pattern):
+            found.add(f.relative_to(base))
+    return found
+
 
 def beautify_js(content: str) -> str:
     """Reformat JavaScript for readable diffing."""
@@ -46,13 +62,8 @@ def diff_js_files(
     # Files vendored by @vercel/ncc that are not built from the action's source.
     ignored_files = {"sourcemap-register.js"}
 
-    original_files = set()
-    rebuilt_files = set()
-
-    for f in original_dir.rglob("*.js"):
-        original_files.add(f.relative_to(original_dir))
-    for f in rebuilt_dir.rglob("*.js"):
-        rebuilt_files.add(f.relative_to(rebuilt_dir))
+    original_files = _collect_compiled_js(original_dir)
+    rebuilt_files = _collect_compiled_js(rebuilt_dir)
 
     all_files = sorted(original_files | rebuilt_files)
 
