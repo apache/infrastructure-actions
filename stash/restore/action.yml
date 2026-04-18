@@ -45,6 +45,20 @@ inputs:
         If true, only the current branch will be searched for the stash.
         If false, the base branch(PRs)/default branch will be searched as well.
     default: "false"
+  retry-count:
+    description: >
+      Number of attempts for downloading the stash artifact. When `gh run download`
+      exits with code 1 (the transient failure mode observed for artifact downloads),
+      the download will be retried until it succeeds or this many attempts have been
+      made. Other exit codes are not retried.
+    default: "3"
+  fail-on-download:
+    description: >
+      If true, the action will fail when a stash artifact was found but could not be
+      downloaded (after exhausting `retry-count` attempts). If false (the default),
+      a failed download is reported only via the `stash-hit` output and the step
+      itself succeeds.
+    default: "false"
 outputs:
   stash-hit:
     description: >
@@ -139,31 +153,23 @@ runs:
             )
 
     - name: Download Stash
-      shell: bash
+      shell: python3 {0}
       if: steps.check-stash.outputs.stash_found != 'false'
       id: download
       env:
+        PYTHONPATH: "${{ github.action_path }}"
         GH_TOKEN: "${{ inputs.token }}"
         STASH_NAME: "${{ steps.check-stash.outputs.stash_name }}"
         STASH_RUN_ID: "${{ steps.check-stash.outputs.stash_run_id }}"
         REPO: "${{ github.repository }}"
         STASH_DIR: "${{ steps.mung.outputs.stash_path }}"
-        INPUTS_CLEAN: ${{ inputs.clean }}
+        CLEAN: "${{ inputs.clean }}"
+        RETRY_COUNT: "${{ inputs.retry-count }}"
+        FAIL_ON_DOWNLOAD: "${{ inputs.fail-on-download }}"
       run: |
-        # Catch errors in the download with || to avoid the whole workflow failing
-        # when the download times out
-        if [[ "${INPUTS_CLEAN}" == "true" ]]; then
-            if [[ -d "$STASH_DIR" ]]; then
-                echo "Removing existing stash directory: $STASH_DIR"
-                rm -rf "$STASH_DIR"
-            fi
-        fi
-        gh run download "$STASH_RUN_ID" \
-                        --name "$STASH_NAME" \
-                        --dir "$STASH_DIR" \
-                        -R "$REPO" || download="failed" && download="success"
-
-        echo "download=$download" >> "$GITHUB_OUTPUT"
+        import os, sys
+        import download_stash
+        sys.exit(download_stash.download_stash(os.environ))
 
     - name: Set stash-hit Output
       id: output
