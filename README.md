@@ -23,6 +23,7 @@ This repository hosts GitHub Actions developed by the ASF community and approved
 - [Submitting an Action](#submitting-an-action)
 - [Available GitHub Actions](#available-github-actions)
 - [Organization-wide GitHub Actions Allow List](#management-of-organization-wide-github-actions-allow-list)
+  - [Pipeline Overview](#pipeline-overview)
   - [Adding a New Action](#adding-a-new-action-to-the-allow-list)
   - [Reviewing](#reviewing)
   - [Updating Version of Already Approved Action](#updating-version-of-already-approved-action)
@@ -79,6 +80,44 @@ As stated in the [ASF GitHub Actions Policy](https://infra.apache.org/github-act
 All other actions must be explicitly added to the allow list after undergoing a security review. This review process applies to both new actions and new versions of previously approved actions (though reviews for new versions are typically expedited).
 
 `actions.yml` is the source of truth for approved actions. From it, two generated files are kept in sync automatically: `approved_patterns.yml` (consumed by the ASF org-wide allow list) and `.github/actions/for-dependabot-triggered-reviews/action.yml` (the composite action Dependabot watches, so it can propose version bumps). The sections below describe the two entry points — manual PRs to add a new action, and the Dependabot-driven flow for updating versions of already-approved actions — and the workflows that implement each.
+
+#### Pipeline Overview
+
+The diagram below summarizes every entry point, workflow and generated file involved in keeping the allow list in shape. Each subsequent section zooms in on one slice of this flow.
+
+```mermaid
+graph LR
+    human["Human PR<br/>(add action / older version /<br/>urgent removal)"]
+    dependabot["Dependabot PR<br/>(version bump)"]
+    cron["Daily 02:04 UTC"]
+
+    actions["actions.yml<br/><i>source of truth</i>"]
+    composite[".github/actions/<br/>for-dependabot-triggered-reviews/<br/>action.yml"]
+    approved["approved_patterns.yml<br/><i>ASF org allow list</i>"]
+
+    human-->actions
+    dependabot-->composite
+    dependabot-.verified by.-verify["verify_dependabot_action.yml<br/>(rebuild &amp; diff)"]
+
+    composite=="update_actions.yml<br/>(on merge)"==>actions
+    cron=="remove_expired.yml"==>actions
+
+    actions=="update_composite_action.yml"==>composite
+    actions=="update_composite_action.yml"==>approved
+
+    guard["check_approved_limit.yml<br/>(fails at 800 / 1000)"]-.monitors.-approved
+
+    classDef source fill:#fff3b0,stroke:#8a6d0b,color:#333
+    classDef generated fill:#e0f0ff,stroke:#2563a6,color:#333
+    classDef trigger fill:#f3e0ff,stroke:#6a1b9a,color:#333
+    classDef workflow fill:#e6ffe6,stroke:#1b5e20,color:#333
+    class actions source
+    class composite,approved generated
+    class human,dependabot,cron trigger
+    class verify,guard workflow
+```
+
+Solid arrows (`==>`) are workflow regeneration edges — the "source → generated" flows that keep `actions.yml`, `approved_patterns.yml` and the dependabot composite in sync. Thin arrows feed the pipeline with new content (human or Dependabot PRs, cron), and dotted arrows are observer workflows that verify or guard rather than mutate.
 
 > [!NOTE]
 > `check_approved_limit.yml` guards the whole pipeline: the org-wide allow list has a hard cap of 1000 entries, and this workflow fails at 800 to give maintainers room to clean up before hitting the wall.
