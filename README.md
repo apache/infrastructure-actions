@@ -29,6 +29,7 @@ This repository hosts GitHub Actions developed by the ASF community and approved
     - [Automated Verification in CI](#automated-verification-in-ci)
     - [Dependabot Cooldown Period](#dependabot-cooldown-period)
   - [Manual Version Addition](#manual-addition-of-specific-versions)
+  - [Automatic Expiration of Old Versions](#automatic-expiration-of-old-versions)
   - [Removing a Version](#removing-a-version-manually)
 
 ## Submitting an Action
@@ -125,15 +126,13 @@ graph TD;
     dependabot-.verified by.-verify["verify_dependabot_action.yml"]
     composite--"update_actions.yml (on merge)"-->actions.yml
     actions.yml--"update_actions.yml"-->approved["approved_patterns.yml"]
-    actions.yml--"remove_expired.yml (daily)"-->actions.yml
 ```
 
 In most cases, new versions are automatically added through Dependabot:
 - Dependabot opens PRs against `.github/actions/for-dependabot-triggered-reviews/action.yml` to update actions to the newest releases
 - **`verify_dependabot_action.yml`** runs on each such PR, rebuilds the action's compiled JavaScript in Docker, and diffs it against the published version (see [Automated Verification in CI](#automated-verification-in-ci))
 - Once a reviewer merges the PR, **`update_actions.yml`** reflects the new commit SHAs back into `actions.yml` and regenerates `approved_patterns.yml`
-- The previously approved version is marked with an `expires_at` date 3 months out, giving projects a grace period to update their workflows
-- Once that date passes, the daily **`remove_expired.yml`** workflow (02:04 UTC) deletes the entry and regenerates `approved_patterns.yml` — no manual PR needed
+- The previously approved version is marked with an `expires_at` date 3 months out, giving projects a grace period to update their workflows; see [Automatic Expiration of Old Versions](#automatic-expiration-of-old-versions) for how the cleanup runs
 
 Projects are encouraged to help review updates to actions they use. Please have a look at the diff and mention in your approval what you have checked and why you think the action is safe.
 
@@ -283,9 +282,27 @@ If you add older version of the action and want to set an expiration date for it
 > [!WARNING]
 > Older versions may contain security vulnerabilities or performance issues. Always evaluate if using the latest version is possible before requesting older versions.
 
+### Automatic Expiration of Old Versions
+
+```mermaid
+graph TD;
+    entry["actions.yml entry<br/>with expires_at"]--"remove_expired.yml (daily, 02:04 UTC)"-->actions.yml
+    actions.yml--"update_composite_action.yml"-->composite[".github/actions/for-dependabot-triggered-reviews/action.yml"]
+    actions.yml--"update_composite_action.yml"-->approved["approved_patterns.yml"]
+```
+
+Routine cleanup of superseded versions is automated:
+
+- Any entry in `actions.yml` with an `expires_at: YYYY-MM-DD` field is a candidate for removal.
+- Dependabot-driven updates (see [Updating Version of Already Approved Action](#updating-version-of-already-approved-action)) set `expires_at` to **3 months out** on the previously approved version. For manually added older versions, set `expires_at` explicitly (see [Manual Addition of Specific Versions](#manual-addition-of-specific-versions)).
+- The **`remove_expired.yml`** workflow runs daily at **02:04 UTC**. Every entry whose `expires_at` date has passed is deleted from `actions.yml`; the workflow then commits the change and lets `update_composite_action.yml` regenerate `approved_patterns.yml` and the dependabot composite.
+- Entries without `expires_at` (for example, `keep: true` wildcards and the current approved version) are never auto-removed — removal of those requires a manual PR.
+
+No human action is required for the routine case: projects get a 3-month grace window after a version bump, and the old entry disappears on its own afterwards.
+
 ### Removing a version manually
 
-Routine removal is already automated: set `expires_at` on the entry and the daily `remove_expired.yml` workflow will delete it once the date passes. Use the manual process below only when you need an immediate removal that can't wait for the next daily run.
+Routine removal is already automated: set `expires_at` on the entry and the daily `remove_expired.yml` workflow will delete it once the date passes. Use the manual process below only when you need an immediate removal that can't wait for the entry to expire.
 
 > [!IMPORTANT]
 > If a version or entire action needs to be removed immediately due to a security vulnerability:
