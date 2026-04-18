@@ -339,7 +339,8 @@ dorny/test-reporter:
 dtolnay/rust-toolchain:
   29eef336d9b2848a0b548edc03f92a220660cdb8:
     keep: true
-    tag: stable
+    # 'stable' is a branch. Mentioning as a 'tag' lets the action-tags verification fail.
+    #tag: stable
 easimon/maximize-build-space:
   '*':
     keep: true
@@ -622,7 +623,9 @@ matlab-actions/run-tests:
     tag: v3.0.0
     expires_at: 2026-07-05
   353aee49b0edf62278c118a51b484d90bf6da1b7:
-    tag: v3.1.0
+    # The SHA 353aee49b0edf62278c118a51b484d90bf6da1b7 for this tag was added on Apr 12, 2026 via PR #695
+    # The tag v3.1.0 has been moved on Apr 14, 2026 to 64426f612825c99055c2b4887c08c135ab01be0b/a6c82b97e58e6b95bf49fcc8f5ea82370dcccd12.
+    #tag: v3.1.0
 matlab-actions/setup-matlab:
   aa8bbc7b76daa63c5d456d1430cbd6cb5b626ab4:
     tag: v2.7.0
