@@ -64,6 +64,7 @@
 - bufbuild/buf-setup-action@*
 - burnett01/rsync-deployments@7659d600d8bdd035bb5cdfba1d4bd0dd4a307ca6
 - burnett01/rsync-deployments@dc0d5d44c4728aad3f02154a87309809e62a960f
+- burnett01/rsync-deployments@66257cad6bfeb2171d3b6bfa6c9a22279dd9c3a1
 - burrunan/gradle-cache-action@*
 - bytedeco/javacpp-presets@*
 - carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3
