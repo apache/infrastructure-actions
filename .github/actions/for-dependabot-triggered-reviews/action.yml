@@ -169,8 +169,6 @@ runs:
       if: false
     - uses: manusa/actions-setup-minikube@96202dee4ae1c2f46a62fe197273aaf22b83f42d  # v2.16.1
       if: false
-    - uses: matlab-actions/run-tests@353aee49b0edf62278c118a51b484d90bf6da1b7  # v3.1.0
-      if: false
     - uses: matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f  # v3.0.1
       if: false
     - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29  # v2.2.1
