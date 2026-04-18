@@ -23,12 +23,14 @@ This repository hosts GitHub Actions developed by the ASF community and approved
 - [Submitting an Action](#submitting-an-action)
 - [Available GitHub Actions](#available-github-actions)
 - [Organization-wide GitHub Actions Allow List](#management-of-organization-wide-github-actions-allow-list)
+  - [Pipeline Overview](#pipeline-overview)
   - [Adding a New Action](#adding-a-new-action-to-the-allow-list)
   - [Reviewing](#reviewing)
-  - [Adding a New Version](#adding-a-new-version-to-the-allow-list)
+  - [Updating Version of Already Approved Action](#updating-version-of-already-approved-action)
     - [Automated Verification in CI](#automated-verification-in-ci)
     - [Dependabot Cooldown Period](#dependabot-cooldown-period)
   - [Manual Version Addition](#manual-addition-of-specific-versions)
+  - [Automatic Expiration of Old Versions](#automatic-expiration-of-old-versions)
   - [Removing a Version](#removing-a-version-manually)
 
 ## Submitting an Action
@@ -77,16 +79,59 @@ As stated in the [ASF GitHub Actions Policy](https://infra.apache.org/github-act
 
 All other actions must be explicitly added to the allow list after undergoing a security review. This review process applies to both new actions and new versions of previously approved actions (though reviews for new versions are typically expedited).
 
+`actions.yml` is the source of truth for approved actions. From it, two generated files are kept in sync automatically: `approved_patterns.yml` (consumed by the ASF org-wide allow list) and `.github/actions/for-dependabot-triggered-reviews/action.yml` (the composite action Dependabot watches, so it can propose version bumps). The sections below describe the two entry points — manual PRs to add a new action, and the Dependabot-driven flow for updating versions of already-approved actions — and the workflows that implement each.
+
+#### Pipeline Overview
+
+The diagram below summarizes every entry point, workflow and generated file involved in keeping the allow list in shape. Each subsequent section zooms in on one slice of this flow.
+
 ```mermaid
-graph TD;
-    manual["manual PRs"]--new entries-->actions.yml
-    dependabot--updates (after review)-->composite-action[".github/actions/for-dependabot-triggered-reviews/action.yml"];
-    composite-action--updates-->actions.yml
-    actions.yml--new entries-->composite-action
-    actions.yml--generates-->approved_patterns.yml
+graph LR
+    human["Human PR<br/>(add action / older version /<br/>urgent removal)"]
+    dependabot["Dependabot PR<br/>(version bump)"]
+    cron["Daily 02:04 UTC"]
+
+    actions["actions.yml<br/><i>source of truth</i>"]
+    composite[".github/actions/<br/>for-dependabot-triggered-reviews/<br/>action.yml"]
+    approved["approved_patterns.yml<br/><i>ASF org allow list</i>"]
+
+    human-->actions
+    dependabot-->composite
+    dependabot-.verified by.-verify["verify_dependabot_action.yml<br/>(rebuild &amp; diff)"]
+
+    composite=="update_actions.yml<br/>(on merge)"==>actions
+    cron=="remove_expired.yml"==>actions
+
+    actions=="update_composite_action.yml"==>composite
+    actions=="update_composite_action.yml"==>approved
+
+    guard["check_approved_limit.yml<br/>(fails at 800 / 1000)"]-.monitors.-approved
+
+    classDef source fill:#fff3b0,stroke:#8a6d0b,color:#333
+    classDef generated fill:#e0f0ff,stroke:#2563a6,color:#333
+    classDef trigger fill:#f3e0ff,stroke:#6a1b9a,color:#333
+    classDef workflow fill:#e6ffe6,stroke:#1b5e20,color:#333
+    class actions source
+    class composite,approved generated
+    class human,dependabot,cron trigger
+    class verify,guard workflow
 ```
 
+Solid arrows (`==>`) are workflow regeneration edges — the "source → generated" flows that keep `actions.yml`, `approved_patterns.yml` and the dependabot composite in sync. Thin arrows feed the pipeline with new content (human or Dependabot PRs, cron), and dotted arrows are observer workflows that verify or guard rather than mutate.
+
+> [!NOTE]
+> `check_approved_limit.yml` guards the whole pipeline: the org-wide allow list has a hard cap of 1000 entries, and this workflow fails at 800 to give maintainers room to clean up before hitting the wall.
+
 ### Adding a New Action to the Allow List
+
+```mermaid
+graph TD;
+    manual["manual PR"]--new entry-->actions.yml
+    actions.yml--"update_composite_action.yml"-->composite[".github/actions/for-dependabot-triggered-reviews/action.yml"]
+    actions.yml--"update_composite_action.yml"-->approved["approved_patterns.yml"]
+```
+
+A human-authored PR edits `actions.yml` directly. Once it merges to `main`, the **`update_composite_action.yml`** workflow regenerates both `.github/actions/for-dependabot-triggered-reviews/action.yml` and `approved_patterns.yml` from the new entries, so contributors never have to hand-edit the generated files.
 
 To request addition of an action to the allow list:
 
@@ -112,12 +157,21 @@ repo/owner:
 
 The infrastructure team will review your request and either approve, request changes, or provide feedback on alternatives.
 
-### Adding a new _version_ to the allow list
+### Updating version of already approved action
+
+```mermaid
+graph TD;
+    dependabot--"PR updates"-->composite[".github/actions/for-dependabot-triggered-reviews/action.yml"]
+    dependabot-.verified by.-verify["verify_dependabot_action.yml"]
+    composite--"update_actions.yml (on merge)"-->actions.yml
+    actions.yml--"update_actions.yml"-->approved["approved_patterns.yml"]
+```
 
 In most cases, new versions are automatically added through Dependabot:
-- Dependabot opens PRs to update actions to the newest releases
-- The previously approved version will be marked to expire in 3 months
-- This grace period gives projects sufficient time to update their workflows
+- Dependabot opens PRs against `.github/actions/for-dependabot-triggered-reviews/action.yml` to update actions to the newest releases
+- **`verify_dependabot_action.yml`** runs on each such PR, rebuilds the action's compiled JavaScript in Docker, and diffs it against the published version (see [Automated Verification in CI](#automated-verification-in-ci))
+- Once a reviewer merges the PR, **`update_actions.yml`** reflects the new commit SHAs back into `actions.yml` and regenerates `approved_patterns.yml`
+- The previously approved version is marked with an `expires_at` date 3 months out, giving projects a grace period to update their workflows; see [Automatic Expiration of Old Versions](#automatic-expiration-of-old-versions) for how the cleanup runs
 
 Projects are encouraged to help review updates to actions they use. Please have a look at the diff and mention in your approval what you have checked and why you think the action is safe.
 
@@ -267,7 +321,27 @@ If you add older version of the action and want to set an expiration date for it
 > [!WARNING]
 > Older versions may contain security vulnerabilities or performance issues. Always evaluate if using the latest version is possible before requesting older versions.
 
+### Automatic Expiration of Old Versions
+
+```mermaid
+graph TD;
+    entry["actions.yml entry<br/>with expires_at"]--"remove_expired.yml (daily, 02:04 UTC)"-->actions.yml
+    actions.yml--"update_composite_action.yml"-->composite[".github/actions/for-dependabot-triggered-reviews/action.yml"]
+    actions.yml--"update_composite_action.yml"-->approved["approved_patterns.yml"]
+```
+
+Routine cleanup of superseded versions is automated:
+
+- Any entry in `actions.yml` with an `expires_at: YYYY-MM-DD` field is a candidate for removal.
+- Dependabot-driven updates (see [Updating Version of Already Approved Action](#updating-version-of-already-approved-action)) set `expires_at` to **3 months out** on the previously approved version. For manually added older versions, set `expires_at` explicitly (see [Manual Addition of Specific Versions](#manual-addition-of-specific-versions)).
+- The **`remove_expired.yml`** workflow runs daily at **02:04 UTC**. Every entry whose `expires_at` date has passed is deleted from `actions.yml`; the workflow then commits the change and lets `update_composite_action.yml` regenerate `approved_patterns.yml` and the dependabot composite.
+- Entries without `expires_at` (for example, `keep: true` wildcards and the current approved version) are never auto-removed — removal of those requires a manual PR.
+
+No human action is required for the routine case: projects get a 3-month grace window after a version bump, and the old entry disappears on its own afterwards.
+
 ### Removing a version manually
+
+Routine removal is already automated: set `expires_at` on the entry and the daily `remove_expired.yml` workflow will delete it once the date passes. Use the manual process below only when you need an immediate removal that can't wait for the entry to expire.
 
 > [!IMPORTANT]
 > If a version or entire action needs to be removed immediately due to a security vulnerability:
