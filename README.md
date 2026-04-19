@@ -246,7 +246,12 @@ The `--no-gh` mode supports all the same features as the default `gh`-based mode
 
 #### Automated Verification in CI
 
-Dependabot PRs that modify `.github/actions/for-dependabot-triggered-reviews/action.yml` are automatically verified by the `verify_dependabot_action.yml` workflow. It extracts the action reference from the PR, rebuilds the compiled JavaScript in Docker, and compares it against the published version. The workflow reports success or failure but does **not** auto-approve or merge — a human reviewer must still approve.
+Two workflows in `.github/workflows/` run `verify-action-build` on PRs that touch the allow list, so the verification status is visible on every PR as a required-candidate status check:
+
+- **`verify_dependabot_action.yml`** — triggers on Dependabot PRs that modify `.github/actions/for-dependabot-triggered-reviews/action.yml`. Extracts the action reference from the PR, rebuilds the compiled JavaScript in Docker, and compares it against the published version.
+- **`verify_manual_action.yml`** — triggers on human-authored PRs that modify `actions.yml` or `approved_patterns.yml` (i.e. manual allow-list additions / version bumps). Dependabot-authored PRs are skipped, since they are already covered by the workflow above.
+
+Both workflows use a regular `pull_request` trigger with read-only permissions and no PR comments — pass/fail is surfaced through the status check. Neither workflow auto-approves or merges; a human reviewer must still approve.
 
 The script exits with code **1** (failure) when something is unexpectedly broken — for example, the action cannot be compiled, the rebuilt JavaScript is invalid, or required tools are missing. In all other cases it exits with code **0** and produces reviewable diffs: a large diff does not by itself cause an error (e.g. major version bumps will naturally have big diffs). It is always up to a human reviewer to inspect the output, assess the changes, and decide whether the update is safe to approve.
 
