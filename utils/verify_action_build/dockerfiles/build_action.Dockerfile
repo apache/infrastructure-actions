@@ -32,6 +32,30 @@ ARG COMMIT_HASH
 
 RUN git clone "$REPO_URL" . && git checkout "$COMMIT_HASH"
 
+# Dart-based actions (e.g. dart-lang/setup-dart) compile Dart sources with
+# `dart compile js` in their npm build script and then bundle via a bare
+# `ncc build` invocation in their dist script. Neither is available in the
+# node:slim base, so detect `pubspec.yaml` at the repo root and install
+# both the Dart SDK (from Google's apt repo) and `@vercel/ncc` globally so
+# the action's own `npm run` scripts can execute unmodified.
+ENV PATH="/usr/lib/dart/bin:${PATH}"
+RUN if [ -f pubspec.yaml ]; then \
+      apt-get update && \
+      apt-get install -y --no-install-recommends ca-certificates curl gnupg && \
+      curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub \
+        | gpg --dearmor -o /usr/share/keyrings/dart.gpg && \
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/dart.gpg] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main" \
+        > /etc/apt/sources.list.d/dart_stable.list && \
+      apt-get update && \
+      apt-get install -y --no-install-recommends dart && \
+      rm -rf /var/lib/apt/lists/* && \
+      npm install -g @vercel/ncc && \
+      dart pub get && \
+      echo "dart-sdk: installed (pubspec.yaml detected)" >> /build-info.log && \
+      echo "global-ncc: installed (pubspec.yaml detected)" >> /build-info.log && \
+      echo "dart-pub-get: ran" >> /build-info.log; \
+    fi
+
 # Detect action type from action.yml or action.yaml.
 # For monorepo sub-actions (SUB_PATH set), check <sub_path>/action.yml first,
 # falling back to the root action.yml.
@@ -193,7 +217,7 @@ RUN OUT_DIR=$(cat /out-dir.txt); \
     fi && \
     if [ "$BUILD_DONE" = "false" ]; then \
       cd "$BUILD_DIR" && \
-      for step in build package start; do \
+      for step in all build package start; do \
         if $RUN_CMD run "$step" 2>/dev/null; then \
           echo "build-step: $RUN_CMD run $step (in $BUILD_DIR)" >> /build-info.log; \
           cd /action && \
