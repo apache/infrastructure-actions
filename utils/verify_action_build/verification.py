@@ -454,7 +454,11 @@ def verify_single_action(
         border = "yellow" if not is_js_action and non_js_warnings else "green"
         console.print(Panel(result_msg + checklist_hint, border_style=border, title="RESULT"))
     else:
-        if is_js_action:
+        # Pick the failure message based on the actual cause, not the action
+        # type. The binary-download check runs for every action type, so a
+        # JS action can fail this path with all_match=True when its only
+        # issue is an unverified download.
+        if not all_match:
             if matched_with_approved_lockfile:
                 fail_msg = (
                     "[red bold]Compiled JS only matches when rebuilt with the "
