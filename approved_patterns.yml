@@ -99,6 +99,7 @@
 - crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec
 - crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd
 - damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
+- dart-lang/setup-dart@e51d8e571e22473a2ddebf0ef8a2123f0ab2c02c
 - DavidAnson/markdownlint-cli2-action@07035fd053f7be764496c0f8d8f9f41f98305101
 - DavidAnson/markdownlint-cli2-action@ce4853d43830c74c1753b39f3cf40f71c2031eb9
 - dawidd6/action-download-artifact@*

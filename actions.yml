@@ -259,6 +259,9 @@ crazy-max/ghaction-import-gpg:
     tag: v7.0.0
 damccorm/tag-ur-it:
   6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5:
+dart-lang/setup-dart:
+  e51d8e571e22473a2ddebf0ef8a2123f0ab2c02c:
+    tag: v1.7.1
 DavidAnson/markdownlint-cli2-action:
   07035fd053f7be764496c0f8d8f9f41f98305101:
     tag: v22.0.0
