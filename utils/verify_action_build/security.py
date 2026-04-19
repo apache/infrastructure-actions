@@ -21,10 +21,12 @@
 import json
 import os
 import re
+from dataclasses import dataclass
+from typing import Iterator
 
 import requests
 
-from .console import console, link
+from .console import console
 from .github_client import GitHubClient
 from .action_ref import (
     fetch_action_yml,
@@ -35,193 +37,210 @@ from .action_ref import (
 from .approved_actions import find_approved_versions
 
 
+# Orgs we trust to the point of not descending into their nested action graph.
+TRUSTED_ORGS = {"actions", "github"}
+
+
+@dataclass
+class VisitedAction:
+    """One node in a depth-first walk of a composite action graph.
+
+    The root action is yielded with ``depth=0`` and ``incoming_ref=None``.
+    Every nested action reached via a ``uses:`` ref is yielded with the
+    raw ref info (``incoming_ref``) and its parent's ``action.yml`` body
+    (``parent_yml``) so checks can report how it was reached (line number,
+    tag comment, etc.) without re-fetching.
+
+    For ``local`` and ``docker-ref`` terminals the walker yields a
+    minimal stub (``action_yml=None``) since there's no corresponding
+    ``action.yml`` to fetch. For trusted-org refs reached at depth > 0,
+    the walker yields a stub as well and does not descend — matching
+    the pre-refactor behaviour of the two per-check recursions.
+    """
+    org: str
+    repo: str
+    commit_hash: str
+    sub_path: str
+    depth: int
+    action_yml: str | None
+    action_type: str  # "composite", "docker", "node<N>", "local", "docker-ref", "trusted", "unknown"
+    incoming_ref: dict | None
+    parent_yml: str | None
+    approved: bool
+    trusted: bool
+
+
+def walk_actions(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+    max_depth: int = 3,
+) -> Iterator[VisitedAction]:
+    """Walk the composite action graph depth-first in pre-order.
+
+    Yields each unique action once (keyed by ``org/repo/sub_path@commit``).
+    Fetches each ``action.yml`` at most once per call — and the shared
+    ``fetch_action_yml`` cache makes it free across multiple walks within
+    a single CLI run. Each check can consume the stream as a pure
+    function: ``for v in walk_actions(...): do_check(v)``.
+
+    Descent rules (matching the two legacy per-check recursions):
+      * Local (``./path``) and docker (``docker://…``) refs are terminal.
+      * Non-hash-pinned refs are yielded but not descended.
+      * Trusted-org refs at depth > 0 are yielded as stubs and not
+        descended (no ``action.yml`` fetch).
+      * Otherwise composite actions — and node actions that themselves
+        reference other actions — are descended.
+    """
+    visited: set[str] = set()
+
+    def _walk(
+        o: str, r: str, c: str, s: str, depth: int,
+        incoming_ref: dict | None, parent_yml: str | None,
+    ) -> Iterator[VisitedAction]:
+        if incoming_ref and incoming_ref.get("is_local"):
+            yield VisitedAction(
+                org=o, repo=r, commit_hash=c, sub_path=s, depth=depth,
+                action_yml=None, action_type="local",
+                incoming_ref=incoming_ref, parent_yml=parent_yml,
+                approved=True, trusted=False,
+            )
+            return
+        if incoming_ref and incoming_ref.get("is_docker"):
+            yield VisitedAction(
+                org=o, repo=r, commit_hash=c, sub_path=s, depth=depth,
+                action_yml=None, action_type="docker-ref",
+                incoming_ref=incoming_ref, parent_yml=parent_yml,
+                approved=True, trusted=False,
+            )
+            return
+
+        trusted = o in TRUSTED_ORGS
+        if depth > 0 and trusted:
+            yield VisitedAction(
+                org=o, repo=r, commit_hash=c, sub_path=s, depth=depth,
+                action_yml=None, action_type="trusted",
+                incoming_ref=incoming_ref, parent_yml=parent_yml,
+                approved=True, trusted=True,
+            )
+            return
+
+        key = f"{o}/{r}/{s}@{c}"
+        if key in visited:
+            return
+        visited.add(key)
+
+        action_yml = fetch_action_yml(o, r, c, s)
+        action_type = "unknown"
+        if action_yml:
+            action_type = detect_action_type_from_yml(action_yml)
+
+        approved = False
+        if incoming_ref and incoming_ref.get("is_hash_pinned"):
+            approved_list = find_approved_versions(o, r)
+            approved = c in {v["hash"] for v in approved_list}
+
+        yield VisitedAction(
+            org=o, repo=r, commit_hash=c, sub_path=s, depth=depth,
+            action_yml=action_yml, action_type=action_type,
+            incoming_ref=incoming_ref, parent_yml=parent_yml,
+            approved=approved, trusted=trusted,
+        )
+
+        if depth >= max_depth:
+            return
+        if not action_yml:
+            return
+        if incoming_ref and not incoming_ref.get("is_hash_pinned"):
+            return
+
+        for nested in extract_composite_uses(action_yml):
+            yield from _walk(
+                nested.get("org", ""), nested.get("repo", ""),
+                nested.get("ref", ""), nested.get("sub_path", ""),
+                depth + 1, nested, action_yml,
+            )
+
+    yield from _walk(org, repo, commit_hash, sub_path, 0, None, None)
+
+
 def analyze_nested_actions(
     org: str, repo: str, commit_hash: str, sub_path: str = "",
     ci_mode: bool = False, gh: GitHubClient | None = None,
-    _depth: int = 0, _visited: set | None = None,
-    _checked: list | None = None,
 ) -> tuple[list[str], list[dict]]:
-    """Analyze actions referenced in composite steps, recursing into ALL types.
+    """Analyze actions referenced in composite steps.
 
-    Returns (warnings, checked_actions) where checked_actions is a list of dicts
-    describing each nested action that was inspected (for the summary).
+    Consumes :func:`walk_actions` in pre-order so each unique nested
+    action is displayed exactly once (matching the legacy ordering)
+    while sharing its ``action.yml`` fetches with every other check
+    that walks the same graph.
+
+    Returns ``(warnings, checked_actions)`` where ``checked_actions``
+    is a list of dicts describing each nested action inspected
+    (used by the verification summary).
     """
-    MAX_DEPTH = 3
     warnings: list[str] = []
+    checked: list[dict] = []
 
-    if _visited is None:
-        _visited = set()
-    if _checked is None:
-        _checked = []
+    first = True
+    header_printed = False
+    for visit in walk_actions(org, repo, commit_hash, sub_path):
+        # The root visit is not "nested"; it only provides the action.yml
+        # from which the first layer of uses: refs were resolved. Warn if
+        # its action.yml could not be fetched — the graph is unreachable.
+        if first:
+            first = False
+            if visit.action_yml is None and visit.action_type != "trusted":
+                warnings.append(
+                    f"Could not fetch action.yml for "
+                    f"{visit.org}/{visit.repo}@{visit.commit_hash[:12]}"
+                )
+            continue
 
-    action_key = f"{org}/{repo}/{sub_path}@{commit_hash}"
-    if action_key in _visited:
-        return warnings, _checked
-    _visited.add(action_key)
+        if not header_printed:
+            console.print()
+            console.rule("[bold]Nested Action Analysis[/bold]")
+            header_printed = True
 
-    indent = "  " * (_depth + 1)
+        ref_info = visit.incoming_ref or {}
+        parent_yml = visit.parent_yml or ""
+        indent = "  " * visit.depth
 
-    action_yml = fetch_action_yml(org, repo, commit_hash, sub_path)
-    if not action_yml:
-        warnings.append(f"Could not fetch action.yml for {org}/{repo}@{commit_hash[:12]}")
-        return warnings, _checked
+        raw = ref_info.get("raw", "")
+        line = ref_info.get("line_num", 0)
 
-    uses_refs = extract_composite_uses(action_yml)
-    if not uses_refs:
-        return warnings, _checked
-
-    if _depth == 0:
-        console.print()
-        console.rule("[bold]Nested Action Analysis[/bold]")
-
-    for ref_info in uses_refs:
-        raw = ref_info["raw"]
-        line = ref_info["line_num"]
-
-        if ref_info.get("is_local"):
-            console.print(f"{indent}[dim]line {line}:[/dim] [cyan]{raw}[/cyan] [dim](local action)[/dim]")
-            _checked.append({
+        if visit.action_type == "local":
+            console.print(
+                f"{indent}[dim]line {line}:[/dim] [cyan]{raw}[/cyan] [dim](local action)[/dim]"
+            )
+            checked.append({
                 "action": raw, "type": "local", "pinned": True,
                 "approved": True, "status": "ok",
             })
             continue
 
-        if ref_info.get("is_docker"):
-            console.print(f"{indent}[dim]line {line}:[/dim] [cyan]{raw}[/cyan] [dim](docker reference)[/dim]")
-            _checked.append({
+        if visit.action_type == "docker-ref":
+            console.print(
+                f"{indent}[dim]line {line}:[/dim] [cyan]{raw}[/cyan] [dim](docker reference)[/dim]"
+            )
+            checked.append({
                 "action": raw, "type": "docker-ref", "pinned": True,
                 "approved": True, "status": "ok",
             })
             continue
 
-        r_org, r_repo, r_sub = ref_info["org"], ref_info["repo"], ref_info["sub_path"]
-        ref_str = ref_info["ref"]
+        r_org, r_repo, r_sub = visit.org, visit.repo, visit.sub_path
+        ref_str = visit.commit_hash
         display_name = f"{r_org}/{r_repo}"
         if r_sub:
             display_name += f"/{r_sub}"
 
-        checked_entry: dict = {
+        entry: dict = {
             "action": display_name, "ref": ref_str,
-            "pinned": ref_info["is_hash_pinned"],
+            "pinned": ref_info.get("is_hash_pinned", False),
             "approved": False, "type": "unknown", "status": "ok",
-            "depth": _depth + 1,
+            "depth": visit.depth,
         }
 
-        if ref_info["is_hash_pinned"]:
-            approved = find_approved_versions(r_org, r_repo)
-            approved_hashes = {v["hash"] for v in approved}
-            is_approved = ref_str in approved_hashes
-            checked_entry["approved"] = is_approved
-
-            tag_comment = ""
-            for yml_line in action_yml.splitlines():
-                if ref_str in yml_line and "#" in yml_line:
-                    tag_comment = yml_line.split("#", 1)[1].strip()
-                    break
-            checked_entry["tag"] = tag_comment
-
-            if is_approved:
-                console.print(
-                    f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
-                    f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{display_name}@{ref_str[:12]}[/link] "
-                    f"[green](hash-pinned, in our approved list)[/green]"
-                )
-            else:
-                tag_display = f" [dim]# {tag_comment}[/dim]" if tag_comment else ""
-                console.print(
-                    f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
-                    f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{display_name}@{ref_str[:12]}[/link]"
-                    f"{tag_display} [yellow](hash-pinned, NOT in our approved list)[/yellow]"
-                )
-                warnings.append(
-                    f"Nested action {display_name}@{ref_str[:12]} is not in our approved actions list"
-                )
-                checked_entry["status"] = "warn"
-
-            TRUSTED_ORGS = {"actions", "github"}
-            is_trusted = r_org in TRUSTED_ORGS
-            checked_entry["trusted"] = is_trusted
-
-            if _depth < MAX_DEPTH:
-                nested_yml = fetch_action_yml(r_org, r_repo, ref_str, r_sub)
-                if nested_yml:
-                    nested_type = detect_action_type_from_yml(nested_yml)
-                    checked_entry["type"] = nested_type
-
-                    if is_trusted:
-                        console.print(
-                            f"{indent}  [dim]↳ {nested_type} action "
-                            f"(trusted org '{r_org}' — skipping deep inspection)[/dim]"
-                        )
-                    elif nested_type == "composite":
-                        console.print(
-                            f"{indent}  [dim]↳ {nested_type} action — analyzing nested steps...[/dim]"
-                        )
-                        nested_warnings, _ = analyze_nested_actions(
-                            r_org, r_repo, ref_str, r_sub,
-                            ci_mode=ci_mode, gh=gh,
-                            _depth=_depth + 1, _visited=_visited,
-                            _checked=_checked,
-                        )
-                        warnings.extend(nested_warnings)
-                    elif nested_type.startswith("node"):
-                        node_ver = nested_type.replace("node", "")
-                        has_dist = False
-                        main_path = ""
-                        for yml_line in nested_yml.splitlines():
-                            main_m = re.match(r"\s+main:\s*['\"]?(\S+?)['\"]?\s*$", yml_line)
-                            if main_m:
-                                main_path = main_m.group(1)
-                                break
-                        if main_path:
-                            main_check = fetch_file_from_github(r_org, r_repo, ref_str, main_path)
-                            has_dist = main_check is not None
-                        else:
-                            dist_check = fetch_file_from_github(r_org, r_repo, ref_str, "dist/index.js")
-                            has_dist = dist_check is not None
-                        if has_dist:
-                            dist_status = f"[green]has {main_path or 'dist/'}[/green]"
-                        else:
-                            dist_status = "[dim]no compiled JS found[/dim]"
-                        console.print(
-                            f"{indent}  [dim]↳ {nested_type} action (Node.js {node_ver}), {dist_status}[/dim]"
-                        )
-                        nested_uses = extract_composite_uses(nested_yml)
-                        if nested_uses:
-                            console.print(
-                                f"{indent}  [dim]↳ node action also references "
-                                f"{len(nested_uses)} other action(s) — inspecting...[/dim]"
-                            )
-                            nested_warnings, _ = analyze_nested_actions(
-                                r_org, r_repo, ref_str, r_sub,
-                                ci_mode=ci_mode, gh=gh,
-                                _depth=_depth + 1, _visited=_visited,
-                                _checked=_checked,
-                            )
-                            warnings.extend(nested_warnings)
-                    elif nested_type == "docker":
-                        for yml_line in nested_yml.splitlines():
-                            img_m = re.search(r"image:\s*['\"]?(\S+?)['\"]?\s*$", yml_line.strip())
-                            if img_m:
-                                image = img_m.group(1)
-                                if image.startswith("Dockerfile") or image.startswith("./"):
-                                    console.print(
-                                        f"{indent}  [dim]↳ docker action (local Dockerfile)[/dim]"
-                                    )
-                                elif "@sha256:" in image:
-                                    console.print(
-                                        f"{indent}  [dim]↳ docker action, image digest-pinned[/dim]"
-                                    )
-                                else:
-                                    console.print(
-                                        f"{indent}  [dim]↳ docker action, image: {image}[/dim]"
-                                    )
-                                break
-                    else:
-                        console.print(
-                            f"{indent}  [dim]↳ {nested_type} action[/dim]"
-                        )
-        else:
+        if not ref_info.get("is_hash_pinned"):
             console.print(
                 f"{indent}[dim]line {line}:[/dim] [red]✗[/red] "
                 f"{display_name}@{ref_str} [red bold](NOT hash-pinned — uses tag/branch!)[/red bold]"
@@ -229,11 +248,103 @@ def analyze_nested_actions(
             warnings.append(
                 f"Nested action {display_name}@{ref_str} is NOT pinned to a commit hash"
             )
-            checked_entry["status"] = "fail"
+            entry["status"] = "fail"
+            checked.append(entry)
+            continue
 
-        _checked.append(checked_entry)
+        entry["approved"] = visit.approved
+        tag_comment = ""
+        for yml_line in parent_yml.splitlines():
+            if ref_str in yml_line and "#" in yml_line:
+                tag_comment = yml_line.split("#", 1)[1].strip()
+                break
+        entry["tag"] = tag_comment
 
-    return warnings, _checked
+        if visit.approved:
+            console.print(
+                f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
+                f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{display_name}@{ref_str[:12]}[/link] "
+                f"[green](hash-pinned, in our approved list)[/green]"
+            )
+        else:
+            tag_display = f" [dim]# {tag_comment}[/dim]" if tag_comment else ""
+            console.print(
+                f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
+                f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{display_name}@{ref_str[:12]}[/link]"
+                f"{tag_display} [yellow](hash-pinned, NOT in our approved list)[/yellow]"
+            )
+            warnings.append(
+                f"Nested action {display_name}@{ref_str[:12]} is not in our approved actions list"
+            )
+            entry["status"] = "warn"
+
+        entry["trusted"] = visit.trusted
+
+        if visit.action_type == "trusted":
+            # Trusted-org refs are yielded as stubs (no action.yml fetch).
+            # Fetch lazily just to attach the action type for the summary;
+            # the shared cache means any other check that already walked
+            # this repo gets a hit here.
+            trusted_yml = fetch_action_yml(r_org, r_repo, ref_str, r_sub)
+            nested_type = detect_action_type_from_yml(trusted_yml) if trusted_yml else "unknown"
+            entry["type"] = nested_type
+            console.print(
+                f"{indent}  [dim]↳ {nested_type} action "
+                f"(trusted org '{r_org}' — skipping deep inspection)[/dim]"
+            )
+        elif visit.action_type == "composite":
+            entry["type"] = "composite"
+            console.print(
+                f"{indent}  [dim]↳ composite action — analyzing nested steps...[/dim]"
+            )
+        elif visit.action_type.startswith("node"):
+            entry["type"] = visit.action_type
+            node_ver = visit.action_type.replace("node", "")
+            main_path = ""
+            if visit.action_yml:
+                for yml_line in visit.action_yml.splitlines():
+                    main_m = re.match(r"\s+main:\s*['\"]?(\S+?)['\"]?\s*$", yml_line)
+                    if main_m:
+                        main_path = main_m.group(1)
+                        break
+            if main_path:
+                has_dist = fetch_file_from_github(r_org, r_repo, ref_str, main_path) is not None
+            else:
+                has_dist = fetch_file_from_github(r_org, r_repo, ref_str, "dist/index.js") is not None
+            dist_status = (
+                f"[green]has {main_path or 'dist/'}[/green]" if has_dist
+                else "[dim]no compiled JS found[/dim]"
+            )
+            console.print(
+                f"{indent}  [dim]↳ {visit.action_type} action (Node.js {node_ver}), {dist_status}[/dim]"
+            )
+            if visit.action_yml and extract_composite_uses(visit.action_yml):
+                nested_uses = extract_composite_uses(visit.action_yml)
+                console.print(
+                    f"{indent}  [dim]↳ node action also references "
+                    f"{len(nested_uses)} other action(s) — inspecting...[/dim]"
+                )
+        elif visit.action_type == "docker":
+            entry["type"] = "docker"
+            if visit.action_yml:
+                for yml_line in visit.action_yml.splitlines():
+                    img_m = re.search(r"image:\s*['\"]?(\S+?)['\"]?\s*$", yml_line.strip())
+                    if img_m:
+                        image = img_m.group(1)
+                        if image.startswith("Dockerfile") or image.startswith("./"):
+                            console.print(f"{indent}  [dim]↳ docker action (local Dockerfile)[/dim]")
+                        elif "@sha256:" in image:
+                            console.print(f"{indent}  [dim]↳ docker action, image digest-pinned[/dim]")
+                        else:
+                            console.print(f"{indent}  [dim]↳ docker action, image: {image}[/dim]")
+                        break
+        else:
+            entry["type"] = visit.action_type
+            console.print(f"{indent}  [dim]↳ {visit.action_type} action[/dim]")
+
+        checked.append(entry)
+
+    return warnings, checked
 
 
 def analyze_dockerfile(
@@ -1055,45 +1166,23 @@ def analyze_binary_downloads(
 
 def analyze_binary_downloads_recursive(
     org: str, repo: str, commit_hash: str, sub_path: str = "",
-    _depth: int = 0, _visited: set | None = None,
 ) -> tuple[list[str], list[str]]:
-    """Run :func:`analyze_binary_downloads` for this action and recurse through
-    composite nested actions (respecting hash-pinning and trusted-org skips)."""
-    MAX_DEPTH = 3
-    if _visited is None:
-        _visited = set()
+    """Run :func:`analyze_binary_downloads` against every action reached by
+    :func:`walk_actions` starting from the given root.
 
-    key = f"{org}/{repo}/{sub_path}@{commit_hash}"
-    if key in _visited:
-        return [], []
-    _visited.add(key)
-
-    warnings, failures = analyze_binary_downloads(org, repo, commit_hash, sub_path)
-
-    if _depth >= MAX_DEPTH:
-        return warnings, failures
-
-    action_yml = fetch_action_yml(org, repo, commit_hash, sub_path)
-    if not action_yml:
-        return warnings, failures
-    if detect_action_type_from_yml(action_yml) != "composite":
-        return warnings, failures
-
-    for ref_info in extract_composite_uses(action_yml):
-        if ref_info.get("is_local") or ref_info.get("is_docker"):
+    Skips the terminal stub visits (``local``/``docker-ref``/``trusted``)
+    since they have no ``action.yml`` to scan. Descent into composite,
+    nested-node, and non-trusted sub-actions is handled by the walker,
+    so this function no longer tracks ``_depth`` or ``_visited``.
+    """
+    warnings: list[str] = []
+    failures: list[str] = []
+    for v in walk_actions(org, repo, commit_hash, sub_path):
+        if v.action_type in ("local", "docker-ref", "trusted"):
             continue
-        if not ref_info.get("is_hash_pinned"):
-            continue
-        r_org = ref_info["org"]
-        if r_org in {"actions", "github"}:
-            continue
-        sub_w, sub_f = analyze_binary_downloads_recursive(
-            r_org, ref_info["repo"], ref_info["ref"], ref_info["sub_path"],
-            _depth=_depth + 1, _visited=_visited,
-        )
-        warnings.extend(sub_w)
-        failures.extend(sub_f)
-
+        w, f = analyze_binary_downloads(v.org, v.repo, v.commit_hash, v.sub_path)
+        warnings.extend(w)
+        failures.extend(f)
     return warnings, failures
 
 
