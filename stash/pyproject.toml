@@ -69,7 +69,8 @@ Issues = "https://github.com/apache/infrastructure-actions/issues"
 py-modules = []
 
 [tool.uv]
-required-version = ">=0.5.0"
+required-version = ">=0.9.17"
+exclude-newer = "7 days"
 
 [tool.hatch.envs.default]
 installer = "uv"

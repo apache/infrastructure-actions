@@ -86,12 +86,13 @@ Issues = "https://github.com/apache/infrastructure-actions/issues"
 [tool.setuptools]
 py-modules = ["plugin_paths"]
 
-# uv settings. `required-version` enforces a minimum uv at runtime — PEP 735
-# dependency groups (used by [dependency-groups].dev and Hatch's env config
-# below) were added in uv 0.4.27, and the `required-version` setting itself
-# was added in uv 0.5.0, so 0.5.0 is the floor we can enforce.
+# uv settings. `required-version` enforces a minimum uv at runtime. The
+# floor is 0.9.17 because friendly-duration values for `exclude-newer`
+# (e.g. "7 days") were only added in that release; earlier uv versions
+# accept just RFC 3339 timestamps.
 [tool.uv]
-required-version = ">=0.5.0"
+required-version = ">=0.9.17"
+exclude-newer = "7 days"
 
 # Hatch environment definition. Hatch reads PEP 735 [dependency-groups]
 # directly, so the `dev` group above is the single source of truth for
