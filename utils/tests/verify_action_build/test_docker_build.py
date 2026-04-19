@@ -99,6 +99,23 @@ class TestReadDockerfileTemplate:
         assert "/rebuilt-dist" in content
         assert "/original-dist" in content
 
+    def test_dart_support_present(self):
+        # Sanity check that the Dart branch wasn't accidentally removed.
+        content = _read_dockerfile_template()
+        assert "pubspec.yaml" in content
+        assert "apt-get install -y --no-install-recommends dart" in content
+        assert "dart pub get" in content
+
+    def test_deno_support_present(self):
+        content = _read_dockerfile_template()
+        # Install branch runs the official installer into /usr/local.
+        assert "deno.json" in content
+        assert "deno.jsonc" in content
+        assert "deno.land/install.sh" in content
+        assert "DENO_INSTALL=/usr/local" in content
+        # Build step invokes the conventional bundle task.
+        assert "deno task bundle" in content
+
 
 class TestPrintDockerBuildSteps:
     def test_parses_build_output(self):

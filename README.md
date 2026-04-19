@@ -192,7 +192,7 @@ uv run utils/verify-action-build.py dorny/test-reporter@dc3a92680fcc15842eef52e8
 The script will:
 1. Clone the action at the specified commit inside an isolated Docker container
 2. Save the original `dist/` files as published in the repository
-3. Rebuild the action from source (`npm ci && npm run build`)
+3. Rebuild the action from source, picking the right toolchain automatically — Node.js (`npm ci && npm run build`, `yarn`, or `pnpm`), Dart (`dart compile js` when a `pubspec.yaml` is present), or Deno (`deno task bundle` when a `deno.json`/`deno.jsonc` is present)
 4. Reformat both versions of the JavaScript for readable comparison
 5. Show a colored diff of any differences
 
