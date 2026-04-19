@@ -35,6 +35,7 @@ from .docker_build import build_in_docker
 from .github_client import GitHubClient
 from .security import (
     analyze_action_metadata,
+    analyze_binary_downloads_recursive,
     analyze_dependency_pinning,
     analyze_dockerfile,
     analyze_nested_actions,
@@ -165,6 +166,7 @@ def offer_open_and_approve(
 def verify_single_action(
     action_ref: str, gh: GitHubClient | None = None, ci_mode: bool = False,
     cache: bool = True, show_build_steps: bool = False,
+    check_binary_downloads: bool = True,
 ) -> bool:
     """Verify a single action reference. Returns True if verification passed."""
     org, repo, sub_path, commit_hash = parse_action_ref(action_ref)
@@ -177,6 +179,7 @@ def verify_single_action(
     non_js_warnings: list[str] = []
     checked_actions: list[dict] = []
     matched_with_approved_lockfile = False
+    binary_download_failures: list[str] = []
 
     with tempfile.TemporaryDirectory(prefix="verify-action-") as tmp:
         work_dir = Path(tmp)
@@ -189,6 +192,37 @@ def verify_single_action(
         checks_performed.append(("Action type detection", "info", action_type))
 
         is_js_action = action_type.startswith("node") or action_type in ("unknown",)
+
+        # Binary-download verification runs for every action type. JS actions
+        # can and do shell out to fetch pre-built binaries (e.g. platform-
+        # specific CLIs) from the action's own `run:` blocks or Dockerfile,
+        # and we want to flag those when they lack a checksum/signature step.
+        if check_binary_downloads:
+            bd_warnings, bd_failures = analyze_binary_downloads_recursive(
+                org, repo, commit_hash, sub_path,
+            )
+            binary_download_failures.extend(bd_failures)
+            if bd_failures:
+                checks_performed.append((
+                    "Binary download verification", "fail",
+                    f"{len(bd_failures)} unverified download(s)",
+                ))
+            elif bd_warnings:
+                checks_performed.append((
+                    "Binary download verification", "warn",
+                    f"{len(bd_warnings)} download(s); verification present",
+                ))
+            else:
+                checks_performed.append((
+                    "Binary download verification", "pass",
+                    "no downloads or all verified",
+                ))
+        else:
+            checks_performed.append((
+                "Binary download verification", "skip",
+                "disabled via --no-binary-download-check",
+            ))
+
         if not is_js_action:
             console.print()
             console.print(
@@ -397,9 +431,11 @@ def verify_single_action(
         ci_mode=ci_mode,
     )
 
+    overall_passed = all_match and not binary_download_failures
+
     console.print()
     checklist_hint = f"\n[dim]Security review checklist: {SECURITY_CHECKLIST_URL}[/dim]"
-    if all_match:
+    if overall_passed:
         if is_js_action:
             if has_node_modules:
                 result_msg = "[green bold]Vendored node_modules matches fresh install[/green bold]"
@@ -418,14 +454,23 @@ def verify_single_action(
         border = "yellow" if not is_js_action and non_js_warnings else "green"
         console.print(Panel(result_msg + checklist_hint, border_style=border, title="RESULT"))
     else:
-        if matched_with_approved_lockfile:
+        if is_js_action:
+            if matched_with_approved_lockfile:
+                fail_msg = (
+                    "[red bold]Compiled JS only matches when rebuilt with the "
+                    "previously approved version's lock files — devDependencies "
+                    "changed and dist/ was not rebuilt[/red bold]"
+                )
+            else:
+                fail_msg = "[red bold]Differences detected between published and rebuilt JS[/red bold]"
+        elif binary_download_failures:
             fail_msg = (
-                "[red bold]Compiled JS only matches when rebuilt with the "
-                "previously approved version's lock files — devDependencies "
-                "changed and dist/ was not rebuilt[/red bold]"
+                f"[red bold]{action_type} action — "
+                f"{len(binary_download_failures)} unverified binary download(s) detected "
+                f"(no checksum/signature check in file)[/red bold]"
             )
         else:
-            fail_msg = "[red bold]Differences detected between published and rebuilt JS[/red bold]"
+            fail_msg = f"[red bold]{action_type} action — verification failed[/red bold]"
         console.print(
             Panel(
                 fail_msg + checklist_hint,
@@ -436,4 +481,4 @@ def verify_single_action(
 
     offer_open_and_approve(org, repo, commit_hash, sub_path, ci_mode=ci_mode)
 
-    return all_match
+    return overall_passed

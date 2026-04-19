@@ -82,11 +82,22 @@ def main() -> None:
         action="store_true",
         help="Show Docker build step summary on successful builds (always shown on failure)",
     )
+    parser.add_argument(
+        "--no-binary-download-check",
+        action="store_true",
+        help=(
+            "Disable the binary download verification check (enabled by default). "
+            "The check scans Dockerfiles, run: blocks and referenced scripts for "
+            "curl/wget/ADD downloads of binaries or scripts and fails the run if "
+            "the file has no detectable checksum/signature verification."
+        ),
+    )
     args = parser.parse_args()
 
     ci_mode = args.ci
     cache = not args.no_cache
     show_build_steps = args.show_build_steps
+    check_binary_downloads = not args.no_binary_download_check
 
     if not shutil.which("docker"):
         console.print("[red]Error:[/red] docker is required but not found in PATH")
@@ -117,12 +128,26 @@ def main() -> None:
             _exit(1)
         for ref in action_refs:
             console.print(f"  Extracted action reference from PR #{args.from_pr}: [bold]{ref}[/bold]")
-        passed = all(verify_single_action(ref, gh=gh, ci_mode=ci_mode, cache=cache, show_build_steps=show_build_steps) for ref in action_refs)
+        passed = all(
+            verify_single_action(
+                ref, gh=gh, ci_mode=ci_mode, cache=cache,
+                show_build_steps=show_build_steps,
+                check_binary_downloads=check_binary_downloads,
+            )
+            for ref in action_refs
+        )
         _exit(0 if passed else 1)
     elif args.check_dependabot_prs:
-        check_dependabot_prs(gh=gh, cache=cache, show_build_steps=show_build_steps)
+        check_dependabot_prs(
+            gh=gh, cache=cache, show_build_steps=show_build_steps,
+            check_binary_downloads=check_binary_downloads,
+        )
     elif args.action_ref:
-        passed = verify_single_action(args.action_ref, gh=gh, ci_mode=ci_mode, cache=cache, show_build_steps=show_build_steps)
+        passed = verify_single_action(
+            args.action_ref, gh=gh, ci_mode=ci_mode, cache=cache,
+            show_build_steps=show_build_steps,
+            check_binary_downloads=check_binary_downloads,
+        )
         _exit(0 if passed else 1)
     else:
         parser.print_help()
