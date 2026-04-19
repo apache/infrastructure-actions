@@ -19,7 +19,10 @@
 """Security analysis checks for GitHub Actions."""
 
 import json
+import os
 import re
+
+import requests
 
 from .console import console, link
 from .github_client import GitHubClient
@@ -724,9 +727,119 @@ _VERIFICATION_PATTERNS = [
 ]
 
 
+# Patterns indicating a JS/TS download of a remote artifact. Most JS actions
+# that fetch binaries go through @actions/tool-cache's downloadTool (which
+# does NOT verify checksums), or via node's http/https, fetch, axios, or
+# @actions/http-client. Each of these should have a companion hash/signature
+# check in the same file to count as verified.
+_JS_DOWNLOAD_PATTERNS = [
+    re.compile(r"\btc\.downloadTool\s*\("),
+    re.compile(r"(?<![a-zA-Z_.])downloadTool\s*\("),
+    re.compile(r"\bfetch\s*\([^)]*['\"`]https?://"),
+    re.compile(r"\bhttps?\.(?:get|request)\s*\("),
+    re.compile(r"\baxios(?:\.(?:get|post|request))?\s*\("),
+    re.compile(r"\bnew\s+HttpClient\s*\("),
+    re.compile(r"\brequire\(\s*['\"`]node-fetch['\"`]"),
+]
+
+# Verification patterns in JS/TS source: node crypto, WebCrypto, or common
+# sigstore/cosign / custom "verify" helper names.
+_JS_VERIFICATION_PATTERNS = [
+    re.compile(r"\bcrypto\.createHash\s*\("),
+    re.compile(r"\bcrypto\.subtle\.digest\b"),
+    re.compile(r"\bsubtle\.verify\s*\("),
+    re.compile(r"\b@noble/hashes\b"),
+    re.compile(r"\bsigstore\b", re.IGNORECASE),
+    re.compile(r"\bcosign\b", re.IGNORECASE),
+    re.compile(r"\bverifySignature\b"),
+    re.compile(r"\bverifyChecksum\b"),
+    re.compile(r"\bcomputeHash\b"),
+]
+
+_JS_SOURCE_EXTENSIONS = (".ts", ".js", ".mjs", ".cjs")
+_JS_SCAN_DIR_PREFIXES = ("src/", "lib/", "source/", "sources/", "scripts/")
+_JS_EXCLUDE_DIR_PREFIXES = (
+    "dist/", "build/", "out/", "node_modules/", "coverage/",
+    "__tests__/", "test/", "tests/", "examples/", "example/",
+    "docs/", ".github/",
+)
+
+
 def _line_is_pkg_manager(line: str) -> bool:
     lower = line.lower()
     return any(marker in lower for marker in _PKG_MANAGER_MARKERS)
+
+
+def _find_binary_downloads_js(content: str) -> list[tuple[int, str]]:
+    """Find lines in JS/TS source that fetch remote artifacts.
+
+    Flags calls to ``tc.downloadTool`` / ``downloadTool``, bare ``fetch`` to
+    an http(s) URL, node's ``http(s).get`` / ``.request``, ``axios.*``, and
+    ``new HttpClient()``. Skips comment-only lines.
+    """
+    findings: list[tuple[int, str]] = []
+    for i, line in enumerate(content.splitlines(), 1):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("//") or stripped.startswith("*"):
+            continue
+        if any(p.search(line) for p in _JS_DOWNLOAD_PATTERNS):
+            findings.append((i, stripped[:120]))
+    return findings
+
+
+def _list_repo_files(org: str, repo: str, commit_hash: str) -> list[str]:
+    """List every blob path in the repo at ``commit_hash`` via the trees API.
+
+    Returns an empty list on error, auth failure, or truncated results (the
+    caller should treat "no files discovered" as best-effort, not canonical).
+    """
+    url = f"https://api.github.com/repos/{org}/{repo}/git/trees/{commit_hash}?recursive=1"
+    headers = {"Accept": "application/vnd.github+json"}
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        resp = requests.get(url, timeout=15, headers=headers)
+        if not resp.ok:
+            return []
+        data = resp.json()
+        if data.get("truncated"):
+            return []
+        return [t["path"] for t in data.get("tree", []) if t.get("type") == "blob"]
+    except requests.RequestException:
+        return []
+
+
+def _discover_js_source_files(
+    org: str, repo: str, commit_hash: str, sub_path: str,
+) -> list[tuple[str, str]]:
+    """Return ``(path, content)`` for JS/TS source files worth scanning.
+
+    Includes files at the repo root and under conventional source dirs
+    (``src/``, ``lib/``, …). Excludes compiled output, vendored modules,
+    test/example dirs, and generated docs. For monorepo sub-actions the
+    ``sub_path`` acts as a prefix filter.
+    """
+    files: list[tuple[str, str]] = []
+    all_paths = _list_repo_files(org, repo, commit_hash)
+    if not all_paths:
+        return files
+
+    prefix = f"{sub_path.rstrip('/')}/" if sub_path else ""
+    for path in all_paths:
+        if prefix and not path.startswith(prefix):
+            continue
+        rel = path[len(prefix):] if prefix else path
+        if not rel.endswith(_JS_SOURCE_EXTENSIONS):
+            continue
+        if any(rel.startswith(d) for d in _JS_EXCLUDE_DIR_PREFIXES):
+            continue
+        if "/" in rel and not any(rel.startswith(d) for d in _JS_SCAN_DIR_PREFIXES):
+            continue
+        content = fetch_file_from_github(org, repo, commit_hash, path)
+        if content is not None:
+            files.append((rel, content))
+    return files
 
 
 def _find_binary_downloads(content: str) -> list[tuple[int, str]]:
@@ -857,7 +970,12 @@ def analyze_binary_downloads(
         if content is not None:
             files_to_scan.append((script_path, content))
 
-    if not files_to_scan:
+    # JS/TS source files: shell-pattern downloads (curl/wget) are rare here
+    # but JS actions commonly fetch binaries via @actions/tool-cache etc.,
+    # so discover those separately and scan with JS-specific patterns.
+    js_files_to_scan = _discover_js_source_files(org, repo, commit_hash, sub_path)
+
+    if not files_to_scan and not js_files_to_scan:
         return warnings, failures
 
     console.print()
@@ -894,6 +1012,39 @@ def analyze_binary_downloads(
             for line_num, snippet in downloads:
                 failures.append(
                     f"{path} line {line_num}: unverified download: {snippet[:80]}"
+                )
+
+    for path, content in js_files_to_scan:
+        downloads = _find_binary_downloads_js(content)
+        if not downloads:
+            continue
+        any_downloads = True
+        has_verify = any(p.search(content) for p in _JS_VERIFICATION_PATTERNS)
+        if has_verify:
+            console.print(
+                f"  [green]✓[/green] {path}: {len(downloads)} JS download(s), "
+                f"verification present in file"
+            )
+            for line_num, snippet in downloads[:3]:
+                console.print(f"    [dim]line {line_num}:[/dim] [dim]{snippet}[/dim]")
+            if len(downloads) > 3:
+                console.print(f"    [dim]... and {len(downloads) - 3} more[/dim]")
+            for line_num, snippet in downloads:
+                warnings.append(
+                    f"{path} line {line_num}: JS download present (review coverage): {snippet[:80]}"
+                )
+        else:
+            console.print(
+                f"  [red]✗[/red] {path}: {len(downloads)} unverified JS download(s) "
+                f"[red bold](no checksum/signature check in file)[/red bold]"
+            )
+            for line_num, snippet in downloads[:5]:
+                console.print(f"    [dim]line {line_num}:[/dim] [red]{snippet}[/red]")
+            if len(downloads) > 5:
+                console.print(f"    [dim]... and {len(downloads) - 5} more[/dim]")
+            for line_num, snippet in downloads:
+                failures.append(
+                    f"{path} line {line_num}: unverified JS download: {snippet[:80]}"
                 )
 
     if not any_downloads:

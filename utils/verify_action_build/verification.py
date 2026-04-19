@@ -192,6 +192,37 @@ def verify_single_action(
         checks_performed.append(("Action type detection", "info", action_type))
 
         is_js_action = action_type.startswith("node") or action_type in ("unknown",)
+
+        # Binary-download verification runs for every action type. JS actions
+        # can and do shell out to fetch pre-built binaries (e.g. platform-
+        # specific CLIs) from the action's own `run:` blocks or Dockerfile,
+        # and we want to flag those when they lack a checksum/signature step.
+        if check_binary_downloads:
+            bd_warnings, bd_failures = analyze_binary_downloads_recursive(
+                org, repo, commit_hash, sub_path,
+            )
+            binary_download_failures.extend(bd_failures)
+            if bd_failures:
+                checks_performed.append((
+                    "Binary download verification", "fail",
+                    f"{len(bd_failures)} unverified download(s)",
+                ))
+            elif bd_warnings:
+                checks_performed.append((
+                    "Binary download verification", "warn",
+                    f"{len(bd_warnings)} download(s); verification present",
+                ))
+            else:
+                checks_performed.append((
+                    "Binary download verification", "pass",
+                    "no downloads or all verified",
+                ))
+        else:
+            checks_performed.append((
+                "Binary download verification", "skip",
+                "disabled via --no-binary-download-check",
+            ))
+
         if not is_js_action:
             console.print()
             console.print(
@@ -272,34 +303,6 @@ def verify_single_action(
                 "warn" if repo_warnings else "pass",
                 f"{len(repo_warnings)} warning(s)" if repo_warnings else "ok",
             ))
-
-            if check_binary_downloads:
-                bd_warnings, bd_failures = analyze_binary_downloads_recursive(
-                    org, repo, commit_hash, sub_path,
-                )
-                non_js_warnings.extend(bd_warnings)
-                non_js_warnings.extend(bd_failures)
-                binary_download_failures.extend(bd_failures)
-                if bd_failures:
-                    checks_performed.append((
-                        "Binary download verification", "fail",
-                        f"{len(bd_failures)} unverified download(s)",
-                    ))
-                elif bd_warnings:
-                    checks_performed.append((
-                        "Binary download verification", "warn",
-                        f"{len(bd_warnings)} download(s); verification present",
-                    ))
-                else:
-                    checks_performed.append((
-                        "Binary download verification", "pass",
-                        "no downloads or all verified",
-                    ))
-            else:
-                checks_performed.append((
-                    "Binary download verification", "skip",
-                    "disabled via --no-binary-download-check",
-                ))
 
             if non_js_warnings:
                 console.print()
