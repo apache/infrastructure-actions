@@ -52,6 +52,7 @@ updates:
     directories:
       - "/"
       - "/pelican/"
+      - "/stash/"
     schedule:
       interval: "weekly"
     cooldown:
