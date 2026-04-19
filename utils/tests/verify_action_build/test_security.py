@@ -19,6 +19,8 @@
 from unittest import mock
 
 from verify_action_build.security import (
+    analyze_binary_downloads,
+    analyze_binary_downloads_recursive,
     analyze_dockerfile,
     analyze_scripts,
     analyze_action_metadata,
@@ -182,6 +184,236 @@ runs:
         with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
             warnings = analyze_action_metadata("org", "repo", "a" * 40)
         assert any("secret" in w for w in warnings)
+
+
+class TestAnalyzeBinaryDownloads:
+    def _mock_fetch(self, files: dict):
+        def fetch(org, repo, commit, path):
+            return files.get(path)
+        return fetch
+
+    def test_no_files_no_results(self):
+        with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert warnings == []
+        assert failures == []
+
+    def test_pipe_to_shell_fails(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN curl -fsSL https://example.com/install.sh | sh\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) >= 1
+        assert any("install.sh" in f for f in failures)
+
+    def test_curl_binary_without_verification_fails(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN curl -fsSLO https://example.com/tool.tar.gz && tar xf tool.tar.gz\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) >= 1
+        assert any("tool.tar.gz" in f for f in failures)
+
+    def test_sha256sum_verification_passes(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN curl -fsSLO https://example.com/tool.tar.gz \\\n"
+                " && echo 'abc123deadbeefcafef00d  tool.tar.gz' | sha256sum -c\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+
+    def test_gpg_verify_passes(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN curl -fsSLO https://example.com/tool.tar.gz \\\n"
+                " && curl -fsSLO https://example.com/tool.tar.gz.sig \\\n"
+                " && gpg --verify tool.tar.gz.sig tool.tar.gz\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+
+    def test_cosign_verify_passes(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN curl -fsSLO https://example.com/tool.tar.gz && cosign verify-blob tool.tar.gz\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+
+    def test_apk_add_not_flagged(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN apk add --no-cache curl wget bash\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+
+    def test_pip_install_not_flagged(self):
+        files = {
+            "Dockerfile": (
+                "FROM python:3.12@sha256:abc\n"
+                "RUN pip install requests==2.31.0\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+
+    def test_dockerfile_add_url_fails(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "ADD https://example.com/app.tar.gz /app.tar.gz\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) >= 1
+
+    def test_action_yml_run_block_unverified_fails(self):
+        action_yml = """\
+name: Test
+runs:
+  using: composite
+  steps:
+    - name: Download tool
+      shell: bash
+      run: |
+        curl -fsSLO https://example.com/tool.tar.gz
+        tar xf tool.tar.gz
+"""
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) >= 1
+
+    def test_action_yml_run_block_with_verification_passes(self):
+        action_yml = """\
+name: Test
+runs:
+  using: composite
+  steps:
+    - name: Download and verify
+      shell: bash
+      run: |
+        curl -fsSLO https://example.com/tool.tar.gz
+        echo "abc123deadbeef  tool.tar.gz" | sha256sum -c
+        tar xf tool.tar.gz
+"""
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+
+    def test_releases_download_path_flagged(self):
+        # URL without a binary extension but under /releases/download/ still
+        # looks like a binary artefact — flag it.
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN curl -fsSLo /usr/local/bin/mytool "
+                "https://github.com/x/y/releases/download/v1/mytool-linux-amd64 "
+                "&& chmod +x /usr/local/bin/mytool\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) >= 1
+
+
+class TestAnalyzeBinaryDownloadsRecursive:
+    def test_recurses_through_composite(self):
+        # Root is a composite action that uses an unpinned-looking hash-pinned
+        # nested action; nested action has an unverified download.
+        root_yml = """\
+name: Root
+runs:
+  using: composite
+  steps:
+    - uses: other/helper@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+"""
+        nested_yml = """\
+name: Helper
+runs:
+  using: composite
+  steps:
+    - name: Download
+      shell: bash
+      run: |
+        curl -fsSLO https://example.com/tool.tar.gz
+"""
+
+        def fake_action_yml(org, repo, commit, sub_path=""):
+            if org == "myorg":
+                return root_yml
+            if org == "other":
+                return nested_yml
+            return None
+
+        def fake_file(org, repo, commit, path):
+            return None
+
+        with mock.patch("verify_action_build.security.fetch_action_yml", side_effect=fake_action_yml):
+            with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=fake_file):
+                warnings, failures = analyze_binary_downloads_recursive(
+                    "myorg", "rootrepo", "b" * 40,
+                )
+        assert len(failures) >= 1
+        assert any("tool.tar.gz" in f for f in failures)
+
+    def test_skips_trusted_org(self):
+        # Nested uses: actions/checkout — should be skipped (trusted), so no
+        # recursion into it even if it had downloads.
+        root_yml = """\
+name: Root
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@cccccccccccccccccccccccccccccccccccccccc
+"""
+
+        def fake_action_yml(org, repo, commit, sub_path=""):
+            if org == "myorg":
+                return root_yml
+            raise AssertionError(f"should not fetch nested yml for {org}/{repo}")
+
+        with mock.patch("verify_action_build.security.fetch_action_yml", side_effect=fake_action_yml):
+            with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
+                warnings, failures = analyze_binary_downloads_recursive(
+                    "myorg", "rootrepo", "b" * 40,
+                )
+        assert failures == []
 
 
 class TestAnalyzeRepoMetadata:
