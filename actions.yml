@@ -376,6 +376,9 @@ erisu/license-checker-action:
     expires_at: 2026-07-05
   04511f4c052b5773f11e1c65b42cda88235c62ae:
     tag: v2.1.0
+erlef/setup-beam:
+  fc68ffb90438ef2936bbb3251622353b3dcb2f93:
+    tag: v1.24.0
 geekyeggo/delete-artifact:
   '*':
     keep: true
