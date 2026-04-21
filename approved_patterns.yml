@@ -82,6 +82,7 @@
 - commit-check/commit-check-action@be79b5cd5953c8afd4266004c5bbb1431f544df1
 - commit-check/commit-check-action@443fb6a114414358496e6243105294c3b11610c5
 - commit-check/commit-check-action@2fe41833054c561710099d8e3e22bbeab4fe204a
+- commit-check/commit-check-action@7c158d4541309c5952de3343151750882b036d10
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - container-tools/microshift-action@*
