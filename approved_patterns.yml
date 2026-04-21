@@ -265,6 +265,7 @@
 - pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e
 - pypa/cibuildwheel@ee02a1537ce3071a004a6b08c41e72f0fdc42d9a
 - pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084
+- pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266
 - pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e
 - pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
 - pyTooling/Actions@*
