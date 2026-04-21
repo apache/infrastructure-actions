@@ -254,3 +254,108 @@ class TestVerifySingleActionLockFileRetry:
         assert len(js_rows) == 1
         assert js_rows[0][1] == "fail"
         assert "approved lock files" in js_rows[0][2]
+
+
+class TestVerifySingleActionResultMessage:
+    """The RESULT panel text must describe the actual failure cause."""
+
+    def _patch_stack(
+        self,
+        *,
+        approved: list[dict],
+        diff_js_side_effect,
+        binary_download_result,
+        action_type: str = "node20",
+    ):
+        patches = {
+            "parse_action_ref": mock.patch(
+                "verify_action_build.verification.parse_action_ref",
+                return_value=("org", "repo", "", "c" * 40),
+            ),
+            "find_approved_versions": mock.patch(
+                "verify_action_build.verification.find_approved_versions",
+                return_value=approved,
+            ),
+            "build_in_docker": mock.patch(
+                "verify_action_build.verification.build_in_docker",
+                return_value=_build_in_docker_result(action_type=action_type),
+            ),
+            "diff_js_files": mock.patch(
+                "verify_action_build.verification.diff_js_files",
+                side_effect=diff_js_side_effect,
+            ),
+            "show_approved_versions": mock.patch(
+                "verify_action_build.verification.show_approved_versions",
+                return_value=None,
+            ),
+            "show_commits_between": mock.patch(
+                "verify_action_build.verification.show_commits_between",
+            ),
+            "diff_approved_vs_new": mock.patch(
+                "verify_action_build.verification.diff_approved_vs_new",
+            ),
+            "analyze_binary_downloads_recursive": mock.patch(
+                "verify_action_build.verification.analyze_binary_downloads_recursive",
+                return_value=binary_download_result,
+            ),
+            "Panel": mock.patch("verify_action_build.verification.Panel"),
+        }
+        started = {name: p.start() for name, p in patches.items()}
+        started["_patchers"] = list(patches.values())
+        return started
+
+    def _stop(self, started):
+        for p in reversed(started["_patchers"]):
+            p.stop()
+
+    def _result_panel_message(self, panel_mock) -> str:
+        result_calls = [
+            c for c in panel_mock.call_args_list
+            if c.kwargs.get("title") == "RESULT"
+        ]
+        assert len(result_calls) == 1, (
+            f"expected exactly one RESULT panel, got {len(result_calls)}"
+        )
+        return result_calls[0].args[0]
+
+    def test_js_action_with_unverified_download_reports_binary_cause(self):
+        """Regression for the misleading RESULT panel seen on PR #724:
+
+        A JS action that rebuilds cleanly but fails the binary-download
+        check must surface the binary-download reason in the RESULT
+        panel, not the default JS-mismatch message.
+        """
+        started = self._patch_stack(
+            approved=[],
+            diff_js_side_effect=[True],
+            binary_download_result=(
+                [],
+                ["Dockerfile line 3: unverified download: curl -fsSL ..."],
+            ),
+        )
+        try:
+            result = verify_single_action("org/repo@" + "c" * 40, ci_mode=True)
+        finally:
+            self._stop(started)
+
+        assert result is False
+        msg = self._result_panel_message(started["Panel"])
+        assert "unverified binary download" in msg
+        assert "Differences detected between published and rebuilt JS" not in msg
+
+    def test_js_action_with_js_mismatch_reports_js_cause(self):
+        """JS mismatch without binary-download failures still reports the
+        JS-mismatch message (the original behaviour)."""
+        started = self._patch_stack(
+            approved=[],
+            diff_js_side_effect=[False],
+            binary_download_result=([], []),
+        )
+        try:
+            result = verify_single_action("org/repo@" + "c" * 40, ci_mode=True)
+        finally:
+            self._stop(started)
+
+        assert result is False
+        msg = self._result_panel_message(started["Panel"])
+        assert "Differences detected between published and rebuilt JS" in msg
