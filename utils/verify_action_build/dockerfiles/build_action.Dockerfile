@@ -56,6 +56,22 @@ RUN if [ -f pubspec.yaml ]; then \
       echo "dart-pub-get: ran" >> /build-info.log; \
     fi
 
+# Deno-based actions (e.g. Kesin11/actions-timeline) emit the compiled JS
+# in their `dist/` folder via `deno task bundle`, typically driving
+# `@deno/dnt` or `esbuild`.  A pure-Deno action has no `package.json`, so
+# the npm build loop below would be a no-op; install the official deno
+# binary when `deno.json`/`deno.jsonc` is present so the build step can
+# invoke the task unchanged.
+RUN if [ -f deno.json ] || [ -f deno.jsonc ]; then \
+      apt-get update && \
+      apt-get install -y --no-install-recommends ca-certificates curl unzip && \
+      rm -rf /var/lib/apt/lists/* && \
+      curl -fsSL https://deno.land/install.sh \
+        | DENO_INSTALL=/usr/local sh -s -- --yes >/dev/null && \
+      /usr/local/bin/deno --version | head -1 >> /build-info.log && \
+      echo "deno: installed (deno.json(c) detected)" >> /build-info.log; \
+    fi
+
 # Detect action type from action.yml or action.yaml.
 # For monorepo sub-actions (SUB_PATH set), check <sub_path>/action.yml first,
 # falling back to the root action.yml.
@@ -211,7 +227,13 @@ RUN OUT_DIR=$(cat /out-dir.txt); \
     RUN_CMD=$(cat /run-cmd); \
     has_output() { [ -d "$OUT_DIR" ] && find "$OUT_DIR" \( -name '*.js' -o -name '*.cjs' -o -name '*.mjs' \) -print -quit | grep -q .; }; \
     BUILD_DONE=false; \
-    if [ -x build ] && ./build dist 2>/dev/null; then \
+    if [ "$BUILD_DONE" = "false" ] && { [ -f deno.json ] || [ -f deno.jsonc ]; }; then \
+      if deno task bundle 2>/dev/null; then \
+        echo "build-step: deno task bundle" >> /build-info.log; \
+        if has_output; then BUILD_DONE=true; fi; \
+      fi; \
+    fi && \
+    if [ "$BUILD_DONE" = "false" ] && [ -x build ] && ./build dist 2>/dev/null; then \
       echo "build-step: ./build dist" >> /build-info.log; \
       if has_output; then BUILD_DONE=true; fi; \
     fi && \
