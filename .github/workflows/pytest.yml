@@ -35,6 +35,8 @@ jobs:
       - name: Run tests
         run: |
           pipx install uv
-          uv run pytest
+          uv run pytest --color=yes
         env:
           GH_TOKEN: ${{ github.token }}
+          FORCE_COLOR: "1"
+          PY_COLORS: "1"
