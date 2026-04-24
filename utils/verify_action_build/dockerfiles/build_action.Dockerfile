@@ -114,6 +114,19 @@ RUN MAIN_PATH=$(cat /main-path.txt); \
 RUN OUT_DIR=$(cat /out-dir.txt); \
     if [ -d "$OUT_DIR" ]; then cp -r "$OUT_DIR" /original-dist; else mkdir /original-dist; fi
 
+# Some actions publish their release tag as an orphan commit containing only the
+# distributable artifacts (action.yml, dist/, LICENSE, README.md) — no src/, no
+# package.json, no lock files.  When that pattern is detected upstream (in
+# release_lookup.py) we're handed SOURCE_COMMIT_HASH: the default-branch commit
+# the release was cut from.  Swap the tree to that commit now — /original-dist
+# has already been captured from COMMIT_HASH — so the rebuild below runs against
+# real source.
+ARG SOURCE_COMMIT_HASH=""
+RUN if [ -n "$SOURCE_COMMIT_HASH" ]; then \
+      echo "source-commit: $SOURCE_COMMIT_HASH (rebuilding from default-branch source)" >> /build-info.log; \
+      git checkout "$SOURCE_COMMIT_HASH"; \
+    fi
+
 # Detect if node_modules/ is committed (vendored dependencies pattern)
 RUN if [ -d "node_modules" ]; then \
       echo "true" > /has-node-modules.txt; \

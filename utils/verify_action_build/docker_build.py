@@ -104,12 +104,18 @@ def build_in_docker(
     cache: bool = True,
     show_build_steps: bool = False,
     approved_hash: str = "",
+    source_commit_hash: str = "",
 ) -> tuple[Path, Path, str, str, bool, Path, Path]:
     """Build the action in a Docker container and extract original + rebuilt dist.
 
     When *approved_hash* is supplied the Docker build restores package lock files
     from that commit so the rebuild uses the same dev-dependency versions that
     produced the original dist/.
+
+    When *source_commit_hash* is supplied the Docker build captures the original
+    dist/ from *commit_hash* (a source-detached release tag) and then switches
+    the tree to *source_commit_hash* before building.  Used for actions whose
+    tagged commit is an orphan tree without buildable source.
 
     Returns (original_dir, rebuilt_dir, action_type, out_dir_name,
              has_node_modules, original_node_modules, rebuilt_node_modules).
@@ -139,6 +145,12 @@ def build_in_docker(
     info_table.add_column()
     info_table.add_row("Action", repo_link)
     info_table.add_row("Commit", commit_link)
+    if source_commit_hash:
+        source_link = link(
+            f"https://github.com/{org}/{repo}/commit/{source_commit_hash}",
+            source_commit_hash,
+        )
+        info_table.add_row("Source commit", source_link)
     console.print()
     console.print(Panel(info_table, title="Action Build Verification", border_style="blue"))
 
@@ -160,6 +172,8 @@ def build_in_docker(
         f"SUB_PATH={sub_path}",
         "--build-arg",
         f"APPROVED_HASH={approved_hash}",
+        "--build-arg",
+        f"SOURCE_COMMIT_HASH={source_commit_hash}",
         "-t",
         image_tag,
         "-f",
