@@ -795,6 +795,9 @@ scacap/action-surefire-report:
     keep: true
   5609ce4db72c09db044803b344a8968fd1f315da:
     tag: v1.9.1
+    expires_at: 2026-07-17
+  fa13579fdd93ed8fc7e717a25eceedcfcbc39dda:
+    tag: v1.10.0
 scalacenter/sbt-dependency-submission:
   f43202114d7522a4b233e052f82c2eea8d658134:
     tag: v3.2.1
