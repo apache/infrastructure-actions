@@ -22,6 +22,7 @@ from verify_action_build.security import (
     analyze_binary_downloads,
     analyze_binary_downloads_recursive,
     analyze_dockerfile,
+    analyze_lock_files,
     analyze_scripts,
     analyze_action_metadata,
     analyze_repo_metadata,
@@ -441,3 +442,219 @@ class TestAnalyzeRepoMetadata:
         with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=fetch):
             warnings = analyze_repo_metadata("actions", "checkout", "a" * 40)
         assert len(warnings) == 0
+
+
+class TestAnalyzeLockFiles:
+    def _run(self, files: dict, sub_path: str = "") -> list[str]:
+        def fetch(org, repo, commit, path):
+            return files.get(path)
+
+        with mock.patch(
+            "verify_action_build.security.fetch_file_from_github",
+            side_effect=fetch,
+        ):
+            return analyze_lock_files("org", "repo", "a" * 40, sub_path=sub_path)
+
+    # --- Node --------------------------------------------------------------
+
+    def test_node_package_json_with_package_lock_passes(self):
+        files = {
+            "package.json": '{"name":"x","dependencies":{"a":"1.0.0"}}',
+            "package-lock.json": "{}",
+        }
+        assert self._run(files) == []
+
+    def test_node_package_json_with_yarn_lock_passes(self):
+        files = {"package.json": "{}", "yarn.lock": ""}
+        assert self._run(files) == []
+
+    def test_node_package_json_with_pnpm_lock_passes(self):
+        files = {"package.json": "{}", "pnpm-lock.yaml": ""}
+        assert self._run(files) == []
+
+    def test_node_package_json_with_bun_lock_passes(self):
+        files = {"package.json": "{}", "bun.lock": ""}
+        assert self._run(files) == []
+
+    def test_node_package_json_without_lock_fails(self):
+        errors = self._run({"package.json": '{"name":"x"}'})
+        assert len(errors) == 1
+        assert "package.json" in errors[0]
+        assert "package-lock.json" in errors[0]
+
+    # --- Python ------------------------------------------------------------
+
+    def test_python_pyproject_with_uv_lock_passes(self):
+        files = {
+            "pyproject.toml": '[project]\nname="x"\ndependencies = ["requests"]\n',
+            "uv.lock": "",
+        }
+        assert self._run(files) == []
+
+    def test_python_pyproject_with_poetry_lock_passes(self):
+        files = {
+            "pyproject.toml": "[tool.poetry.dependencies]\npython = '^3.11'\n",
+            "poetry.lock": "",
+        }
+        assert self._run(files) == []
+
+    def test_python_pyproject_with_requirements_txt_passes(self):
+        files = {
+            "pyproject.toml": '[project]\ndependencies = ["requests"]\n',
+            "requirements.txt": "requests==2.31.0\n",
+        }
+        assert self._run(files) == []
+
+    def test_python_pyproject_without_lock_fails(self):
+        files = {
+            "pyproject.toml": '[project]\nname="x"\ndependencies = ["requests"]\n',
+        }
+        errors = self._run(files)
+        assert len(errors) == 1
+        assert "pyproject.toml" in errors[0]
+
+    def test_python_pyproject_without_deps_skipped(self):
+        # Bare config (ruff, black, mypy settings) doesn't need a lock.
+        files = {
+            "pyproject.toml": "[tool.ruff]\nline-length = 100\n",
+        }
+        assert self._run(files) == []
+
+    def test_python_pipfile_with_lock_passes(self):
+        files = {"Pipfile": "[packages]\nrequests = '*'\n", "Pipfile.lock": "{}"}
+        assert self._run(files) == []
+
+    def test_python_pipfile_without_lock_fails(self):
+        errors = self._run({"Pipfile": "[packages]\nrequests = '*'\n"})
+        assert len(errors) == 1
+        assert "Pipfile" in errors[0]
+
+    # --- Deno --------------------------------------------------------------
+
+    def test_deno_with_lock_passes(self):
+        files = {"deno.json": '{"imports":{}}', "deno.lock": "{}"}
+        assert self._run(files) == []
+
+    def test_deno_jsonc_without_lock_fails(self):
+        errors = self._run({"deno.jsonc": "{}"})
+        assert len(errors) == 1
+        assert "deno.jsonc" in errors[0]
+
+    # --- Dart --------------------------------------------------------------
+
+    def test_dart_with_pubspec_lock_passes(self):
+        files = {"pubspec.yaml": "name: x\n", "pubspec.lock": ""}
+        assert self._run(files) == []
+
+    def test_dart_without_lock_fails(self):
+        errors = self._run({"pubspec.yaml": "name: x\n"})
+        assert len(errors) == 1
+        assert "pubspec.yaml" in errors[0]
+
+    # --- Ruby --------------------------------------------------------------
+
+    def test_ruby_with_gemfile_lock_passes(self):
+        files = {"Gemfile": "gem 'rails'\n", "Gemfile.lock": ""}
+        assert self._run(files) == []
+
+    def test_ruby_without_lock_fails(self):
+        errors = self._run({"Gemfile": "gem 'rails'\n"})
+        assert len(errors) == 1
+
+    # --- Go ----------------------------------------------------------------
+
+    def test_go_with_sum_passes(self):
+        files = {
+            "go.mod": "module x\n\nrequire github.com/a/b v1.2.3\n",
+            "go.sum": "github.com/a/b v1.2.3 h1:...\n",
+        }
+        assert self._run(files) == []
+
+    def test_go_without_sum_fails(self):
+        files = {"go.mod": "module x\n\nrequire github.com/a/b v1.2.3\n"}
+        errors = self._run(files)
+        assert len(errors) == 1
+        assert "go.mod" in errors[0]
+
+    def test_go_without_requires_skipped(self):
+        # go.mod with no external deps doesn't need go.sum.
+        assert self._run({"go.mod": "module x\n\ngo 1.21\n"}) == []
+
+    # --- Rust --------------------------------------------------------------
+
+    def test_rust_binary_without_lock_fails(self):
+        # Default binary crate — Cargo.lock expected.
+        files = {"Cargo.toml": '[package]\nname = "x"\n'}
+        errors = self._run(files)
+        assert len(errors) == 1
+
+    def test_rust_binary_with_lock_passes(self):
+        files = {
+            "Cargo.toml": '[package]\nname = "x"\n',
+            "Cargo.lock": "",
+        }
+        assert self._run(files) == []
+
+    def test_rust_library_without_lock_skipped(self):
+        # [lib] without [[bin]] — library crate, Cargo.lock not conventionally committed.
+        files = {
+            "Cargo.toml": '[package]\nname = "x"\n\n[lib]\nname = "x"\n',
+        }
+        assert self._run(files) == []
+
+    def test_rust_library_with_bin_still_requires_lock(self):
+        files = {
+            "Cargo.toml": (
+                '[package]\nname = "x"\n'
+                '[lib]\nname = "x"\n'
+                '[[bin]]\nname = "x-cli"\n'
+            ),
+        }
+        errors = self._run(files)
+        assert len(errors) == 1
+
+    def test_rust_workspace_requires_lock(self):
+        files = {"Cargo.toml": '[workspace]\nmembers = ["a"]\n'}
+        errors = self._run(files)
+        assert len(errors) == 1
+
+    # --- Sub-path handling ------------------------------------------------
+
+    def test_sub_path_manifest_detected(self):
+        # Manifest in sub-path with lock in sub-path — passes.
+        files = {
+            "sub/package.json": "{}",
+            "sub/package-lock.json": "{}",
+        }
+        assert self._run(files, sub_path="sub") == []
+
+    def test_sub_path_falls_back_to_root(self):
+        # Sub-action may reuse repo-root manifests.
+        files = {
+            "package.json": "{}",
+            "package-lock.json": "{}",
+        }
+        assert self._run(files, sub_path="sub") == []
+
+    def test_sub_path_without_lock_fails(self):
+        files = {"sub/package.json": "{}"}
+        errors = self._run(files, sub_path="sub")
+        assert len(errors) == 1
+        assert "sub/package.json" in errors[0]
+
+    # --- No manifests -----------------------------------------------------
+
+    def test_no_manifests_found_passes(self):
+        # Pure composite action — no manifests anywhere.
+        assert self._run({}) == []
+
+    # --- Multiple ecosystems -----------------------------------------------
+
+    def test_multiple_ecosystems_all_missing_aggregates_errors(self):
+        files = {
+            "package.json": "{}",
+            "go.mod": "module x\n\nrequire a v1\n",
+            "pubspec.yaml": "name: x\n",
+        }
+        errors = self._run(files)
+        assert len(errors) == 3

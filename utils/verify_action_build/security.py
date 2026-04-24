@@ -557,6 +557,146 @@ def analyze_scripts(
     return warnings
 
 
+def analyze_lock_files(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+) -> list[str]:
+    """Verify each detected dependency manifest has a matching lock file.
+
+    Downstream build verification relies on a clean rebuild producing the same
+    output as the published artifacts. That reproducibility depends on every
+    transitive dependency being pinned — which is the lock file's job. A
+    manifest (package.json, pyproject.toml, go.mod, ...) without a matching
+    lock file means `npm install` / `pip install` / `go get` would resolve to
+    whatever version is latest at build time, making verification impossible.
+
+    A missing lock file when the corresponding manifest is present is
+    returned as a hard error. Manifests that don't declare dependencies
+    (e.g. a bare pyproject.toml with only tool config, a Rust library crate
+    that conventionally doesn't commit Cargo.lock) are reported as skipped.
+
+    Returns a list of error strings (empty = pass).
+    """
+    errors: list[str] = []
+    header_shown = False
+
+    def _show_header() -> None:
+        nonlocal header_shown
+        if not header_shown:
+            console.print()
+            console.rule("[bold]Lock File Presence[/bold]")
+            header_shown = True
+
+    def _candidate_paths(name: str) -> list[str]:
+        if sub_path:
+            return [f"{sub_path}/{name}", name]
+        return [name]
+
+    def _find(name: str) -> tuple[str, str] | None:
+        for p in _candidate_paths(name):
+            c = fetch_file_from_github(org, repo, commit_hash, p)
+            if c is not None:
+                return p, c
+        return None
+
+    # (ecosystem, manifest, [acceptable lock files in priority order])
+    ecosystems: list[tuple[str, str, list[str]]] = [
+        ("node",   "package.json",   ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lock", "bun.lockb"]),
+        ("python", "pyproject.toml", ["uv.lock", "poetry.lock", "pdm.lock", "requirements.txt"]),
+        ("python", "Pipfile",        ["Pipfile.lock"]),
+        ("deno",   "deno.json",      ["deno.lock"]),
+        ("deno",   "deno.jsonc",     ["deno.lock"]),
+        ("dart",   "pubspec.yaml",   ["pubspec.lock"]),
+        ("ruby",   "Gemfile",        ["Gemfile.lock"]),
+        ("go",     "go.mod",         ["go.sum"]),
+        ("rust",   "Cargo.toml",     ["Cargo.lock"]),
+    ]
+
+    for ecosystem, manifest, lock_options in ecosystems:
+        found = _find(manifest)
+        if found is None:
+            continue
+        mpath, mcontent = found
+
+        # Rust libraries conventionally don't commit Cargo.lock — only binary
+        # crates / workspaces do. Detect via [lib] without [[bin]] in the
+        # root manifest (workspaces are treated as needing a lock).
+        if ecosystem == "rust":
+            has_lib = bool(re.search(r"(?m)^\s*\[lib\]", mcontent))
+            has_bin = bool(re.search(r"(?m)^\s*\[\[bin\]\]", mcontent))
+            has_workspace = bool(re.search(r"(?m)^\s*\[workspace\]", mcontent))
+            if has_lib and not has_bin and not has_workspace:
+                _show_header()
+                console.print(
+                    f"  [dim]⊘[/dim] {ecosystem}: {mpath} looks like a library crate — "
+                    "Cargo.lock is not conventionally committed"
+                )
+                continue
+
+        # pyproject.toml is often a bare config file (ruff/black/mypy settings)
+        # with no dependencies. Skip if no deps section is declared.
+        if manifest == "pyproject.toml":
+            has_deps = bool(re.search(
+                r"(?m)^\s*("
+                r"dependencies\s*="
+                r"|\[project\.optional-dependencies\]"
+                r"|\[tool\.poetry\.dependencies\]"
+                r"|\[tool\.poetry\.dev-dependencies\]"
+                r"|\[tool\.poetry\.group\..+?\.dependencies\]"
+                r"|\[tool\.pdm\.dev-dependencies\]"
+                r")",
+                mcontent,
+            ))
+            if not has_deps:
+                _show_header()
+                console.print(
+                    f"  [dim]⊘[/dim] {ecosystem}: {mpath} declares no dependencies"
+                )
+                continue
+
+        # go.mod without any `require` directives has no third-party deps and
+        # thus no go.sum to generate.
+        if manifest == "go.mod":
+            has_require = bool(re.search(r"(?m)^\s*require\b", mcontent))
+            if not has_require:
+                _show_header()
+                console.print(
+                    f"  [dim]⊘[/dim] {ecosystem}: {mpath} has no require directives"
+                )
+                continue
+
+        found_lock: str | None = None
+        for lock in lock_options:
+            lp = _find(lock)
+            if lp is not None:
+                found_lock = lp[0]
+                break
+
+        _show_header()
+        manifest_link = (
+            f"[link=https://github.com/{org}/{repo}/blob/{commit_hash}/{mpath}]"
+            f"{mpath}[/link]"
+        )
+        if found_lock:
+            lock_link = (
+                f"[link=https://github.com/{org}/{repo}/blob/{commit_hash}/{found_lock}]"
+                f"{found_lock}[/link]"
+            )
+            console.print(
+                f"  [green]✓[/green] {ecosystem}: {manifest_link} → {lock_link}"
+            )
+        else:
+            console.print(
+                f"  [red]✗[/red] {ecosystem}: {manifest_link} has no matching lock file "
+                f"(expected one of: {', '.join(lock_options)})"
+            )
+            errors.append(
+                f"{mpath}: missing lock file; expected one of "
+                f"{', '.join(lock_options)} so transitive dependencies are pinned"
+            )
+
+    return errors
+
+
 def analyze_dependency_pinning(
     org: str, repo: str, commit_hash: str, sub_path: str = "",
 ) -> list[str]:

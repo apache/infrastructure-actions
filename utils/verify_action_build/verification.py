@@ -39,6 +39,7 @@ from .security import (
     analyze_binary_downloads_recursive,
     analyze_dependency_pinning,
     analyze_dockerfile,
+    analyze_lock_files,
     analyze_nested_actions,
     analyze_repo_metadata,
     analyze_scripts,
@@ -181,6 +182,7 @@ def verify_single_action(
     checked_actions: list[dict] = []
     matched_with_approved_lockfile = False
     binary_download_failures: list[str] = []
+    lock_file_errors: list[str] = []
 
     # Detect source-detached release tags (orphan commits containing only
     # distributable artifacts) and resolve the default-branch source commit
@@ -271,6 +273,21 @@ def verify_single_action(
             checks_performed.append((
                 "Binary download verification", "skip",
                 "disabled via --no-binary-download-check",
+            ))
+
+        # Lock-file presence runs for every action type — reproducibility of
+        # the rebuilt dist/ (and of any pip/go/etc. install the action performs
+        # at runtime) depends on every transitive dependency being pinned.
+        lock_file_errors = analyze_lock_files(org, repo, commit_hash, sub_path)
+        if lock_file_errors:
+            checks_performed.append((
+                "Lock file presence", "fail",
+                f"{len(lock_file_errors)} manifest(s) missing lock file",
+            ))
+        else:
+            checks_performed.append((
+                "Lock file presence", "pass",
+                "all detected manifests have lock files",
             ))
 
         if not is_js_action:
@@ -481,7 +498,7 @@ def verify_single_action(
         ci_mode=ci_mode,
     )
 
-    overall_passed = all_match and not binary_download_failures
+    overall_passed = all_match and not binary_download_failures and not lock_file_errors
 
     console.print()
     checklist_hint = f"\n[dim]Security review checklist: {SECURITY_CHECKLIST_URL}[/dim]"
@@ -522,6 +539,12 @@ def verify_single_action(
                 f"[red bold]{action_type} action — "
                 f"{len(binary_download_failures)} unverified binary download(s) detected "
                 f"(no checksum/signature check in file)[/red bold]"
+            )
+        elif lock_file_errors:
+            fail_msg = (
+                f"[red bold]{action_type} action — "
+                f"{len(lock_file_errors)} manifest(s) without a matching lock file "
+                f"(transitive dependencies not pinned; rebuilds cannot be reproduced)[/red bold]"
             )
         else:
             fail_msg = f"[red bold]{action_type} action — verification failed[/red bold]"
