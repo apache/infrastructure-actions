@@ -33,6 +33,7 @@ from .diff_node_modules import diff_node_modules
 from .diff_source import diff_approved_vs_new
 from .docker_build import build_in_docker
 from .github_client import GitHubClient
+from .release_lookup import is_source_detached, resolve_source_commit
 from .security import (
     analyze_action_metadata,
     analyze_binary_downloads_recursive,
@@ -181,15 +182,64 @@ def verify_single_action(
     matched_with_approved_lockfile = False
     binary_download_failures: list[str] = []
 
+    # Detect source-detached release tags (orphan commits containing only
+    # distributable artifacts) and resolve the default-branch source commit
+    # the release was cut from, so the rebuild has real source to build from.
+    source_commit_hash = ""
+    source_detached_detail = ""
+    if is_source_detached(org, repo, commit_hash, sub_path):
+        resolved = resolve_source_commit(org, repo, commit_hash, sub_path)
+        if resolved:
+            source_commit_hash, tag_name = resolved
+            source_detached_detail = (
+                f"orphan tag {tag_name}; rebuilding from {source_commit_hash[:12]}"
+            )
+            console.print()
+            console.print(
+                Panel(
+                    f"[yellow]Release tag [bold]{tag_name}[/bold] at "
+                    f"[bold]{commit_hash[:12]}[/bold] is a source-detached "
+                    f"orphan commit (no src/ or package.json at the tag).\n"
+                    f"Rebuilding from the default-branch source commit "
+                    f"[bold]{source_commit_hash[:12]}[/bold] the release was "
+                    f"cut from, then diffing the rebuilt dist/ against the "
+                    f"tag's published dist/.[/yellow]",
+                    border_style="yellow",
+                    title="SOURCE-DETACHED RELEASE TAG",
+                )
+            )
+        else:
+            source_detached_detail = "detected but source commit could not be resolved"
+            console.print()
+            console.print(
+                Panel(
+                    f"[red]Tag commit [bold]{commit_hash[:12]}[/bold] has no "
+                    f"buildable source at the tag, and the default-branch "
+                    f"source commit the release was cut from could not be "
+                    f"resolved via the GitHub Releases API.  The rebuild "
+                    f"below will almost certainly produce no output — this "
+                    f"action requires manual source review.[/red]",
+                    border_style="red",
+                    title="SOURCE-DETACHED RELEASE TAG (unresolved)",
+                )
+            )
+
     with tempfile.TemporaryDirectory(prefix="verify-action-") as tmp:
         work_dir = Path(tmp)
         (original_dir, rebuilt_dir, action_type, out_dir_name,
          has_node_modules, original_node_modules, rebuilt_node_modules) = build_in_docker(
             org, repo, commit_hash, work_dir, sub_path=sub_path, gh=gh,
             cache=cache, show_build_steps=show_build_steps,
+            source_commit_hash=source_commit_hash,
         )
 
         checks_performed.append(("Action type detection", "info", action_type))
+        if source_detached_detail:
+            checks_performed.append((
+                "Source-detached release tag",
+                "info" if source_commit_hash else "warn",
+                source_detached_detail,
+            ))
 
         is_js_action = action_type.startswith("node") or action_type in ("unknown",)
 
