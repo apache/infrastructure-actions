@@ -22,6 +22,7 @@ import json
 import os
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterator
 
 import requests
@@ -39,6 +40,53 @@ from .approved_actions import find_approved_versions
 
 # Orgs we trust to the point of not descending into their nested action graph.
 TRUSTED_ORGS = {"actions", "github"}
+
+# Exemptions file for the lock-file-presence check.  Path matches the
+# convention used by approved_actions.ACTIONS_YML.
+LOCK_FILE_EXEMPTIONS_YML = (
+    Path(__file__).resolve().parent.parent.parent / "lock_file_exemptions.yml"
+)
+
+
+def _load_lock_file_exemptions(
+    path: Path = LOCK_FILE_EXEMPTIONS_YML,
+) -> dict[tuple[str, str], set[str]]:
+    """Parse lock_file_exemptions.yml into {(org, repo): {ecosystems}}.
+
+    Uses a minimal line-based parser rather than PyYAML to keep the dependency
+    surface small (the rest of this project also avoids pulling in yaml).
+    Supported subset:
+        org/repo:
+          - ecosystem1
+          - ecosystem2
+    Comments (``#``) and blank lines are ignored.  Keys are lowercased so
+    lookups are case-insensitive (``Pypa/cibuildwheel`` == ``pypa/cibuildwheel``).
+    """
+    result: dict[tuple[str, str], set[str]] = {}
+    if not path.exists():
+        return result
+
+    current: tuple[str, str] | None = None
+    for raw in path.read_text().splitlines():
+        line = raw.split("#", 1)[0].rstrip()
+        if not line.strip():
+            continue
+        if not line[0].isspace() and line.endswith(":"):
+            orgrepo = line[:-1].strip().strip("'\"")
+            if "/" in orgrepo:
+                org, repo = orgrepo.split("/", 1)
+                current = (org.lower(), repo.lower())
+                result.setdefault(current, set())
+            else:
+                current = None
+            continue
+        if current is not None:
+            stripped = line.lstrip()
+            if stripped.startswith("- "):
+                ecosystem = stripped[2:].strip().strip("'\"")
+                if ecosystem:
+                    result[current].add(ecosystem)
+    return result
 
 
 @dataclass
@@ -559,6 +607,7 @@ def analyze_scripts(
 
 def analyze_lock_files(
     org: str, repo: str, commit_hash: str, sub_path: str = "",
+    exemptions: dict[tuple[str, str], set[str]] | None = None,
 ) -> list[str]:
     """Verify each detected dependency manifest has a matching lock file.
 
@@ -574,8 +623,17 @@ def analyze_lock_files(
     (e.g. a bare pyproject.toml with only tool config, a Rust library crate
     that conventionally doesn't commit Cargo.lock) are reported as skipped.
 
+    ``exemptions`` maps ``(org, repo)`` to a set of ecosystem names where a
+    missing lock file is tolerated — for library-first projects (cibuildwheel,
+    setup-dart) that don't commit lock files per their ecosystem convention.
+    Defaults to the contents of ``lock_file_exemptions.yml`` at the repo root.
+
     Returns a list of error strings (empty = pass).
     """
+    if exemptions is None:
+        exemptions = _load_lock_file_exemptions()
+    exempted_ecosystems = exemptions.get((org.lower(), repo.lower()), set())
+
     errors: list[str] = []
     header_shown = False
 
@@ -683,6 +741,11 @@ def analyze_lock_files(
             )
             console.print(
                 f"  [green]✓[/green] {ecosystem}: {manifest_link} → {lock_link}"
+            )
+        elif ecosystem in exempted_ecosystems:
+            console.print(
+                f"  [dim]⊘[/dim] {ecosystem}: {manifest_link} has no matching lock file "
+                f"— exempted in lock_file_exemptions.yml (library-first project)"
             )
         else:
             console.print(

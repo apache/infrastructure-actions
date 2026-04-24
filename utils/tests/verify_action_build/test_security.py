@@ -658,3 +658,98 @@ class TestAnalyzeLockFiles:
         }
         errors = self._run(files)
         assert len(errors) == 3
+
+    # --- Exemptions -------------------------------------------------------
+
+    def _run_with_exemptions(
+        self,
+        files: dict,
+        exemptions: dict,
+        org: str = "org",
+        repo: str = "repo",
+    ) -> list[str]:
+        def fetch(o, r, commit, path):
+            return files.get(path)
+
+        with mock.patch(
+            "verify_action_build.security.fetch_file_from_github",
+            side_effect=fetch,
+        ):
+            return analyze_lock_files(org, repo, "a" * 40, exemptions=exemptions)
+
+    def test_exemption_skips_matching_ecosystem(self):
+        # pyproject.toml with deps but no lock — normally fails; exempted here.
+        files = {
+            "pyproject.toml": '[project]\ndependencies = ["requests"]\n',
+        }
+        errors = self._run_with_exemptions(
+            files, {("org", "repo"): {"python"}},
+        )
+        assert errors == []
+
+    def test_exemption_does_not_skip_other_ecosystems(self):
+        # Exempt only python; node still fails.
+        files = {
+            "pyproject.toml": '[project]\ndependencies = ["requests"]\n',
+            "package.json": "{}",
+        }
+        errors = self._run_with_exemptions(
+            files, {("org", "repo"): {"python"}},
+        )
+        assert len(errors) == 1
+        assert "package.json" in errors[0]
+
+    def test_exemption_case_insensitive(self):
+        # Look-up key lowercases org/repo, so an exemption entry written as
+        # "Pypa/cibuildwheel" matches a run on "pypa/cibuildwheel".
+        files = {"pyproject.toml": '[project]\ndependencies = ["a"]\n'}
+        errors = self._run_with_exemptions(
+            files, {("pypa", "cibuildwheel"): {"python"}},
+            org="Pypa", repo="CIBuildWheel",
+        )
+        assert errors == []
+
+    def test_exemption_for_different_repo_does_not_apply(self):
+        files = {"pyproject.toml": '[project]\ndependencies = ["a"]\n'}
+        errors = self._run_with_exemptions(
+            files, {("other", "project"): {"python"}},
+        )
+        assert len(errors) == 1
+
+    # --- Exemption file parser -------------------------------------------
+
+    def test_exemption_file_parses(self, tmp_path):
+        from verify_action_build.security import _load_lock_file_exemptions
+
+        yml = tmp_path / "lock_file_exemptions.yml"
+        yml.write_text(
+            "# comment\n"
+            "pypa/cibuildwheel:\n"
+            "  - python\n"
+            "\n"
+            "dart-lang/setup-dart:\n"
+            "  - dart  # trailing comment\n"
+        )
+        result = _load_lock_file_exemptions(yml)
+        assert result == {
+            ("pypa", "cibuildwheel"): {"python"},
+            ("dart-lang", "setup-dart"): {"dart"},
+        }
+
+    def test_exemption_file_missing_returns_empty(self, tmp_path):
+        from verify_action_build.security import _load_lock_file_exemptions
+
+        result = _load_lock_file_exemptions(tmp_path / "does-not-exist.yml")
+        assert result == {}
+
+    def test_exemption_file_multiple_ecosystems_per_repo(self, tmp_path):
+        from verify_action_build.security import _load_lock_file_exemptions
+
+        yml = tmp_path / "lock_file_exemptions.yml"
+        yml.write_text(
+            "some/multiecosystem-repo:\n"
+            "  - python\n"
+            "  - dart\n"
+        )
+        result = _load_lock_file_exemptions(yml)
+        assert result[("some", "multiecosystem-repo")] == {"python", "dart"}

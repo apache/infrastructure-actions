@@ -287,7 +287,7 @@ def verify_single_action(
         else:
             checks_performed.append((
                 "Lock file presence", "pass",
-                "all detected manifests have lock files",
+                "all detected manifests have lock files (or are exempted)",
             ))
 
         if not is_js_action:
