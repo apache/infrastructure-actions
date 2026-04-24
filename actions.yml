@@ -22,9 +22,6 @@
 # update expiry dates for previous versions.
 # Versions that are known to be problematic should be removed explicitly manually.
 1Password/load-secrets-action:
-  13f58eec611f8e5db52ec16247f58c508398f3e6:
-    tag: v3.0.0
-    expires_at: 2026-04-24
   8d0d610af187e78a2772c2d18d627f4c52d3fbfb:
     tag: v3.1.0
     expires_at: 2026-06-12
@@ -128,9 +125,6 @@ betahuhn/repo-file-sync-action:
   8b92be3375cf1d1b0cd579af488a9255572e4619:
     tag: v1.21.1
 biomejs/setup-biome:
-  454fa0d884737805f48d7dc236c1761a0ac3cc13:
-    tag: v2.6.0
-    expires_at: 2026-04-24
   29711cbb52afee00eb13aeb30636592f9edc0088:
     tag: v2.7.0
     expires_at: 2026-06-14
@@ -199,9 +193,6 @@ codspeedhq/action:
   '*':
     keep: true
 commit-check/commit-check-action:
-  a0193b1ca486178b85d7a1db145af34cd227f81f:
-    tag: v2.1.1
-    expires_at: 2026-04-24
   be79b5cd5953c8afd4266004c5bbb1431f544df1:
     tag: v2.2.1
     expires_at: 2026-06-12
@@ -337,9 +328,6 @@ dorny/paths-filter:
   fbd0ab8f3e69293af611ebaee6363fc25e6d187d:
     tag: v4.0.1
 dorny/test-reporter:
-  dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3:
-    tag: v2.1.1
-    expires_at: 2026-04-24
   b082adf0eced0765477756c2a610396589b8c637:
     tag: v2.5.0
     expires_at: 2026-06-12
@@ -389,9 +377,6 @@ golangci/*:
   '*':
     keep: true
 golangci/golangci-lint-action:
-  55c2c1448f86e01eaae002a5a3a9624417608d84:
-    tag: v6.5.2
-    expires_at: 2026-04-24
   1481404843c368bc19ca9406f87d6e0fc97bdcfd:
     tag: v7.0.0
     expires_at: 2026-06-12
@@ -407,12 +392,6 @@ gr2m/twitter-together:
   '*':
     keep: true
 graalvm/setup-graalvm:
-  7f488cf82a3629ee755e4e97342c01d6bed318fa:
-    tag: v1.3.5
-    expires_at: 2026-04-24
-  790e28947b79a9c09c3391c0f18bf8d0f102ed69:
-    tag: v1.4.4
-    expires_at: 2026-04-24
   54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1:
     tag: v1.4.5
     expires_at: 2026-06-14
@@ -422,9 +401,6 @@ graalvm/setup-graalvm:
   60c26726de13f8b90771df4bc1641a52a3159994:
     tag: v1.5.2
 gradle/actions/dependency-submission:
-  017a9effdb900e5b5b2fddfb590a105619dca3c3:
-    tag: v4.4.2
-    expires_at: 2026-04-24
   4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2:
     tag: v5.0.0
     expires_at: 2026-05-24
@@ -437,9 +413,6 @@ gradle/actions/dependency-submission:
   50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
     tag: v6.1.0
 gradle/actions/setup-gradle:
-  017a9effdb900e5b5b2fddfb590a105619dca3c3:
-    tag: v4.4.2
-    expires_at: 2026-04-24
   4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2:
     tag: v5.0.0
     expires_at: 2026-05-24
@@ -452,9 +425,6 @@ gradle/actions/setup-gradle:
   50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
     tag: v6.1.0
 gradle/actions/wrapper-validation:
-  017a9effdb900e5b5b2fddfb590a105619dca3c3:
-    tag: v4.4.2
-    expires_at: 2026-04-24
   4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2:
     tag: v5.0.0
     expires_at: 2026-05-24
@@ -467,15 +437,9 @@ gradle/actions/wrapper-validation:
   50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
     tag: v6.1.0
 gradle/develocity-actions/maven-publish-build-scan:
-  4a2aed82eea165ba2d5c494fc2a8730d7fdff229:
-    tag: v1.4
-    expires_at: 2026-04-24
   974e8dbcbda40db6828fc35f349c80a7c0e71529:
     tag: v2.1
 gradle/develocity-actions/setup-maven:
-  4a2aed82eea165ba2d5c494fc2a8730d7fdff229:
-    tag: v1.4
-    expires_at: 2026-04-24
   974e8dbcbda40db6828fc35f349c80a7c0e71529:
     tag: v2.1
 gsactions/commit-message-checker:
@@ -512,9 +476,6 @@ ilammy/setup-nasm:
   72793074d3c8cdda771dba85f6deafe00623038b:
     tag: v1.5.2
 JamesIves/github-pages-deploy-action:
-  4a3abc783e1a24aeb44c16e869ad83caf6b4cc23:
-    tag: v4.7.4
-    expires_at: 2026-04-24
   d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
     tag: v4.8.0
 jarvusinnovations/background-action:
@@ -658,9 +619,6 @@ mikepenz/action-junit-report:
   '*':
     keep: true
 mlugg/setup-zig:
-  fa65c4058643678a4e4a9a60513944a7d8d35440:
-    tag: v2.1.0
-    expires_at: 2026-04-24
   d1434d08867e3ee9daa34448df10607b98908d29:
     tag: v2.2.1
 mozilla-actions/sccache-action:
@@ -694,9 +652,6 @@ olafurpg/setup-scala:
   '*':
     keep: true
 opentofu/setup-opentofu:
-  000eeb8522f0572907c393e8151076c205fdba1b:
-    tag: v1.0.6
-    expires_at: 2026-04-24
   9d84900f3238fab8cd84ce47d658d25dd008be2f:
     tag: v1.0.8
     expires_at: 2026-06-14
@@ -748,9 +703,6 @@ PyO3/maturin-action:
   '*':
     keep: true
 pypa/cibuildwheel:
-  63fd63b352a9a8bdcc24791c9dbee952ee9a8abc:
-    tag: v3.3.0
-    expires_at: 2026-04-24
   298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e:
     tag: v3.3.1
     expires_at: 2026-06-14

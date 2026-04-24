@@ -19,7 +19,6 @@
 # This file was generated from actions.yml by gateway/gateway.py.
 # It will be regenerated and committed as part of various workflows.
 # DO NOT UPDATE MANUALLY. Update /actions.yml instead.
-- 1Password/load-secrets-action@13f58eec611f8e5db52ec16247f58c508398f3e6
 - 1Password/load-secrets-action@8d0d610af187e78a2772c2d18d627f4c52d3fbfb
 - 1Password/load-secrets-action@dafbe7cb03502b260e2b2893c753c352eee545bf
 - 1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259
@@ -54,7 +53,6 @@
 - bazel-contrib/setup-bazel@083175551ceeceebc757ebee2127fde78840ca77
 - bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86
 - betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619
-- biomejs/setup-biome@454fa0d884737805f48d7dc236c1761a0ac3cc13
 - biomejs/setup-biome@29711cbb52afee00eb13aeb30636592f9edc0088
 - biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51
 - BobAnkh/auto-generate-changelog@*
@@ -78,7 +76,6 @@
 - codecov/codecov-action@*
 - codelytv/pr-size-labeler@*
 - codspeedhq/action@*
-- commit-check/commit-check-action@a0193b1ca486178b85d7a1db145af34cd227f81f
 - commit-check/commit-check-action@be79b5cd5953c8afd4266004c5bbb1431f544df1
 - commit-check/commit-check-action@443fb6a114414358496e6243105294c3b11610c5
 - commit-check/commit-check-action@2fe41833054c561710099d8e3e22bbeab4fe204a
@@ -125,7 +122,6 @@
 - docker://pandoc/core@sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93
 - dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
 - dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d
-- dorny/test-reporter@dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3
 - dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637
 - dorny/test-reporter@3d76b34a4535afbd0600d347b09a6ee5deb3ed7f
 - dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451
@@ -142,35 +138,27 @@
 - geekyeggo/delete-artifact@*
 - golang/govulncheck-action@*
 - golangci/*@*
-- golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84
 - golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd
 - golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20
 - google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
 - google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
 - gr2m/twitter-together@*
-- graalvm/setup-graalvm@7f488cf82a3629ee755e4e97342c01d6bed318fa
-- graalvm/setup-graalvm@790e28947b79a9c09c3391c0f18bf8d0f102ed69
 - graalvm/setup-graalvm@54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1
 - graalvm/setup-graalvm@f744c72a42b1995d7b0cbc314bde4bace7ac1fe1
 - graalvm/setup-graalvm@60c26726de13f8b90771df4bc1641a52a3159994
-- gradle/actions/dependency-submission@017a9effdb900e5b5b2fddfb590a105619dca3c3
 - gradle/actions/dependency-submission@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2
 - gradle/actions/dependency-submission@0723195856401067f7a2779048b490ace7a47d7c
 - gradle/actions/dependency-submission@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f
 - gradle/actions/dependency-submission@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e
-- gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3
 - gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2
 - gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
 - gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f
 - gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e
-- gradle/actions/wrapper-validation@017a9effdb900e5b5b2fddfb590a105619dca3c3
 - gradle/actions/wrapper-validation@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2
 - gradle/actions/wrapper-validation@0723195856401067f7a2779048b490ace7a47d7c
 - gradle/actions/wrapper-validation@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f
 - gradle/actions/wrapper-validation@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e
-- gradle/develocity-actions/maven-publish-build-scan@4a2aed82eea165ba2d5c494fc2a8730d7fdff229
 - gradle/develocity-actions/maven-publish-build-scan@974e8dbcbda40db6828fc35f349c80a7c0e71529
-- gradle/develocity-actions/setup-maven@4a2aed82eea165ba2d5c494fc2a8730d7fdff229
 - gradle/develocity-actions/setup-maven@974e8dbcbda40db6828fc35f349c80a7c0e71529
 - gsactions/commit-message-checker@*
 - hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5
@@ -183,7 +171,6 @@
 - houseabsolute/actions-rust-cross@*
 - ilammy/msvc-dev-cmd@*
 - ilammy/setup-nasm@72793074d3c8cdda771dba85f6deafe00623038b
-- JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23
 - JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f
 - jarvusinnovations/background-action@*
 - jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5
@@ -232,7 +219,6 @@
 - maxim-lobanov/setup-xcode@*
 - medyagh/setup-minikube@*
 - mikepenz/action-junit-report@*
-- mlugg/setup-zig@fa65c4058643678a4e4a9a60513944a7d8d35440
 - mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29
 - mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
 - msys2/setup-msys2@*
@@ -244,7 +230,6 @@
 - nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654
 - ocaml/setup-ocaml@*
 - olafurpg/setup-scala@*
-- opentofu/setup-opentofu@000eeb8522f0572907c393e8151076c205fdba1b
 - opentofu/setup-opentofu@9d84900f3238fab8cd84ce47d658d25dd008be2f
 - opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb
 - oracle-actions/setup-java@*
@@ -262,7 +247,6 @@
 - potiuk/cancel-workflow-runs@*
 - pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
 - PyO3/maturin-action@*
-- pypa/cibuildwheel@63fd63b352a9a8bdcc24791c9dbee952ee9a8abc
 - pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e
 - pypa/cibuildwheel@ee02a1537ce3071a004a6b08c41e72f0fdc42d9a
 - pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084
