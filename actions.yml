@@ -256,6 +256,9 @@ damccorm/tag-ur-it:
 dart-lang/setup-dart:
   e51d8e571e22473a2ddebf0ef8a2123f0ab2c02c:
     tag: v1.7.1
+    expires_at: 2026-07-18
+  65eb853c7ba17dde3be364c3d2858773e7144260:
+    tag: v1.7.2
 DavidAnson/markdownlint-cli2-action:
   07035fd053f7be764496c0f8d8f9f41f98305101:
     tag: v22.0.0
