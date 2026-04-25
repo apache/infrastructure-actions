@@ -238,3 +238,61 @@ def resolve_source_commit(
             return sha, tag_name
 
     return None
+
+
+def _commit_committer_date(org: str, repo: str, commit_hash: str) -> datetime | None:
+    """Return the committer date of ``commit_hash`` as a tz-aware datetime."""
+    data = _gh_api(f"repos/{org}/{repo}/commits/{commit_hash}")
+    if not isinstance(data, dict):
+        return None
+    ts = (
+        data.get("commit", {}).get("committer", {}).get("date")
+        or data.get("commit", {}).get("author", {}).get("date")
+    )
+    if not ts:
+        return None
+    try:
+        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def get_release_or_commit_time(
+    org: str, repo: str, commit_hash: str,
+) -> tuple[datetime, str | None, str] | None:
+    """Return when this commit was released, with the tag name if known.
+
+    Resolution order:
+      1. Find every tag pointing at ``commit_hash``; for each (most-specific
+         first) try to fetch its GitHub Release and use ``published_at``.
+      2. If no release exists, fall back to the commit's committer date.
+
+    Returns ``(timestamp, tag_name, source)`` where ``source`` is either
+    ``"release"`` or ``"commit"``, or ``None`` if neither lookup succeeds.
+    ``tag_name`` is ``None`` when the commit isn't pointed at by any tag.
+    """
+    tags = _find_tags_for_commit(org, repo, commit_hash)
+    for tag in tags:
+        ts = _release_published_at(org, repo, tag)
+        if ts is not None:
+            return ts, tag, "release"
+
+    ts = _commit_committer_date(org, repo, commit_hash)
+    if ts is None:
+        return None
+    # Even if we have no GitHub Release, we may have a tag name to display.
+    return ts, (tags[0] if tags else None), "commit"
+
+
+def format_release_time(ts: datetime) -> str:
+    """Format ``ts`` for the verification summary as 'Weekday YYYY-MM-DD HH:MM UTC'.
+
+    Leads with the day of the week so the reader can eyeball how many days
+    ago this was relative to today — without baking a "N days ago" string
+    that silently rots when the same output is re-read later (a CI log,
+    a PR-comment quote, a saved transcript). The absolute timestamp is
+    self-validating; the weekday makes the recency obvious.
+    """
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    return ts.astimezone(timezone.utc).strftime("%A %Y-%m-%d %H:%M UTC")
