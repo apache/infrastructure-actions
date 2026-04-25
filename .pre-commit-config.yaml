@@ -1,3 +1,4 @@
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,6 +15,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
 ---
 default_stages: [pre-commit]
 default_language_version:
@@ -29,3 +31,92 @@ repos:
         additional_dependencies: ['rich>=12.4.4', 'ruamel.yaml']
         require_serial: true
         files: ^actions\.yml$
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: ad1b27d73581aa16cca06fc4a0761fc563ffe8e8  # frozen: v1.5.6
+    hooks:
+      # Files in stash/ (except stash/pyproject.toml) carry the short-form
+      # Apache 2.0 license ("Copyright (c) The stash contributors / Licensed
+      # under the Apache License, Version 2.0") which RAT accepts. Adding the
+      # full ASF contributor header on top would just duplicate, so they are
+      # excluded across every ecosystem-specific hook below.
+      - id: insert-license
+        name: Add Apache license header to Python files
+        files: \.py$
+        exclude: ^stash/(?!pyproject\.toml).*$
+        args:
+          - --comment-style
+          - "#|#|#"
+          - --license-filepath
+          - license-templates/LICENSE.txt
+          - --fuzzy-match-generates-todo
+      - id: insert-license
+        name: Add Apache license header to YAML files
+        files: \.ya?ml$
+        # approved_patterns.yml is regenerated from actions.yml by gateway/.
+        # stash-action-test.yml uses the short-form Apache 2.0 license to
+        # match the rest of the stash sub-project.
+        exclude: |
+          (?x)
+          ^approved_patterns\.yml$|
+          ^stash/(?!pyproject\.toml).*$|
+          ^\.github/workflows/stash-action-test\.yml$
+        args:
+          - --comment-style
+          - "#|#|#"
+          - --license-filepath
+          - license-templates/LICENSE.txt
+          - --fuzzy-match-generates-todo
+      - id: insert-license
+        name: Add Apache license header to TOML files
+        files: \.toml$
+        args:
+          - --comment-style
+          - "#|#|#"
+          - --license-filepath
+          - license-templates/LICENSE.txt
+          - --fuzzy-match-generates-todo
+      - id: insert-license
+        name: Add Apache license header to shell scripts
+        files: \.(sh|bash)$
+        args:
+          - --comment-style
+          - "#|#|#"
+          - --license-filepath
+          - license-templates/LICENSE.txt
+          - --fuzzy-match-generates-todo
+      - id: insert-license
+        name: Add Apache license header to Dockerfiles
+        files: (^|/)Dockerfile$|\.Dockerfile$
+        args:
+          - --comment-style
+          - "#|#|#"
+          - --license-filepath
+          - license-templates/LICENSE.txt
+          - --fuzzy-match-generates-todo
+      - id: insert-license
+        name: Add Apache license header to ezt templates
+        files: \.ezt$
+        args:
+          - --comment-style
+          - "#|#|#"
+          - --license-filepath
+          - license-templates/LICENSE.txt
+          - --fuzzy-match-generates-todo
+      - id: insert-license
+        name: Add Apache license header to Markdown files
+        files: \.md$
+        # CLAUDE.md / AGENTS.md are agentic-tooling docs that follow the
+        # short-license convention used in apache/airflow; keeping them
+        # exempted here matches that convention until we add the short
+        # template too. stash/README.md uses the short-form Apache license.
+        exclude: |
+          (?x)
+          ^(?:.*/)?AGENTS\.md$|
+          ^(?:.*/)?CLAUDE\.md$|
+          ^stash/.*\.md$
+        args:
+          - --comment-style
+          - "<!--|  |-->"
+          - --license-filepath
+          - license-templates/LICENSE.txt
+          - --fuzzy-match-generates-todo
