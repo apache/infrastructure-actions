@@ -1056,6 +1056,43 @@ _JS_DOWNLOAD_PATTERNS = [
     re.compile(r"\brequire\(\s*['\"`]node-fetch['\"`]"),
 ]
 
+# Markers indicating the response of an HTTP call is consumed as *data* —
+# parsed for a value rather than written to disk and executed/extracted.
+# A "data fetch" with these markers and no binary-handling markers (see
+# below) anywhere in the file is exempt from the unverified-download check,
+# since there is no binary or executable to verify in the first place.
+_JS_DATA_PARSE_PATTERNS = [
+    re.compile(r"\.match\s*\("),
+    re.compile(r"\.matchAll\s*\("),
+    re.compile(r"\.replace\s*\("),
+    re.compile(r"\.test\s*\("),
+    re.compile(r"\bJSON\.parse\s*\("),
+    re.compile(r"\bparseInt\s*\("),
+    re.compile(r"\bparseFloat\s*\("),
+    re.compile(r"\bNumber\s*\("),
+    re.compile(r"\.split\s*\("),
+    re.compile(r"\.includes\s*\("),
+    re.compile(r"\.startsWith\s*\("),
+    re.compile(r"\.endsWith\s*\("),
+    re.compile(r"\.toLowerCase\s*\(\)"),
+    re.compile(r"\.toUpperCase\s*\(\)"),
+]
+
+# Markers indicating the response is treated as a binary or executable —
+# extracted, written to disk, made executable, or executed.  If any of these
+# appear anywhere in the file the download stays subject to the verification
+# requirement, regardless of any data-parse markers also present.
+_JS_BINARY_HANDLE_PATTERNS = [
+    re.compile(r"\btc\.extract(?:Tar|Zip|7z|Xar)\s*\("),
+    re.compile(r"\btc\.cache(?:File|Dir)\s*\("),
+    re.compile(r"\bfs\.(?:writeFile|writeFileSync|createWriteStream|copyFile|copyFileSync|rename|renameSync)\b"),
+    re.compile(r"\bexec\.exec(?:Async)?\s*\("),
+    re.compile(r"\bchild_process\b"),
+    re.compile(r"\bspawn(?:Sync)?\s*\("),
+    re.compile(r"\bchmod(?:Sync)?\s*\("),
+    re.compile(r"['\"`]chmod\s+\+x"),
+]
+
 # Verification patterns in JS/TS source: node crypto, WebCrypto, or common
 # sigstore/cosign / custom "verify" helper names.
 _JS_VERIFICATION_PATTERNS = [
@@ -1084,13 +1121,40 @@ def _line_is_pkg_manager(line: str) -> bool:
     return any(marker in lower for marker in _PKG_MANAGER_MARKERS)
 
 
+def _file_is_pure_data_fetch(content: str) -> bool:
+    """Return True if the file fetches HTTP responses purely as data.
+
+    Heuristic: the file has at least one data-parse marker (regex .match,
+    JSON.parse, parseInt, etc.) AND no binary-handling marker (tc.extractTar,
+    fs.writeFile, exec.exec, chmod +x, etc.).  When both hold, the response
+    is being consumed as a string/number rather than persisted or executed,
+    so there is no binary to verify in the first place.
+
+    This is intentionally a per-file heuristic rather than per-finding: a
+    file that mixes a real binary download with a metadata fetch should
+    keep the strict check, since we cannot reliably scope which usage
+    follows which call without a real AST.
+    """
+    has_parse = any(p.search(content) for p in _JS_DATA_PARSE_PATTERNS)
+    if not has_parse:
+        return False
+    has_binary_handle = any(p.search(content) for p in _JS_BINARY_HANDLE_PATTERNS)
+    return not has_binary_handle
+
+
 def _find_binary_downloads_js(content: str) -> list[tuple[int, str]]:
     """Find lines in JS/TS source that fetch remote artifacts.
 
     Flags calls to ``tc.downloadTool`` / ``downloadTool``, bare ``fetch`` to
     an http(s) URL, node's ``http(s).get`` / ``.request``, ``axios.*``, and
     ``new HttpClient()``. Skips comment-only lines.
+
+    Files that look like pure data fetches (response parsed as a value, not
+    persisted or executed) return no findings — see ``_file_is_pure_data_fetch``
+    for the heuristic.
     """
+    if _file_is_pure_data_fetch(content):
+        return []
     findings: list[tuple[int, str]] = []
     for i, line in enumerate(content.splitlines(), 1):
         stripped = line.strip()

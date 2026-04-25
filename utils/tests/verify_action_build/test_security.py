@@ -27,6 +27,10 @@ from verify_action_build.security import (
     analyze_action_metadata,
     analyze_repo_metadata,
 )
+from verify_action_build.security import (
+    _file_is_pure_data_fetch,
+    _find_binary_downloads_js,
+)
 
 
 class TestAnalyzeDockerfile:
@@ -753,3 +757,109 @@ class TestAnalyzeLockFiles:
         )
         result = _load_lock_file_exemptions(yml)
         assert result[("some", "multiecosystem-repo")] == {"python", "dart"}
+
+
+class TestPureDataFetchExemption:
+    """The binary-download check should not flag JS files that fetch HTTP
+    responses purely as data (regex-parsed, JSON.parse'd, etc.) when nothing
+    in the file persists or executes the response."""
+
+    # The exact pattern that triggered the false positive on PR #752
+    # (dependabot/fetch-metadata): badge fetch + regex match + parseInt.
+    DEPENDABOT_BADGE_FETCH = """\
+import * as https from 'https'
+
+export async function getCompatibility (name, oldVersion, newVersion, ecosystem) {
+  const svg = await new Promise((resolve) => {
+    https.get(`https://dependabot-badges.githubapp.com/badges/compatibility_score?dependency-name=${name}&package-manager=${ecosystem}&previous-version=${oldVersion}&new-version=${newVersion}`, res => {
+      let data = ''
+      res.on('data', chunk => { data += chunk.toString('utf8') })
+      res.on('end', () => { resolve(data) })
+    }).on('error', () => { resolve('') })
+  })
+
+  const scoreChunk = svg.match(/<title>compatibility: (?<score>\\d+)%<\\/title>/m)
+  return scoreChunk?.groups ? parseInt(scoreChunk.groups.score) : 0
+}
+"""
+
+    LUAROCKS_BINARY_DOWNLOAD = """\
+import * as tc from "@actions/tool-cache"
+
+const sourceTar = await tc.downloadTool(`https://luarocks.org/releases/luarocks-${v}.tar.gz`)
+await tc.extractTar(sourceTar, dest)
+"""
+
+    def test_pure_data_fetch_exempted(self):
+        # https.get + .match + parseInt, no extract/write/exec → exempted.
+        assert _file_is_pure_data_fetch(self.DEPENDABOT_BADGE_FETCH) is True
+        assert _find_binary_downloads_js(self.DEPENDABOT_BADGE_FETCH) == []
+
+    def test_real_binary_download_still_flagged(self):
+        # tc.downloadTool followed by tc.extractTar → not exempt.
+        assert _file_is_pure_data_fetch(self.LUAROCKS_BINARY_DOWNLOAD) is False
+        findings = _find_binary_downloads_js(self.LUAROCKS_BINARY_DOWNLOAD)
+        assert len(findings) == 1
+        assert "downloadTool" in findings[0][1]
+
+    def test_data_fetch_with_extract_in_same_file_not_exempt(self):
+        # File mixes a metadata fetch and a real binary extraction. The
+        # heuristic is intentionally conservative: any binary-handling
+        # marker in the file disables the exemption for everything in it.
+        mixed = """\
+import * as https from 'https'
+import * as tc from "@actions/tool-cache"
+
+const meta = await new Promise((r) => https.get('https://x/y.json', res => {/*...*/}))
+const parsed = JSON.parse(meta)
+
+const archive = await tc.downloadTool('https://x/foo.tar.gz')
+await tc.extractTar(archive, dest)
+"""
+        assert _file_is_pure_data_fetch(mixed) is False
+        findings = _find_binary_downloads_js(mixed)
+        # Both downloads remain flagged.
+        assert len(findings) == 2
+
+    def test_no_data_parse_marker_not_exempt(self):
+        # A fetch that doesn't visibly parse the response shouldn't be
+        # exempted by accident — we can't tell if it's binary or data.
+        opaque = """\
+import * as https from 'https'
+
+https.get('https://x/y', res => { /* opaque */ })
+"""
+        assert _file_is_pure_data_fetch(opaque) is False
+        assert len(_find_binary_downloads_js(opaque)) == 1
+
+    def test_chmod_plus_x_in_string_disables_exemption(self):
+        # chmod +x on a downloaded path is a strong "this is an executable"
+        # signal even with parse markers also present.
+        mixed = """\
+const r = await fetch('https://x/y')
+const txt = await r.text()
+const score = parseInt(txt)
+exec.exec('chmod +x ./downloaded')
+"""
+        assert _file_is_pure_data_fetch(mixed) is False
+
+    def test_json_parse_alone_exempts(self):
+        json_fetch = """\
+import * as https from 'https'
+
+const data = await new Promise((r) => https.get('https://api.x/v1/info', res => { r(res) }))
+const parsed = JSON.parse(data)
+return parsed.version
+"""
+        assert _file_is_pure_data_fetch(json_fetch) is True
+        assert _find_binary_downloads_js(json_fetch) == []
+
+    def test_split_alone_exempts(self):
+        # .split is a common data-parse operation.
+        split_fetch = """\
+const data = await fetch('https://x/y').then(r => r.text())
+const lines = data.split('\\n')
+return lines[0]
+"""
+        assert _file_is_pure_data_fetch(split_fetch) is True
+        assert _find_binary_downloads_js(split_fetch) == []
