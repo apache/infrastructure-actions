@@ -289,6 +289,7 @@
 - sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad
 - slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
 - slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95
+- slackapi/slack-github-action@03ea5433c137af7c0495bc0cad1af10403fc800c
 - slsa-framework/source-actions@dea965cdca5e0cb422bf7b2653c9d15f678ad01c
 - snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a
 - softprops/action-gh-release@*
