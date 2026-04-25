@@ -136,6 +136,7 @@
 - erisu/apache-rat-action@46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c
 - erisu/license-checker-action@99cffa11264fe545fd0baa6c13bca5a00ae608f2
 - erisu/license-checker-action@04511f4c052b5773f11e1c65b42cda88235c62ae
+- erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93
 - geekyeggo/delete-artifact@*
 - golang/govulncheck-action@*
 - golangci/*@*

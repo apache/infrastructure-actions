@@ -117,6 +117,8 @@ runs:
       if: false
     - uses: erisu/license-checker-action@04511f4c052b5773f11e1c65b42cda88235c62ae  # v2.1.0
       if: false
+    - uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
+      if: false
     - uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20  # v9.2.0
       if: false
     - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3.0.0
