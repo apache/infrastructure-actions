@@ -55,9 +55,17 @@ def beautify_js(content: str) -> str:
 def diff_js_files(
     original_dir: Path, rebuilt_dir: Path, org: str, repo: str, commit_hash: str,
     out_dir_name: str = "dist",
+    kept_files: set[Path] | None = None,
 ) -> bool:
-    """Diff JS files between original and rebuilt, return True if identical."""
+    """Diff JS files between original and rebuilt, return True if identical.
+
+    Files in *kept_files* (paths relative to *out_dir_name*) are skipped here:
+    they're non-minified bundles where a clean rebuild produces toolchain-
+    version noise rather than actionable diffs, and are verified by the
+    approved-vs-new source diff section instead.
+    """
     blob_url = f"https://github.com/{org}/{repo}/blob/{commit_hash}"
+    kept_files = kept_files or set()
 
     # Files vendored by @vercel/ncc that are not built from the action's source.
     ignored_files = {"sourcemap-register.js"}
@@ -119,6 +127,13 @@ def diff_js_files(
         built_file = rebuilt_dir / rel_path
 
         file_link = link(f"{blob_url}/{out_dir_name}/{rel_path}", str(rel_path))
+
+        if rel_path in kept_files:
+            console.print(
+                f"  [yellow]~[/yellow] {file_link} [yellow](non-minified — "
+                f"kept; diffed against previously-approved version below)[/yellow]"
+            )
+            continue
 
         if rel_path not in original_files:
             console.print(f"  [green]+[/green] {file_link} [dim](only in rebuilt)[/dim]")

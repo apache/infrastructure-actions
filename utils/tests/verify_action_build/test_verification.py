@@ -102,6 +102,7 @@ def _build_in_docker_result(action_type: str = "node20") -> tuple:
         False,
         Path("/tmp/fake/original-node-modules"),
         Path("/tmp/fake/rebuilt-node-modules"),
+        [],
     )
 
 
