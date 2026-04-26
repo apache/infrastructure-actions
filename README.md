@@ -198,6 +198,8 @@ The script will:
 
 A clean result confirms that the compiled JS was built from the declared source. Any differences will be flagged for manual inspection.
 
+Non-minified compiled JS (e.g. Deno `deno task bundle` output, Dart `dart compile js` readable output) is handled differently: a clean rebuild for these tends to produce toolchain-version noise (esbuild/ncc/webpack boilerplate differences) rather than actionable diffs. The script keeps these files in place during the pre-rebuild deletion step and instead diffs them against the previously approved version of the action, so reviewers see real source changes rather than rebuild artifacts. The detection threshold mirrors the comparison heuristic — fewer than 10 lines or an average line length above 500 chars is treated as minified.
+
 #### Security Review Checklist
 
 When reviewing an action (new or updated), watch for these potential issues in the source diff between the approved and new versions:

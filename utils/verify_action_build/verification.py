@@ -227,11 +227,23 @@ def verify_single_action(
     with tempfile.TemporaryDirectory(prefix="verify-action-") as tmp:
         work_dir = Path(tmp)
         (original_dir, rebuilt_dir, action_type, out_dir_name,
-         has_node_modules, original_node_modules, rebuilt_node_modules) = build_in_docker(
+         has_node_modules, original_node_modules, rebuilt_node_modules,
+         kept_js_files) = build_in_docker(
             org, repo, commit_hash, work_dir, sub_path=sub_path, gh=gh,
             cache=cache, show_build_steps=show_build_steps,
             source_commit_hash=source_commit_hash,
         )
+
+        # Paths from /kept-js.log are repo-root-relative (e.g. "dist/post.js").
+        # diff_js indexes by paths relative to out_dir_name; diff_source indexes
+        # by paths relative to repo root. Keep both forms.
+        kept_repo_paths: set[Path] = {Path(p) for p in kept_js_files}
+        kept_out_dir_paths: set[Path] = set()
+        for p in kept_repo_paths:
+            try:
+                kept_out_dir_paths.add(p.relative_to(out_dir_name))
+            except ValueError:
+                kept_out_dir_paths.add(p)
 
         checks_performed.append(("Action type detection", "info", action_type))
         if source_detached_detail:
@@ -372,6 +384,7 @@ def verify_single_action(
         else:
             all_match = diff_js_files(
                 original_dir, rebuilt_dir, org, repo, commit_hash, out_dir_name,
+                kept_files=kept_out_dir_paths,
             )
 
             # If no compiled JS was found in dist/ but node_modules is vendored,
@@ -409,7 +422,7 @@ def verify_single_action(
                 retry_dir = work_dir / "retry"
                 retry_dir.mkdir(exist_ok=True)
                 (retry_orig, retry_rebuilt, _, _, retry_has_nm,
-                 retry_orig_nm, retry_rebuilt_nm) = build_in_docker(
+                 retry_orig_nm, retry_rebuilt_nm, _) = build_in_docker(
                     org, repo, commit_hash, retry_dir, sub_path=sub_path, gh=gh,
                     cache=cache, show_build_steps=show_build_steps,
                     approved_hash=prev_hash,
@@ -417,6 +430,7 @@ def verify_single_action(
 
                 retry_match = diff_js_files(
                     retry_orig, retry_rebuilt, org, repo, commit_hash, out_dir_name,
+                    kept_files=kept_out_dir_paths,
                 )
                 if retry_has_nm:
                     retry_nm = diff_node_modules(
@@ -462,7 +476,10 @@ def verify_single_action(
             selected_hash = show_approved_versions(org, repo, commit_hash, approved, gh=gh, ci_mode=ci_mode)
             if selected_hash:
                 show_commits_between(org, repo, selected_hash, commit_hash, gh=gh)
-                diff_approved_vs_new(org, repo, selected_hash, commit_hash, work_dir, ci_mode=ci_mode)
+                diff_approved_vs_new(
+                    org, repo, selected_hash, commit_hash, work_dir,
+                    ci_mode=ci_mode, include_dist_files=kept_repo_paths,
+                )
                 checks_performed.append(("Source diff vs approved", "info", f"compared against {selected_hash[:12]}"))
         else:
             checks_performed.append(("Approved versions", "info", "new action (none on file)"))

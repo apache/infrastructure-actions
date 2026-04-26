@@ -25,13 +25,23 @@ from rich.panel import Panel
 
 from .console import console, run, ask_confirm, UserQuit
 from .diff_display import show_colored_diff
+from .diff_js import beautify_js
 
 
 def diff_approved_vs_new(
     org: str, repo: str, approved_hash: str, new_hash: str, work_dir: Path,
     ci_mode: bool = False,
+    include_dist_files: set[Path] | None = None,
 ) -> None:
-    """Diff source files between an approved version and the new version."""
+    """Diff source files between an approved version and the new version.
+
+    Files in *include_dist_files* (repo-root-relative paths under dist/, e.g.
+    ``dist/post.js``) bypass the dist/ exclusion filter and are diffed against
+    the approved version. Used for non-minified compiled JS that the rebuild
+    step intentionally skips. JS/CJS/MJS files in this set are beautified
+    before diffing so the output is readable.
+    """
+    include_dist_files = include_dist_files or set()
     console.print()
     console.rule("[bold]Diff: Approved vs New (source changes)[/bold]")
 
@@ -72,7 +82,7 @@ def diff_approved_vs_new(
                     continue
                 rel = f.relative_to(clone_dir)
                 matched = [part for part in rel.parts if part in excluded_dirs]
-                if matched:
+                if matched and rel not in include_dist_files:
                     skipped_dirs.update(matched)
                     continue
                 if rel.suffix in source_extensions:
@@ -128,6 +138,14 @@ def diff_approved_vs_new(
     skipped_by_user: list[tuple[Path, str]] = []
     quit_all = False
 
+    js_extensions = {".js", ".cjs", ".mjs"}
+
+    def _read(path: Path, rel: Path) -> str:
+        text = path.read_text(errors="replace")
+        if rel in include_dist_files and rel.suffix in js_extensions:
+            return beautify_js(text)
+        return text
+
     for rel_path in all_files:
         if rel_path.name in lock_files:
             continue
@@ -141,7 +159,7 @@ def diff_approved_vs_new(
 
         if rel_path not in approved_files:
             console.print(f"  [cyan]+[/cyan] {rel_path} [dim](new file)[/dim]")
-            new_content = new_file.read_text(errors="replace")
+            new_content = _read(new_file, rel_path)
             result = show_colored_diff(rel_path, "", new_content, from_label="approved", to_label="new", border="cyan", ci_mode=ci_mode)
             if result == "skip_file":
                 skipped_by_user.append((rel_path, "new file"))
@@ -151,7 +169,7 @@ def diff_approved_vs_new(
 
         if rel_path not in new_files:
             console.print(f"  [cyan]-[/cyan] {rel_path} [dim](removed)[/dim]")
-            approved_content = approved_file.read_text(errors="replace")
+            approved_content = _read(approved_file, rel_path)
             result = show_colored_diff(rel_path, approved_content, "", from_label="approved", to_label="new", border="cyan", ci_mode=ci_mode)
             if result == "skip_file":
                 skipped_by_user.append((rel_path, "removed"))
@@ -159,8 +177,8 @@ def diff_approved_vs_new(
                 quit_all = True
             continue
 
-        approved_content = approved_file.read_text(errors="replace")
-        new_content = new_file.read_text(errors="replace")
+        approved_content = _read(approved_file, rel_path)
+        new_content = _read(new_file, rel_path)
 
         if approved_content == new_content:
             console.print(f"  [green]✓[/green] {rel_path} [green](identical)[/green]")

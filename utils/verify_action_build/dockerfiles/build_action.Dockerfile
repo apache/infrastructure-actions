@@ -139,9 +139,30 @@ RUN if [ -d "node_modules" ]; then \
 # Delete compiled JS from output dir before rebuild to ensure a clean build.
 # Covers .js, .cjs and .mjs — actions bundled with esbuild/rollup may emit
 # dist/index.cjs (e.g. JustinBeckwith/linkinator-action) or dist/index.mjs.
+#
+# Non-minified bundles (e.g. Deno's deno task bundle output, dart compile
+# js's readable output) are kept in place: a clean rebuild for them tends
+# to produce toolchain-version noise (esbuild/ncc/webpack boilerplate
+# differences) that isn't actionable for review. They're verified by
+# diffing the committed file against the previously-approved version
+# instead — see diff_source.py / verification.py.
+#
+# Mirrors the Python is_minified() heuristic in diff_js.py: <10 lines OR
+# average line length >500 chars.
 RUN OUT_DIR=$(cat /out-dir.txt); \
     if [ -d "$OUT_DIR" ]; then \
-      find "$OUT_DIR" \( -name '*.js' -o -name '*.cjs' -o -name '*.mjs' \) -print -delete > /deleted-js.log 2>&1; \
+      : > /deleted-js.log; \
+      : > /kept-js.log; \
+      find "$OUT_DIR" \( -name '*.js' -o -name '*.cjs' -o -name '*.mjs' \) -type f | while IFS= read -r f; do \
+        lines=$(wc -l < "$f"); \
+        chars=$(wc -c < "$f"); \
+        if [ "$lines" -lt 10 ] || { [ "$lines" -gt 0 ] && [ "$((chars / lines))" -gt 500 ]; }; then \
+          echo "$f" >> /deleted-js.log; \
+          rm -f "$f"; \
+        else \
+          echo "$f" >> /kept-js.log; \
+        fi; \
+      done; \
     else \
       echo "no $OUT_DIR/ directory" > /deleted-js.log; \
     fi

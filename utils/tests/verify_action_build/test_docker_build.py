@@ -116,6 +116,19 @@ class TestReadDockerfileTemplate:
         # Build step invokes the conventional bundle task.
         assert "deno task bundle" in content
 
+    def test_keeps_non_minified_compiled_js(self):
+        """Pre-rebuild deletion must skip non-minified JS and record kept
+        paths in /kept-js.log so they're diffed against the previously
+        approved version instead of the noisy rebuild."""
+        content = _read_dockerfile_template()
+        assert "/kept-js.log" in content
+        # Minified-detection heuristic must be present and mirror the
+        # Python is_minified() in diff_js.py: <10 lines OR avg line >500.
+        assert "wc -l" in content
+        assert "wc -c" in content
+        assert '"$lines" -lt 10' in content
+        assert '"$((chars / lines))" -gt 500' in content
+
 
 class TestPrintDockerBuildSteps:
     def test_parses_build_output(self):
