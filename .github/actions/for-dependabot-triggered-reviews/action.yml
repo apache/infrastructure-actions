@@ -163,7 +163,7 @@ runs:
       if: false
     - uses: jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d  # v1.2
       if: false
-    - uses: Kesin11/actions-timeline@e018cfefea60b4f44266998551211a35a58b8097  # v3.0.0
+    - uses: Kesin11/actions-timeline@44c9c178ffb2fb1d9859614a3ffa79ccfb77565e  # v3.1.0
       if: false
     - uses: leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248  # v6.0.0
       if: false
