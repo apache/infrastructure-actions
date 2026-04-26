@@ -165,7 +165,7 @@ runs:
       if: false
     - uses: Kesin11/actions-timeline@44c9c178ffb2fb1d9859614a3ffa79ccfb77565e  # v3.1.0
       if: false
-    - uses: leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248  # v6.0.0
+    - uses: leafo/gh-actions-luarocks@35d062def313a7699a0d513e996bcf4352f05389  # v6.1.0
       if: false
     - uses: lhotari/sandboxed-trivy-action@f01374b6cc3bf7264ab238293e94f6db7ada6dd0  # v1.0.2
       if: false
