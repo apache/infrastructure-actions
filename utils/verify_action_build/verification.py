@@ -33,7 +33,12 @@ from .diff_node_modules import diff_node_modules
 from .diff_source import diff_approved_vs_new
 from .docker_build import build_in_docker
 from .github_client import GitHubClient
-from .release_lookup import is_source_detached, resolve_source_commit
+from .release_lookup import (
+    format_release_time,
+    get_release_or_commit_time,
+    is_source_detached,
+    resolve_source_commit,
+)
 from .security import (
     analyze_action_metadata,
     analyze_binary_downloads_recursive,
@@ -252,6 +257,18 @@ def verify_single_action(
                 "info" if source_commit_hash else "warn",
                 source_detached_detail,
             ))
+
+        # Show when this commit was released so a reviewer can spot fresh-off-
+        # the-press tags that haven't soaked in the wild yet, or stale tags
+        # being bumped to.
+        release_info = get_release_or_commit_time(org, repo, commit_hash)
+        if release_info is not None:
+            ts, tag, source = release_info
+            label = "Released" if source == "release" else "Commit date"
+            detail = format_release_time(ts)
+            if tag:
+                detail = f"{tag} — {detail}"
+            checks_performed.append((label, "info", detail))
 
         is_js_action = action_type.startswith("node") or action_type in ("unknown",)
 
