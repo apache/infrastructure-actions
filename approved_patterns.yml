@@ -239,6 +239,7 @@
 - oracle-actions/setup-java@*
 - orhun/git-cliff-action@e16f179f0be49ecdfe63753837f20b9531642772
 - orhun/git-cliff-action@c93ef52f3d0ddcdcc9bd5447d98d458a11cd4f72
+- orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5
 - ossf/scorecard-action@*
 - peaceiris/actions-gh-pages@*
 - peaceiris/actions-hugo@*
