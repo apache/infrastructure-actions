@@ -1,0 +1,54 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# lock_file_exemptions.yml
+#
+# Per-(org/repo) per-ecosystem exemptions from the "every dependency manifest
+# must have a matching lock file" check enforced by verify-action-build.
+#
+# When is an exemption appropriate?  Only when the upstream repo is primarily
+# a library or CLI tool that also ships a GitHub Action wrapper, and that
+# project's ecosystem convention is to *not* commit a lock file.  Typical
+# examples:
+#   * Python libraries published to PyPI — lock files would pin transitive
+#     versions that downstream library consumers shouldn't be forced into.
+#   * Dart packages published to pub.dev — pubspec.lock is deliberately
+#     .gitignore'd for libraries.
+#
+# Exemptions are scoped per-ecosystem, so a project exempted for Python is
+# still checked for its Node side (if it has one).
+#
+# Ecosystem keys (must match one of the names in analyze_lock_files):
+#   node  python  deno  dart  ruby  go  rust
+#
+# Format:
+#   org/repo:
+#     - ecosystem1
+#     - ecosystem2
+
+pypa/cibuildwheel:
+  # cibuildwheel is a Python library published to PyPI.  Its pyproject.toml
+  # declares runtime deps for users who `pip install cibuildwheel`; committing
+  # a lock file would over-constrain library consumers.
+  - python
+
+dart-lang/setup-dart:
+  # The repo is a Dart package (pubspec.yaml) shipped as an action.  Dart
+  # convention for library packages is to not commit pubspec.lock.  The node
+  # side of this action is still checked (package.json → package-lock.json).
+  - dart

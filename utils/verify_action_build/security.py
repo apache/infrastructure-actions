@@ -22,6 +22,7 @@ import json
 import os
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterator
 
 import requests
@@ -39,6 +40,53 @@ from .approved_actions import find_approved_versions
 
 # Orgs we trust to the point of not descending into their nested action graph.
 TRUSTED_ORGS = {"actions", "github"}
+
+# Exemptions file for the lock-file-presence check.  Path matches the
+# convention used by approved_actions.ACTIONS_YML.
+LOCK_FILE_EXEMPTIONS_YML = (
+    Path(__file__).resolve().parent.parent.parent / "lock_file_exemptions.yml"
+)
+
+
+def _load_lock_file_exemptions(
+    path: Path = LOCK_FILE_EXEMPTIONS_YML,
+) -> dict[tuple[str, str], set[str]]:
+    """Parse lock_file_exemptions.yml into {(org, repo): {ecosystems}}.
+
+    Uses a minimal line-based parser rather than PyYAML to keep the dependency
+    surface small (the rest of this project also avoids pulling in yaml).
+    Supported subset:
+        org/repo:
+          - ecosystem1
+          - ecosystem2
+    Comments (``#``) and blank lines are ignored.  Keys are lowercased so
+    lookups are case-insensitive (``Pypa/cibuildwheel`` == ``pypa/cibuildwheel``).
+    """
+    result: dict[tuple[str, str], set[str]] = {}
+    if not path.exists():
+        return result
+
+    current: tuple[str, str] | None = None
+    for raw in path.read_text().splitlines():
+        line = raw.split("#", 1)[0].rstrip()
+        if not line.strip():
+            continue
+        if not line[0].isspace() and line.endswith(":"):
+            orgrepo = line[:-1].strip().strip("'\"")
+            if "/" in orgrepo:
+                org, repo = orgrepo.split("/", 1)
+                current = (org.lower(), repo.lower())
+                result.setdefault(current, set())
+            else:
+                current = None
+            continue
+        if current is not None:
+            stripped = line.lstrip()
+            if stripped.startswith("- "):
+                ecosystem = stripped[2:].strip().strip("'\"")
+                if ecosystem:
+                    result[current].add(ecosystem)
+    return result
 
 
 @dataclass
@@ -555,6 +603,161 @@ def analyze_scripts(
                 )
 
     return warnings
+
+
+def analyze_lock_files(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+    exemptions: dict[tuple[str, str], set[str]] | None = None,
+) -> list[str]:
+    """Verify each detected dependency manifest has a matching lock file.
+
+    Downstream build verification relies on a clean rebuild producing the same
+    output as the published artifacts. That reproducibility depends on every
+    transitive dependency being pinned — which is the lock file's job. A
+    manifest (package.json, pyproject.toml, go.mod, ...) without a matching
+    lock file means `npm install` / `pip install` / `go get` would resolve to
+    whatever version is latest at build time, making verification impossible.
+
+    A missing lock file when the corresponding manifest is present is
+    returned as a hard error. Manifests that don't declare dependencies
+    (e.g. a bare pyproject.toml with only tool config, a Rust library crate
+    that conventionally doesn't commit Cargo.lock) are reported as skipped.
+
+    ``exemptions`` maps ``(org, repo)`` to a set of ecosystem names where a
+    missing lock file is tolerated — for library-first projects (cibuildwheel,
+    setup-dart) that don't commit lock files per their ecosystem convention.
+    Defaults to the contents of ``lock_file_exemptions.yml`` at the repo root.
+
+    Returns a list of error strings (empty = pass).
+    """
+    if exemptions is None:
+        exemptions = _load_lock_file_exemptions()
+    exempted_ecosystems = exemptions.get((org.lower(), repo.lower()), set())
+
+    errors: list[str] = []
+    header_shown = False
+
+    def _show_header() -> None:
+        nonlocal header_shown
+        if not header_shown:
+            console.print()
+            console.rule("[bold]Lock File Presence[/bold]")
+            header_shown = True
+
+    def _candidate_paths(name: str) -> list[str]:
+        if sub_path:
+            return [f"{sub_path}/{name}", name]
+        return [name]
+
+    def _find(name: str) -> tuple[str, str] | None:
+        for p in _candidate_paths(name):
+            c = fetch_file_from_github(org, repo, commit_hash, p)
+            if c is not None:
+                return p, c
+        return None
+
+    # (ecosystem, manifest, [acceptable lock files in priority order])
+    ecosystems: list[tuple[str, str, list[str]]] = [
+        ("node",   "package.json",   ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lock", "bun.lockb"]),
+        ("python", "pyproject.toml", ["uv.lock", "poetry.lock", "pdm.lock", "requirements.txt"]),
+        ("python", "Pipfile",        ["Pipfile.lock"]),
+        ("deno",   "deno.json",      ["deno.lock"]),
+        ("deno",   "deno.jsonc",     ["deno.lock"]),
+        ("dart",   "pubspec.yaml",   ["pubspec.lock"]),
+        ("ruby",   "Gemfile",        ["Gemfile.lock"]),
+        ("go",     "go.mod",         ["go.sum"]),
+        ("rust",   "Cargo.toml",     ["Cargo.lock"]),
+    ]
+
+    for ecosystem, manifest, lock_options in ecosystems:
+        found = _find(manifest)
+        if found is None:
+            continue
+        mpath, mcontent = found
+
+        # Rust libraries conventionally don't commit Cargo.lock — only binary
+        # crates / workspaces do. Detect via [lib] without [[bin]] in the
+        # root manifest (workspaces are treated as needing a lock).
+        if ecosystem == "rust":
+            has_lib = bool(re.search(r"(?m)^\s*\[lib\]", mcontent))
+            has_bin = bool(re.search(r"(?m)^\s*\[\[bin\]\]", mcontent))
+            has_workspace = bool(re.search(r"(?m)^\s*\[workspace\]", mcontent))
+            if has_lib and not has_bin and not has_workspace:
+                _show_header()
+                console.print(
+                    f"  [dim]⊘[/dim] {ecosystem}: {mpath} looks like a library crate — "
+                    "Cargo.lock is not conventionally committed"
+                )
+                continue
+
+        # pyproject.toml is often a bare config file (ruff/black/mypy settings)
+        # with no dependencies. Skip if no deps section is declared.
+        if manifest == "pyproject.toml":
+            has_deps = bool(re.search(
+                r"(?m)^\s*("
+                r"dependencies\s*="
+                r"|\[project\.optional-dependencies\]"
+                r"|\[tool\.poetry\.dependencies\]"
+                r"|\[tool\.poetry\.dev-dependencies\]"
+                r"|\[tool\.poetry\.group\..+?\.dependencies\]"
+                r"|\[tool\.pdm\.dev-dependencies\]"
+                r")",
+                mcontent,
+            ))
+            if not has_deps:
+                _show_header()
+                console.print(
+                    f"  [dim]⊘[/dim] {ecosystem}: {mpath} declares no dependencies"
+                )
+                continue
+
+        # go.mod without any `require` directives has no third-party deps and
+        # thus no go.sum to generate.
+        if manifest == "go.mod":
+            has_require = bool(re.search(r"(?m)^\s*require\b", mcontent))
+            if not has_require:
+                _show_header()
+                console.print(
+                    f"  [dim]⊘[/dim] {ecosystem}: {mpath} has no require directives"
+                )
+                continue
+
+        found_lock: str | None = None
+        for lock in lock_options:
+            lp = _find(lock)
+            if lp is not None:
+                found_lock = lp[0]
+                break
+
+        _show_header()
+        manifest_link = (
+            f"[link=https://github.com/{org}/{repo}/blob/{commit_hash}/{mpath}]"
+            f"{mpath}[/link]"
+        )
+        if found_lock:
+            lock_link = (
+                f"[link=https://github.com/{org}/{repo}/blob/{commit_hash}/{found_lock}]"
+                f"{found_lock}[/link]"
+            )
+            console.print(
+                f"  [green]✓[/green] {ecosystem}: {manifest_link} → {lock_link}"
+            )
+        elif ecosystem in exempted_ecosystems:
+            console.print(
+                f"  [dim]⊘[/dim] {ecosystem}: {manifest_link} has no matching lock file "
+                f"— exempted in lock_file_exemptions.yml (library-first project)"
+            )
+        else:
+            console.print(
+                f"  [red]✗[/red] {ecosystem}: {manifest_link} has no matching lock file "
+                f"(expected one of: {', '.join(lock_options)})"
+            )
+            errors.append(
+                f"{mpath}: missing lock file; expected one of "
+                f"{', '.join(lock_options)} so transitive dependencies are pinned"
+            )
+
+    return errors
 
 
 def analyze_dependency_pinning(
