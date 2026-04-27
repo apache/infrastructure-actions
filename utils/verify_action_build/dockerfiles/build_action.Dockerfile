@@ -1,3 +1,4 @@
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -18,6 +19,7 @@
 # Dockerfile for rebuilding a GitHub Action's compiled JavaScript
 # in an isolated container.  Used by verify-action-build to compare
 # published dist/ output against a from-scratch rebuild.
+#
 
 ARG NODE_VERSION=20
 FROM node:${NODE_VERSION}-slim

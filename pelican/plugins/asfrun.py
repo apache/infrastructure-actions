@@ -1,4 +1,5 @@
 #!/usr/bin/python -B
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -18,6 +19,7 @@
 #
 #
 # asfrun.py - Pelican plugin that runs shell scripts during initialization or finalization
+#
 #
 
 import os
