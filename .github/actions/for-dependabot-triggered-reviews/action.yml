@@ -153,7 +153,7 @@ runs:
       if: false
     - uses: jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5  # v2
       if: false
-    - uses: JetBrains/qodana-action@89eb4357efd2b52e639f3216e63edaf33b82622b  # v2025.3.2
+    - uses: JetBrains/qodana-action@d7b5ec2fbec32197ef447c450e00589ed5f34fd5  # v2026.1.0
       if: false
     - uses: Jimver/cuda-toolkit@3d45d157f327c09c04b50ee6ccdea2d9d017ec76  # v0.2.35
       if: false
