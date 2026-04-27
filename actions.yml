@@ -905,6 +905,9 @@ untitaker/hyperlink:
 uraimo/run-on-arch-action:
   d94c13912ea685de38fccc1109385b83fd79427d:
     tag: v3.0.1
+    expires_at: 2026-07-20
+  f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9:
+    tag: v3.1.0
 vapier/coverity-scan-action:
   2068473c7bdf8c2fb984a6a40ae76ee7facd7a85:
     tag: v1.8.0
