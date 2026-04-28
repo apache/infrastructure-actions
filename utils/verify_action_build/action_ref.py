@@ -20,6 +20,7 @@
 
 import re
 import sys
+from functools import lru_cache
 
 import requests
 
@@ -46,8 +47,13 @@ def parse_action_ref(ref: str) -> tuple[str, str, str, str]:
     return org, repo, sub_path, commit_hash
 
 
+@lru_cache(maxsize=512)
 def fetch_action_yml(org: str, repo: str, commit_hash: str, sub_path: str = "") -> str | None:
-    """Fetch action.yml content from GitHub at a specific commit."""
+    """Fetch action.yml content from GitHub at a specific commit.
+
+    Cached so that multiple security checks walking the same action graph
+    only pay the HTTP cost once per (org, repo, commit, sub_path).
+    """
     candidates = []
     if sub_path:
         candidates.extend([f"{sub_path}/action.yml", f"{sub_path}/action.yaml"])

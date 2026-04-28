@@ -55,6 +55,15 @@ When creating a PR via `gh pr create --web`, GitHub will present a template choo
 template that matches the type of change. When opening a PR URL directly, you can append
 `&template=action_approval.md` or `&template=code_change.md` to pre-fill the appropriate template.
 
+## Documentation
+
+When you add, change, or remove a user-visible feature, workflow, script, or flag, update the
+corresponding reference documentation in the same PR. At minimum this means the relevant section of
+`README.md`; check other `*.md` files in the area you touched for stale references as well. A PR
+that introduces a new workflow in `.github/workflows/`, a new utility under `utils/`, or a new CLI
+flag is not complete until the docs describe it — reviewers should not have to ask "is this
+documented?".
+
 ## License headers
 
 All files must include the Apache License 2.0 header where the file format supports it. Use the

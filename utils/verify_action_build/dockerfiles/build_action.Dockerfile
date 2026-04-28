@@ -1,3 +1,4 @@
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -18,6 +19,7 @@
 # Dockerfile for rebuilding a GitHub Action's compiled JavaScript
 # in an isolated container.  Used by verify-action-build to compare
 # published dist/ output against a from-scratch rebuild.
+#
 
 ARG NODE_VERSION=20
 FROM node:${NODE_VERSION}-slim
@@ -31,6 +33,46 @@ ARG REPO_URL
 ARG COMMIT_HASH
 
 RUN git clone "$REPO_URL" . && git checkout "$COMMIT_HASH"
+
+# Dart-based actions (e.g. dart-lang/setup-dart) compile Dart sources with
+# `dart compile js` in their npm build script and then bundle via a bare
+# `ncc build` invocation in their dist script. Neither is available in the
+# node:slim base, so detect `pubspec.yaml` at the repo root and install
+# both the Dart SDK (from Google's apt repo) and `@vercel/ncc` globally so
+# the action's own `npm run` scripts can execute unmodified.
+ENV PATH="/usr/lib/dart/bin:${PATH}"
+RUN if [ -f pubspec.yaml ]; then \
+      apt-get update && \
+      apt-get install -y --no-install-recommends ca-certificates curl gnupg && \
+      curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub \
+        | gpg --dearmor -o /usr/share/keyrings/dart.gpg && \
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/dart.gpg] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main" \
+        > /etc/apt/sources.list.d/dart_stable.list && \
+      apt-get update && \
+      apt-get install -y --no-install-recommends dart && \
+      rm -rf /var/lib/apt/lists/* && \
+      npm install -g @vercel/ncc && \
+      dart pub get && \
+      echo "dart-sdk: installed (pubspec.yaml detected)" >> /build-info.log && \
+      echo "global-ncc: installed (pubspec.yaml detected)" >> /build-info.log && \
+      echo "dart-pub-get: ran" >> /build-info.log; \
+    fi
+
+# Deno-based actions (e.g. Kesin11/actions-timeline) emit the compiled JS
+# in their `dist/` folder via `deno task bundle`, typically driving
+# `@deno/dnt` or `esbuild`.  A pure-Deno action has no `package.json`, so
+# the npm build loop below would be a no-op; install the official deno
+# binary when `deno.json`/`deno.jsonc` is present so the build step can
+# invoke the task unchanged.
+RUN if [ -f deno.json ] || [ -f deno.jsonc ]; then \
+      apt-get update && \
+      apt-get install -y --no-install-recommends ca-certificates curl unzip && \
+      rm -rf /var/lib/apt/lists/* && \
+      curl -fsSL https://deno.land/install.sh \
+        | DENO_INSTALL=/usr/local sh -s -- --yes >/dev/null && \
+      /usr/local/bin/deno --version | head -1 >> /build-info.log && \
+      echo "deno: installed (deno.json(c) detected)" >> /build-info.log; \
+    fi
 
 # Detect action type from action.yml or action.yaml.
 # For monorepo sub-actions (SUB_PATH set), check <sub_path>/action.yml first,
@@ -74,6 +116,19 @@ RUN MAIN_PATH=$(cat /main-path.txt); \
 RUN OUT_DIR=$(cat /out-dir.txt); \
     if [ -d "$OUT_DIR" ]; then cp -r "$OUT_DIR" /original-dist; else mkdir /original-dist; fi
 
+# Some actions publish their release tag as an orphan commit containing only the
+# distributable artifacts (action.yml, dist/, LICENSE, README.md) — no src/, no
+# package.json, no lock files.  When that pattern is detected upstream (in
+# release_lookup.py) we're handed SOURCE_COMMIT_HASH: the default-branch commit
+# the release was cut from.  Swap the tree to that commit now — /original-dist
+# has already been captured from COMMIT_HASH — so the rebuild below runs against
+# real source.
+ARG SOURCE_COMMIT_HASH=""
+RUN if [ -n "$SOURCE_COMMIT_HASH" ]; then \
+      echo "source-commit: $SOURCE_COMMIT_HASH (rebuilding from default-branch source)" >> /build-info.log; \
+      git checkout "$SOURCE_COMMIT_HASH"; \
+    fi
+
 # Detect if node_modules/ is committed (vendored dependencies pattern)
 RUN if [ -d "node_modules" ]; then \
       echo "true" > /has-node-modules.txt; \
@@ -83,9 +138,36 @@ RUN if [ -d "node_modules" ]; then \
       mkdir /original-node-modules; \
     fi
 
-# Delete compiled JS from output dir before rebuild to ensure a clean build
+# Delete compiled JS from output dir before rebuild to ensure a clean build.
+# Covers .js, .cjs and .mjs — actions bundled with esbuild/rollup may emit
+# dist/index.cjs (e.g. JustinBeckwith/linkinator-action) or dist/index.mjs.
+#
+# Non-minified bundles (e.g. Deno's deno task bundle output, dart compile
+# js's readable output) are kept in place: a clean rebuild for them tends
+# to produce toolchain-version noise (esbuild/ncc/webpack boilerplate
+# differences) that isn't actionable for review. They're verified by
+# diffing the committed file against the previously-approved version
+# instead — see diff_source.py / verification.py.
+#
+# Mirrors the Python is_minified() heuristic in diff_js.py: <10 lines OR
+# average line length >500 chars.
 RUN OUT_DIR=$(cat /out-dir.txt); \
-    if [ -d "$OUT_DIR" ]; then find "$OUT_DIR" -name '*.js' -print -delete > /deleted-js.log 2>&1; else echo "no $OUT_DIR/ directory" > /deleted-js.log; fi
+    if [ -d "$OUT_DIR" ]; then \
+      : > /deleted-js.log; \
+      : > /kept-js.log; \
+      find "$OUT_DIR" \( -name '*.js' -o -name '*.cjs' -o -name '*.mjs' \) -type f | while IFS= read -r f; do \
+        lines=$(wc -l < "$f"); \
+        chars=$(wc -c < "$f"); \
+        if [ "$lines" -lt 10 ] || { [ "$lines" -gt 0 ] && [ "$((chars / lines))" -gt 500 ]; }; then \
+          echo "$f" >> /deleted-js.log; \
+          rm -f "$f"; \
+        else \
+          echo "$f" >> /kept-js.log; \
+        fi; \
+      done; \
+    else \
+      echo "no $OUT_DIR/ directory" > /deleted-js.log; \
+    fi
 
 # If an approved (previous) commit hash is provided, restore the dev-dependency
 # lock files from that commit so the rebuild uses the same toolchain (e.g. same
@@ -179,15 +261,21 @@ RUN BUILD_DIR=$(cat /build-dir.txt); \
 RUN OUT_DIR=$(cat /out-dir.txt); \
     BUILD_DIR=$(cat /build-dir.txt); \
     RUN_CMD=$(cat /run-cmd); \
-    has_output() { [ -d "$OUT_DIR" ] && find "$OUT_DIR" -name '*.js' -print -quit | grep -q .; }; \
+    has_output() { [ -d "$OUT_DIR" ] && find "$OUT_DIR" \( -name '*.js' -o -name '*.cjs' -o -name '*.mjs' \) -print -quit | grep -q .; }; \
     BUILD_DONE=false; \
-    if [ -x build ] && ./build dist 2>/dev/null; then \
+    if [ "$BUILD_DONE" = "false" ] && { [ -f deno.json ] || [ -f deno.jsonc ]; }; then \
+      if deno task bundle 2>/dev/null; then \
+        echo "build-step: deno task bundle" >> /build-info.log; \
+        if has_output; then BUILD_DONE=true; fi; \
+      fi; \
+    fi && \
+    if [ "$BUILD_DONE" = "false" ] && [ -x build ] && ./build dist 2>/dev/null; then \
       echo "build-step: ./build dist" >> /build-info.log; \
       if has_output; then BUILD_DONE=true; fi; \
     fi && \
     if [ "$BUILD_DONE" = "false" ]; then \
       cd "$BUILD_DIR" && \
-      for step in build package start; do \
+      for step in all build package start; do \
         if $RUN_CMD run "$step" 2>/dev/null; then \
           echo "build-step: $RUN_CMD run $step (in $BUILD_DIR)" >> /build-info.log; \
           cd /action && \

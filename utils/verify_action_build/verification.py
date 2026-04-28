@@ -33,10 +33,18 @@ from .diff_node_modules import diff_node_modules
 from .diff_source import diff_approved_vs_new
 from .docker_build import build_in_docker
 from .github_client import GitHubClient
+from .release_lookup import (
+    format_release_time,
+    get_release_or_commit_time,
+    is_source_detached,
+    resolve_source_commit,
+)
 from .security import (
     analyze_action_metadata,
+    analyze_binary_downloads_recursive,
     analyze_dependency_pinning,
     analyze_dockerfile,
+    analyze_lock_files,
     analyze_nested_actions,
     analyze_repo_metadata,
     analyze_scripts,
@@ -165,6 +173,7 @@ def offer_open_and_approve(
 def verify_single_action(
     action_ref: str, gh: GitHubClient | None = None, ci_mode: bool = False,
     cache: bool = True, show_build_steps: bool = False,
+    check_binary_downloads: bool = True,
 ) -> bool:
     """Verify a single action reference. Returns True if verification passed."""
     org, repo, sub_path, commit_hash = parse_action_ref(action_ref)
@@ -177,18 +186,139 @@ def verify_single_action(
     non_js_warnings: list[str] = []
     checked_actions: list[dict] = []
     matched_with_approved_lockfile = False
+    binary_download_failures: list[str] = []
+    lock_file_errors: list[str] = []
+
+    # Detect source-detached release tags (orphan commits containing only
+    # distributable artifacts) and resolve the default-branch source commit
+    # the release was cut from, so the rebuild has real source to build from.
+    source_commit_hash = ""
+    source_detached_detail = ""
+    if is_source_detached(org, repo, commit_hash, sub_path):
+        resolved = resolve_source_commit(org, repo, commit_hash, sub_path)
+        if resolved:
+            source_commit_hash, tag_name = resolved
+            source_detached_detail = (
+                f"orphan tag {tag_name}; rebuilding from {source_commit_hash[:12]}"
+            )
+            console.print()
+            console.print(
+                Panel(
+                    f"[yellow]Release tag [bold]{tag_name}[/bold] at "
+                    f"[bold]{commit_hash[:12]}[/bold] is a source-detached "
+                    f"orphan commit (no src/ or package.json at the tag).\n"
+                    f"Rebuilding from the default-branch source commit "
+                    f"[bold]{source_commit_hash[:12]}[/bold] the release was "
+                    f"cut from, then diffing the rebuilt dist/ against the "
+                    f"tag's published dist/.[/yellow]",
+                    border_style="yellow",
+                    title="SOURCE-DETACHED RELEASE TAG",
+                )
+            )
+        else:
+            source_detached_detail = "detected but source commit could not be resolved"
+            console.print()
+            console.print(
+                Panel(
+                    f"[red]Tag commit [bold]{commit_hash[:12]}[/bold] has no "
+                    f"buildable source at the tag, and the default-branch "
+                    f"source commit the release was cut from could not be "
+                    f"resolved via the GitHub Releases API.  The rebuild "
+                    f"below will almost certainly produce no output — this "
+                    f"action requires manual source review.[/red]",
+                    border_style="red",
+                    title="SOURCE-DETACHED RELEASE TAG (unresolved)",
+                )
+            )
 
     with tempfile.TemporaryDirectory(prefix="verify-action-") as tmp:
         work_dir = Path(tmp)
         (original_dir, rebuilt_dir, action_type, out_dir_name,
-         has_node_modules, original_node_modules, rebuilt_node_modules) = build_in_docker(
+         has_node_modules, original_node_modules, rebuilt_node_modules,
+         kept_js_files) = build_in_docker(
             org, repo, commit_hash, work_dir, sub_path=sub_path, gh=gh,
             cache=cache, show_build_steps=show_build_steps,
+            source_commit_hash=source_commit_hash,
         )
 
+        # Paths from /kept-js.log are repo-root-relative (e.g. "dist/post.js").
+        # diff_js indexes by paths relative to out_dir_name; diff_source indexes
+        # by paths relative to repo root. Keep both forms.
+        kept_repo_paths: set[Path] = {Path(p) for p in kept_js_files}
+        kept_out_dir_paths: set[Path] = set()
+        for p in kept_repo_paths:
+            try:
+                kept_out_dir_paths.add(p.relative_to(out_dir_name))
+            except ValueError:
+                kept_out_dir_paths.add(p)
+
         checks_performed.append(("Action type detection", "info", action_type))
+        if source_detached_detail:
+            checks_performed.append((
+                "Source-detached release tag",
+                "info" if source_commit_hash else "warn",
+                source_detached_detail,
+            ))
+
+        # Show when this commit was released so a reviewer can spot fresh-off-
+        # the-press tags that haven't soaked in the wild yet, or stale tags
+        # being bumped to.
+        release_info = get_release_or_commit_time(org, repo, commit_hash)
+        if release_info is not None:
+            ts, tag, source = release_info
+            label = "Released" if source == "release" else "Commit date"
+            detail = format_release_time(ts)
+            if tag:
+                detail = f"{tag} — {detail}"
+            checks_performed.append((label, "info", detail))
 
         is_js_action = action_type.startswith("node") or action_type in ("unknown",)
+
+        # Binary-download verification runs for every action type. JS actions
+        # can and do shell out to fetch pre-built binaries (e.g. platform-
+        # specific CLIs) from the action's own `run:` blocks or Dockerfile,
+        # and we want to flag those when they lack a checksum/signature step.
+        if check_binary_downloads:
+            bd_warnings, bd_failures = analyze_binary_downloads_recursive(
+                org, repo, commit_hash, sub_path,
+            )
+            binary_download_failures.extend(bd_failures)
+            if bd_failures:
+                checks_performed.append((
+                    "Binary download verification", "fail",
+                    f"{len(bd_failures)} unverified download(s)",
+                ))
+            elif bd_warnings:
+                checks_performed.append((
+                    "Binary download verification", "warn",
+                    f"{len(bd_warnings)} download(s); verification present",
+                ))
+            else:
+                checks_performed.append((
+                    "Binary download verification", "pass",
+                    "no downloads or all verified",
+                ))
+        else:
+            checks_performed.append((
+                "Binary download verification", "skip",
+                "disabled via --no-binary-download-check",
+            ))
+
+        # Lock-file presence runs for every action type — reproducibility of
+        # the rebuilt dist/ (and of any pip/go/etc. install the action performs
+        # at runtime) depends on every transitive dependency being pinned.
+        lock_file_errors = analyze_lock_files(org, repo, commit_hash, sub_path)
+        if lock_file_errors:
+            checks_performed.append((
+                "Lock file presence", "fail",
+                f"{len(lock_file_errors)} manifest(s) missing lock file",
+            ))
+        else:
+            checks_performed.append((
+                "Lock file presence", "pass",
+                "all detected manifests have lock files (or are exempted)",
+            ))
+
         if not is_js_action:
             console.print()
             console.print(
@@ -288,6 +418,7 @@ def verify_single_action(
         else:
             all_match = diff_js_files(
                 original_dir, rebuilt_dir, org, repo, commit_hash, out_dir_name,
+                kept_files=kept_out_dir_paths,
             )
 
             # If no compiled JS was found in dist/ but node_modules is vendored,
@@ -325,7 +456,7 @@ def verify_single_action(
                 retry_dir = work_dir / "retry"
                 retry_dir.mkdir(exist_ok=True)
                 (retry_orig, retry_rebuilt, _, _, retry_has_nm,
-                 retry_orig_nm, retry_rebuilt_nm) = build_in_docker(
+                 retry_orig_nm, retry_rebuilt_nm, _) = build_in_docker(
                     org, repo, commit_hash, retry_dir, sub_path=sub_path, gh=gh,
                     cache=cache, show_build_steps=show_build_steps,
                     approved_hash=prev_hash,
@@ -333,6 +464,7 @@ def verify_single_action(
 
                 retry_match = diff_js_files(
                     retry_orig, retry_rebuilt, org, repo, commit_hash, out_dir_name,
+                    kept_files=kept_out_dir_paths,
                 )
                 if retry_has_nm:
                     retry_nm = diff_node_modules(
@@ -378,7 +510,10 @@ def verify_single_action(
             selected_hash = show_approved_versions(org, repo, commit_hash, approved, gh=gh, ci_mode=ci_mode)
             if selected_hash:
                 show_commits_between(org, repo, selected_hash, commit_hash, gh=gh)
-                diff_approved_vs_new(org, repo, selected_hash, commit_hash, work_dir, ci_mode=ci_mode)
+                diff_approved_vs_new(
+                    org, repo, selected_hash, commit_hash, work_dir,
+                    ci_mode=ci_mode, include_dist_files=kept_repo_paths,
+                )
                 checks_performed.append(("Source diff vs approved", "info", f"compared against {selected_hash[:12]}"))
         else:
             checks_performed.append(("Approved versions", "info", "new action (none on file)"))
@@ -397,9 +532,11 @@ def verify_single_action(
         ci_mode=ci_mode,
     )
 
+    overall_passed = all_match and not binary_download_failures and not lock_file_errors
+
     console.print()
     checklist_hint = f"\n[dim]Security review checklist: {SECURITY_CHECKLIST_URL}[/dim]"
-    if all_match:
+    if overall_passed:
         if is_js_action:
             if has_node_modules:
                 result_msg = "[green bold]Vendored node_modules matches fresh install[/green bold]"
@@ -418,14 +555,33 @@ def verify_single_action(
         border = "yellow" if not is_js_action and non_js_warnings else "green"
         console.print(Panel(result_msg + checklist_hint, border_style=border, title="RESULT"))
     else:
-        if matched_with_approved_lockfile:
+        # Pick the failure message based on the actual cause, not the action
+        # type. The binary-download check runs for every action type, so a
+        # JS action can fail this path with all_match=True when its only
+        # issue is an unverified download.
+        if not all_match:
+            if matched_with_approved_lockfile:
+                fail_msg = (
+                    "[red bold]Compiled JS only matches when rebuilt with the "
+                    "previously approved version's lock files — devDependencies "
+                    "changed and dist/ was not rebuilt[/red bold]"
+                )
+            else:
+                fail_msg = "[red bold]Differences detected between published and rebuilt JS[/red bold]"
+        elif binary_download_failures:
             fail_msg = (
-                "[red bold]Compiled JS only matches when rebuilt with the "
-                "previously approved version's lock files — devDependencies "
-                "changed and dist/ was not rebuilt[/red bold]"
+                f"[red bold]{action_type} action — "
+                f"{len(binary_download_failures)} unverified binary download(s) detected "
+                f"(no checksum/signature check in file)[/red bold]"
+            )
+        elif lock_file_errors:
+            fail_msg = (
+                f"[red bold]{action_type} action — "
+                f"{len(lock_file_errors)} manifest(s) without a matching lock file "
+                f"(transitive dependencies not pinned; rebuilds cannot be reproduced)[/red bold]"
             )
         else:
-            fail_msg = "[red bold]Differences detected between published and rebuilt JS[/red bold]"
+            fail_msg = f"[red bold]{action_type} action — verification failed[/red bold]"
         console.print(
             Panel(
                 fail_msg + checklist_hint,
@@ -436,4 +592,4 @@ def verify_single_action(
 
     offer_open_and_approve(org, repo, commit_hash, sub_path, ci_mode=ci_mode)
 
-    return all_match
+    return overall_passed

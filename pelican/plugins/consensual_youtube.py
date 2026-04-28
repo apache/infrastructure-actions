@@ -1,4 +1,5 @@
 #!/usr/bin/python -B
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -30,6 +31,7 @@
 # The preview image will be taken from `img/{youtube_id}.jpg` in your content
 # folder. If no preview image is found there, it will be fetched from youtube
 # at site generation time.
+#
 from os import path
 
 from urllib import request

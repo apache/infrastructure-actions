@@ -19,7 +19,10 @@
 from unittest import mock
 
 from verify_action_build.security import (
+    analyze_binary_downloads,
+    analyze_binary_downloads_recursive,
     analyze_dockerfile,
+    analyze_lock_files,
     analyze_scripts,
     analyze_action_metadata,
     analyze_repo_metadata,
@@ -64,6 +67,18 @@ class TestAnalyzeDockerfile:
         with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
             warnings = analyze_dockerfile("org", "repo", "a" * 40)
         assert any("curl" in w.lower() or "evil" in w.lower() for w in warnings)
+
+    def test_multistage_internal_from_no_warnings(self):
+        dockerfile = (
+            "FROM node:20@sha256:abc123 AS builder\n"
+            "RUN npm ci\n"
+            "FROM builder AS runtime\n"
+            "CMD [\"node\", \"index.js\"]\n"
+        )
+        files = {"Dockerfile": dockerfile}
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            warnings = analyze_dockerfile("org", "repo", "a" * 40)
+        assert warnings == []
 
     def test_no_dockerfile_no_warnings(self):
         with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
@@ -172,6 +187,236 @@ runs:
         assert any("secret" in w for w in warnings)
 
 
+class TestAnalyzeBinaryDownloads:
+    def _mock_fetch(self, files: dict):
+        def fetch(org, repo, commit, path):
+            return files.get(path)
+        return fetch
+
+    def test_no_files_no_results(self):
+        with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert warnings == []
+        assert failures == []
+
+    def test_pipe_to_shell_fails(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN curl -fsSL https://example.com/install.sh | sh\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) >= 1
+        assert any("install.sh" in f for f in failures)
+
+    def test_curl_binary_without_verification_fails(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN curl -fsSLO https://example.com/tool.tar.gz && tar xf tool.tar.gz\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) >= 1
+        assert any("tool.tar.gz" in f for f in failures)
+
+    def test_sha256sum_verification_passes(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN curl -fsSLO https://example.com/tool.tar.gz \\\n"
+                " && echo 'abc123deadbeefcafef00d  tool.tar.gz' | sha256sum -c\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+
+    def test_gpg_verify_passes(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN curl -fsSLO https://example.com/tool.tar.gz \\\n"
+                " && curl -fsSLO https://example.com/tool.tar.gz.sig \\\n"
+                " && gpg --verify tool.tar.gz.sig tool.tar.gz\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+
+    def test_cosign_verify_passes(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN curl -fsSLO https://example.com/tool.tar.gz && cosign verify-blob tool.tar.gz\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+
+    def test_apk_add_not_flagged(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN apk add --no-cache curl wget bash\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+
+    def test_pip_install_not_flagged(self):
+        files = {
+            "Dockerfile": (
+                "FROM python:3.12@sha256:abc\n"
+                "RUN pip install requests==2.31.0\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+
+    def test_dockerfile_add_url_fails(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "ADD https://example.com/app.tar.gz /app.tar.gz\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) >= 1
+
+    def test_action_yml_run_block_unverified_fails(self):
+        action_yml = """\
+name: Test
+runs:
+  using: composite
+  steps:
+    - name: Download tool
+      shell: bash
+      run: |
+        curl -fsSLO https://example.com/tool.tar.gz
+        tar xf tool.tar.gz
+"""
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) >= 1
+
+    def test_action_yml_run_block_with_verification_passes(self):
+        action_yml = """\
+name: Test
+runs:
+  using: composite
+  steps:
+    - name: Download and verify
+      shell: bash
+      run: |
+        curl -fsSLO https://example.com/tool.tar.gz
+        echo "abc123deadbeef  tool.tar.gz" | sha256sum -c
+        tar xf tool.tar.gz
+"""
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+
+    def test_releases_download_path_flagged(self):
+        # URL without a binary extension but under /releases/download/ still
+        # looks like a binary artefact — flag it.
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN curl -fsSLo /usr/local/bin/mytool "
+                "https://github.com/x/y/releases/download/v1/mytool-linux-amd64 "
+                "&& chmod +x /usr/local/bin/mytool\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) >= 1
+
+
+class TestAnalyzeBinaryDownloadsRecursive:
+    def test_recurses_through_composite(self):
+        # Root is a composite action that uses an unpinned-looking hash-pinned
+        # nested action; nested action has an unverified download.
+        root_yml = """\
+name: Root
+runs:
+  using: composite
+  steps:
+    - uses: other/helper@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+"""
+        nested_yml = """\
+name: Helper
+runs:
+  using: composite
+  steps:
+    - name: Download
+      shell: bash
+      run: |
+        curl -fsSLO https://example.com/tool.tar.gz
+"""
+
+        def fake_action_yml(org, repo, commit, sub_path=""):
+            if org == "myorg":
+                return root_yml
+            if org == "other":
+                return nested_yml
+            return None
+
+        def fake_file(org, repo, commit, path):
+            return None
+
+        with mock.patch("verify_action_build.security.fetch_action_yml", side_effect=fake_action_yml):
+            with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=fake_file):
+                warnings, failures = analyze_binary_downloads_recursive(
+                    "myorg", "rootrepo", "b" * 40,
+                )
+        assert len(failures) >= 1
+        assert any("tool.tar.gz" in f for f in failures)
+
+    def test_skips_trusted_org(self):
+        # Nested uses: actions/checkout — should be skipped (trusted), so no
+        # recursion into it even if it had downloads.
+        root_yml = """\
+name: Root
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@cccccccccccccccccccccccccccccccccccccccc
+"""
+
+        def fake_action_yml(org, repo, commit, sub_path=""):
+            if org == "myorg":
+                return root_yml
+            raise AssertionError(f"should not fetch nested yml for {org}/{repo}")
+
+        with mock.patch("verify_action_build.security.fetch_action_yml", side_effect=fake_action_yml):
+            with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
+                warnings, failures = analyze_binary_downloads_recursive(
+                    "myorg", "rootrepo", "b" * 40,
+                )
+        assert failures == []
+
+
 class TestAnalyzeRepoMetadata:
     def test_mit_license_detected(self):
         def fetch(org, repo, commit, path):
@@ -197,3 +442,314 @@ class TestAnalyzeRepoMetadata:
         with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=fetch):
             warnings = analyze_repo_metadata("actions", "checkout", "a" * 40)
         assert len(warnings) == 0
+
+
+class TestAnalyzeLockFiles:
+    def _run(self, files: dict, sub_path: str = "") -> list[str]:
+        def fetch(org, repo, commit, path):
+            return files.get(path)
+
+        with mock.patch(
+            "verify_action_build.security.fetch_file_from_github",
+            side_effect=fetch,
+        ):
+            return analyze_lock_files("org", "repo", "a" * 40, sub_path=sub_path)
+
+    # --- Node --------------------------------------------------------------
+
+    def test_node_package_json_with_package_lock_passes(self):
+        files = {
+            "package.json": '{"name":"x","dependencies":{"a":"1.0.0"}}',
+            "package-lock.json": "{}",
+        }
+        assert self._run(files) == []
+
+    def test_node_package_json_with_yarn_lock_passes(self):
+        files = {"package.json": "{}", "yarn.lock": ""}
+        assert self._run(files) == []
+
+    def test_node_package_json_with_pnpm_lock_passes(self):
+        files = {"package.json": "{}", "pnpm-lock.yaml": ""}
+        assert self._run(files) == []
+
+    def test_node_package_json_with_bun_lock_passes(self):
+        files = {"package.json": "{}", "bun.lock": ""}
+        assert self._run(files) == []
+
+    def test_node_package_json_without_lock_fails(self):
+        errors = self._run({"package.json": '{"name":"x"}'})
+        assert len(errors) == 1
+        assert "package.json" in errors[0]
+        assert "package-lock.json" in errors[0]
+
+    # --- Python ------------------------------------------------------------
+
+    def test_python_pyproject_with_uv_lock_passes(self):
+        files = {
+            "pyproject.toml": '[project]\nname="x"\ndependencies = ["requests"]\n',
+            "uv.lock": "",
+        }
+        assert self._run(files) == []
+
+    def test_python_pyproject_with_poetry_lock_passes(self):
+        files = {
+            "pyproject.toml": "[tool.poetry.dependencies]\npython = '^3.11'\n",
+            "poetry.lock": "",
+        }
+        assert self._run(files) == []
+
+    def test_python_pyproject_with_requirements_txt_passes(self):
+        files = {
+            "pyproject.toml": '[project]\ndependencies = ["requests"]\n',
+            "requirements.txt": "requests==2.31.0\n",
+        }
+        assert self._run(files) == []
+
+    def test_python_pyproject_without_lock_fails(self):
+        files = {
+            "pyproject.toml": '[project]\nname="x"\ndependencies = ["requests"]\n',
+        }
+        errors = self._run(files)
+        assert len(errors) == 1
+        assert "pyproject.toml" in errors[0]
+
+    def test_python_pyproject_without_deps_skipped(self):
+        # Bare config (ruff, black, mypy settings) doesn't need a lock.
+        files = {
+            "pyproject.toml": "[tool.ruff]\nline-length = 100\n",
+        }
+        assert self._run(files) == []
+
+    def test_python_pipfile_with_lock_passes(self):
+        files = {"Pipfile": "[packages]\nrequests = '*'\n", "Pipfile.lock": "{}"}
+        assert self._run(files) == []
+
+    def test_python_pipfile_without_lock_fails(self):
+        errors = self._run({"Pipfile": "[packages]\nrequests = '*'\n"})
+        assert len(errors) == 1
+        assert "Pipfile" in errors[0]
+
+    # --- Deno --------------------------------------------------------------
+
+    def test_deno_with_lock_passes(self):
+        files = {"deno.json": '{"imports":{}}', "deno.lock": "{}"}
+        assert self._run(files) == []
+
+    def test_deno_jsonc_without_lock_fails(self):
+        errors = self._run({"deno.jsonc": "{}"})
+        assert len(errors) == 1
+        assert "deno.jsonc" in errors[0]
+
+    # --- Dart --------------------------------------------------------------
+
+    def test_dart_with_pubspec_lock_passes(self):
+        files = {"pubspec.yaml": "name: x\n", "pubspec.lock": ""}
+        assert self._run(files) == []
+
+    def test_dart_without_lock_fails(self):
+        errors = self._run({"pubspec.yaml": "name: x\n"})
+        assert len(errors) == 1
+        assert "pubspec.yaml" in errors[0]
+
+    # --- Ruby --------------------------------------------------------------
+
+    def test_ruby_with_gemfile_lock_passes(self):
+        files = {"Gemfile": "gem 'rails'\n", "Gemfile.lock": ""}
+        assert self._run(files) == []
+
+    def test_ruby_without_lock_fails(self):
+        errors = self._run({"Gemfile": "gem 'rails'\n"})
+        assert len(errors) == 1
+
+    # --- Go ----------------------------------------------------------------
+
+    def test_go_with_sum_passes(self):
+        files = {
+            "go.mod": "module x\n\nrequire github.com/a/b v1.2.3\n",
+            "go.sum": "github.com/a/b v1.2.3 h1:...\n",
+        }
+        assert self._run(files) == []
+
+    def test_go_without_sum_fails(self):
+        files = {"go.mod": "module x\n\nrequire github.com/a/b v1.2.3\n"}
+        errors = self._run(files)
+        assert len(errors) == 1
+        assert "go.mod" in errors[0]
+
+    def test_go_without_requires_skipped(self):
+        # go.mod with no external deps doesn't need go.sum.
+        assert self._run({"go.mod": "module x\n\ngo 1.21\n"}) == []
+
+    # --- Rust --------------------------------------------------------------
+
+    def test_rust_binary_without_lock_fails(self):
+        # Default binary crate — Cargo.lock expected.
+        files = {"Cargo.toml": '[package]\nname = "x"\n'}
+        errors = self._run(files)
+        assert len(errors) == 1
+
+    def test_rust_binary_with_lock_passes(self):
+        files = {
+            "Cargo.toml": '[package]\nname = "x"\n',
+            "Cargo.lock": "",
+        }
+        assert self._run(files) == []
+
+    def test_rust_library_without_lock_skipped(self):
+        # [lib] without [[bin]] — library crate, Cargo.lock not conventionally committed.
+        files = {
+            "Cargo.toml": '[package]\nname = "x"\n\n[lib]\nname = "x"\n',
+        }
+        assert self._run(files) == []
+
+    def test_rust_library_with_bin_still_requires_lock(self):
+        files = {
+            "Cargo.toml": (
+                '[package]\nname = "x"\n'
+                '[lib]\nname = "x"\n'
+                '[[bin]]\nname = "x-cli"\n'
+            ),
+        }
+        errors = self._run(files)
+        assert len(errors) == 1
+
+    def test_rust_workspace_requires_lock(self):
+        files = {"Cargo.toml": '[workspace]\nmembers = ["a"]\n'}
+        errors = self._run(files)
+        assert len(errors) == 1
+
+    # --- Sub-path handling ------------------------------------------------
+
+    def test_sub_path_manifest_detected(self):
+        # Manifest in sub-path with lock in sub-path — passes.
+        files = {
+            "sub/package.json": "{}",
+            "sub/package-lock.json": "{}",
+        }
+        assert self._run(files, sub_path="sub") == []
+
+    def test_sub_path_falls_back_to_root(self):
+        # Sub-action may reuse repo-root manifests.
+        files = {
+            "package.json": "{}",
+            "package-lock.json": "{}",
+        }
+        assert self._run(files, sub_path="sub") == []
+
+    def test_sub_path_without_lock_fails(self):
+        files = {"sub/package.json": "{}"}
+        errors = self._run(files, sub_path="sub")
+        assert len(errors) == 1
+        assert "sub/package.json" in errors[0]
+
+    # --- No manifests -----------------------------------------------------
+
+    def test_no_manifests_found_passes(self):
+        # Pure composite action — no manifests anywhere.
+        assert self._run({}) == []
+
+    # --- Multiple ecosystems -----------------------------------------------
+
+    def test_multiple_ecosystems_all_missing_aggregates_errors(self):
+        files = {
+            "package.json": "{}",
+            "go.mod": "module x\n\nrequire a v1\n",
+            "pubspec.yaml": "name: x\n",
+        }
+        errors = self._run(files)
+        assert len(errors) == 3
+
+    # --- Exemptions -------------------------------------------------------
+
+    def _run_with_exemptions(
+        self,
+        files: dict,
+        exemptions: dict,
+        org: str = "org",
+        repo: str = "repo",
+    ) -> list[str]:
+        def fetch(o, r, commit, path):
+            return files.get(path)
+
+        with mock.patch(
+            "verify_action_build.security.fetch_file_from_github",
+            side_effect=fetch,
+        ):
+            return analyze_lock_files(org, repo, "a" * 40, exemptions=exemptions)
+
+    def test_exemption_skips_matching_ecosystem(self):
+        # pyproject.toml with deps but no lock — normally fails; exempted here.
+        files = {
+            "pyproject.toml": '[project]\ndependencies = ["requests"]\n',
+        }
+        errors = self._run_with_exemptions(
+            files, {("org", "repo"): {"python"}},
+        )
+        assert errors == []
+
+    def test_exemption_does_not_skip_other_ecosystems(self):
+        # Exempt only python; node still fails.
+        files = {
+            "pyproject.toml": '[project]\ndependencies = ["requests"]\n',
+            "package.json": "{}",
+        }
+        errors = self._run_with_exemptions(
+            files, {("org", "repo"): {"python"}},
+        )
+        assert len(errors) == 1
+        assert "package.json" in errors[0]
+
+    def test_exemption_case_insensitive(self):
+        # Look-up key lowercases org/repo, so an exemption entry written as
+        # "Pypa/cibuildwheel" matches a run on "pypa/cibuildwheel".
+        files = {"pyproject.toml": '[project]\ndependencies = ["a"]\n'}
+        errors = self._run_with_exemptions(
+            files, {("pypa", "cibuildwheel"): {"python"}},
+            org="Pypa", repo="CIBuildWheel",
+        )
+        assert errors == []
+
+    def test_exemption_for_different_repo_does_not_apply(self):
+        files = {"pyproject.toml": '[project]\ndependencies = ["a"]\n'}
+        errors = self._run_with_exemptions(
+            files, {("other", "project"): {"python"}},
+        )
+        assert len(errors) == 1
+
+    # --- Exemption file parser -------------------------------------------
+
+    def test_exemption_file_parses(self, tmp_path):
+        from verify_action_build.security import _load_lock_file_exemptions
+
+        yml = tmp_path / "lock_file_exemptions.yml"
+        yml.write_text(
+            "# comment\n"
+            "pypa/cibuildwheel:\n"
+            "  - python\n"
+            "\n"
+            "dart-lang/setup-dart:\n"
+            "  - dart  # trailing comment\n"
+        )
+        result = _load_lock_file_exemptions(yml)
+        assert result == {
+            ("pypa", "cibuildwheel"): {"python"},
+            ("dart-lang", "setup-dart"): {"dart"},
+        }
+
+    def test_exemption_file_missing_returns_empty(self, tmp_path):
+        from verify_action_build.security import _load_lock_file_exemptions
+
+        result = _load_lock_file_exemptions(tmp_path / "does-not-exist.yml")
+        assert result == {}
+
+    def test_exemption_file_multiple_ecosystems_per_repo(self, tmp_path):
+        from verify_action_build.security import _load_lock_file_exemptions
+
+        yml = tmp_path / "lock_file_exemptions.yml"
+        yml.write_text(
+            "some/multiecosystem-repo:\n"
+            "  - python\n"
+            "  - dart\n"
+        )
+        result = _load_lock_file_exemptions(yml)
+        assert result[("some", "multiecosystem-repo")] == {"python", "dart"}

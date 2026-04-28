@@ -104,15 +104,26 @@ def build_in_docker(
     cache: bool = True,
     show_build_steps: bool = False,
     approved_hash: str = "",
-) -> tuple[Path, Path, str, str, bool, Path, Path]:
+    source_commit_hash: str = "",
+) -> tuple[Path, Path, str, str, bool, Path, Path, list[str]]:
     """Build the action in a Docker container and extract original + rebuilt dist.
 
     When *approved_hash* is supplied the Docker build restores package lock files
     from that commit so the rebuild uses the same dev-dependency versions that
     produced the original dist/.
 
+    When *source_commit_hash* is supplied the Docker build captures the original
+    dist/ from *commit_hash* (a source-detached release tag) and then switches
+    the tree to *source_commit_hash* before building.  Used for actions whose
+    tagged commit is an orphan tree without buildable source.
+
     Returns (original_dir, rebuilt_dir, action_type, out_dir_name,
-             has_node_modules, original_node_modules, rebuilt_node_modules).
+             has_node_modules, original_node_modules, rebuilt_node_modules,
+             kept_js_files).
+    *kept_js_files* contains repo-root-relative paths (e.g. ``dist/post.js``)
+    of non-minified compiled JS files that were preserved during the
+    pre-rebuild deletion step — these are diffed against the previously
+    approved version instead of the rebuild.
     """
     repo_url = f"https://github.com/{org}/{repo}.git"
     container_name = f"verify-action-{org}-{repo}-{commit_hash[:12]}"
@@ -139,6 +150,12 @@ def build_in_docker(
     info_table.add_column()
     info_table.add_row("Action", repo_link)
     info_table.add_row("Commit", commit_link)
+    if source_commit_hash:
+        source_link = link(
+            f"https://github.com/{org}/{repo}/commit/{source_commit_hash}",
+            source_commit_hash,
+        )
+        info_table.add_row("Source commit", source_link)
     console.print()
     console.print(Panel(info_table, title="Action Build Verification", border_style="blue"))
 
@@ -160,6 +177,8 @@ def build_in_docker(
         f"SUB_PATH={sub_path}",
         "--build-arg",
         f"APPROVED_HASH={approved_hash}",
+        "--build-arg",
+        f"SOURCE_COMMIT_HASH={source_commit_hash}",
         "-t",
         image_tag,
         "-f",
@@ -232,8 +251,27 @@ def build_in_docker(
                     console.print(f"  [yellow]![/yellow] No {out_dir_name}/ directory found before rebuild")
                 else:
                     deleted_files = [l for l in log_content.splitlines() if l.strip()]
-                    console.print(f"  [green]✓[/green] Deleted {len(deleted_files)} compiled JS file(s) before rebuild:")
-                    for f in deleted_files:
+                    if deleted_files:
+                        console.print(f"  [green]✓[/green] Deleted {len(deleted_files)} compiled JS file(s) before rebuild:")
+                        for f in deleted_files:
+                            console.print(f"    [dim]- {f}[/dim]")
+
+            kept_js_files: list[str] = []
+            kept_log = subprocess.run(
+                ["docker", "cp", f"{container_name}:/kept-js.log", str(work_dir / "kept-js.log")],
+                capture_output=True,
+            )
+            if kept_log.returncode == 0:
+                kept_js_files = [
+                    l for l in (work_dir / "kept-js.log").read_text().strip().splitlines()
+                    if l.strip()
+                ]
+                if kept_js_files:
+                    console.print(
+                        f"  [green]✓[/green] Kept {len(kept_js_files)} non-minified JS file(s) "
+                        f"(diffed against previously-approved version, not rebuild):"
+                    )
+                    for f in kept_js_files:
                         console.print(f"    [dim]- {f}[/dim]")
 
             action_type_result = subprocess.run(
@@ -285,4 +323,5 @@ def build_in_docker(
             console.print("  [green]✓[/green] Cleanup complete")
 
     return (original_dir, rebuilt_dir, action_type, out_dir_name,
-            has_node_modules, original_node_modules, rebuilt_node_modules)
+            has_node_modules, original_node_modules, rebuilt_node_modules,
+            kept_js_files)

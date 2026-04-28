@@ -55,8 +55,8 @@ dependencies = []
 # desired, alongside `python3 test_*.py`.
 [dependency-groups]
 dev = [
-    "ruff>=0.6",
-    "mypy>=1.10",
+    "ruff>=0.15.11",
+    "mypy>=1.20.1",
     "pytest>=8",
 ]
 
@@ -69,7 +69,8 @@ Issues = "https://github.com/apache/infrastructure-actions/issues"
 py-modules = []
 
 [tool.uv]
-required-version = ">=0.5.0"
+required-version = ">=0.9.17"
+exclude-newer = "7 days"
 
 [tool.hatch.envs.default]
 installer = "uv"

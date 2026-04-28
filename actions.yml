@@ -22,9 +22,6 @@
 # update expiry dates for previous versions.
 # Versions that are known to be problematic should be removed explicitly manually.
 1Password/load-secrets-action:
-  13f58eec611f8e5db52ec16247f58c508398f3e6:
-    tag: v3.0.0
-    expires_at: 2026-04-24
   8d0d610af187e78a2772c2d18d627f4c52d3fbfb:
     tag: v3.1.0
     expires_at: 2026-06-12
@@ -88,6 +85,9 @@ astral-sh/setup-uv:
     expires_at: 2026-06-27
   cec208311dfd045dd5311c1add060b2062131d57:
     tag: v8.0.0
+    expires_at: 2026-07-11
+  08807647e7069bb48b6ef5acd8ec9567f424441b:
+    tag: v8.1.0
 awalsh128/cache-apt-pkgs-action:
   '*':
     keep: true
@@ -112,6 +112,9 @@ azure/setup-kubectl:
     expires_at: 2026-06-20
   15650b3ad78fff148532a140b8a4c821796b2d7b:
     tag: v5.0.0
+    expires_at: 2026-07-11
+  829323503d1be3d00ca8346e5391ca0b07a9ab0d:
+    tag: v5.1.0
 bazel-contrib/setup-bazel:
   083175551ceeceebc757ebee2127fde78840ca77:
     tag: 0.18.0
@@ -122,9 +125,6 @@ betahuhn/repo-file-sync-action:
   8b92be3375cf1d1b0cd579af488a9255572e4619:
     tag: v1.21.1
 biomejs/setup-biome:
-  454fa0d884737805f48d7dc236c1761a0ac3cc13:
-    tag: v2.6.0
-    expires_at: 2026-04-24
   29711cbb52afee00eb13aeb30636592f9edc0088:
     tag: v2.7.0
     expires_at: 2026-06-14
@@ -156,6 +156,9 @@ burnett01/rsync-deployments:
     expires_at: 2026-05-22
   dc0d5d44c4728aad3f02154a87309809e62a960f:
     tag: 8.0.4
+    expires_at: 2026-07-11
+  66257cad6bfeb2171d3b6bfa6c9a22279dd9c3a1:
+    tag: 8.0.5
 burrunan/gradle-cache-action:
   '*':
     keep: true
@@ -190,9 +193,6 @@ codspeedhq/action:
   '*':
     keep: true
 commit-check/commit-check-action:
-  a0193b1ca486178b85d7a1db145af34cd227f81f:
-    tag: v2.1.1
-    expires_at: 2026-04-24
   be79b5cd5953c8afd4266004c5bbb1431f544df1:
     tag: v2.2.1
     expires_at: 2026-06-12
@@ -201,6 +201,9 @@ commit-check/commit-check-action:
     expires_at: 2026-07-07
   2fe41833054c561710099d8e3e22bbeab4fe204a:
     tag: v2.5.0
+    expires_at: 2026-07-14
+  7c158d4541309c5952de3343151750882b036d10:
+    tag: v2.6.0
 conda-incubator/setup-miniconda:
   '*':
     keep: true
@@ -220,9 +223,6 @@ coursier/cache-action:
   bebeeb0e6f48ebad66d3783946588ecf43114433:
     tag: v7.0.0
     expires_at: 2026-06-10
-  4e2615869d13561d626ed48655e1a39e5b192b3c:
-    tag: 6.4.7
-    expires_at: 2026-04-28
   90c37294538be80a558fd665531fcdc2b467b475:
     tag: v8.1.0
 coursier/setup-action:
@@ -250,6 +250,12 @@ crazy-max/ghaction-import-gpg:
     tag: v7.0.0
 damccorm/tag-ur-it:
   6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5:
+dart-lang/setup-dart:
+  e51d8e571e22473a2ddebf0ef8a2123f0ab2c02c:
+    tag: v1.7.1
+    expires_at: 2026-07-18
+  65eb853c7ba17dde3be364c3d2858773e7144260:
+    tag: v1.7.2
 DavidAnson/markdownlint-cli2-action:
   07035fd053f7be764496c0f8d8f9f41f98305101:
     tag: v22.0.0
@@ -271,6 +277,9 @@ delaguardo/setup-graalvm:
 dependabot/fetch-metadata:
   ffa630c65fa7e0ecfa0625b5ceda64399aea1b36:
     tag: v3.0.0
+    expires_at: 2026-07-21
+  25dd0e34f4fe68f24cc83900b1fe3fe149efef98:
+    tag: v3.1.0
 dlang-community/setup-dlang:
   '*':
     keep: true
@@ -322,9 +331,6 @@ dorny/paths-filter:
   fbd0ab8f3e69293af611ebaee6363fc25e6d187d:
     tag: v4.0.1
 dorny/test-reporter:
-  dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3:
-    tag: v2.1.1
-    expires_at: 2026-04-24
   b082adf0eced0765477756c2a610396589b8c637:
     tag: v2.5.0
     expires_at: 2026-06-12
@@ -365,6 +371,9 @@ erisu/license-checker-action:
     expires_at: 2026-07-05
   04511f4c052b5773f11e1c65b42cda88235c62ae:
     tag: v2.1.0
+erlef/setup-beam:
+  fc68ffb90438ef2936bbb3251622353b3dcb2f93:
+    tag: v1.24.0
 geekyeggo/delete-artifact:
   '*':
     keep: true
@@ -375,9 +384,6 @@ golangci/*:
   '*':
     keep: true
 golangci/golangci-lint-action:
-  55c2c1448f86e01eaae002a5a3a9624417608d84:
-    tag: v6.5.2
-    expires_at: 2026-04-24
   1481404843c368bc19ca9406f87d6e0fc97bdcfd:
     tag: v7.0.0
     expires_at: 2026-06-12
@@ -393,12 +399,6 @@ gr2m/twitter-together:
   '*':
     keep: true
 graalvm/setup-graalvm:
-  7f488cf82a3629ee755e4e97342c01d6bed318fa:
-    tag: v1.3.5
-    expires_at: 2026-04-24
-  790e28947b79a9c09c3391c0f18bf8d0f102ed69:
-    tag: v1.4.4
-    expires_at: 2026-04-24
   54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1:
     tag: v1.4.5
     expires_at: 2026-06-14
@@ -408,9 +408,6 @@ graalvm/setup-graalvm:
   60c26726de13f8b90771df4bc1641a52a3159994:
     tag: v1.5.2
 gradle/actions/dependency-submission:
-  017a9effdb900e5b5b2fddfb590a105619dca3c3:
-    tag: v4.4.2
-    expires_at: 2026-04-24
   4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2:
     tag: v5.0.0
     expires_at: 2026-05-24
@@ -423,9 +420,6 @@ gradle/actions/dependency-submission:
   50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
     tag: v6.1.0
 gradle/actions/setup-gradle:
-  017a9effdb900e5b5b2fddfb590a105619dca3c3:
-    tag: v4.4.2
-    expires_at: 2026-04-24
   4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2:
     tag: v5.0.0
     expires_at: 2026-05-24
@@ -438,9 +432,6 @@ gradle/actions/setup-gradle:
   50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
     tag: v6.1.0
 gradle/actions/wrapper-validation:
-  017a9effdb900e5b5b2fddfb590a105619dca3c3:
-    tag: v4.4.2
-    expires_at: 2026-04-24
   4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2:
     tag: v5.0.0
     expires_at: 2026-05-24
@@ -453,15 +444,9 @@ gradle/actions/wrapper-validation:
   50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
     tag: v6.1.0
 gradle/develocity-actions/maven-publish-build-scan:
-  4a2aed82eea165ba2d5c494fc2a8730d7fdff229:
-    tag: v1.4
-    expires_at: 2026-04-24
   974e8dbcbda40db6828fc35f349c80a7c0e71529:
     tag: v2.1
 gradle/develocity-actions/setup-maven:
-  4a2aed82eea165ba2d5c494fc2a8730d7fdff229:
-    tag: v1.4
-    expires_at: 2026-04-24
   974e8dbcbda40db6828fc35f349c80a7c0e71529:
     tag: v2.1
 gsactions/commit-message-checker:
@@ -498,9 +483,6 @@ ilammy/setup-nasm:
   72793074d3c8cdda771dba85f6deafe00623038b:
     tag: v1.5.2
 JamesIves/github-pages-deploy-action:
-  4a3abc783e1a24aeb44c16e869ad83caf6b4cc23:
-    tag: v4.7.4
-    expires_at: 2026-04-24
   d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
     tag: v4.8.0
 jarvusinnovations/background-action:
@@ -512,6 +494,9 @@ jasonetco/create-an-issue:
 JetBrains/qodana-action:
   89eb4357efd2b52e639f3216e63edaf33b82622b:
     tag: v2025.3.2
+    expires_at: 2026-07-20
+  d7b5ec2fbec32197ef447c450e00589ed5f34fd5:
+    tag: v2026.1.0
 jidicula/clang-format-action:
   '*':
     keep: true
@@ -565,6 +550,9 @@ JustinBeckwith/linkinator-action:
     expires_at: 2026-07-05
   363572b2714d25a059fceb2fa332a98e7ea3baff:
     tag: v2.4.1
+    expires_at: 2026-07-12
+  7b6b0bc671f6264e1a8daa4488a5bd91ce61dcd4:
+    tag: v2.4.2
 jwgmeligmeyling/checkstyle-github-action:
   '*':
     keep: true
@@ -580,6 +568,9 @@ Kesin11/actions-timeline:
     expires_at: 2026-05-22
   e018cfefea60b4f44266998551211a35a58b8097:
     tag: v3.0.0
+    expires_at: 2026-07-19
+  44c9c178ffb2fb1d9859614a3ffa79ccfb77565e:
+    tag: v3.1.0
 kiegroup/github-action-build-chain:
   '*':
     keep: true
@@ -592,9 +583,12 @@ leafo/gh-actions-lua:
 leafo/gh-actions-luarocks:
   4c082a5fad45388feaeb0798dbd82dbd7dc65bca:
     tag: v5
-    expires_at: 2026-08-01
+    expires_at: 2026-07-21
   97053c556d6ce2c8e26eb7ac93743437c7af7248:
     tag: v6.0.0
+    expires_at: 2026-07-21
+  35d062def313a7699a0d513e996bcf4352f05389:
+    tag: v6.1.0
 lhotari/sandboxed-trivy-action:
   555963036b2012b44c1071508a236e569db28ebb:
     tag: v1.0.1
@@ -622,9 +616,6 @@ matlab-actions/run-tests:
   4be3345d41da8b1bf8cc5cb01a5e19c4611cb15d:
     tag: v3.0.0
     expires_at: 2026-07-05
-  # The SHA 353aee49b0edf62278c118a51b484d90bf6da1b7 for the v3.1.0 tag was added on Apr 12, 2026 via PR #695
-  # The tag v3.1.0 has been moved on Apr 14, 2026 to 64426f612825c99055c2b4887c08c135ab01be0b/a6c82b97e58e6b95bf49fcc8f5ea82370dcccd12.
-  353aee49b0edf62278c118a51b484d90bf6da1b7:
 matlab-actions/setup-matlab:
   aa8bbc7b76daa63c5d456d1430cbd6cb5b626ab4:
     tag: v2.7.0
@@ -644,14 +635,14 @@ mikepenz/action-junit-report:
   '*':
     keep: true
 mlugg/setup-zig:
-  fa65c4058643678a4e4a9a60513944a7d8d35440:
-    tag: v2.1.0
-    expires_at: 2026-04-24
   d1434d08867e3ee9daa34448df10607b98908d29:
     tag: v2.2.1
 mozilla-actions/sccache-action:
   7d986dd989559c6ecdb630a3fd2557667be217ad:
     tag: v0.0.9
+    expires_at: 2026-07-17
+  9e7fa8a12102821edf02ca5dbea1acd0f89a2696:
+    tag: v0.0.10
 msys2/setup-msys2:
   '*':
     keep: true
@@ -680,9 +671,6 @@ olafurpg/setup-scala:
   '*':
     keep: true
 opentofu/setup-opentofu:
-  000eeb8522f0572907c393e8151076c205fdba1b:
-    tag: v1.0.6
-    expires_at: 2026-04-24
   9d84900f3238fab8cd84ce47d658d25dd008be2f:
     tag: v1.0.8
     expires_at: 2026-06-14
@@ -697,6 +685,9 @@ orhun/git-cliff-action:
     expires_at: 2026-06-12
   c93ef52f3d0ddcdcc9bd5447d98d458a11cd4f72:
     tag: v4.7.1
+    expires_at: 2026-07-20
+  f50e11560dce63f7c33227798f90b924471a88b5:
+    tag: v4.8.0
 ossf/scorecard-action:
   '*':
     keep: true
@@ -724,6 +715,9 @@ pnpm/action-setup:
 posit-dev/setup-air:
   63e80dedb6d275c94a3841e15e5ff8691e1ab237:
     tag: v1.0.0
+    expires_at: 2026-07-21
+  cf390573ff4fe0f198f35df3a642b1409328d859:
+    tag: v1.0.1
 potiuk/cancel-workflow-runs:
   '*':
     keep: true
@@ -734,9 +728,6 @@ PyO3/maturin-action:
   '*':
     keep: true
 pypa/cibuildwheel:
-  63fd63b352a9a8bdcc24791c9dbee952ee9a8abc:
-    tag: v3.3.0
-    expires_at: 2026-04-24
   298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e:
     tag: v3.3.1
     expires_at: 2026-06-14
@@ -745,6 +736,9 @@ pypa/cibuildwheel:
     expires_at: 2026-07-05
   8d2b08b68458a16aeb24b64e68a09ab1c8e82084:
     tag: v3.4.1
+pypa/gh-action-pip-audit:
+  1220774d901786e6f652ae159f7b6bc8fea6d266:
+    tag: v1.1.0
 pypa/gh-action-pypi-publish:
   ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e:
     keep: true
@@ -801,9 +795,6 @@ rustsec/*:
   '*':
     keep: true
 sbt/setup-sbt:
-  a627500d27445f8c5021755a439829b6e78e3358:
-    tag: v1.1.15
-    expires_at: 2026-04-27
   ae54f7cfe46ec0d24ade661d77f007360ab48bda:
     tag: v1.1.16
     expires_at: 2026-05-12
@@ -832,6 +823,9 @@ scacap/action-surefire-report:
     # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
     ignore_gh_api_errors: true
     tag: v1.9.1
+    expires_at: 2026-07-17
+  fa13579fdd93ed8fc7e717a25eceedcfcbc39dda:
+    tag: v1.10.0
 scalacenter/sbt-dependency-submission:
   f43202114d7522a4b233e052f82c2eea8d658134:
     tag: v3.2.1
@@ -860,6 +854,9 @@ slackapi/slack-github-action:
     expires_at: 2026-06-13
   af78098f536edbc4de71162a307590698245be95:
     tag: v3.0.1
+    expires_at: 2026-07-18
+  03ea5433c137af7c0495bc0cad1af10403fc800c:
+    tag: v3.0.2
 slsa-framework/source-actions:
   dea965cdca5e0cb422bf7b2653c9d15f678ad01c:
     expires_at: 2026-12-31
@@ -924,6 +921,9 @@ untitaker/hyperlink:
 uraimo/run-on-arch-action:
   d94c13912ea685de38fccc1109385b83fd79427d:
     tag: v3.0.1
+    expires_at: 2026-07-20
+  f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9:
+    tag: v3.1.0
 vapier/coverity-scan-action:
   2068473c7bdf8c2fb984a6a40ae76ee7facd7a85:
     tag: v1.8.0

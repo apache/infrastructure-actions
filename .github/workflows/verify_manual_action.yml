@@ -16,29 +16,45 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+# Runs verify-action-build on PRs that manually add a new action to the
+# allow list (touching actions.yml or approved_patterns.yml).  Complements
+# verify_dependabot_action.yml, which covers dependabot-authored PRs.
 #
-name: pytest
+# The job exits with the verify script's exit code — success/failure is
+# surfaced through the status check on the PR.
+name: Verify Manual Allowlist PR
 
 on:
   pull_request:
-    branches: [main]
+    paths:
+      - actions.yml
+      - approved_patterns.yml
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
-  test:
+  verify:
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
 
-      - name: Run tests
+      - run: pipx install uv
+
+      - name: Verify action build
         run: |
-          pipx install uv
-          uv run pytest --color=yes
+          # Disable workflow command processing so that strings like
+          # "##[add-matcher]" or "::error::" in action diffs are not
+          # interpreted as GitHub Actions commands.
+          stop_token="$(uuidgen)"
+          echo "::stop-commands::${stop_token}"
+          uv run utils/verify-action-build.py --ci --from-pr "${{ github.event.pull_request.number }}"
+          rc=$?
+          echo "::${stop_token}::"
+          exit $rc
         env:
           GH_TOKEN: ${{ github.token }}
-          FORCE_COLOR: "1"
-          PY_COLORS: "1"

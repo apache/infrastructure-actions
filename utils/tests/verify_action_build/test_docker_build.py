@@ -99,6 +99,36 @@ class TestReadDockerfileTemplate:
         assert "/rebuilt-dist" in content
         assert "/original-dist" in content
 
+    def test_dart_support_present(self):
+        # Sanity check that the Dart branch wasn't accidentally removed.
+        content = _read_dockerfile_template()
+        assert "pubspec.yaml" in content
+        assert "apt-get install -y --no-install-recommends dart" in content
+        assert "dart pub get" in content
+
+    def test_deno_support_present(self):
+        content = _read_dockerfile_template()
+        # Install branch runs the official installer into /usr/local.
+        assert "deno.json" in content
+        assert "deno.jsonc" in content
+        assert "deno.land/install.sh" in content
+        assert "DENO_INSTALL=/usr/local" in content
+        # Build step invokes the conventional bundle task.
+        assert "deno task bundle" in content
+
+    def test_keeps_non_minified_compiled_js(self):
+        """Pre-rebuild deletion must skip non-minified JS and record kept
+        paths in /kept-js.log so they're diffed against the previously
+        approved version instead of the noisy rebuild."""
+        content = _read_dockerfile_template()
+        assert "/kept-js.log" in content
+        # Minified-detection heuristic must be present and mirror the
+        # Python is_minified() in diff_js.py: <10 lines OR avg line >500.
+        assert "wc -l" in content
+        assert "wc -c" in content
+        assert '"$lines" -lt 10' in content
+        assert '"$((chars / lines))" -gt 500' in content
+
 
 class TestPrintDockerBuildSteps:
     def test_parses_build_output(self):

@@ -35,7 +35,10 @@ def get_gh_user(gh: GitHubClient | None = None) -> str:
     return gh.get_authenticated_user()
 
 
-def check_dependabot_prs(gh: GitHubClient, cache: bool = True, show_build_steps: bool = False) -> None:
+def check_dependabot_prs(
+    gh: GitHubClient, cache: bool = True, show_build_steps: bool = False,
+    check_binary_downloads: bool = True,
+) -> None:
     """List open dependabot PRs, verify each, and optionally merge."""
     console.print()
     console.rule("[bold]Dependabot PR Review[/bold]")
@@ -158,10 +161,17 @@ def check_dependabot_prs(gh: GitHubClient, cache: bool = True, show_build_steps:
                         sub_ref = f"{org_repo}/{sp}@{commit_hash}"
                     else:
                         sub_ref = f"{org_repo}@{commit_hash}"
-                    if not verify_single_action(sub_ref, gh=gh, cache=cache, show_build_steps=show_build_steps):
+                    if not verify_single_action(
+                        sub_ref, gh=gh, cache=cache, show_build_steps=show_build_steps,
+                        check_binary_downloads=check_binary_downloads,
+                    ):
                         passed = False
             else:
-                if not verify_single_action(f"{org_repo}@{commit_hash}", gh=gh, cache=cache, show_build_steps=show_build_steps):
+                if not verify_single_action(
+                    f"{org_repo}@{commit_hash}", gh=gh, cache=cache,
+                    show_build_steps=show_build_steps,
+                    check_binary_downloads=check_binary_downloads,
+                ):
                     passed = False
 
         if not passed:

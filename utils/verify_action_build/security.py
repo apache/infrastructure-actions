@@ -19,9 +19,15 @@
 """Security analysis checks for GitHub Actions."""
 
 import json
+import os
 import re
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Iterator
 
-from .console import console, link
+import requests
+
+from .console import console
 from .github_client import GitHubClient
 from .action_ref import (
     fetch_action_yml,
@@ -32,193 +38,257 @@ from .action_ref import (
 from .approved_actions import find_approved_versions
 
 
+# Orgs we trust to the point of not descending into their nested action graph.
+TRUSTED_ORGS = {"actions", "github"}
+
+# Exemptions file for the lock-file-presence check.  Path matches the
+# convention used by approved_actions.ACTIONS_YML.
+LOCK_FILE_EXEMPTIONS_YML = (
+    Path(__file__).resolve().parent.parent.parent / "lock_file_exemptions.yml"
+)
+
+
+def _load_lock_file_exemptions(
+    path: Path = LOCK_FILE_EXEMPTIONS_YML,
+) -> dict[tuple[str, str], set[str]]:
+    """Parse lock_file_exemptions.yml into {(org, repo): {ecosystems}}.
+
+    Uses a minimal line-based parser rather than PyYAML to keep the dependency
+    surface small (the rest of this project also avoids pulling in yaml).
+    Supported subset:
+        org/repo:
+          - ecosystem1
+          - ecosystem2
+    Comments (``#``) and blank lines are ignored.  Keys are lowercased so
+    lookups are case-insensitive (``Pypa/cibuildwheel`` == ``pypa/cibuildwheel``).
+    """
+    result: dict[tuple[str, str], set[str]] = {}
+    if not path.exists():
+        return result
+
+    current: tuple[str, str] | None = None
+    for raw in path.read_text().splitlines():
+        line = raw.split("#", 1)[0].rstrip()
+        if not line.strip():
+            continue
+        if not line[0].isspace() and line.endswith(":"):
+            orgrepo = line[:-1].strip().strip("'\"")
+            if "/" in orgrepo:
+                org, repo = orgrepo.split("/", 1)
+                current = (org.lower(), repo.lower())
+                result.setdefault(current, set())
+            else:
+                current = None
+            continue
+        if current is not None:
+            stripped = line.lstrip()
+            if stripped.startswith("- "):
+                ecosystem = stripped[2:].strip().strip("'\"")
+                if ecosystem:
+                    result[current].add(ecosystem)
+    return result
+
+
+@dataclass
+class VisitedAction:
+    """One node in a depth-first walk of a composite action graph.
+
+    The root action is yielded with ``depth=0`` and ``incoming_ref=None``.
+    Every nested action reached via a ``uses:`` ref is yielded with the
+    raw ref info (``incoming_ref``) and its parent's ``action.yml`` body
+    (``parent_yml``) so checks can report how it was reached (line number,
+    tag comment, etc.) without re-fetching.
+
+    For ``local`` and ``docker-ref`` terminals the walker yields a
+    minimal stub (``action_yml=None``) since there's no corresponding
+    ``action.yml`` to fetch. For trusted-org refs reached at depth > 0,
+    the walker yields a stub as well and does not descend — matching
+    the pre-refactor behaviour of the two per-check recursions.
+    """
+    org: str
+    repo: str
+    commit_hash: str
+    sub_path: str
+    depth: int
+    action_yml: str | None
+    action_type: str  # "composite", "docker", "node<N>", "local", "docker-ref", "trusted", "unknown"
+    incoming_ref: dict | None
+    parent_yml: str | None
+    approved: bool
+    trusted: bool
+
+
+def walk_actions(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+    max_depth: int = 3,
+) -> Iterator[VisitedAction]:
+    """Walk the composite action graph depth-first in pre-order.
+
+    Yields each unique action once (keyed by ``org/repo/sub_path@commit``).
+    Fetches each ``action.yml`` at most once per call — and the shared
+    ``fetch_action_yml`` cache makes it free across multiple walks within
+    a single CLI run. Each check can consume the stream as a pure
+    function: ``for v in walk_actions(...): do_check(v)``.
+
+    Descent rules (matching the two legacy per-check recursions):
+      * Local (``./path``) and docker (``docker://…``) refs are terminal.
+      * Non-hash-pinned refs are yielded but not descended.
+      * Trusted-org refs at depth > 0 are yielded as stubs and not
+        descended (no ``action.yml`` fetch).
+      * Otherwise composite actions — and node actions that themselves
+        reference other actions — are descended.
+    """
+    visited: set[str] = set()
+
+    def _walk(
+        o: str, r: str, c: str, s: str, depth: int,
+        incoming_ref: dict | None, parent_yml: str | None,
+    ) -> Iterator[VisitedAction]:
+        if incoming_ref and incoming_ref.get("is_local"):
+            yield VisitedAction(
+                org=o, repo=r, commit_hash=c, sub_path=s, depth=depth,
+                action_yml=None, action_type="local",
+                incoming_ref=incoming_ref, parent_yml=parent_yml,
+                approved=True, trusted=False,
+            )
+            return
+        if incoming_ref and incoming_ref.get("is_docker"):
+            yield VisitedAction(
+                org=o, repo=r, commit_hash=c, sub_path=s, depth=depth,
+                action_yml=None, action_type="docker-ref",
+                incoming_ref=incoming_ref, parent_yml=parent_yml,
+                approved=True, trusted=False,
+            )
+            return
+
+        trusted = o in TRUSTED_ORGS
+        if depth > 0 and trusted:
+            yield VisitedAction(
+                org=o, repo=r, commit_hash=c, sub_path=s, depth=depth,
+                action_yml=None, action_type="trusted",
+                incoming_ref=incoming_ref, parent_yml=parent_yml,
+                approved=True, trusted=True,
+            )
+            return
+
+        key = f"{o}/{r}/{s}@{c}"
+        if key in visited:
+            return
+        visited.add(key)
+
+        action_yml = fetch_action_yml(o, r, c, s)
+        action_type = "unknown"
+        if action_yml:
+            action_type = detect_action_type_from_yml(action_yml)
+
+        approved = False
+        if incoming_ref and incoming_ref.get("is_hash_pinned"):
+            approved_list = find_approved_versions(o, r)
+            approved = c in {v["hash"] for v in approved_list}
+
+        yield VisitedAction(
+            org=o, repo=r, commit_hash=c, sub_path=s, depth=depth,
+            action_yml=action_yml, action_type=action_type,
+            incoming_ref=incoming_ref, parent_yml=parent_yml,
+            approved=approved, trusted=trusted,
+        )
+
+        if depth >= max_depth:
+            return
+        if not action_yml:
+            return
+        if incoming_ref and not incoming_ref.get("is_hash_pinned"):
+            return
+
+        for nested in extract_composite_uses(action_yml):
+            yield from _walk(
+                nested.get("org", ""), nested.get("repo", ""),
+                nested.get("ref", ""), nested.get("sub_path", ""),
+                depth + 1, nested, action_yml,
+            )
+
+    yield from _walk(org, repo, commit_hash, sub_path, 0, None, None)
+
+
 def analyze_nested_actions(
     org: str, repo: str, commit_hash: str, sub_path: str = "",
     ci_mode: bool = False, gh: GitHubClient | None = None,
-    _depth: int = 0, _visited: set | None = None,
-    _checked: list | None = None,
 ) -> tuple[list[str], list[dict]]:
-    """Analyze actions referenced in composite steps, recursing into ALL types.
+    """Analyze actions referenced in composite steps.
 
-    Returns (warnings, checked_actions) where checked_actions is a list of dicts
-    describing each nested action that was inspected (for the summary).
+    Consumes :func:`walk_actions` in pre-order so each unique nested
+    action is displayed exactly once (matching the legacy ordering)
+    while sharing its ``action.yml`` fetches with every other check
+    that walks the same graph.
+
+    Returns ``(warnings, checked_actions)`` where ``checked_actions``
+    is a list of dicts describing each nested action inspected
+    (used by the verification summary).
     """
-    MAX_DEPTH = 3
     warnings: list[str] = []
+    checked: list[dict] = []
 
-    if _visited is None:
-        _visited = set()
-    if _checked is None:
-        _checked = []
+    first = True
+    header_printed = False
+    for visit in walk_actions(org, repo, commit_hash, sub_path):
+        # The root visit is not "nested"; it only provides the action.yml
+        # from which the first layer of uses: refs were resolved. Warn if
+        # its action.yml could not be fetched — the graph is unreachable.
+        if first:
+            first = False
+            if visit.action_yml is None and visit.action_type != "trusted":
+                warnings.append(
+                    f"Could not fetch action.yml for "
+                    f"{visit.org}/{visit.repo}@{visit.commit_hash[:12]}"
+                )
+            continue
 
-    action_key = f"{org}/{repo}/{sub_path}@{commit_hash}"
-    if action_key in _visited:
-        return warnings, _checked
-    _visited.add(action_key)
+        if not header_printed:
+            console.print()
+            console.rule("[bold]Nested Action Analysis[/bold]")
+            header_printed = True
 
-    indent = "  " * (_depth + 1)
+        ref_info = visit.incoming_ref or {}
+        parent_yml = visit.parent_yml or ""
+        indent = "  " * visit.depth
 
-    action_yml = fetch_action_yml(org, repo, commit_hash, sub_path)
-    if not action_yml:
-        warnings.append(f"Could not fetch action.yml for {org}/{repo}@{commit_hash[:12]}")
-        return warnings, _checked
+        raw = ref_info.get("raw", "")
+        line = ref_info.get("line_num", 0)
 
-    uses_refs = extract_composite_uses(action_yml)
-    if not uses_refs:
-        return warnings, _checked
-
-    if _depth == 0:
-        console.print()
-        console.rule("[bold]Nested Action Analysis[/bold]")
-
-    for ref_info in uses_refs:
-        raw = ref_info["raw"]
-        line = ref_info["line_num"]
-
-        if ref_info.get("is_local"):
-            console.print(f"{indent}[dim]line {line}:[/dim] [cyan]{raw}[/cyan] [dim](local action)[/dim]")
-            _checked.append({
+        if visit.action_type == "local":
+            console.print(
+                f"{indent}[dim]line {line}:[/dim] [cyan]{raw}[/cyan] [dim](local action)[/dim]"
+            )
+            checked.append({
                 "action": raw, "type": "local", "pinned": True,
                 "approved": True, "status": "ok",
             })
             continue
 
-        if ref_info.get("is_docker"):
-            console.print(f"{indent}[dim]line {line}:[/dim] [cyan]{raw}[/cyan] [dim](docker reference)[/dim]")
-            _checked.append({
+        if visit.action_type == "docker-ref":
+            console.print(
+                f"{indent}[dim]line {line}:[/dim] [cyan]{raw}[/cyan] [dim](docker reference)[/dim]"
+            )
+            checked.append({
                 "action": raw, "type": "docker-ref", "pinned": True,
                 "approved": True, "status": "ok",
             })
             continue
 
-        r_org, r_repo, r_sub = ref_info["org"], ref_info["repo"], ref_info["sub_path"]
-        ref_str = ref_info["ref"]
+        r_org, r_repo, r_sub = visit.org, visit.repo, visit.sub_path
+        ref_str = visit.commit_hash
         display_name = f"{r_org}/{r_repo}"
         if r_sub:
             display_name += f"/{r_sub}"
 
-        checked_entry: dict = {
+        entry: dict = {
             "action": display_name, "ref": ref_str,
-            "pinned": ref_info["is_hash_pinned"],
+            "pinned": ref_info.get("is_hash_pinned", False),
             "approved": False, "type": "unknown", "status": "ok",
-            "depth": _depth + 1,
+            "depth": visit.depth,
         }
 
-        if ref_info["is_hash_pinned"]:
-            approved = find_approved_versions(r_org, r_repo)
-            approved_hashes = {v["hash"] for v in approved}
-            is_approved = ref_str in approved_hashes
-            checked_entry["approved"] = is_approved
-
-            tag_comment = ""
-            for yml_line in action_yml.splitlines():
-                if ref_str in yml_line and "#" in yml_line:
-                    tag_comment = yml_line.split("#", 1)[1].strip()
-                    break
-            checked_entry["tag"] = tag_comment
-
-            if is_approved:
-                console.print(
-                    f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
-                    f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{display_name}@{ref_str[:12]}[/link] "
-                    f"[green](hash-pinned, in our approved list)[/green]"
-                )
-            else:
-                tag_display = f" [dim]# {tag_comment}[/dim]" if tag_comment else ""
-                console.print(
-                    f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
-                    f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{display_name}@{ref_str[:12]}[/link]"
-                    f"{tag_display} [yellow](hash-pinned, NOT in our approved list)[/yellow]"
-                )
-                warnings.append(
-                    f"Nested action {display_name}@{ref_str[:12]} is not in our approved actions list"
-                )
-                checked_entry["status"] = "warn"
-
-            TRUSTED_ORGS = {"actions", "github"}
-            is_trusted = r_org in TRUSTED_ORGS
-            checked_entry["trusted"] = is_trusted
-
-            if _depth < MAX_DEPTH:
-                nested_yml = fetch_action_yml(r_org, r_repo, ref_str, r_sub)
-                if nested_yml:
-                    nested_type = detect_action_type_from_yml(nested_yml)
-                    checked_entry["type"] = nested_type
-
-                    if is_trusted:
-                        console.print(
-                            f"{indent}  [dim]↳ {nested_type} action "
-                            f"(trusted org '{r_org}' — skipping deep inspection)[/dim]"
-                        )
-                    elif nested_type == "composite":
-                        console.print(
-                            f"{indent}  [dim]↳ {nested_type} action — analyzing nested steps...[/dim]"
-                        )
-                        nested_warnings, _ = analyze_nested_actions(
-                            r_org, r_repo, ref_str, r_sub,
-                            ci_mode=ci_mode, gh=gh,
-                            _depth=_depth + 1, _visited=_visited,
-                            _checked=_checked,
-                        )
-                        warnings.extend(nested_warnings)
-                    elif nested_type.startswith("node"):
-                        node_ver = nested_type.replace("node", "")
-                        has_dist = False
-                        main_path = ""
-                        for yml_line in nested_yml.splitlines():
-                            main_m = re.match(r"\s+main:\s*['\"]?(\S+?)['\"]?\s*$", yml_line)
-                            if main_m:
-                                main_path = main_m.group(1)
-                                break
-                        if main_path:
-                            main_check = fetch_file_from_github(r_org, r_repo, ref_str, main_path)
-                            has_dist = main_check is not None
-                        else:
-                            dist_check = fetch_file_from_github(r_org, r_repo, ref_str, "dist/index.js")
-                            has_dist = dist_check is not None
-                        if has_dist:
-                            dist_status = f"[green]has {main_path or 'dist/'}[/green]"
-                        else:
-                            dist_status = "[dim]no compiled JS found[/dim]"
-                        console.print(
-                            f"{indent}  [dim]↳ {nested_type} action (Node.js {node_ver}), {dist_status}[/dim]"
-                        )
-                        nested_uses = extract_composite_uses(nested_yml)
-                        if nested_uses:
-                            console.print(
-                                f"{indent}  [dim]↳ node action also references "
-                                f"{len(nested_uses)} other action(s) — inspecting...[/dim]"
-                            )
-                            nested_warnings, _ = analyze_nested_actions(
-                                r_org, r_repo, ref_str, r_sub,
-                                ci_mode=ci_mode, gh=gh,
-                                _depth=_depth + 1, _visited=_visited,
-                                _checked=_checked,
-                            )
-                            warnings.extend(nested_warnings)
-                    elif nested_type == "docker":
-                        for yml_line in nested_yml.splitlines():
-                            img_m = re.search(r"image:\s*['\"]?(\S+?)['\"]?\s*$", yml_line.strip())
-                            if img_m:
-                                image = img_m.group(1)
-                                if image.startswith("Dockerfile") or image.startswith("./"):
-                                    console.print(
-                                        f"{indent}  [dim]↳ docker action (local Dockerfile)[/dim]"
-                                    )
-                                elif "@sha256:" in image:
-                                    console.print(
-                                        f"{indent}  [dim]↳ docker action, image digest-pinned[/dim]"
-                                    )
-                                else:
-                                    console.print(
-                                        f"{indent}  [dim]↳ docker action, image: {image}[/dim]"
-                                    )
-                                break
-                    else:
-                        console.print(
-                            f"{indent}  [dim]↳ {nested_type} action[/dim]"
-                        )
-        else:
+        if not ref_info.get("is_hash_pinned"):
             console.print(
                 f"{indent}[dim]line {line}:[/dim] [red]✗[/red] "
                 f"{display_name}@{ref_str} [red bold](NOT hash-pinned — uses tag/branch!)[/red bold]"
@@ -226,11 +296,103 @@ def analyze_nested_actions(
             warnings.append(
                 f"Nested action {display_name}@{ref_str} is NOT pinned to a commit hash"
             )
-            checked_entry["status"] = "fail"
+            entry["status"] = "fail"
+            checked.append(entry)
+            continue
 
-        _checked.append(checked_entry)
+        entry["approved"] = visit.approved
+        tag_comment = ""
+        for yml_line in parent_yml.splitlines():
+            if ref_str in yml_line and "#" in yml_line:
+                tag_comment = yml_line.split("#", 1)[1].strip()
+                break
+        entry["tag"] = tag_comment
 
-    return warnings, _checked
+        if visit.approved:
+            console.print(
+                f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
+                f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{display_name}@{ref_str[:12]}[/link] "
+                f"[green](hash-pinned, in our approved list)[/green]"
+            )
+        else:
+            tag_display = f" [dim]# {tag_comment}[/dim]" if tag_comment else ""
+            console.print(
+                f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
+                f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{display_name}@{ref_str[:12]}[/link]"
+                f"{tag_display} [yellow](hash-pinned, NOT in our approved list)[/yellow]"
+            )
+            warnings.append(
+                f"Nested action {display_name}@{ref_str[:12]} is not in our approved actions list"
+            )
+            entry["status"] = "warn"
+
+        entry["trusted"] = visit.trusted
+
+        if visit.action_type == "trusted":
+            # Trusted-org refs are yielded as stubs (no action.yml fetch).
+            # Fetch lazily just to attach the action type for the summary;
+            # the shared cache means any other check that already walked
+            # this repo gets a hit here.
+            trusted_yml = fetch_action_yml(r_org, r_repo, ref_str, r_sub)
+            nested_type = detect_action_type_from_yml(trusted_yml) if trusted_yml else "unknown"
+            entry["type"] = nested_type
+            console.print(
+                f"{indent}  [dim]↳ {nested_type} action "
+                f"(trusted org '{r_org}' — skipping deep inspection)[/dim]"
+            )
+        elif visit.action_type == "composite":
+            entry["type"] = "composite"
+            console.print(
+                f"{indent}  [dim]↳ composite action — analyzing nested steps...[/dim]"
+            )
+        elif visit.action_type.startswith("node"):
+            entry["type"] = visit.action_type
+            node_ver = visit.action_type.replace("node", "")
+            main_path = ""
+            if visit.action_yml:
+                for yml_line in visit.action_yml.splitlines():
+                    main_m = re.match(r"\s+main:\s*['\"]?(\S+?)['\"]?\s*$", yml_line)
+                    if main_m:
+                        main_path = main_m.group(1)
+                        break
+            if main_path:
+                has_dist = fetch_file_from_github(r_org, r_repo, ref_str, main_path) is not None
+            else:
+                has_dist = fetch_file_from_github(r_org, r_repo, ref_str, "dist/index.js") is not None
+            dist_status = (
+                f"[green]has {main_path or 'dist/'}[/green]" if has_dist
+                else "[dim]no compiled JS found[/dim]"
+            )
+            console.print(
+                f"{indent}  [dim]↳ {visit.action_type} action (Node.js {node_ver}), {dist_status}[/dim]"
+            )
+            if visit.action_yml and extract_composite_uses(visit.action_yml):
+                nested_uses = extract_composite_uses(visit.action_yml)
+                console.print(
+                    f"{indent}  [dim]↳ node action also references "
+                    f"{len(nested_uses)} other action(s) — inspecting...[/dim]"
+                )
+        elif visit.action_type == "docker":
+            entry["type"] = "docker"
+            if visit.action_yml:
+                for yml_line in visit.action_yml.splitlines():
+                    img_m = re.search(r"image:\s*['\"]?(\S+?)['\"]?\s*$", yml_line.strip())
+                    if img_m:
+                        image = img_m.group(1)
+                        if image.startswith("Dockerfile") or image.startswith("./"):
+                            console.print(f"{indent}  [dim]↳ docker action (local Dockerfile)[/dim]")
+                        elif "@sha256:" in image:
+                            console.print(f"{indent}  [dim]↳ docker action, image digest-pinned[/dim]")
+                        else:
+                            console.print(f"{indent}  [dim]↳ docker action, image: {image}[/dim]")
+                        break
+        else:
+            entry["type"] = visit.action_type
+            console.print(f"{indent}  [dim]↳ {visit.action_type} action[/dim]")
+
+        checked.append(entry)
+
+    return warnings, checked
 
 
 def analyze_dockerfile(
@@ -256,17 +418,24 @@ def analyze_dockerfile(
         lines = content.splitlines()
         from_lines = []
         suspicious_cmds = []
+        stage_names: set[str] = set()
 
         for i, line in enumerate(lines, 1):
             stripped = line.strip()
             if not stripped or stripped.startswith("#"):
                 continue
 
-            from_match = re.match(r"FROM\s+(.+?)(?:\s+AS\s+\S+)?$", stripped, re.IGNORECASE)
+            from_match = re.match(r"FROM\s+(\S+)(?:\s+AS\s+(\S+))?\s*$", stripped, re.IGNORECASE)
             if from_match:
                 image = from_match.group(1).strip()
+                stage_alias = from_match.group(2)
                 from_lines.append((i, image))
-                if "@sha256:" in image:
+                if image in stage_names:
+                    console.print(
+                        f"  [green]✓[/green] [dim]line {i}:[/dim] FROM {image} "
+                        f"[green](multi-stage reference)[/green]"
+                    )
+                elif "@sha256:" in image:
                     console.print(
                         f"  [green]✓[/green] [dim]line {i}:[/dim] FROM {image} "
                         f"[green](digest-pinned)[/green]"
@@ -284,6 +453,8 @@ def analyze_dockerfile(
                         f"[red bold](unpinned or :latest!)[/red bold]"
                     )
                     warnings.append(f"Dockerfile FROM {image} is not pinned")
+                if stage_alias:
+                    stage_names.add(stage_alias)
                 continue
 
             lower = stripped.lower()
@@ -432,6 +603,161 @@ def analyze_scripts(
                 )
 
     return warnings
+
+
+def analyze_lock_files(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+    exemptions: dict[tuple[str, str], set[str]] | None = None,
+) -> list[str]:
+    """Verify each detected dependency manifest has a matching lock file.
+
+    Downstream build verification relies on a clean rebuild producing the same
+    output as the published artifacts. That reproducibility depends on every
+    transitive dependency being pinned — which is the lock file's job. A
+    manifest (package.json, pyproject.toml, go.mod, ...) without a matching
+    lock file means `npm install` / `pip install` / `go get` would resolve to
+    whatever version is latest at build time, making verification impossible.
+
+    A missing lock file when the corresponding manifest is present is
+    returned as a hard error. Manifests that don't declare dependencies
+    (e.g. a bare pyproject.toml with only tool config, a Rust library crate
+    that conventionally doesn't commit Cargo.lock) are reported as skipped.
+
+    ``exemptions`` maps ``(org, repo)`` to a set of ecosystem names where a
+    missing lock file is tolerated — for library-first projects (cibuildwheel,
+    setup-dart) that don't commit lock files per their ecosystem convention.
+    Defaults to the contents of ``lock_file_exemptions.yml`` at the repo root.
+
+    Returns a list of error strings (empty = pass).
+    """
+    if exemptions is None:
+        exemptions = _load_lock_file_exemptions()
+    exempted_ecosystems = exemptions.get((org.lower(), repo.lower()), set())
+
+    errors: list[str] = []
+    header_shown = False
+
+    def _show_header() -> None:
+        nonlocal header_shown
+        if not header_shown:
+            console.print()
+            console.rule("[bold]Lock File Presence[/bold]")
+            header_shown = True
+
+    def _candidate_paths(name: str) -> list[str]:
+        if sub_path:
+            return [f"{sub_path}/{name}", name]
+        return [name]
+
+    def _find(name: str) -> tuple[str, str] | None:
+        for p in _candidate_paths(name):
+            c = fetch_file_from_github(org, repo, commit_hash, p)
+            if c is not None:
+                return p, c
+        return None
+
+    # (ecosystem, manifest, [acceptable lock files in priority order])
+    ecosystems: list[tuple[str, str, list[str]]] = [
+        ("node",   "package.json",   ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lock", "bun.lockb"]),
+        ("python", "pyproject.toml", ["uv.lock", "poetry.lock", "pdm.lock", "requirements.txt"]),
+        ("python", "Pipfile",        ["Pipfile.lock"]),
+        ("deno",   "deno.json",      ["deno.lock"]),
+        ("deno",   "deno.jsonc",     ["deno.lock"]),
+        ("dart",   "pubspec.yaml",   ["pubspec.lock"]),
+        ("ruby",   "Gemfile",        ["Gemfile.lock"]),
+        ("go",     "go.mod",         ["go.sum"]),
+        ("rust",   "Cargo.toml",     ["Cargo.lock"]),
+    ]
+
+    for ecosystem, manifest, lock_options in ecosystems:
+        found = _find(manifest)
+        if found is None:
+            continue
+        mpath, mcontent = found
+
+        # Rust libraries conventionally don't commit Cargo.lock — only binary
+        # crates / workspaces do. Detect via [lib] without [[bin]] in the
+        # root manifest (workspaces are treated as needing a lock).
+        if ecosystem == "rust":
+            has_lib = bool(re.search(r"(?m)^\s*\[lib\]", mcontent))
+            has_bin = bool(re.search(r"(?m)^\s*\[\[bin\]\]", mcontent))
+            has_workspace = bool(re.search(r"(?m)^\s*\[workspace\]", mcontent))
+            if has_lib and not has_bin and not has_workspace:
+                _show_header()
+                console.print(
+                    f"  [dim]⊘[/dim] {ecosystem}: {mpath} looks like a library crate — "
+                    "Cargo.lock is not conventionally committed"
+                )
+                continue
+
+        # pyproject.toml is often a bare config file (ruff/black/mypy settings)
+        # with no dependencies. Skip if no deps section is declared.
+        if manifest == "pyproject.toml":
+            has_deps = bool(re.search(
+                r"(?m)^\s*("
+                r"dependencies\s*="
+                r"|\[project\.optional-dependencies\]"
+                r"|\[tool\.poetry\.dependencies\]"
+                r"|\[tool\.poetry\.dev-dependencies\]"
+                r"|\[tool\.poetry\.group\..+?\.dependencies\]"
+                r"|\[tool\.pdm\.dev-dependencies\]"
+                r")",
+                mcontent,
+            ))
+            if not has_deps:
+                _show_header()
+                console.print(
+                    f"  [dim]⊘[/dim] {ecosystem}: {mpath} declares no dependencies"
+                )
+                continue
+
+        # go.mod without any `require` directives has no third-party deps and
+        # thus no go.sum to generate.
+        if manifest == "go.mod":
+            has_require = bool(re.search(r"(?m)^\s*require\b", mcontent))
+            if not has_require:
+                _show_header()
+                console.print(
+                    f"  [dim]⊘[/dim] {ecosystem}: {mpath} has no require directives"
+                )
+                continue
+
+        found_lock: str | None = None
+        for lock in lock_options:
+            lp = _find(lock)
+            if lp is not None:
+                found_lock = lp[0]
+                break
+
+        _show_header()
+        manifest_link = (
+            f"[link=https://github.com/{org}/{repo}/blob/{commit_hash}/{mpath}]"
+            f"{mpath}[/link]"
+        )
+        if found_lock:
+            lock_link = (
+                f"[link=https://github.com/{org}/{repo}/blob/{commit_hash}/{found_lock}]"
+                f"{found_lock}[/link]"
+            )
+            console.print(
+                f"  [green]✓[/green] {ecosystem}: {manifest_link} → {lock_link}"
+            )
+        elif ecosystem in exempted_ecosystems:
+            console.print(
+                f"  [dim]⊘[/dim] {ecosystem}: {manifest_link} has no matching lock file "
+                f"— exempted in lock_file_exemptions.yml (library-first project)"
+            )
+        else:
+            console.print(
+                f"  [red]✗[/red] {ecosystem}: {manifest_link} has no matching lock file "
+                f"(expected one of: {', '.join(lock_options)})"
+            )
+            errors.append(
+                f"{mpath}: missing lock file; expected one of "
+                f"{', '.join(lock_options)} so transitive dependencies are pinned"
+            )
+
+    return errors
 
 
 def analyze_dependency_pinning(
@@ -658,6 +984,409 @@ def analyze_action_metadata(
     )
 
     return warnings
+
+
+# Commands that fetch resources over HTTP(S). Dockerfile ADD <url> is also a download.
+_DOWNLOAD_LINE_PATTERNS = [
+    re.compile(r"\bcurl\b", re.IGNORECASE),
+    re.compile(r"\bwget\b", re.IGNORECASE),
+    re.compile(r"\bInvoke-WebRequest\b", re.IGNORECASE),
+    re.compile(r"\biwr\b", re.IGNORECASE),
+    re.compile(r"^\s*ADD\s+https?://", re.IGNORECASE),
+]
+
+# Extensions that typically indicate binary or executable downloads.
+_BINARY_EXTS = (
+    ".tar.gz", ".tgz", ".tar.bz2", ".tar.xz", ".tar", ".zip",
+    ".exe", ".msi", ".deb", ".rpm", ".dmg", ".pkg", ".appimage",
+    ".jar", ".so", ".dylib", ".dll", ".bin",
+)
+
+# Pipe-to-shell: curl/wget output piped straight into a shell interpreter.
+_PIPE_TO_SHELL = re.compile(
+    r"\b(curl|wget|iwr|Invoke-WebRequest)\b[^\n]*\|\s*(ba|z|k|a)?sh\b",
+    re.IGNORECASE,
+)
+
+# Package-manager invocations that bring their own integrity verification —
+# skip these so we don't flag `curl` mentioned as an arg to a package manager.
+_PKG_MANAGER_MARKERS = (
+    "apt-get", "apt install", "apt update", "apt-cache",
+    "apk add", "apk update", "yum install", "dnf install",
+    "zypper install", "pacman -s", "brew install",
+    "pip install", "pip3 install", "pipx install", "uv pip", "uv tool",
+    "npm install", "npm ci", "pnpm install", "yarn install", "yarn add",
+    "gem install", "go install ", "go get ", "cargo install ",
+    "choco install", "scoop install",
+    "tdnf install", "microdnf install",
+)
+
+# Patterns indicating cryptographic verification of a downloaded artifact.
+_VERIFICATION_PATTERNS = [
+    re.compile(r"\bsha(1|256|384|512)sum\b"),
+    re.compile(r"\bmd5sum\b"),
+    re.compile(r"\bb2sum\b"),
+    re.compile(r"\bshasum\s+-a\s+(1|256|384|512)\b"),
+    re.compile(r"\bopenssl\s+(dgst|sha256|sha512)", re.IGNORECASE),
+    re.compile(r"\bgpg2?\b[^\n]*--verify", re.IGNORECASE),
+    re.compile(r"\bcosign\s+verify", re.IGNORECASE),
+    re.compile(r"\bslsa-verifier\b"),
+    re.compile(r"\bgh\s+attestation\s+verify\b"),
+    re.compile(r"\bminisign\b"),
+    re.compile(r"\bssh-keygen\s+-Y\s+verify\b"),
+    re.compile(r"\bCertUtil\b[^\n]*-hashfile", re.IGNORECASE),
+    re.compile(r"\bGet-FileHash\b", re.IGNORECASE),
+    # Inline checksum compare:  echo "<hash>  file" | sha256sum -c
+    re.compile(r'["\'][a-f0-9]{32,}\s+\*?\S+["\']', re.IGNORECASE),
+]
+
+
+# Patterns indicating a JS/TS download of a remote artifact. Most JS actions
+# that fetch binaries go through @actions/tool-cache's downloadTool (which
+# does NOT verify checksums), or via node's http/https, fetch, axios, or
+# @actions/http-client. Each of these should have a companion hash/signature
+# check in the same file to count as verified.
+_JS_DOWNLOAD_PATTERNS = [
+    re.compile(r"\btc\.downloadTool\s*\("),
+    re.compile(r"(?<![a-zA-Z_.])downloadTool\s*\("),
+    re.compile(r"\bfetch\s*\([^)]*['\"`]https?://"),
+    re.compile(r"\bhttps?\.(?:get|request)\s*\("),
+    re.compile(r"\baxios(?:\.(?:get|post|request))?\s*\("),
+    re.compile(r"\bnew\s+HttpClient\s*\("),
+    re.compile(r"\brequire\(\s*['\"`]node-fetch['\"`]"),
+]
+
+# Verification patterns in JS/TS source: node crypto, WebCrypto, or common
+# sigstore/cosign / custom "verify" helper names.
+_JS_VERIFICATION_PATTERNS = [
+    re.compile(r"\bcrypto\.createHash\s*\("),
+    re.compile(r"\bcrypto\.subtle\.digest\b"),
+    re.compile(r"\bsubtle\.verify\s*\("),
+    re.compile(r"\b@noble/hashes\b"),
+    re.compile(r"\bsigstore\b", re.IGNORECASE),
+    re.compile(r"\bcosign\b", re.IGNORECASE),
+    re.compile(r"\bverifySignature\b"),
+    re.compile(r"\bverifyChecksum\b"),
+    re.compile(r"\bcomputeHash\b"),
+]
+
+_JS_SOURCE_EXTENSIONS = (".ts", ".js", ".mjs", ".cjs")
+_JS_SCAN_DIR_PREFIXES = ("src/", "lib/", "source/", "sources/", "scripts/")
+_JS_EXCLUDE_DIR_PREFIXES = (
+    "dist/", "build/", "out/", "node_modules/", "coverage/",
+    "__tests__/", "test/", "tests/", "examples/", "example/",
+    "docs/", ".github/",
+)
+
+
+def _line_is_pkg_manager(line: str) -> bool:
+    lower = line.lower()
+    return any(marker in lower for marker in _PKG_MANAGER_MARKERS)
+
+
+def _find_binary_downloads_js(content: str) -> list[tuple[int, str]]:
+    """Find lines in JS/TS source that fetch remote artifacts.
+
+    Flags calls to ``tc.downloadTool`` / ``downloadTool``, bare ``fetch`` to
+    an http(s) URL, node's ``http(s).get`` / ``.request``, ``axios.*``, and
+    ``new HttpClient()``. Skips comment-only lines.
+    """
+    findings: list[tuple[int, str]] = []
+    for i, line in enumerate(content.splitlines(), 1):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("//") or stripped.startswith("*"):
+            continue
+        if any(p.search(line) for p in _JS_DOWNLOAD_PATTERNS):
+            findings.append((i, stripped[:120]))
+    return findings
+
+
+def _list_repo_files(org: str, repo: str, commit_hash: str) -> list[str]:
+    """List every blob path in the repo at ``commit_hash`` via the trees API.
+
+    Returns an empty list on error, auth failure, or truncated results (the
+    caller should treat "no files discovered" as best-effort, not canonical).
+    """
+    url = f"https://api.github.com/repos/{org}/{repo}/git/trees/{commit_hash}?recursive=1"
+    headers = {"Accept": "application/vnd.github+json"}
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        resp = requests.get(url, timeout=15, headers=headers)
+        if not resp.ok:
+            return []
+        data = resp.json()
+        if data.get("truncated"):
+            return []
+        return [t["path"] for t in data.get("tree", []) if t.get("type") == "blob"]
+    except requests.RequestException:
+        return []
+
+
+def _discover_js_source_files(
+    org: str, repo: str, commit_hash: str, sub_path: str,
+) -> list[tuple[str, str]]:
+    """Return ``(path, content)`` for JS/TS source files worth scanning.
+
+    Includes files at the repo root and under conventional source dirs
+    (``src/``, ``lib/``, …). Excludes compiled output, vendored modules,
+    test/example dirs, and generated docs. For monorepo sub-actions the
+    ``sub_path`` acts as a prefix filter.
+    """
+    files: list[tuple[str, str]] = []
+    all_paths = _list_repo_files(org, repo, commit_hash)
+    if not all_paths:
+        return files
+
+    prefix = f"{sub_path.rstrip('/')}/" if sub_path else ""
+    for path in all_paths:
+        if prefix and not path.startswith(prefix):
+            continue
+        rel = path[len(prefix):] if prefix else path
+        if not rel.endswith(_JS_SOURCE_EXTENSIONS):
+            continue
+        if any(rel.startswith(d) for d in _JS_EXCLUDE_DIR_PREFIXES):
+            continue
+        if "/" in rel and not any(rel.startswith(d) for d in _JS_SCAN_DIR_PREFIXES):
+            continue
+        content = fetch_file_from_github(org, repo, commit_hash, path)
+        if content is not None:
+            files.append((rel, content))
+    return files
+
+
+def _find_binary_downloads(content: str) -> list[tuple[int, str]]:
+    """Find lines that download binaries or scripts over HTTP(S).
+
+    Returns a list of ``(line_num, snippet)`` tuples. Lines that are part of a
+    package-manager invocation are skipped.
+    """
+    findings: list[tuple[int, str]] = []
+    for i, line in enumerate(content.splitlines(), 1):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if _line_is_pkg_manager(stripped):
+            continue
+
+        if _PIPE_TO_SHELL.search(line):
+            findings.append((i, stripped[:120]))
+            continue
+
+        if not any(p.search(stripped) for p in _DOWNLOAD_LINE_PATTERNS):
+            continue
+
+        url_match = re.search(r"https?://\S+", stripped)
+        if not url_match:
+            continue
+        url = url_match.group(0).rstrip(",;'\")}\\")
+
+        if url.lower().endswith(_BINARY_EXTS):
+            findings.append((i, stripped[:120]))
+            continue
+        if stripped.upper().startswith("ADD "):
+            findings.append((i, stripped[:120]))
+            continue
+        if any(m in url for m in ("/releases/download/", "/bin/", "/binaries/", "/dist/")):
+            findings.append((i, stripped[:120]))
+            continue
+    return findings
+
+
+def _has_verification(content: str) -> bool:
+    return any(p.search(content) for p in _VERIFICATION_PATTERNS)
+
+
+def _extract_run_blocks(action_yml: str) -> list[str]:
+    """Return the textual contents of every ``run:`` block in an action.yml."""
+    blocks: list[str] = []
+    lines = action_yml.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        m = re.match(r"(\s*)run:\s*[|>][+-]?\s*$", line)
+        if m:
+            indent = len(m.group(1))
+            i += 1
+            block_lines: list[str] = []
+            while i < len(lines):
+                nxt = lines[i]
+                if nxt.strip() == "":
+                    block_lines.append("")
+                    i += 1
+                    continue
+                leading = len(nxt) - len(nxt.lstrip())
+                if leading <= indent:
+                    break
+                block_lines.append(nxt)
+                i += 1
+            blocks.append("\n".join(block_lines))
+            continue
+        m2 = re.match(r"\s*run:\s+(\S.*)$", line)
+        if m2:
+            blocks.append(m2.group(1))
+        i += 1
+    return blocks
+
+
+def analyze_binary_downloads(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+) -> tuple[list[str], list[str]]:
+    """Scan Dockerfile, ``action.yml`` run blocks and referenced scripts for
+    binary/script downloads that lack a detectable verification step.
+
+    Returns ``(warnings, failures)``:
+      * ``failures`` — downloads in a file with no verification patterns at all.
+        These cause the check to fail.
+      * ``warnings`` — downloads in a file that does contain verification
+        (informational; reviewer should confirm coverage).
+    """
+    warnings: list[str] = []
+    failures: list[str] = []
+
+    files_to_scan: list[tuple[str, str]] = []
+
+    df_candidates = [f"{sub_path}/Dockerfile", "Dockerfile"] if sub_path else ["Dockerfile"]
+    for df_path in df_candidates:
+        content = fetch_file_from_github(org, repo, commit_hash, df_path)
+        if content:
+            files_to_scan.append((df_path, content))
+            break
+
+    action_yml = fetch_action_yml(org, repo, commit_hash, sub_path)
+    if action_yml:
+        for idx, block in enumerate(_extract_run_blocks(action_yml), start=1):
+            if block.strip():
+                files_to_scan.append((f"action.yml [run block #{idx}]", block))
+
+    script_files: set[str] = set()
+    if action_yml:
+        for line in action_yml.splitlines():
+            stripped = line.strip()
+            if "${{" in stripped and "}}" in stripped:
+                continue
+            for ext in (".sh", ".bash", ".py", ".ps1"):
+                for m in re.findall(r"(?<![.\w])[\w][\w./-]*" + re.escape(ext) + r"\b", stripped):
+                    clean = m.lstrip("./").strip("'\"")
+                    if any(p in clean for p in ("steps.", "outputs.", "inputs.")):
+                        continue
+                    if re.search(r"https?://.*" + re.escape(m), stripped):
+                        continue
+                    if clean and clean.count("/") <= 3:
+                        script_files.add(clean)
+
+    for script_path in sorted(script_files):
+        base_path = f"{sub_path}/{script_path}" if sub_path else script_path
+        content = fetch_file_from_github(org, repo, commit_hash, base_path)
+        if content is None:
+            content = fetch_file_from_github(org, repo, commit_hash, script_path)
+        if content is not None:
+            files_to_scan.append((script_path, content))
+
+    # JS/TS source files: shell-pattern downloads (curl/wget) are rare here
+    # but JS actions commonly fetch binaries via @actions/tool-cache etc.,
+    # so discover those separately and scan with JS-specific patterns.
+    js_files_to_scan = _discover_js_source_files(org, repo, commit_hash, sub_path)
+
+    if not files_to_scan and not js_files_to_scan:
+        return warnings, failures
+
+    console.print()
+    console.rule("[bold]Binary Download Verification[/bold]")
+
+    any_downloads = False
+    for path, content in files_to_scan:
+        downloads = _find_binary_downloads(content)
+        if not downloads:
+            continue
+        any_downloads = True
+        if _has_verification(content):
+            console.print(
+                f"  [green]✓[/green] {path}: {len(downloads)} download(s), "
+                f"verification present in file"
+            )
+            for line_num, snippet in downloads[:3]:
+                console.print(f"    [dim]line {line_num}:[/dim] [dim]{snippet}[/dim]")
+            if len(downloads) > 3:
+                console.print(f"    [dim]... and {len(downloads) - 3} more[/dim]")
+            for line_num, snippet in downloads:
+                warnings.append(
+                    f"{path} line {line_num}: download present (review coverage): {snippet[:80]}"
+                )
+        else:
+            console.print(
+                f"  [red]✗[/red] {path}: {len(downloads)} unverified download(s) "
+                f"[red bold](no checksum/signature check in file)[/red bold]"
+            )
+            for line_num, snippet in downloads[:5]:
+                console.print(f"    [dim]line {line_num}:[/dim] [red]{snippet}[/red]")
+            if len(downloads) > 5:
+                console.print(f"    [dim]... and {len(downloads) - 5} more[/dim]")
+            for line_num, snippet in downloads:
+                failures.append(
+                    f"{path} line {line_num}: unverified download: {snippet[:80]}"
+                )
+
+    for path, content in js_files_to_scan:
+        downloads = _find_binary_downloads_js(content)
+        if not downloads:
+            continue
+        any_downloads = True
+        has_verify = any(p.search(content) for p in _JS_VERIFICATION_PATTERNS)
+        if has_verify:
+            console.print(
+                f"  [green]✓[/green] {path}: {len(downloads)} JS download(s), "
+                f"verification present in file"
+            )
+            for line_num, snippet in downloads[:3]:
+                console.print(f"    [dim]line {line_num}:[/dim] [dim]{snippet}[/dim]")
+            if len(downloads) > 3:
+                console.print(f"    [dim]... and {len(downloads) - 3} more[/dim]")
+            for line_num, snippet in downloads:
+                warnings.append(
+                    f"{path} line {line_num}: JS download present (review coverage): {snippet[:80]}"
+                )
+        else:
+            console.print(
+                f"  [red]✗[/red] {path}: {len(downloads)} unverified JS download(s) "
+                f"[red bold](no checksum/signature check in file)[/red bold]"
+            )
+            for line_num, snippet in downloads[:5]:
+                console.print(f"    [dim]line {line_num}:[/dim] [red]{snippet}[/red]")
+            if len(downloads) > 5:
+                console.print(f"    [dim]... and {len(downloads) - 5} more[/dim]")
+            for line_num, snippet in downloads:
+                failures.append(
+                    f"{path} line {line_num}: unverified JS download: {snippet[:80]}"
+                )
+
+    if not any_downloads:
+        console.print("  [green]✓[/green] No binary downloads detected")
+
+    return warnings, failures
+
+
+def analyze_binary_downloads_recursive(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+) -> tuple[list[str], list[str]]:
+    """Run :func:`analyze_binary_downloads` against every action reached by
+    :func:`walk_actions` starting from the given root.
+
+    Skips the terminal stub visits (``local``/``docker-ref``/``trusted``)
+    since they have no ``action.yml`` to scan. Descent into composite,
+    nested-node, and non-trusted sub-actions is handled by the walker,
+    so this function no longer tracks ``_depth`` or ``_visited``.
+    """
+    warnings: list[str] = []
+    failures: list[str] = []
+    for v in walk_actions(org, repo, commit_hash, sub_path):
+        if v.action_type in ("local", "docker-ref", "trusted"):
+            continue
+        w, f = analyze_binary_downloads(v.org, v.repo, v.commit_hash, v.sub_path)
+        warnings.extend(w)
+        failures.extend(f)
+    return warnings, failures
 
 
 def analyze_repo_metadata(

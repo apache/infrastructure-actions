@@ -25,6 +25,22 @@ import jsbeautifier
 from .console import console, link
 from .diff_display import show_colored_diff
 
+# Extensions emitted by action build toolchains. `.js` is the common case
+# (webpack/ncc/tsc); `.cjs` is what esbuild/rollup write when the source
+# package is ESM (type: module) and the action needs a CommonJS bundle for
+# the node runner (e.g. JustinBeckwith/linkinator-action);
+# `.mjs` is the inverse — an ESM bundle for node20+ runners.
+COMPILED_JS_EXTENSIONS = ("*.js", "*.cjs", "*.mjs")
+
+
+def _collect_compiled_js(base: Path) -> set[Path]:
+    """Return relative paths of compiled JS files under base."""
+    found: set[Path] = set()
+    for pattern in COMPILED_JS_EXTENSIONS:
+        for f in base.rglob(pattern):
+            found.add(f.relative_to(base))
+    return found
+
 
 def beautify_js(content: str) -> str:
     """Reformat JavaScript for readable diffing."""
@@ -39,20 +55,23 @@ def beautify_js(content: str) -> str:
 def diff_js_files(
     original_dir: Path, rebuilt_dir: Path, org: str, repo: str, commit_hash: str,
     out_dir_name: str = "dist",
+    kept_files: set[Path] | None = None,
 ) -> bool:
-    """Diff JS files between original and rebuilt, return True if identical."""
+    """Diff JS files between original and rebuilt, return True if identical.
+
+    Files in *kept_files* (paths relative to *out_dir_name*) are skipped here:
+    they're non-minified bundles where a clean rebuild produces toolchain-
+    version noise rather than actionable diffs, and are verified by the
+    approved-vs-new source diff section instead.
+    """
     blob_url = f"https://github.com/{org}/{repo}/blob/{commit_hash}"
+    kept_files = kept_files or set()
 
     # Files vendored by @vercel/ncc that are not built from the action's source.
     ignored_files = {"sourcemap-register.js"}
 
-    original_files = set()
-    rebuilt_files = set()
-
-    for f in original_dir.rglob("*.js"):
-        original_files.add(f.relative_to(original_dir))
-    for f in rebuilt_dir.rglob("*.js"):
-        rebuilt_files.add(f.relative_to(rebuilt_dir))
+    original_files = _collect_compiled_js(original_dir)
+    rebuilt_files = _collect_compiled_js(rebuilt_dir)
 
     all_files = sorted(original_files | rebuilt_files)
 
@@ -108,6 +127,13 @@ def diff_js_files(
         built_file = rebuilt_dir / rel_path
 
         file_link = link(f"{blob_url}/{out_dir_name}/{rel_path}", str(rel_path))
+
+        if rel_path in kept_files:
+            console.print(
+                f"  [yellow]~[/yellow] {file_link} [yellow](non-minified — "
+                f"kept; diffed against previously-approved version below)[/yellow]"
+            )
+            continue
 
         if rel_path not in original_files:
             console.print(f"  [green]+[/green] {file_link} [dim](only in rebuilt)[/dim]")
