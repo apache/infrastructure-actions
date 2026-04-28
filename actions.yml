@@ -582,9 +582,12 @@ leafo/gh-actions-lua:
 leafo/gh-actions-luarocks:
   4c082a5fad45388feaeb0798dbd82dbd7dc65bca:
     tag: v5
-    expires_at: 2026-08-01
+    expires_at: 2026-07-21
   97053c556d6ce2c8e26eb7ac93743437c7af7248:
     tag: v6.0.0
+    expires_at: 2026-07-21
+  35d062def313a7699a0d513e996bcf4352f05389:
+    tag: v6.1.0
 lhotari/sandboxed-trivy-action:
   555963036b2012b44c1071508a236e569db28ebb:
     tag: v1.0.1

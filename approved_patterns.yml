@@ -208,6 +208,7 @@
 - leafo/gh-actions-lua@*
 - leafo/gh-actions-luarocks@4c082a5fad45388feaeb0798dbd82dbd7dc65bca
 - leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248
+- leafo/gh-actions-luarocks@35d062def313a7699a0d513e996bcf4352f05389
 - lhotari/sandboxed-trivy-action@555963036b2012b44c1071508a236e569db28ebb
 - lhotari/sandboxed-trivy-action@f01374b6cc3bf7264ab238293e94f6db7ada6dd0
 - lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411
