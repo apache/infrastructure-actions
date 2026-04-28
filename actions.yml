@@ -271,6 +271,9 @@ dawidd6/action-send-mail:
     expires_at: 2026-06-14
   d38f3f7cd391cdebfe0d38efc3998b935e951c4f:
     tag: v16
+    expires_at: 2026-07-21
+  42942bc2f8fba4e611b459a018967a6a7c78c68c:
+    tag: v17
 delaguardo/setup-graalvm:
   '*':
     keep: true

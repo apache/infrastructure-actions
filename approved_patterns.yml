@@ -103,6 +103,7 @@
 - dawidd6/action-download-artifact@*
 - dawidd6/action-send-mail@6d98ae34d733f9a723a9e04e94f2f24ba05e1402
 - dawidd6/action-send-mail@d38f3f7cd391cdebfe0d38efc3998b935e951c4f
+- dawidd6/action-send-mail@42942bc2f8fba4e611b459a018967a6a7c78c68c
 - delaguardo/setup-graalvm@*
 - dependabot/fetch-metadata@ffa630c65fa7e0ecfa0625b5ceda64399aea1b36
 - dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98
