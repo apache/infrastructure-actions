@@ -22,7 +22,7 @@
 # PRs to the right area experts, and ultimately merging, is welcome
 # but voluntary.  Additional reviewers (e.g. PMC members for actions
 # touching their area) should still be pulled in ad hoc.
-*            @dfoulks1 @potiuk @pkarwasz
+*            @dfoulks1 @potiuk @ppkarwasz
 
 # Area-specific owners — reviewed in addition to the defaults above.
 /pelican/    @dave2wave
