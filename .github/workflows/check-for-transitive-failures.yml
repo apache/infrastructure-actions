@@ -19,22 +19,119 @@
 
 name: Check for transitive failures in current latest actions
 
+# Runs hourly. The `gate` job decides whether the actual `check` job
+# needs to run, so most hours we burn ~5 seconds on the gate and skip
+# the rest. The `check` job is what actually exercises the org-wide
+# allowlist by loading the composite action.
+#
+# Triggering on `push` after a Dependabot merge does not work: the
+# org-level allowlist is synced from approved_patterns.yml by an
+# external ASF Infra job that runs on its own cadence, so the new SHA
+# is typically not yet on the allowlist when the push fires. The
+# 30-minute grace period below gives that sync time to land before we
+# probe.
 on:
   workflow_dispatch:
   schedule:
-    # Run daily to detect when a transitive dependency has fallen out
-    # of the allowlist even without changes to the action file.
-    - cron: "30 5 * * *"
-  push:
-    branches:
-      - main
-    paths:
-      - .github/actions/for-dependabot-triggered-reviews/action.yml
+    - cron: "30 * * * *"
 
 permissions: {}
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      should_run: ${{ steps.decide.outputs.should_run }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Decide whether to run the check
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Wait this long after the most recent change to the composite
+          # action before probing — gives the external org-level
+          # allowlist sync time to catch up. Tune up if we still see
+          # fail-then-pass cycles.
+          GRACE_MINUTES: "30"
+          # Always run at least this often regardless of changes, so we
+          # still catch transitive deps that fall out of the allowlist
+          # without any local edit (the original purpose of this check).
+          MAX_HOURS: "24"
+          # The file we actually `uses:` below — its SHAs are what
+          # GitHub validates against the org allowlist. Other inputs
+          # like approved_patterns.yml or actions.yml can change without
+          # affecting what we exercise here, so they don't gate runs.
+          PROBED_FILE: ".github/actions/for-dependabot-triggered-reviews/action.yml"
+        run: |
+          set -euo pipefail
+
+          last_success_sha=$(gh run list \
+            --workflow check-for-transitive-failures.yml \
+            --status success \
+            --branch main \
+            --limit 1 \
+            --json headSha \
+            --jq '.[0].headSha // ""')
+          last_success_time=$(gh run list \
+            --workflow check-for-transitive-failures.yml \
+            --status success \
+            --branch main \
+            --limit 1 \
+            --json updatedAt \
+            --jq '.[0].updatedAt // ""')
+
+          now_epoch=$(date +%s)
+
+          decide() {
+            if [ -z "$last_success_sha" ]; then
+              echo "no prior successful run"
+              return 0
+            fi
+
+            if [ -n "$last_success_time" ]; then
+              last_success_epoch=$(date -d "$last_success_time" +%s)
+              hours_since_success=$(( (now_epoch - last_success_epoch) / 3600 ))
+              if [ "$hours_since_success" -ge "$MAX_HOURS" ]; then
+                echo "${hours_since_success}h since last success (>= ${MAX_HOURS}h safety net)"
+                return 0
+              fi
+            fi
+
+            if git diff --quiet "$last_success_sha" HEAD -- "$PROBED_FILE"; then
+              echo "$PROBED_FILE unchanged since $last_success_sha"
+              return 1
+            fi
+
+            changed_at=$(git log -1 --format=%cI -- "$PROBED_FILE")
+            changed_epoch=$(date -d "$changed_at" +%s)
+            age_minutes=$(( (now_epoch - changed_epoch) / 60 ))
+            if [ "$age_minutes" -lt "$GRACE_MINUTES" ]; then
+              echo "$PROBED_FILE changed ${age_minutes}m ago; waiting for org sync (< ${GRACE_MINUTES}m)"
+              return 1
+            fi
+
+            echo "$PROBED_FILE changed since $last_success_sha (${age_minutes}m ago)"
+            return 0
+          }
+
+          if reason=$(decide); then
+            should_run=true
+          else
+            should_run=false
+          fi
+          echo "Decision: should_run=$should_run — $reason"
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+
   check-for-transitive-failures:
+    needs: gate
+    if: needs.gate.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
