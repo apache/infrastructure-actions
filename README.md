@@ -32,6 +32,7 @@ This repository hosts GitHub Actions developed by the ASF community and approved
   - [Manual Version Addition](#manual-addition-of-specific-versions)
   - [Automatic Expiration of Old Versions](#automatic-expiration-of-old-versions)
   - [Removing a Version](#removing-a-version-manually)
+- [Auditing Repositories for Actions Security Tooling](#auditing-repositories-for-actions-security-tooling)
 
 ## Submitting an Action
 
@@ -366,3 +367,107 @@ Routine removal is already automated: set `expires_at` on the entry and the dail
 The infrastructure team will prioritize these removal requests and may take additional steps to notify affected projects if necessary.
 
 For 'regular' removals (not security responses), you can use `./utils/action-usage.sh someorg/theaction` to see if/how an action is still used anywhere in the ASF, and create a 'regular' PR removing it from `actions.yml` (or adding an expiration date) when it is no longer used.
+
+## Auditing Repositories for Actions Security Tooling
+
+Recent security breaches have shown that GitHub Actions can fail silently, leaving repositories vulnerable without any visible indication. The `actions-audit.py` script helps ensure that all Apache repositories using GitHub Actions have a baseline set of security tooling in place.
+
+### Why This Matters
+
+GitHub Actions workflows can introduce security risks in several ways:
+- **Unpinned or unreviewed action versions** may contain malicious code or vulnerabilities
+- **Missing static analysis** means workflow misconfigurations (secret exposure, injection vulnerabilities) go undetected
+- **No dependabot** means action versions never get updated, accumulating known vulnerabilities over time
+
+The audit script checks each repository for four security configurations and can automatically open PRs to add any that are missing:
+
+| Check | What it does |
+|-------|-------------|
+| **Dependabot** | Keeps GitHub Actions dependencies up to date with a 4-day cooldown to avoid overwhelming reviewers |
+| **CodeQL** | Runs static analysis on workflow files to detect security issues in Actions syntax |
+| **Zizmor** | Specialized scanner for GitHub Actions anti-patterns: credential leaks, injection vulnerabilities, excessive permissions |
+| **ASF Allowlist Check** | Ensures every action used is on the ASF Infrastructure approved allowlist |
+
+### Prerequisites
+
+- **Python 3.11+** and [**uv**](https://docs.astral.sh/uv/) **>= 0.9.17** (dependencies are managed inline via PEP 723). Make sure your uv is up to date — depending on how you installed it, run `uv self update`, `pip install --upgrade uv`, `pipx upgrade uv`, or `brew upgrade uv`
+- **`gh`** (GitHub CLI, authenticated via `gh auth login`) — or provide a `--github-token` with `repo` scope and use `--no-gh`
+- **`zizmor`** ([install instructions](https://docs.zizmor.dev/installation/)) — required for PR creation mode; not needed for `--dry-run`. If missing, zizmor pre-checks are skipped with a warning
+
+### Usage
+
+Always start with `--dry-run` to see what the script would do without making any changes:
+
+```bash
+# Audit all repos for a specific PMC (prefix before first '-' in repo name)
+uv run utils/actions-audit.py --dry-run --pmc spark --max-num 10
+
+# Audit multiple PMCs
+uv run utils/actions-audit.py --dry-run --pmc kafka --pmc flink
+
+# Audit the first 50 repos (no PMC filter)
+uv run utils/actions-audit.py --dry-run --max-num 50
+
+# Increase GraphQL page size for fewer API round-trips
+uv run utils/actions-audit.py --dry-run --max-num 200 --batch-size 100
+```
+
+When satisfied with the dry-run output, remove `--dry-run` to create PRs:
+
+```bash
+# Create PRs for spark repos missing security tooling
+uv run utils/actions-audit.py --pmc spark --max-num 10
+```
+
+#### Options
+
+| Flag | Description |
+|------|-------------|
+| `--pmc PMC` | Filter by PMC prefix (repeatable). The prefix is the text before the first `-` in the repo name, e.g. `spark` matches `spark`, `spark-connect-go`, `spark-docker`. |
+| `--dry-run` | Report findings without creating PRs or branches. |
+| `--max-num N` | Maximum number of repositories to check (0 = unlimited, default). |
+| `--batch-size N` | Number of repos to fetch per GraphQL request (default: 50, max: 100). |
+| `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN` environment variable. |
+| `--no-gh` | Use Python `requests` instead of the `gh` CLI for all API calls. Requires `--github-token` or a token env var. |
+
+#### How PMC Filtering Works
+
+The `--pmc` flag matches repos by prefix: the text before the first hyphen in the repository name. For example, `--pmc spark` matches `apache/spark`, `apache/spark-connect-go`, and `apache/spark-docker`. If the repo name has no hyphen, the full name is used as the prefix.
+
+The script downloads the list of known PMCs from `whimsy.apache.org` on first run and caches it locally (`~/.cache/asf-actions-audit/pmc-list.json`) for 24 hours. If a `--pmc` value doesn't match any known PMC, a warning is printed but it is still used as a prefix filter.
+
+#### What the PRs Contain
+
+For each repository that is missing one or more checks, the script creates a single PR on a branch named `asf-actions-security-audit` containing only the missing files:
+
+- `.github/dependabot.yml` — created or updated to include the `github-actions` ecosystem with a 4-day cooldown
+- `.github/workflows/codeql-analysis.yml` — CodeQL scanning for the `actions` language
+- `.github/workflows/zizmor.yml` — Zizmor scanning with SARIF upload
+- `.github/workflows/allowlist-check.yml` — ASF allowlist verification on workflow changes
+
+#### Zizmor Pre-Check
+
+Before creating a PR, the script runs `zizmor` against the repository's existing workflow files. If zizmor finds errors, the **CodeQL and Zizmor workflow files are added but commented out**, with instructions explaining:
+- That zizmor found existing issues in the workflows
+- How to auto-fix common issues (`zizmor --fix .github/workflows/`)
+- That the PMC should uncomment the workflows and fix remaining issues in a follow-up PR
+
+This avoids creating PRs that would immediately fail CI due to pre-existing problems.
+
+#### Interactive Confirmation
+
+When not in `--dry-run` mode, the script prompts for confirmation before creating each PR:
+
+```
+  Create PR for apache/spark?
+  Will add: dependabot, codeql, zizmor, allowlist-check
+  Proceed? [yes/no/quit] (yes):
+```
+
+- **yes** (default) — create the PR
+- **no** — skip this repository and continue to the next
+- **quit** — stop processing entirely and print the summary
+
+#### Idempotency
+
+The script is safe to re-run. Before creating a PR for a repository, it checks whether a PR with the branch name `asf-actions-security-audit` already exists — open, closed, or merged — and skips the repo if so.
