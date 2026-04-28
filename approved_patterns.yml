@@ -105,6 +105,7 @@
 - dawidd6/action-send-mail@d38f3f7cd391cdebfe0d38efc3998b935e951c4f
 - delaguardo/setup-graalvm@*
 - dependabot/fetch-metadata@ffa630c65fa7e0ecfa0625b5ceda64399aea1b36
+- dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98
 - dlang-community/setup-dlang@*
 - docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
 - docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
