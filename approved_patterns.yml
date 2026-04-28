@@ -251,6 +251,7 @@
 - phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e
 - pnpm/action-setup@*
 - posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237
+- posit-dev/setup-air@cf390573ff4fe0f198f35df3a642b1409328d859
 - potiuk/cancel-workflow-runs@*
 - pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
 - PyO3/maturin-action@*
