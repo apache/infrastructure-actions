@@ -223,9 +223,6 @@ coursier/cache-action:
   bebeeb0e6f48ebad66d3783946588ecf43114433:
     tag: v7.0.0
     expires_at: 2026-06-10
-  4e2615869d13561d626ed48655e1a39e5b192b3c:
-    tag: 6.4.7
-    expires_at: 2026-04-28
   90c37294538be80a558fd665531fcdc2b467b475:
     tag: v8.1.0
 coursier/setup-action:

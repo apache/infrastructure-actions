@@ -86,7 +86,6 @@
 - coursier/cache-action@e47d7d35a0d3a2c7f649ca5c63dfc2bbfaa002e7
 - coursier/cache-action@c5ca79321d170b8a18c288d9cadc2a6037166d0f
 - coursier/cache-action@bebeeb0e6f48ebad66d3783946588ecf43114433
-- coursier/cache-action@4e2615869d13561d626ed48655e1a39e5b192b3c
 - coursier/cache-action@90c37294538be80a558fd665531fcdc2b467b475
 - coursier/setup-action@*
 - coursier/setup-action@f7be3eb3dcef84a4e16fc8cd75c87beb2e5cbcc9
