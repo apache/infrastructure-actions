@@ -348,7 +348,8 @@ dorny/test-reporter:
 dtolnay/rust-toolchain:
   29eef336d9b2848a0b548edc03f92a220660cdb8:
     keep: true
-    tag: stable
+    # 'stable' is a branch. Mentioning as a 'tag' lets the action-tags verification fail.
+    #tag: stable
 easimon/maximize-build-space:
   '*':
     keep: true
@@ -817,7 +818,13 @@ sbt/setup-sbt:
 scacap/action-surefire-report:
   '*':
     keep: true
+    # GH API requests from GH hosted runners fail with 403 and the following error message:
+    # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
+    ignore_gh_api_errors: true
   5609ce4db72c09db044803b344a8968fd1f315da:
+    # GH API requests from GH hosted runners fail with 403 and the following error message:
+    # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
+    ignore_gh_api_errors: true
     tag: v1.9.1
     expires_at: 2026-07-17
   fa13579fdd93ed8fc7e717a25eceedcfcbc39dda:
