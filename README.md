@@ -20,6 +20,7 @@
 
 This repository hosts GitHub Actions developed by the ASF community and approved for any ASF top level project to use. It also manages the organization wide allow list of GitHub Actions via 'Configuration as Code'.
 
+- [Checking the Action Usage in an ASF Project](#checking-the-action-usage-in-an-asf-project)
 - [Submitting an Action](#submitting-an-action)
 - [Available GitHub Actions](#available-github-actions)
 - [Organization-wide GitHub Actions Allow List](#management-of-organization-wide-github-actions-allow-list)
@@ -32,6 +33,26 @@ This repository hosts GitHub Actions developed by the ASF community and approved
   - [Manual Version Addition](#manual-addition-of-specific-versions)
   - [Automatic Expiration of Old Versions](#automatic-expiration-of-old-versions)
   - [Removing a Version](#removing-a-version-manually)
+
+## Checking the Action Usage in an ASF Project
+
+You can let your CI workflows check if the Actions used in your project are approved for use in the ASF.
+
+An example workflow that can be used as a template for your project's CI can be found
+[here `check-actions-usage/sample-ci-workflow.yml`](check-actions-usage/sample-ci-workflow.yml).
+It is usually enough to add the following job to an existing `.github/workflows/ci.yml` file:
+```yaml
+jobs:
+  check:
+    name: Check actions usage
+    uses: apache/infrastructure-actions/.github/workflows/check-project-actions.yml@main
+    permissions:
+      # Only read access to the repository's content
+      contents: read
+```
+
+When calling the `check-project-actions` workflow from a `push` or `pull_request` event, it should work
+automatically against the "right" reference. See the sample workflow linked above for more details.
 
 ## Submitting an Action
 

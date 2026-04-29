@@ -1,0 +1,93 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Workflow to be called from ASF project repository workflows to check
+# whether the GitHub actions referenced in GitHub workflows (`.github/workflows`) and
+# composite actions (`.github/actions`) are approved.
+#
+# The README.md of ASF Infrastructure Actions repository https://github.com/apache/infrastructure-actions
+# contains usage instructions.
+#
+# See: ASF Infrastructure GitHub Actions Policy: https://infra.apache.org/github-actions-policy.html
+
+
+name: Check Actions Usage
+on:
+  workflow_call:
+    inputs:
+      repository:
+        required: false
+        description: |
+          Optional, the `repository` parameter for `actions/checkout`.
+          If not specified, the default is to use the repository of the calling workflow.
+          See https://github.com/actions/checkout?tab=readme-ov-file#usage for details.
+        type: string
+      ref:
+        required: false
+        description: |
+          Optional, the `ref` parameter for `actions/checkout`
+          If not specified, the default is to use the repository of the calling workflow.
+          See https://github.com/actions/checkout?tab=readme-ov-file#usage for details.
+        type: string
+      fetch-depth:
+        required: false
+        description: |
+          Optional, the `fetch-depth` parameter for `actions/checkout`.
+          See https://github.com/actions/checkout?tab=readme-ov-file#usage for details.
+        type: number
+        default: 1
+      submodules:
+        required: false
+        description: |
+          Optional, the `submodules` parameter for `actions/checkout`.
+          See https://github.com/actions/checkout?tab=readme-ov-file#usage for details.
+        type: boolean
+        default: false
+
+jobs:
+  check-project-actions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: "Checkout apache/infrastructure-actions"
+        uses: actions/checkout@v2
+        with:
+          repository: 'apache/infrastructure-actions'
+          ref: 'main'
+
+      - name: "Checkout repository to be checked"
+        uses: actions/checkout@v2
+        with:
+          repository: '${{ inputs.repository }}'
+          ref: ${{ inputs.ref }}
+          fetch-depth: ${{ inputs.fetch-depth }}
+          submodules: ${{ inputs.submodules }}
+          path: repository-to-be-checked
+
+      - run: pip install ruyaml
+
+      - name: Check allowed actions usage
+        shell: python
+        run: |
+          import sys
+          sys.path.append("./gateway/")
+
+          import check_repository_actions as c
+          c.check_project_actions('./repository-to-be-checked', './approved_patterns.yml')
