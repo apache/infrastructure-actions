@@ -485,8 +485,8 @@ ilammy/setup-nasm:
   72793074d3c8cdda771dba85f6deafe00623038b:
     tag: v1.5.2
 j178/prek-action:
-  '0bb87d7f00b0c99306c8bcb8b8beba1eb581c037':
-    keep: true
+  cbc2f23eb5539cf20d82d1aabd0d0ecbcc56f4e3:
+    tag: v2.0.2
 JamesIves/github-pages-deploy-action:
   d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
     tag: v4.8.0
