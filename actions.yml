@@ -612,6 +612,9 @@ lhotari/sandboxed-trivy-action:
     expires_at: 2026-07-08
   f01374b6cc3bf7264ab238293e94f6db7ada6dd0:
     tag: v1.0.2
+LocalStack/setup-localstack:
+  7c8a0cb3405bc58be4c8f763f812aa000bc46303:
+    tag: v0.3.2   # immutable tag, FWIW
 lycheeverse/lychee-action:
   8646ba30535128ac92d33dfc9133794bfdd9b411:
     tag: v2.8.0
