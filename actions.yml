@@ -508,6 +508,9 @@ jarvusinnovations/background-action:
 jasonetco/create-an-issue:
   1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5:
     tag: v2
+jenseng/dynamic-uses:   # used by setup-localstack
+  8bc24f0360175e710da532c4d19eafdbed489a06:
+    tag: v1.1.1
 JetBrains/qodana-action:
   89eb4357efd2b52e639f3216e63edaf33b82622b:
     tag: v2025.3.2
