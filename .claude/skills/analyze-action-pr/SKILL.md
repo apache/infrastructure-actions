@@ -68,7 +68,7 @@ under "Classify".
 | **B** | plain unverified download | `curl -Lo bin URL && chmod +x bin` (or `ADD https://...` in a Dockerfile) with no checksum/signature step in the same file |
 | **C** | nested-action issue | Top-level action passes but a `uses:` dependency (e.g. `install/foo`) hits A or B |
 | **D** | metadata-only | `No LICENSE`, input interpolation in `run:` blocks, `GITHUB_PATH` writes — soft warnings, mention but don't block |
-| **E** | verify-script bug | False positive (regex hole, missing pattern) or extractor missing an action that's clearly in the diff |
+| **E** | verify-script gap | The script gets the wrong answer for a reason unrelated to the action's actual security: false positive (regex hole, missing pattern), missing capability (new action type / build flow / verification mechanism it doesn't yet recognize), bad attribution (extractor drops an action that's clearly in the diff), or a check that misreads a legitimate input shape |
 
 ### 4. Look up upstream verification material (for A/B/C)
 
@@ -121,25 +121,68 @@ Do **not** approve the action.
 Note the warnings and recommend approval — the user typically approves
 manually after a final read-through.
 
-#### E — verify-action-build itself is wrong
+#### E — verify-action-build itself is wrong (or missing a capability)
 
-Symptoms: extractor returns fewer refs than the diff has additions;
-clear false positive (e.g. JSON API call flagged as a binary download);
-a regex that doesn't match a real call shape (e.g. TS generics breaking
-a `*Json` method match).
+This case is broader than "the script has a bug" — it also covers
+"the script doesn't yet know about this kind of action / build flow
+/ verification mechanism." If the verdict is wrong for a reason that
+**isn't** about the action's actual security posture, it's case E.
+Resist the temptation to wave it off as a one-off; almost every gap
+becomes a recurring blocker once a second action hits the same shape.
+
+Common shapes (with the PR / commit that closed each one — use these
+as templates when proposing your own extension):
+
+| Kind of gap | Example | Fix landed in |
+|---|---|---|
+| New action type entirely | Deno-based action (`deno task bundle`) | [#749](https://github.com/apache/infrastructure-actions/pull/749) |
+| New action type entirely | Dart-based action (`setup-dart`) | [#741](https://github.com/apache/infrastructure-actions/pull/741) |
+| New compiled-bundle extension | `.cjs` / `.mjs` not scanned | [#734](https://github.com/apache/infrastructure-actions/pull/734) |
+| New build flow | `npm run start` invocation | [#664](https://github.com/apache/infrastructure-actions/pull/664) |
+| New build flow | Multi-step Docker build (`tsc` + `ncc`) | [#685](https://github.com/apache/infrastructure-actions/pull/685) |
+| Vendored / non-standard source layout | `node_modules` checked in (vendored deps) | [#652](https://github.com/apache/infrastructure-actions/pull/652) |
+| Source-layout edge case | Orphan / source-detached release tags | [#768](https://github.com/apache/infrastructure-actions/pull/768) |
+| New verification heuristic | Sibling `sha256sum -c` step counts as verify | [#800](https://github.com/apache/infrastructure-actions/pull/800) |
+| New verification heuristic | JS/TS file fetches HTTP as data, not binary | [#775](https://github.com/apache/infrastructure-actions/pull/775) |
+| New verification heuristic | `@actions/http-client` `*Json` helpers | commit [`920d616`](https://github.com/apache/infrastructure-actions/commit/920d616) |
+| Regex hole on a real call shape | TS generics on `postJson<T>(...)` | [#798](https://github.com/apache/infrastructure-actions/pull/798) |
+| New scan target | JS/TS sources not previously scanned for downloads | [#743](https://github.com/apache/infrastructure-actions/pull/743) |
+| False positive on legitimate input | Multi-stage Dockerfile `FROM <stage>` flagged as unpinned | [#733](https://github.com/apache/infrastructure-actions/pull/733) |
+| Extraction shape | Hash added under an existing `actions.yml` key | [#804](https://github.com/apache/infrastructure-actions/pull/804) |
+| Per-ecosystem exemption | Lock-file rule too strict for library-first projects | [#770](https://github.com/apache/infrastructure-actions/pull/770) |
+
+When you hit a case that's clearly one of these — or a new kind not
+in the table — propose the fix. The cost of leaving a false positive
+or unsupported action type is paid by the next reviewer who runs
+into the same shape.
 
 Steps:
 
-1. Read the relevant module under `utils/verify_action_build/` —
-   typically `pr_extraction.py` or `security.py`.
-2. Add a focused fix and a regression test that captures the exact
-   shape that broke (use a real-world fixture, not a stripped-down
-   one — strip-downs hide regex holes, see PR #798's lesson).
-3. Run `uv run pytest utils/tests/` from the repo root — all tests
-   must pass.
-4. Open a fix PR off latest `origin/main`. Consult `CLAUDE.md` and
-   `CODEOWNERS` for repo-specific conventions on commit attribution
-   and reviewers.
+1. **Identify the right module** under `utils/verify_action_build/`:
+   - `pr_extraction.py` — `--from-pr` ref extraction.
+   - `security.py` — most signal/heuristic patterns (binary downloads,
+     verification, action.yml metadata, scripts).
+   - `verification.py` — top-level verification orchestration.
+   - `docker_build.py` — Docker rebuild flow.
+   - `action_ref.py` / `release_lookup.py` / `github_client.py` —
+     fetching action source and metadata.
+
+2. **Capture the breaking shape as a real-world fixture.** PR #798's
+   lesson: a stripped-down test fixture hid a TS-generic regex hole
+   that the real source triggered. Use the actual file content (or
+   a faithfully-trimmed version) and add a regression test that
+   would have caught the issue.
+
+3. **Run the full suite** from the repo root: `uv run pytest utils/tests/`.
+   All tests must pass.
+
+4. **Run prek** before pushing — see AGENTS.md for the install +
+   workflow.
+
+5. **Open a fix PR** off latest `origin/main`. Consult `CLAUDE.md`
+   and `CODEOWNERS` for repo-specific conventions on commit
+   attribution and reviewers; the verify-action-build area has
+   established reviewers worth requesting.
 
 #### All-clean PR
 
