@@ -166,8 +166,8 @@ bytedeco/javacpp-presets:
   '*':
     keep: true
 carabiner-dev/actions/ampel/verify:
-  360ffa1eb909b0105d4eccb6d6ef337911c34952:
-    tag: v1.1.6
+  e0e3b8149dafed833431095bc148d50e7eade4e8:
+    tag: v1.2.0
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
