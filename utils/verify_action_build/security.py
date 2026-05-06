@@ -740,6 +740,34 @@ def analyze_lock_files(
                 )
                 continue
 
+        # package.json that declares no dependencies has no transitive deps
+        # to pin — a lock file would describe an empty graph.  Bundled-action
+        # release tags (release-please style) commonly ship a minimal
+        # ``package.json`` like ``{"type": "module"}`` next to a self-
+        # contained ``index.js``; the runtime behaviour comes from the
+        # bundle, not from npm install.
+        if manifest == "package.json":
+            try:
+                pkg = json.loads(mcontent)
+            except json.JSONDecodeError:
+                pkg = {}
+            has_deps = isinstance(pkg, dict) and any(
+                pkg.get(k) for k in (
+                    "dependencies",
+                    "devDependencies",
+                    "peerDependencies",
+                    "optionalDependencies",
+                    "bundledDependencies",
+                    "bundleDependencies",
+                )
+            )
+            if not has_deps:
+                _show_header()
+                console.print(
+                    f"  [dim]⊘[/dim] {ecosystem}: {mpath} declares no dependencies"
+                )
+                continue
+
         found_lock: str | None = None
         for lock in lock_options:
             lp = _find(lock)

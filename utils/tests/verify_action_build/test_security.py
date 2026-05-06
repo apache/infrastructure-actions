@@ -558,22 +558,69 @@ class TestAnalyzeLockFiles:
         assert self._run(files) == []
 
     def test_node_package_json_with_yarn_lock_passes(self):
-        files = {"package.json": "{}", "yarn.lock": ""}
+        files = {
+            "package.json": '{"name":"x","dependencies":{"a":"1.0.0"}}',
+            "yarn.lock": "",
+        }
         assert self._run(files) == []
 
     def test_node_package_json_with_pnpm_lock_passes(self):
-        files = {"package.json": "{}", "pnpm-lock.yaml": ""}
+        files = {
+            "package.json": '{"name":"x","dependencies":{"a":"1.0.0"}}',
+            "pnpm-lock.yaml": "",
+        }
         assert self._run(files) == []
 
     def test_node_package_json_with_bun_lock_passes(self):
-        files = {"package.json": "{}", "bun.lock": ""}
+        files = {
+            "package.json": '{"name":"x","dependencies":{"a":"1.0.0"}}',
+            "bun.lock": "",
+        }
         assert self._run(files) == []
 
     def test_node_package_json_without_lock_fails(self):
-        errors = self._run({"package.json": '{"name":"x"}'})
+        # ``dependencies`` are declared, so the lock-file requirement applies.
+        errors = self._run({
+            "package.json": '{"name":"x","dependencies":{"a":"1.0.0"}}',
+        })
         assert len(errors) == 1
         assert "package.json" in errors[0]
         assert "package-lock.json" in errors[0]
+
+    def test_node_package_json_dev_deps_only_without_lock_fails(self):
+        # ``devDependencies`` alone count: a rebuild still installs them and
+        # pins through them.
+        errors = self._run({
+            "package.json": '{"devDependencies":{"typescript":"5.0.0"}}',
+        })
+        assert len(errors) == 1
+        assert "package.json" in errors[0]
+
+    def test_node_package_json_no_deps_skipped(self):
+        # browser-actions/setup-firefox v1.7.2 shape: bundled-action release
+        # tag ships ``index.js`` next to a minimal ``{"type":"module"}``
+        # ``package.json`` declaring zero dependencies.  A lock file would
+        # describe an empty graph; require it and the check falsely fails
+        # this whole class of release-please-style bundled tags.
+        assert self._run({"package.json": '{"type":"module"}'}) == []
+
+    def test_node_package_json_completely_empty_skipped(self):
+        # ``{}`` — no fields at all.  No deps to pin.
+        assert self._run({"package.json": "{}"}) == []
+
+    def test_node_package_json_invalid_json_treated_as_no_deps(self):
+        # A package.json that doesn't parse (truncated, malformed) shouldn't
+        # crash the check.  We can't see deps, so we fall through to the
+        # skip path — same as a syntactically-empty manifest.
+        assert self._run({"package.json": "{ not json"}) == []
+
+    def test_node_package_json_peer_deps_without_lock_fails(self):
+        # ``peerDependencies`` and ``optionalDependencies`` also imply a
+        # transitive resolution that benefits from pinning.
+        errors = self._run({
+            "package.json": '{"peerDependencies":{"react":"^18"}}',
+        })
+        assert len(errors) == 1
 
     # --- Python ------------------------------------------------------------
 
@@ -730,7 +777,9 @@ class TestAnalyzeLockFiles:
         assert self._run(files, sub_path="sub") == []
 
     def test_sub_path_without_lock_fails(self):
-        files = {"sub/package.json": "{}"}
+        files = {
+            "sub/package.json": '{"dependencies":{"a":"1.0.0"}}',
+        }
         errors = self._run(files, sub_path="sub")
         assert len(errors) == 1
         assert "sub/package.json" in errors[0]
@@ -745,7 +794,7 @@ class TestAnalyzeLockFiles:
 
     def test_multiple_ecosystems_all_missing_aggregates_errors(self):
         files = {
-            "package.json": "{}",
+            "package.json": '{"dependencies":{"a":"1.0.0"}}',
             "go.mod": "module x\n\nrequire a v1\n",
             "pubspec.yaml": "name: x\n",
         }
@@ -784,7 +833,7 @@ class TestAnalyzeLockFiles:
         # Exempt only python; node still fails.
         files = {
             "pyproject.toml": '[project]\ndependencies = ["requests"]\n',
-            "package.json": "{}",
+            "package.json": '{"dependencies":{"a":"1.0.0"}}',
         }
         errors = self._run_with_exemptions(
             files, {("org", "repo"): {"python"}},
