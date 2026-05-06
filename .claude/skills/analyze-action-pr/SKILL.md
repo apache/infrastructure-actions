@@ -1,3 +1,22 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+  
+     http://www.apache.org/licenses/LICENSE-2.0
+  
+   Unless required by applicable law or agreed to in writing,
+   software distributed under the License is distributed on an
+   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+   KIND, either express or implied.  See the License for the
+   specific language governing permissions and limitations
+   under the License.
+-->
+
 ---
 name: analyze-action-pr
 description: Triage a PR that adds or bumps an action in this repo's allowlist. Runs verify-action-build, classifies each failing action (clean / pipe-to-shell / unverified-download / nested-action-issue / verify-script-bug), and proposes concrete next actions — recommend approval, open an upstream issue + ping the PR author, or fix verify-action-build itself with a regression test. Use when the user says "analyze PR <N>", "triage PR <N>", "verify PR <N>", or otherwise asks to review an action-allowlist PR in this repo.

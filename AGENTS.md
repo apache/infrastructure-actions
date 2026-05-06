@@ -94,3 +94,31 @@ documented?".
 All files must include the Apache License 2.0 header where the file format supports it. Use the
 appropriate comment syntax for the file type (e.g., `<!-- -->` for Markdown/HTML, `#` for YAML/Python,
 `//` for JavaScript/Go). See existing files in the repository for examples of the correct format.
+
+## Pre-commit checks (prek)
+
+This repository's pre-commit hooks (license headers, `actions.yml` sorting, etc.) are also run in CI
+by the `Pre-commit Checks` workflow. **Always run them locally before pushing** — otherwise the CI
+hook will fail and require a follow-up commit to land the auto-fixes.
+
+We use [prek](https://github.com/j178/prek), a drop-in `pre-commit` replacement written in Rust that's
+noticeably faster than the Python original and reads the same `.pre-commit-config.yaml`.
+
+Install once per environment:
+
+```bash
+uv tool install prek      # or: pipx install prek
+prek install              # set up the .git/hooks/pre-commit hook for this clone
+```
+
+Run before every push:
+
+```bash
+prek run --all-files
+```
+
+If `prek` modifies any files (for example, inserting a missing Apache license header on a new
+Markdown file), it exits non-zero. Review the auto-fixes, `git add` them, create a new commit, and
+push. Do **not** push without a clean `prek run --all-files` — and do **not** skip hooks with
+`--no-verify`. The hooks are the same ones CI enforces, so anything that's wrong locally will fail
+CI too.
