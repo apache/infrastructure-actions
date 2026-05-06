@@ -22,8 +22,12 @@
 *.swp
 *.swo
 
-# Claude Code
-.claude/
+# Claude Code — personal state stays out, shared skills under .claude/skills/
+# are committed so other contributors get them via `git clone`.
+.claude/settings.json
+.claude/settings.local.json
+.claude/worktrees/
+.claude/debug/
 
 # Python
 __pycache__/
