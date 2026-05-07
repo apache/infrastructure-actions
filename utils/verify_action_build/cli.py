@@ -26,7 +26,7 @@ import sys
 from .console import console
 from .dependabot import check_dependabot_prs
 from .github_client import GitHubClient
-from .pr_extraction import extract_action_refs_from_pr
+from .pr_extraction import extract_action_refs_from_diff
 from .verification import SECURITY_CHECKLIST_URL, verify_single_action
 
 
@@ -122,10 +122,17 @@ def main() -> None:
         gh = GitHubClient(token=args.github_token)
 
     if args.from_pr:
-        action_refs = extract_action_refs_from_pr(args.from_pr, gh=gh)
-        if not action_refs:
-            console.print(f"[red]Error:[/red] could not extract action reference from PR #{args.from_pr}")
+        diff_text = gh.get_pr_diff(args.from_pr)
+        if diff_text is None:
+            console.print(f"[red]Error:[/red] could not fetch diff for PR #{args.from_pr}")
             _exit(1)
+        action_refs = extract_action_refs_from_diff(diff_text)
+        if not action_refs:
+            console.print(
+                f"No added action references in PR #{args.from_pr} — nothing to verify "
+                "(removal-only or non-action changes)."
+            )
+            _exit(0)
         for ref in action_refs:
             console.print(f"  Extracted action reference from PR #{args.from_pr}: [bold]{ref}[/bold]")
         passed = all(
