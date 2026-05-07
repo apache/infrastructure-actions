@@ -57,9 +57,6 @@
 - biomejs/setup-biome@29711cbb52afee00eb13aeb30636592f9edc0088
 - biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51
 - BobAnkh/auto-generate-changelog@*
-- browser-actions/setup-firefox@5914774dda97099441f02628f8d46411fcfbd208
-- browser-actions/setup-firefox@fcf821c621167805dd63a29662bd7cb5676c81a8
-- browser-actions/setup-geckodriver@5ef1526ed36211ab6cb531ec1cfb11f924ca2dee
 - bufbuild/buf-breaking-action@*
 - bufbuild/buf-lint-action@*
 - bufbuild/buf-setup-action@*

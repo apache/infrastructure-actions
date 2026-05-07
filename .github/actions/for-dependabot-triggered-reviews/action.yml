@@ -65,10 +65,6 @@ runs:
       if: false
     - uses: biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51  # v2.7.1
       if: false
-    - uses: browser-actions/setup-firefox@fcf821c621167805dd63a29662bd7cb5676c81a8  # v1.7.1
-      if: false
-    - uses: browser-actions/setup-geckodriver@5ef1526ed36211ab6cb531ec1cfb11f924ca2dee
-      if: false
     - uses: burnett01/rsync-deployments@66257cad6bfeb2171d3b6bfa6c9a22279dd9c3a1  # 8.0.5
       if: false
     - uses: carabiner-dev/actions/ampel/verify@e0e3b8149dafed833431095bc148d50e7eade4e8  # v1.2.0
