@@ -1625,3 +1625,126 @@ def analyze_repo_metadata(
         console.print(f"  [dim]ℹ[/dim] Org: {org} (not in well-known list)")
 
     return warnings
+
+
+# Extensions that strongly indicate a pre-compiled native binary.  An action
+# shipping any of these in its tree is running opaque executable code that
+# the JS-rebuild check cannot reconcile with source.
+_IN_TREE_BINARY_EXTENSIONS = (
+    ".exe", ".dll", ".so", ".dylib", ".bin",
+    ".deb", ".rpm", ".pkg", ".dmg", ".msi", ".appimage",
+    ".o", ".a", ".lib", ".obj",
+    ".class", ".jar", ".war",
+    ".wasm",
+)
+
+# Cross-compiled binary naming convention used by Go, Rust, and similar
+# toolchains: ``<name>-<os>-<arch>`` with an optional ``.exe``.  Catches
+# the runs-on/action shape (main-linux-amd64, main-windows-amd64.exe).
+_PLATFORM_ARCH_BINARY_RE = re.compile(
+    r"-(?:linux|darwin|windows|freebsd|openbsd|netbsd|aix)"
+    r"-(?:amd64|arm64|386|i386|arm|armv7|riscv64|x86_64|aarch64|ppc64le|s390x)"
+    r"(?:\.exe)?$"
+)
+
+# Filename patterns that LOOK binary but are conventional in JS/TS or other
+# textual sources — don't false-positive these.
+_IN_TREE_BINARY_EXEMPT_NAMES = {
+    # Webpack's licenses txt that ships in dist/ for some actions.
+    "licenses.txt",
+}
+
+
+def _looks_like_in_tree_binary(path: str) -> bool:
+    """Return True if ``path`` (a repo-relative blob path) looks like a
+    pre-compiled native binary by name alone.
+
+    Cheap path-only heuristic — no fetch, no magic-byte sniff.  Known
+    binary extensions and cross-compile platform/arch suffixes both
+    trigger; conventional text artifacts are exempted.
+    """
+    name = path.rsplit("/", 1)[-1]
+    if name in _IN_TREE_BINARY_EXEMPT_NAMES:
+        return False
+    lower = name.lower()
+    if lower.endswith(_IN_TREE_BINARY_EXTENSIONS):
+        return True
+    if _PLATFORM_ARCH_BINARY_RE.search(lower):
+        return True
+    return False
+
+
+def analyze_in_tree_binaries(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+) -> list[str]:
+    """Flag pre-compiled native binaries shipped directly in the action's tree.
+
+    An action that commits a Go/Rust/C binary alongside ``action.yml`` and
+    exec's it from a small launcher (``index.js`` doing ``childProcess.
+    execFileSync``) is running opaque executable code on the runner that
+    no rebuild check can reconcile with source.  The launcher matches its
+    template, the binary doesn't — and our JS-rebuild verification only
+    sees the launcher.
+
+    Without verifiable build provenance (SLSA via
+    ``actions/attest-build-provenance``, or a signed ``SHA256SUMS``
+    checksum file released alongside the binaries) the action's actual
+    code can't be tied back to its repo state.  This check fails the
+    review for that shape.
+
+    Returns a list of error strings (empty = pass).  Each error names the
+    offending paths so the reviewer can confirm what was flagged.
+    """
+    errors: list[str] = []
+
+    paths = _list_repo_files(org, repo, commit_hash)
+    if not paths:
+        return errors
+
+    prefix = f"{sub_path.rstrip('/')}/" if sub_path else ""
+    binaries: list[str] = []
+    for path in paths:
+        if prefix and not path.startswith(prefix):
+            continue
+        rel = path[len(prefix):] if prefix else path
+        if _looks_like_in_tree_binary(rel):
+            binaries.append(rel)
+
+    if not binaries:
+        return errors
+
+    console.print()
+    console.rule("[bold]In-tree Binary Check[/bold]")
+    console.print(
+        f"  [red]✗[/red] {len(binaries)} pre-compiled binary file(s) "
+        f"shipped directly in the action tree:"
+    )
+    for path in binaries[:10]:
+        console.print(f"    [red]{path}[/red]")
+    if len(binaries) > 10:
+        console.print(f"    [dim]    ... and {len(binaries) - 10} more[/dim]")
+    console.print(
+        "  [dim]These binaries can't be reconciled with source by the "
+        "rebuild check.[/dim]"
+    )
+    console.print(
+        "  [dim]Action ships opaque executable code that runs on the runner.  "
+        "Without SLSA[/dim]"
+    )
+    console.print(
+        "  [dim]attestations or a signed SHA256SUMS, the published binaries "
+        "cannot be[/dim]"
+    )
+    console.print(
+        "  [dim]verified against the source tree.[/dim]"
+    )
+
+    sample = ", ".join(binaries[:3])
+    if len(binaries) > 3:
+        sample += f", ... ({len(binaries) - 3} more)"
+    errors.append(
+        f"action ships {len(binaries)} pre-compiled binary file(s) in-tree "
+        f"({sample}) — opaque executable code, no source-level "
+        f"rebuild verification possible"
+    )
+    return errors

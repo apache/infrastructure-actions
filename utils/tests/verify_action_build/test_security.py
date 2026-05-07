@@ -22,6 +22,7 @@ from verify_action_build.security import (
     analyze_binary_downloads,
     analyze_binary_downloads_recursive,
     analyze_dockerfile,
+    analyze_in_tree_binaries,
     analyze_lock_files,
     analyze_scripts,
     analyze_action_metadata,
@@ -30,6 +31,7 @@ from verify_action_build.security import (
 from verify_action_build.security import (
     _file_is_pure_data_fetch,
     _find_binary_downloads_js,
+    _looks_like_in_tree_binary,
 )
 
 
@@ -1231,3 +1233,182 @@ const createHash = customLibrary.createHash('blake2')
         # Other existing patterns kept.
         for snippet in ("import * as sigstore from 'sigstore'", "cosign verify-blob"):
             assert self._has_verification(snippet) is True, snippet
+
+
+class TestLooksLikeInTreeBinary:
+    """Path-only heuristic for catching pre-compiled binary files in an
+    action's tree.  These tests pin the boundaries of the regex + extension
+    list so future tweaks don't accidentally widen or narrow the catch.
+    """
+
+    def test_go_cross_compile_naming(self):
+        # The runs-on/action shape: <name>-<os>-<arch>(.exe)?
+        for name in (
+            "main-linux-amd64",
+            "main-linux-arm64",
+            "main-darwin-amd64",
+            "main-darwin-arm64",
+            "main-windows-amd64.exe",
+            "tool-freebsd-amd64",
+            "agent-aix-ppc64le",
+        ):
+            assert _looks_like_in_tree_binary(name), name
+
+    def test_known_binary_extensions(self):
+        for name in (
+            "foo.exe", "foo.dll", "foo.so", "foo.dylib", "foo.bin",
+            "package.deb", "package.rpm", "Installer.msi", "App.dmg",
+            "archive.appimage",
+            "module.wasm",
+            "Library.jar", "App.war", "Foo.class",
+            "object.o", "object.a", "object.lib", "object.obj",
+        ):
+            assert _looks_like_in_tree_binary(name), name
+
+    def test_extension_is_case_insensitive(self):
+        # Windows PE files often have an upper-case ``.EXE``.
+        assert _looks_like_in_tree_binary("Setup.EXE") is True
+        assert _looks_like_in_tree_binary("App.DLL") is True
+
+    def test_normal_action_files_not_flagged(self):
+        for name in (
+            "action.yml", "package.json", "package-lock.json",
+            "tsconfig.json", "README.md", "CHANGELOG.md",
+            "index.js", "post.js", "index.template.js",
+            "src/main.ts", "dist/index.js", "dist/index.js.map",
+            "go.mod", "go.sum", "main.go",
+            "Makefile", ".gitignore", "LICENSE",
+        ):
+            assert not _looks_like_in_tree_binary(name), name
+
+    def test_substring_matches_dont_falsely_match(self):
+        # ``binsearch.md`` ends in ``-md`` but isn't ``-darwin-..``.
+        # ``setup-node-cache`` contains a hyphen but no os/arch suffix.
+        # ``configure-aws-credentials`` ditto.
+        for name in (
+            "binsearch.md",
+            "setup-node-cache",
+            "configure-aws-credentials",
+            "node-fetch-helper.js",
+            "linux-distro-detect.sh",
+        ):
+            assert not _looks_like_in_tree_binary(name), name
+
+    def test_licenses_txt_exempt(self):
+        # webpack/ncc commonly ship a licenses.txt next to the bundle.
+        # It's text metadata, not a binary, even though some bundlers
+        # name it confusingly.
+        assert _looks_like_in_tree_binary("dist/licenses.txt") is False
+        assert _looks_like_in_tree_binary("licenses.txt") is False
+
+
+class TestAnalyzeInTreeBinaries:
+    """Whole-action check that aggregates the path heuristic across the
+    repo tree and emits a hard failure on any match."""
+
+    @staticmethod
+    def _patch_tree(paths):
+        return mock.patch(
+            "verify_action_build.security._list_repo_files",
+            return_value=list(paths),
+        )
+
+    def test_runs_on_action_shape_fails(self):
+        # The exact shape that prompted this check: pre-compiled Go
+        # binaries committed in the repo root next to a tiny launcher.
+        paths = [
+            ".gitignore", "LICENSE", "Makefile", "README.md",
+            "action.yml", "go.mod", "go.sum",
+            "index.js", "index.template.js", "post.js", "main.go",
+            "main-linux-amd64", "main-linux-arm64",
+            "main-windows-amd64.exe",
+        ]
+        with self._patch_tree(paths):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert len(errors) == 1
+        # The error message must name the specific files so a reviewer
+        # can confirm what was caught — abstract counts aren't enough.
+        msg = errors[0]
+        assert "main-linux-amd64" in msg
+        assert "3 pre-compiled binary file(s)" in msg
+
+    def test_normal_node_action_passes(self):
+        # A garden-variety bundled JS action shouldn't trip the heuristic.
+        paths = [
+            "action.yml", "package.json", "package-lock.json",
+            "README.md", "tsconfig.json",
+            "src/main.ts", "src/util.ts",
+            "dist/index.js", "dist/index.js.map", "dist/licenses.txt",
+        ]
+        with self._patch_tree(paths):
+            assert analyze_in_tree_binaries("org", "repo", "a" * 40) == []
+
+    def test_composite_action_passes(self):
+        # Composite/docker actions don't ship compiled JS at all and
+        # shouldn't be false-flagged.
+        paths = ["action.yml", "Dockerfile", "scripts/install.sh"]
+        with self._patch_tree(paths):
+            assert analyze_in_tree_binaries("org", "repo", "a" * 40) == []
+
+    def test_single_exe_at_root_fails(self):
+        # Even one ``.exe`` is enough to flag.
+        paths = ["action.yml", "tool.exe", "index.js"]
+        with self._patch_tree(paths):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert len(errors) == 1
+        assert "tool.exe" in errors[0]
+
+    def test_jar_in_lib_directory_fails(self):
+        # JVM-bytecode artifacts shipped in the repo are also opaque code
+        # — the JS-rebuild check has no view into them.
+        paths = ["action.yml", "lib/runtime.jar"]
+        with self._patch_tree(paths):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert len(errors) == 1
+        assert "lib/runtime.jar" in errors[0]
+
+    def test_sub_path_filters_to_subaction(self):
+        # For monorepo sub-actions, only flag binaries in the sub-tree.
+        paths = [
+            "other-action/main-linux-amd64",   # different sub-action's binary
+            "my-action/action.yml",
+            "my-action/index.js",
+        ]
+        with self._patch_tree(paths):
+            assert analyze_in_tree_binaries(
+                "org", "repo", "a" * 40, sub_path="my-action",
+            ) == []
+
+    def test_sub_path_flags_within_subaction(self):
+        paths = [
+            "my-action/action.yml",
+            "my-action/main-linux-amd64",
+        ]
+        with self._patch_tree(paths):
+            errors = analyze_in_tree_binaries(
+                "org", "repo", "a" * 40, sub_path="my-action",
+            )
+        assert len(errors) == 1
+        # Path is reported relative to the sub-action root.
+        assert "main-linux-amd64" in errors[0]
+
+    def test_empty_tree_returns_no_errors(self):
+        # API failure / empty tree shouldn't crash or produce a phantom
+        # finding — best-effort behaviour matches _list_repo_files'
+        # contract.
+        with self._patch_tree([]):
+            assert analyze_in_tree_binaries("org", "repo", "a" * 40) == []
+
+    def test_many_binaries_truncates_in_message(self):
+        # Pathological case: lots of binaries.  The error message lists
+        # the first 3 and totals the rest so the failure is still
+        # useful for a reviewer to skim.
+        paths = ["action.yml"] + [
+            f"main-linux-amd64-{i}.exe" for i in range(20)
+        ]
+        with self._patch_tree(paths):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert len(errors) == 1
+        msg = errors[0]
+        assert "20 pre-compiled binary file(s)" in msg
+        assert "17 more" in msg

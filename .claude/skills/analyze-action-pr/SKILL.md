@@ -19,7 +19,7 @@
 
 ---
 name: analyze-action-pr
-description: Triage a PR that adds or bumps an action in this repo's allowlist. Runs verify-action-build, classifies each failing action (clean / pipe-to-shell / unverified-download / nested-action-issue / verify-script-bug), and proposes concrete next actions — recommend approval, open an upstream issue + ping the PR author, or fix verify-action-build itself with a regression test. Use when the user says "analyze PR <N>", "triage PR <N>", "verify PR <N>", or otherwise asks to review an action-allowlist PR in this repo.
+description: Triage a PR that adds or bumps an action in this repo's allowlist. Runs verify-action-build, classifies each failing action (clean / pipe-to-shell / unverified-download / nested-action-issue / metadata-only / verify-script gap / in-tree native binaries) and proposes concrete next actions — recommend approval, open an upstream issue + ping the PR author, or fix verify-action-build itself with a regression test. Use when the user says "analyze PR <N>", "triage PR <N>", "verify PR <N>", or otherwise asks to review an action-allowlist PR in this repo.
 ---
 
 # Analyze an apache/infrastructure-actions PR
@@ -69,6 +69,7 @@ under "Classify".
 | **C** | nested-action issue | Top-level action passes but a `uses:` dependency (e.g. `install/foo`) hits A or B |
 | **D** | metadata-only | `No LICENSE`, input interpolation in `run:` blocks, `GITHUB_PATH` writes — soft warnings, mention but don't block |
 | **E** | verify-script gap | The script gets the wrong answer for a reason unrelated to the action's actual security: false positive (regex hole, missing pattern), missing capability (new action type / build flow / verification mechanism it doesn't yet recognize), bad attribution (extractor drops an action that's clearly in the diff), or a check that misreads a legitimate input shape |
+| **F** | in-tree binaries | The action ships pre-compiled native binaries directly in the repo (Go cross-compile, `.exe` / `.dll` / `.so` / `.dylib`, `.jar`, `.wasm`, etc.) and exec's them from a small launcher. The JS-rebuild check verifies the launcher but **cannot** reconcile the binaries with source — the action runs opaque executable code. Reject unless upstream provides verifiable build provenance (SLSA via `actions/attest-build-provenance`, or a signed `SHA256SUMS` released alongside the binaries). `verify-action-build`'s `In-tree binary check` flags this; if it fires, this is case F |
 
 ### 4. Look up upstream verification material (for A/B/C)
 
@@ -115,6 +116,36 @@ Two messages, both held until the user OKs:
    issue, and asking them to support it as a downstream consumer.
 
 Do **not** approve the action.
+
+#### F — in-tree native binaries
+
+The action's verdict is "fails because of opaque code we can't audit" — this
+is a hard reject regardless of how reputable the maintainer is, until upstream
+provides verifiable build provenance.
+
+Two messages, both held until the user OKs:
+
+1. **Upstream issue** asking the action's maintainers to add either
+   `actions/attest-build-provenance` to their release workflow (so the
+   binaries get a SLSA attestation verifiable via `gh attestation verify`)
+   or a GPG-signed `SHA256SUMS` file shipped as a release asset.  Quote
+   the offending paths and explain the downstream-review impact.
+2. **Comment** on the ASF PR pinging the PR author, summarising why
+   approval is held: the JS-rebuild check only verifies the launcher,
+   not the binary, and we have no way to tie what runs on the runner
+   back to the published source.  Link the upstream issue.
+
+Before recommending retroactive rejection of an already-approved version
+in this shape, **check downstream impact** with code search:
+
+```
+gh api 'search/code?q=<org>%2F<action>+org%3Aapache+language%3AYAML' \
+  --jq '.items[] | "\(.repository.full_name)  \(.path)"'
+```
+
+If multiple ASF projects depend on the action, loop in their maintainers
+(e.g. `@apache/<project>-committers`) before any retroactive decision —
+they pay the cost of pinning back to an older version or migrating off.
 
 #### D only (passing verification but with metadata warnings)
 
@@ -229,3 +260,5 @@ future runs can cite a precedent instead of re-deriving the analysis.
 | #802 | carabiner-dev nested `install/{ampel,bnd}` do `curl + chmod 0755`; upstream ships SLSA `provenance.json` / `attestations.jsonl` | C | Upstream issue carabiner-dev/actions#51 + PR comment |
 | #803 | 3 actions in one diff; extractor only got the wholly-new key | E | Fix landed in PR #804 |
 | #806 | `jbangdev/setup-jbang` does `curl ... \| bash`; upstream ships SHA256/GPG | A | Upstream issue jbangdev/setup-jbang#16 + PR comment |
+| #813 | `browser-actions/setup-firefox@v1.7.2` ships a minimal `{"type":"module"}` package.json with no deps; lock-file check too strict | E | Fix landed in PR #816 |
+| #809 | `runs-on/action@v2.1.1` ships ~10 MB of UPX-packed Go binaries (`main-linux-amd64`, `main-linux-arm64`, `main-windows-amd64.exe`); launcher exec's them as root; no SLSA, no SHA256SUMS | F | Upstream issue runs-on/action#36; deferred until upstream adds provenance |
