@@ -194,9 +194,16 @@ def resolve_source_commit(
       1. Find the tag name(s) that point at ``commit_hash``.
       2. Look up the GitHub Release object for that tag — use its
          ``published_at`` as a time anchor.
-      3. List commits on the default branch at or just before that time.
-      4. Pick the most recent one whose tree actually has ``package.json``
-         at the build root (confirming it's buildable source).
+      3. List default-branch commits within a generous window on *both*
+         sides of the anchor (release-please can publish the orphan tag
+         before *or* after pushing the version-bump commit to the
+         default branch, depending on workflow wiring).
+      4. Strongly prefer the commit whose message names the exact tag
+         (``release v1.22.1`` matches tag ``v1.22.1``).  If no exact
+         match, fall back to a generic release-marker (``chore: release``,
+         ``chore(main): release``, etc.).  Last resort: API order.
+      5. Of the ordered candidates, return the first whose tree has
+         ``package.json`` at the build root.
     """
     candidate_tags = _find_tags_for_commit(org, repo, commit_hash)
     if not candidate_tags:
@@ -215,22 +222,31 @@ def resolve_source_commit(
 
     default_branch = _default_branch(org, repo)
 
-    # The orphan tag is typically pushed a few seconds *after* the release
-    # PR lands on the default branch, so we cap the window at published_at +
-    # a short tolerance to cover race conditions while keeping commits that
-    # landed *after* the release (e.g. subsequent dependabot bumps) out.
-    cutoff = published + timedelta(minutes=1)
-    until = cutoff.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # The orphan tag and its master "release vX.Y.Z" commit are usually
+    # within seconds of each other, but the *order* depends on the release
+    # automation: release-please can publish the tag *before* it pushes
+    # the version-bump commit to master (benchmark-action's pattern), or
+    # *after* (the more common shape).  Use a generous window on both
+    # sides so we capture either ordering, then disambiguate by tag name.
+    since = (published - timedelta(hours=2)).astimezone(timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
+    until = (published + timedelta(hours=2)).astimezone(timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
     commits = _gh_api(
-        f"repos/{org}/{repo}/commits?sha={default_branch}&until={until}&per_page=20"
+        f"repos/{org}/{repo}/commits?sha={default_branch}"
+        f"&since={since}&until={until}&per_page=50"
     )
     if not isinstance(commits, list):
         return None
 
-    # Prefer commits whose message looks like a release commit (changesets
-    # uses "chore: release", release-please uses "chore(main): release
-    # x.y.z", other automations use "Release …").  Fall back to the most
-    # recent buildable commit in the window otherwise.
+    # Strongly prefer commits whose message names the exact tag.  Most
+    # release automations write "release v1.22.1" or "chore(main):
+    # release 1.22.1" — matching the tag name uniquely identifies the
+    # right commit even when several "release X" commits land in the
+    # time window.  Fall back to a generic release-marker match, then
+    # to API order (most recent first).
     release_markers = ("chore: release", "chore(main): release", "release:", "Release ", "Version Packages")
 
     def _is_release_commit(commit: dict) -> bool:
@@ -238,9 +254,22 @@ def resolve_source_commit(
         first_line = msg.splitlines()[0] if msg else ""
         return any(marker.lower() in first_line.lower() for marker in release_markers)
 
+    bare_tag = tag_name.lstrip("v")
+
+    def _matches_exact_tag(commit: dict) -> bool:
+        msg = commit.get("commit", {}).get("message", "")
+        first_line = msg.splitlines()[0] if msg else ""
+        # Match the tag both with and without the leading ``v`` so we
+        # catch ``release v1.22.1`` *and* ``chore(main): release 1.22.1``.
+        return tag_name in first_line or (bare_tag and bare_tag in first_line)
+
     ordered = sorted(
         commits,
-        key=lambda c: (not _is_release_commit(c), commits.index(c)),
+        key=lambda c: (
+            not _matches_exact_tag(c),
+            not _is_release_commit(c),
+            commits.index(c),
+        ),
     )
     for commit in ordered:
         sha = commit.get("sha")

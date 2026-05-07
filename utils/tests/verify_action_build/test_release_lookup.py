@@ -23,6 +23,7 @@ from verify_action_build.release_lookup import (
     format_release_time,
     get_release_or_commit_time,
     is_source_detached,
+    resolve_source_commit,
 )
 
 
@@ -227,3 +228,192 @@ class TestIsSourceDetached:
         # source commit and produce a confusing report.
         with self._patch_tree(set()):
             assert is_source_detached("org", "repo", "a" * 40) is False
+
+
+class TestResolveSourceCommit:
+    """The resolver picks the master commit a source-detached tag was cut
+    from.  These tests cover the orphan-tag-pushed-before-master-release
+    timing (benchmark-action's pattern, which the +1min cutoff missed)
+    and the disambiguation when several "release X" commits land in the
+    window.
+    """
+
+    @staticmethod
+    def _gh_api_for(commits, tags=None, releases=None, package_json_present=True):
+        """Return a side_effect for ``_gh_api`` that serves canned data
+        for tags / matching-refs / releases / commits / package.json
+        lookups in that order, like the real GitHub API would."""
+        tags = tags or {}
+        releases = releases or {}
+
+        def _side_effect(url):
+            # Tag listings: ``repos/.../git/matching-refs/tags?per_page=...``
+            if "/git/matching-refs/tags" in url:
+                return tags.get("matching-refs", [])
+            # Release lookup: ``repos/.../releases/tags/<tag>``
+            if "/releases/tags/" in url:
+                tag = url.rsplit("/", 1)[-1]
+                return releases.get(tag)
+            # Default-branch lookup: the bare ``repos/<org>/<repo>`` URL.
+            if url.endswith(("repos/org/repo", "/repos/org/repo")):
+                return {"default_branch": "master"}
+            # Commit listing.
+            if "/commits?" in url:
+                return commits
+            # ``_commit_has_package_json`` calls trees endpoint at root.
+            if "/git/trees/" in url:
+                tree = [{"path": "package.json"}] if package_json_present else []
+                return {"tree": tree}
+            return None
+
+        return _side_effect
+
+    @staticmethod
+    def _commit(sha, message, date):
+        return {
+            "sha": sha,
+            "commit": {
+                "message": message,
+                "committer": {"date": date},
+                "author": {"date": date},
+            },
+        }
+
+    def _patch_api(self, commits, tag_name, published_at, package_json=True):
+        side = self._gh_api_for(
+            commits=commits,
+            tags={
+                "matching-refs": [
+                    {
+                        "ref": f"refs/tags/{tag_name}",
+                        "object": {"sha": "a" * 40, "type": "commit"},
+                    },
+                ],
+            },
+            releases={
+                tag_name: {"published_at": published_at, "tag_name": tag_name},
+            },
+            package_json_present=package_json,
+        )
+        return mock.patch(
+            "verify_action_build.release_lookup._gh_api",
+            side_effect=side,
+        )
+
+    def test_picks_release_commit_pushed_after_orphan_tag(self):
+        # The benchmark-action v1.22.1 shape: the orphan tag is published
+        # at 10:36:23, then the master "release v1.22.1" commit lands at
+        # 10:37:24 — 1 second after the old +1min cutoff.  The wider
+        # window plus exact-tag matching must pick the right commit.
+        commits = [
+            # API returns most-recent first.
+            self._commit("d" * 40, "fix(ci): unrelated", "2026-05-06T11:00:00Z"),
+            self._commit(
+                "release111111111111111111111111111111111111",
+                "release v1.22.1",
+                "2026-05-06T10:37:24Z",  # 1s past the old cutoff
+            ),
+            self._commit(
+                "fixbuild11111111111111111111111111111111111",
+                "fix(build): scope tsconfig.build.json to src/",
+                "2026-05-06T10:25:26Z",
+            ),
+            self._commit(
+                "release000000000000000000000000000000000000",
+                "release v1.22.0",
+                "2026-03-31T04:53:51Z",
+            ),
+        ]
+        with self._patch_api(commits, "v1.22.1", "2026-05-06T10:36:23Z"):
+            result = resolve_source_commit("org", "repo", "a" * 40)
+        assert result is not None
+        sha, tag = result
+        assert tag == "v1.22.1"
+        # Must pick the v1.22.1 release commit, NOT the v1.22.0 one,
+        # despite v1.22.0 also matching the generic release-marker.
+        assert sha == "release111111111111111111111111111111111111"
+
+    def test_prefers_exact_tag_over_other_release_markers(self):
+        # Even when several commits in the window match the generic
+        # release-marker heuristic ("release …"), only the one whose
+        # message names the exact tag should win.
+        commits = [
+            self._commit(
+                "wrong00000000000000000000000000000000000000",
+                "release v2.0.0",  # nearby release, not ours
+                "2026-05-06T11:00:00Z",
+            ),
+            self._commit(
+                "right00000000000000000000000000000000000000",
+                "release v1.22.1",
+                "2026-05-06T10:37:24Z",
+            ),
+        ]
+        with self._patch_api(commits, "v1.22.1", "2026-05-06T10:36:23Z"):
+            result = resolve_source_commit("org", "repo", "a" * 40)
+        assert result is not None
+        assert result[0] == "right00000000000000000000000000000000000000"
+
+    def test_matches_tag_without_v_prefix(self):
+        # release-please-style automations sometimes write
+        # ``chore(main): release 1.22.1`` (no leading ``v``) for the
+        # commit message even when the tag itself is ``v1.22.1``.
+        commits = [
+            self._commit(
+                "right00000000000000000000000000000000000000",
+                "chore(main): release 1.22.1",
+                "2026-05-06T10:37:24Z",
+            ),
+            self._commit(
+                "earlier00000000000000000000000000000000000000",
+                "release v1.22.0",
+                "2026-03-31T04:53:51Z",
+            ),
+        ]
+        with self._patch_api(commits, "v1.22.1", "2026-05-06T10:36:23Z"):
+            result = resolve_source_commit("org", "repo", "a" * 40)
+        assert result is not None
+        assert result[0] == "right00000000000000000000000000000000000000"
+
+    def test_falls_back_to_release_marker_when_no_exact_match(self):
+        # If no commit names the exact tag, the next best signal is the
+        # generic release-marker (changesets / release-please pattern).
+        commits = [
+            self._commit(
+                "marker00000000000000000000000000000000000000",
+                "chore(main): release",  # generic, no version number
+                "2026-05-06T10:37:24Z",
+            ),
+            self._commit(
+                "regular00000000000000000000000000000000000000",
+                "fix: something else",
+                "2026-05-06T11:00:00Z",
+            ),
+        ]
+        with self._patch_api(commits, "v1.22.1", "2026-05-06T10:36:23Z"):
+            result = resolve_source_commit("org", "repo", "a" * 40)
+        assert result is not None
+        assert result[0] == "marker00000000000000000000000000000000000000"
+
+    def test_returns_none_when_no_commits(self):
+        with self._patch_api([], "v1.22.1", "2026-05-06T10:36:23Z"):
+            assert resolve_source_commit("org", "repo", "a" * 40) is None
+
+    def test_returns_none_when_tag_has_no_release(self):
+        # No GitHub release for the tag → no time anchor → bail.
+        side = self._gh_api_for(
+            commits=[],
+            tags={
+                "matching-refs": [
+                    {
+                        "ref": "refs/tags/v1.22.1",
+                        "object": {"sha": "a" * 40, "type": "commit"},
+                    },
+                ],
+            },
+            releases={},  # no release for v1.22.1
+        )
+        with mock.patch(
+            "verify_action_build.release_lookup._gh_api", side_effect=side,
+        ):
+            assert resolve_source_commit("org", "repo", "a" * 40) is None
