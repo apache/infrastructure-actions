@@ -44,3 +44,34 @@ class TestMain:
                     with pytest.raises(SystemExit) as exc_info:
                         main()
                     assert exc_info.value.code == 1
+
+    def test_from_pr_with_no_added_refs_passes(self):
+        removal_only_diff = (
+            "diff --git a/actions.yml b/actions.yml\n"
+            "--- a/actions.yml\n"
+            "+++ b/actions.yml\n"
+            "@@ -10,5 +10,0 @@\n"
+            "-some-org/some-action:\n"
+            "-  " + "a" * 40 + ":\n"
+            "-    tag: v1.0.0\n"
+        )
+        with mock.patch("sys.argv", ["verify-action-build", "--from-pr", "999"]):
+            with mock.patch("shutil.which", return_value="/usr/bin/docker"):
+                with mock.patch(
+                    "verify_action_build.cli.GitHubClient"
+                ) as gh_cls:
+                    gh_cls.return_value.get_pr_diff.return_value = removal_only_diff
+                    with pytest.raises(SystemExit) as exc_info:
+                        main()
+                    assert exc_info.value.code == 0
+
+    def test_from_pr_when_diff_fetch_fails_errors(self):
+        with mock.patch("sys.argv", ["verify-action-build", "--from-pr", "999"]):
+            with mock.patch("shutil.which", return_value="/usr/bin/docker"):
+                with mock.patch(
+                    "verify_action_build.cli.GitHubClient"
+                ) as gh_cls:
+                    gh_cls.return_value.get_pr_diff.return_value = None
+                    with pytest.raises(SystemExit) as exc_info:
+                        main()
+                    assert exc_info.value.code == 1
