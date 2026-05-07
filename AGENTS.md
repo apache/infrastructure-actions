@@ -35,6 +35,31 @@ following the guidelines of the ASF:
 Generated-by: <Agent information>
 ```
 
+## Brevity in commits and PRs
+
+Default to short. The diff and the linked issue carry the detail — the message is for the *why*,
+not a recap of every step.
+
+**Commit messages.** Subject under 70 chars, imperative voice, names the area touched
+(`verify-action-build: …`, `analyze-action-pr: …`). Body is rarely longer than 5–10 lines; only as
+long as it needs to be to explain the why.
+
+**PR titles.** Same rules as commit subjects.
+
+**PR bodies.** Lead with what changed in 2–4 bullets, then a brief test plan. Skip restating
+the commit message — reviewers read both.
+
+Cut:
+- Recaps of what didn't work or how the diagnosis evolved.
+- Per-file change inventories (the diff already says it).
+- "Note: …" appendices for tangential observations — open a follow-up issue instead.
+- Multi-paragraph backstories when one sentence covers it.
+
+Keep:
+- The why, once, plainly.
+- A reproducer or fixture path for non-obvious bugs.
+- Links to related issues / PRs.
+
 ## Pull requests
 
 Always use `--web` when creating PRs (e.g. `gh pr create --web ...`). This opens the PR in the
