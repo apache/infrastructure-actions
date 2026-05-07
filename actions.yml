@@ -100,6 +100,9 @@ aws-actions/configure-aws-credentials:
     expires_at: 2026-07-05
   ec61189d14ec14c8efccab744f656cffd0e33f37:
     tag: v6.1.0
+    expires_at: 2026-07-30
+  d979d5b3a71173a29b74b5b88418bfda9437d885:
+    tag: v6.1.1
 azure/setup-helm:
   1a275c3b69536ee54be43f2070a358922e12c8d4:
     tag: v4.3.1
@@ -295,6 +298,9 @@ dlang-community/setup-dlang:
 docker/bake-action:
   aefd381cbaa93c62a1e8b02194ae420cc36269d2:
     tag: v4.7.0
+    expires_at: 2026-07-30
+  a66e1c87e2eca0503c343edf1d208c716d54b8a8:
+    tag: v7.1.0
 docker/build-push-action:
   10e90e3645eae34f1e60eeb005ba3a3d33f178e8:
     tag: v6.19.2
