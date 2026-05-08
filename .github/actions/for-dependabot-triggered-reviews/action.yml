@@ -211,8 +211,6 @@ runs:
       if: false
     - uses: sbt/setup-sbt@93e926cbdb4a428e41b4ef754124ec82925ffdc2  # v1.1.23
       if: false
-    - uses: scacap/action-surefire-report@3dacff26879cd2a7f2160d101254032a3707fe6f  # v1.12.0
-      if: false
     - uses: scalacenter/sbt-dependency-submission@f43202114d7522a4b233e052f82c2eea8d658134  # v3.2.1
       if: false
     - uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c  # v3.0.3
