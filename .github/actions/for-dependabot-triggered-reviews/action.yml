@@ -205,7 +205,7 @@ runs:
       if: false
     - uses: rubygems/release-gem@6317d8d1f7e28c24d28f6eff169ea854948bd9f7  # v1.2.0
       if: false
-    - uses: runs-on/action@742bf56072eb4845a0f94b3394673e4903c90ff0  # v2.1.0
+    - uses: runs-on/action@d141ef83eb66d096ce8afc767e09115a65c63b60  # v2.1.2
       if: false
     - uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe  # v1.0.4
       if: false
