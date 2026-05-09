@@ -818,6 +818,9 @@ runs-on/action:
     expires_at: 2026-06-14
   742bf56072eb4845a0f94b3394673e4903c90ff0:
     tag: v2.1.0
+    expires_at: 2026-08-01
+  d141ef83eb66d096ce8afc767e09115a65c63b60:
+    tag: v2.1.2
 rust-lang/crates-io-auth-action:
   b7e9a28eded4986ec6b1fa40eeee8f8f165559ec:
     tag: v1.0.3

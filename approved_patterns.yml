@@ -285,6 +285,7 @@
 - rubygems/release-gem@6317d8d1f7e28c24d28f6eff169ea854948bd9f7
 - runs-on/action@cd2b598b0515d39d78c38a02d529db87d2196d1e
 - runs-on/action@742bf56072eb4845a0f94b3394673e4903c90ff0
+- runs-on/action@d141ef83eb66d096ce8afc767e09115a65c63b60
 - rust-lang/crates-io-auth-action@b7e9a28eded4986ec6b1fa40eeee8f8f165559ec
 - rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe
 - rustsec/*@*
