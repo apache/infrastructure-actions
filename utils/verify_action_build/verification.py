@@ -332,12 +332,12 @@ def verify_single_action(
         if in_tree_binary_errors:
             checks_performed.append((
                 "In-tree binary check", "fail",
-                "pre-compiled binaries shipped in repo (opaque code)",
+                "unverified binaries in repo (no SLSA attestation / SHA256SUMS)",
             ))
         else:
             checks_performed.append((
                 "In-tree binary check", "pass",
-                "no pre-compiled native binaries in repo tree",
+                "no in-tree binaries (or all verified via attestation / SHA256SUMS)",
             ))
 
         if not is_js_action:
@@ -609,8 +609,9 @@ def verify_single_action(
         elif in_tree_binary_errors:
             fail_msg = (
                 f"[red bold]{action_type} action — "
-                f"pre-compiled binaries shipped in repo (opaque executable code; "
-                f"no source-level rebuild verification possible)[/red bold]"
+                f"{len(in_tree_binary_errors)} unverified pre-compiled binary(ies) "
+                f"in repo (no SLSA attestation, no matching SHA256SUMS at release)"
+                f"[/red bold]"
             )
         else:
             fail_msg = f"[red bold]{action_type} action — verification failed[/red bold]"
