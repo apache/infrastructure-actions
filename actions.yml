@@ -124,6 +124,9 @@ bazel-contrib/setup-bazel:
     expires_at: 2026-06-20
   c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86:
     tag: 0.19.0
+benchmark-action/github-action-benchmark:
+  52576c92bccf6ac60c8223ec7eb2565637cae9ba:
+    tag: v1.22.1
 betahuhn/repo-file-sync-action:
   8b92be3375cf1d1b0cd579af488a9255572e4619:
     tag: v1.21.1
