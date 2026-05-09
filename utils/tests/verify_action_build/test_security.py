@@ -1059,3 +1059,175 @@ await tc.extractTar(archive, dest)
         findings = _find_binary_downloads_js(mixed)
         # Both the getJson and the downloadTool stay flagged.
         assert len(findings) == 2
+
+    def test_accept_application_json_marks_data_fetch(self):
+        # graalvm/setup-graalvm/src/gds.ts shape (lines 62, 97):
+        # ``http.get(url, { accept: 'application/json' })`` followed by
+        # ``JSON.parse(await response.readBody())``.  The accept header
+        # is the unambiguous data-vs-binary signal.
+        gds_metadata = """\
+const requestUrl = `${c.GDS_BASE}/artifacts?productId=${id}&...`
+const response = await http.get(requestUrl, { accept: 'application/json' })
+const artifactResponse = JSON.parse(await response.readBody())
+return artifactResponse.items[0]
+"""
+        assert _file_is_pure_data_fetch(gds_metadata) is True
+        assert _find_binary_downloads_js(gds_metadata) == []
+
+    def test_accept_application_json_double_quoted_also_works(self):
+        # Variant: double-quoted ``"accept"`` and ``"application/json"``.
+        content = """\
+const response = await http.get(url, { "accept": "application/json" })
+const data = JSON.parse(await response.readBody())
+"""
+        assert _file_is_pure_data_fetch(content) is True
+
+
+class TestFunctionDefinitionNotADownload:
+    """Regression: ``async function downloadTool(...)`` is a function
+    *definition*, not a call.  The download-pattern scanner must not
+    flag the function-name shadow that happens to match the regex.
+    Surfaced by graalvm/setup-graalvm/src/gds.ts (line 153).
+    """
+
+    def test_async_function_definition_skipped(self):
+        content = """\
+import * as tc from '@actions/tool-cache'
+
+async function downloadTool(url: string, headers?: OutgoingHttpHeaders): Promise<string> {
+  return await someInternalImplementation(url, headers)
+}
+"""
+        # Use a content that has a binary-handle marker so we don't
+        # short-circuit via _file_is_pure_data_fetch.
+        with_handler = content + "\nawait fs.writeFileSync('/tmp/bin', data)\n"
+        findings = _find_binary_downloads_js(with_handler)
+        # Pre-fix the function-definition line was flagged as a
+        # ``downloadTool(`` call.  Post-fix only the genuine
+        # writeFileSync-adjacent code is in scope, and that's not a
+        # download pattern — so zero findings.
+        assert findings == []
+
+    def test_function_definition_with_export_default_skipped(self):
+        content = """\
+import * as tc from '@actions/tool-cache'
+
+export default async function downloadTool(url) {
+  return tc.downloadTool(url)  // this IS a real call
+}
+await fs.writeFileSync('/tmp/x', data)
+"""
+        findings = _find_binary_downloads_js(content)
+        # Only the inner ``tc.downloadTool(url)`` call should be
+        # flagged; the ``export default async function downloadTool(``
+        # line must be skipped.
+        assert len(findings) == 1
+        # Returned tuple is (line_num, snippet); the snippet must be the
+        # ``tc.downloadTool(url)`` call, not the function declaration.
+        line_num, snippet = findings[0]
+        assert "tc.downloadTool(url)" in snippet
+        assert "function" not in snippet
+
+    def test_generator_function_definition_skipped(self):
+        # ``function*`` generators are a less common but valid syntax.
+        content = """\
+function* downloadTool(urls) {
+  for (const u of urls) yield u
+}
+await fs.writeFileSync('/tmp/x', data)
+"""
+        assert _find_binary_downloads_js(content) == []
+
+    def test_function_call_still_flagged_after_definition(self):
+        # The fix must not blanket-suppress *any* line containing the
+        # word ``function`` — only lines that are *themselves* function
+        # definitions.  A real call later in the file must still trip
+        # the scanner.
+        content = """\
+import * as tc from '@actions/tool-cache'
+
+// Helper definition (must be skipped):
+async function helper(url) { return null }
+
+// Real call (must be flagged):
+await tc.downloadTool('https://example.com/binary')
+await fs.writeFileSync('/tmp/bin', data)
+"""
+        findings = _find_binary_downloads_js(content)
+        assert len(findings) == 1
+        assert "tc.downloadTool" in findings[0][1]
+
+
+class TestVerificationPatternsRecognized:
+    """Verification patterns the scanner must accept as evidence that a
+    file with downloads also has integrity checks — so the binary-
+    download check downgrades from failure to warning."""
+
+    @staticmethod
+    def _has_verification(content: str) -> bool:
+        # Mirror the analyze_binary_downloads helper directly so the test
+        # exercises exactly the predicate used in production.
+        from verify_action_build.security import _JS_VERIFICATION_PATTERNS
+        return any(p.search(content) for p in _JS_VERIFICATION_PATTERNS)
+
+    def test_bare_create_hash_recognized(self):
+        # graalvm/setup-graalvm/src/utils.ts shape: ``createHash`` is
+        # imported via ``import { createHash } from 'crypto'`` and used
+        # bare without the ``crypto.`` prefix.  The original pattern
+        # ``crypto\.createHash\(`` missed this entirely.
+        content = """\
+import { createHash } from 'crypto'
+
+export function calculateSHA256(filePath) {
+  const hashSum = createHash('sha256')
+  hashSum.update(readFileSync(filePath))
+  return hashSum.digest('hex')
+}
+"""
+        assert self._has_verification(content) is True
+
+    def test_bare_create_hash_requires_sha_literal(self):
+        # An unrelated ``createHash`` identifier (or one called with a
+        # non-SHA algorithm) shouldn't false-positive.  Require the
+        # ``sha`` literal as the first argument so we only match
+        # genuine SHA-family hashing.
+        unrelated = """\
+const createHash = customLibrary.createHash('blake2')
+"""
+        # ``createHash('blake2')`` is a hash too but our concern is
+        # specifically SHA verification; the broader case is fine to
+        # miss here — better than over-matching arbitrary createHash
+        # identifiers.
+        assert self._has_verification(unrelated) is False
+
+    def test_calculate_sha256_function_name_recognized(self):
+        # Custom helper-function naming convention used by several
+        # actions: ``calculateSHA256``, ``calculateChecksum``, etc.
+        for func_name in (
+            "calculateSHA256",
+            "calculateSHA512",
+            "calculateSHA1",
+            "calculateChecksum",
+            "calculateDigest",
+        ):
+            content = f"const sha = {func_name}(downloadPath)\n"
+            assert self._has_verification(content) is True, func_name
+
+    def test_verify_hash_function_recognized(self):
+        # Whether named ``verifyHash`` or referenced inline.
+        for snippet in (
+            "if (!verifyHash(blob, expected)) throw new Error('bad hash')",
+            "const ok = computeChecksum(blob)",
+        ):
+            assert self._has_verification(snippet) is True, snippet
+
+    def test_existing_crypto_dotted_form_still_matches(self):
+        # Regression: the original ``crypto\.createHash\(`` matcher
+        # must still fire — existing actions that use the dotted form.
+        content = "const h = crypto.createHash('sha256')"
+        assert self._has_verification(content) is True
+
+    def test_sigstore_and_cosign_still_match(self):
+        # Other existing patterns kept.
+        for snippet in ("import * as sigstore from 'sigstore'", "cosign verify-blob"):
+            assert self._has_verification(snippet) is True, snippet

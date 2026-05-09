@@ -1144,6 +1144,11 @@ _JS_DATA_PARSE_PATTERNS = [
     # (``http.postJson<IdToken>(...)``); without it the regex misses the
     # exact call shape rubygems/configure-rubygems-credentials uses.
     re.compile(r"\.(?:get|post|put|patch|del|request)Json(?:\s*<[^>]*>)?\s*\("),
+    # An ``Accept: application/json`` header on the same line as an HTTP
+    # call is an unambiguous "I'm asking for JSON, not bytes" signal.
+    # graalvm/setup-graalvm's GDS metadata calls
+    # (``http.get(requestUrl, { accept: 'application/json' })``) hit this.
+    re.compile(r"['\"`]accept['\"`]\s*:\s*['\"`]application/json", re.IGNORECASE),
 ]
 
 # Markers indicating the response is treated as a binary or executable —
@@ -1173,6 +1178,20 @@ _JS_VERIFICATION_PATTERNS = [
     re.compile(r"\bverifySignature\b"),
     re.compile(r"\bverifyChecksum\b"),
     re.compile(r"\bcomputeHash\b"),
+    # Bare ``createHash('sha…')`` — the function imported via
+    # ``import { createHash } from 'crypto'`` rather than dereferenced
+    # off the module object.  Common in TypeScript actions
+    # (e.g. graalvm/setup-graalvm's ``calculateSHA256``).  Require a
+    # ``sha`` literal so we don't false-positive on unrelated
+    # ``createHash`` identifiers from other libraries.
+    re.compile(r"\bcreateHash\s*\(\s*['\"`]sha", re.IGNORECASE),
+    # Custom helper-function names that imply a SHA computation or
+    # checksum comparison.  Catches ``calculateSHA256(...)``, ``verifyHash``,
+    # ``computeChecksum``, etc. when they're defined or called within
+    # the file under inspection.
+    re.compile(r"\bcalculate(?:SHA[\d]+|Checksum|Digest)\b", re.IGNORECASE),
+    re.compile(r"\bverifyHash\b"),
+    re.compile(r"\bcomputeChecksum\b"),
 ]
 
 _JS_SOURCE_EXTENSIONS = (".ts", ".js", ".mjs", ".cjs")
@@ -1210,12 +1229,23 @@ def _file_is_pure_data_fetch(content: str) -> bool:
     return not has_binary_handle
 
 
+# Function-definition shapes — the regex below matches any of these on
+# their own line, so the download-pattern scanner can skip them.  Without
+# this guard ``async function downloadTool(...)`` would be mis-flagged as
+# a download call simply because the regex sees ``downloadTool(``.
+_JS_FUNCTION_DEFINITION_RE = re.compile(
+    r"^\s*(?:export\s+)?(?:default\s+)?"
+    r"(?:async\s+)?function\s*\*?\s*\w+\s*[(<]"
+)
+
+
 def _find_binary_downloads_js(content: str) -> list[tuple[int, str]]:
     """Find lines in JS/TS source that fetch remote artifacts.
 
     Flags calls to ``tc.downloadTool`` / ``downloadTool``, bare ``fetch`` to
     an http(s) URL, node's ``http(s).get`` / ``.request``, ``axios.*``, and
-    ``new HttpClient()``. Skips comment-only lines.
+    ``new HttpClient()``. Skips comment-only lines and function definitions
+    (a ``function downloadTool(...)`` declaration isn't itself a download).
 
     Files that look like pure data fetches (response parsed as a value, not
     persisted or executed) return no findings — see ``_file_is_pure_data_fetch``
@@ -1227,6 +1257,8 @@ def _find_binary_downloads_js(content: str) -> list[tuple[int, str]]:
     for i, line in enumerate(content.splitlines(), 1):
         stripped = line.strip()
         if not stripped or stripped.startswith("//") or stripped.startswith("*"):
+            continue
+        if _JS_FUNCTION_DEFINITION_RE.match(line):
             continue
         if any(p.search(line) for p in _JS_DOWNLOAD_PATTERNS):
             findings.append((i, stripped[:120]))
