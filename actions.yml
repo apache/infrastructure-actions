@@ -380,6 +380,9 @@ eps1lon/actions-label-merge-conflict:
 erisu/apache-rat-action:
   46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c:
     tag: v2.0.0
+    expires_at: 2026-08-01
+  30c94d10ed21e6f6fd5590dc5c158f58cae7a0dd:
+    tag: v3.0.0
 erisu/license-checker-action:
   99cffa11264fe545fd0baa6c13bca5a00ae608f2:
     tag: v2.0.1
