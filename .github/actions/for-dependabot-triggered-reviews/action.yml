@@ -113,7 +113,7 @@ runs:
       if: false
     - uses: editorconfig-checker/action-editorconfig-checker@840e866d93b8e032123c23bac69dece044d4d84c  # v2.2.0
       if: false
-    - uses: erisu/apache-rat-action@46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c  # v2.0.0
+    - uses: erisu/apache-rat-action@30c94d10ed21e6f6fd5590dc5c158f58cae7a0dd  # v3.0.0
       if: false
     - uses: erisu/license-checker-action@04511f4c052b5773f11e1c65b42cda88235c62ae  # v2.1.0
       if: false
