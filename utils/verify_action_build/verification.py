@@ -44,6 +44,7 @@ from .security import (
     analyze_binary_downloads_recursive,
     analyze_dependency_pinning,
     analyze_dockerfile,
+    analyze_in_tree_binaries,
     analyze_lock_files,
     analyze_nested_actions,
     analyze_repo_metadata,
@@ -188,6 +189,7 @@ def verify_single_action(
     matched_with_approved_lockfile = False
     binary_download_failures: list[str] = []
     lock_file_errors: list[str] = []
+    in_tree_binary_errors: list[str] = []
 
     # Detect source-detached release tags (orphan commits containing only
     # distributable artifacts) and resolve the default-branch source commit
@@ -317,6 +319,25 @@ def verify_single_action(
             checks_performed.append((
                 "Lock file presence", "pass",
                 "all detected manifests have lock files (or are exempted)",
+            ))
+
+        # In-tree binary check: flag pre-compiled native binaries shipped
+        # directly in the action's repo.  These are opaque executable code
+        # that the JS-rebuild check cannot reconcile with source — the
+        # launcher matches, the binary doesn't.  See runs-on/action@v2.1.x
+        # for the canonical case.
+        in_tree_binary_errors = analyze_in_tree_binaries(
+            org, repo, commit_hash, sub_path,
+        )
+        if in_tree_binary_errors:
+            checks_performed.append((
+                "In-tree binary check", "fail",
+                "unverified binaries in repo (no SLSA attestation / SHA256SUMS)",
+            ))
+        else:
+            checks_performed.append((
+                "In-tree binary check", "pass",
+                "no in-tree binaries (or all verified via attestation / SHA256SUMS)",
             ))
 
         if not is_js_action:
@@ -532,7 +553,12 @@ def verify_single_action(
         ci_mode=ci_mode,
     )
 
-    overall_passed = all_match and not binary_download_failures and not lock_file_errors
+    overall_passed = (
+        all_match
+        and not binary_download_failures
+        and not lock_file_errors
+        and not in_tree_binary_errors
+    )
 
     console.print()
     checklist_hint = f"\n[dim]Security review checklist: {SECURITY_CHECKLIST_URL}[/dim]"
@@ -579,6 +605,13 @@ def verify_single_action(
                 f"[red bold]{action_type} action — "
                 f"{len(lock_file_errors)} manifest(s) without a matching lock file "
                 f"(transitive dependencies not pinned; rebuilds cannot be reproduced)[/red bold]"
+            )
+        elif in_tree_binary_errors:
+            fail_msg = (
+                f"[red bold]{action_type} action — "
+                f"{len(in_tree_binary_errors)} unverified pre-compiled binary(ies) "
+                f"in repo (no SLSA attestation, no matching SHA256SUMS at release)"
+                f"[/red bold]"
             )
         else:
             fail_msg = f"[red bold]{action_type} action — verification failed[/red bold]"

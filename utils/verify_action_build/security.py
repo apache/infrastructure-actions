@@ -18,9 +18,13 @@
 #
 """Security analysis checks for GitHub Actions."""
 
+import hashlib
 import json
 import os
 import re
+import shutil
+import subprocess
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
@@ -1625,3 +1629,335 @@ def analyze_repo_metadata(
         console.print(f"  [dim]ℹ[/dim] Org: {org} (not in well-known list)")
 
     return warnings
+
+
+# Extensions that strongly indicate a pre-compiled native binary.  An action
+# shipping any of these in its tree is running opaque executable code that
+# the JS-rebuild check cannot reconcile with source.
+_IN_TREE_BINARY_EXTENSIONS = (
+    ".exe", ".dll", ".so", ".dylib", ".bin",
+    ".deb", ".rpm", ".pkg", ".dmg", ".msi", ".appimage",
+    ".o", ".a", ".lib", ".obj",
+    ".class", ".jar", ".war",
+    ".wasm",
+)
+
+# Cross-compiled binary naming convention used by Go, Rust, and similar
+# toolchains: ``<name>-<os>-<arch>`` with an optional ``.exe``.  Catches
+# the runs-on/action shape (main-linux-amd64, main-windows-amd64.exe).
+_PLATFORM_ARCH_BINARY_RE = re.compile(
+    r"-(?:linux|darwin|windows|freebsd|openbsd|netbsd|aix)"
+    r"-(?:amd64|arm64|386|i386|arm|armv7|riscv64|x86_64|aarch64|ppc64le|s390x)"
+    r"(?:\.exe)?$"
+)
+
+# Filename patterns that LOOK binary but are conventional in JS/TS or other
+# textual sources — don't false-positive these.
+_IN_TREE_BINARY_EXEMPT_NAMES = {
+    # Webpack's licenses txt that ships in dist/ for some actions.
+    "licenses.txt",
+}
+
+
+def _looks_like_in_tree_binary(path: str) -> bool:
+    """Return True if ``path`` (a repo-relative blob path) looks like a
+    pre-compiled native binary by name alone.
+
+    Cheap path-only heuristic — no fetch, no magic-byte sniff.  Known
+    binary extensions and cross-compile platform/arch suffixes both
+    trigger; conventional text artifacts are exempted.
+    """
+    name = path.rsplit("/", 1)[-1]
+    if name in _IN_TREE_BINARY_EXEMPT_NAMES:
+        return False
+    lower = name.lower()
+    if lower.endswith(_IN_TREE_BINARY_EXTENSIONS):
+        return True
+    if _PLATFORM_ARCH_BINARY_RE.search(lower):
+        return True
+    return False
+
+
+def _fetch_blob_bytes(org: str, repo: str, commit_hash: str, path: str) -> bytes | None:
+    """Fetch a file's *raw bytes* from GitHub at ``commit_hash``.
+
+    Uses raw.githubusercontent.com which serves any file size (the
+    Contents API caps at 1 MB and the in-tree binaries we want to verify
+    are several MB).  Returns ``None`` on any failure.
+    """
+    url = f"https://raw.githubusercontent.com/{org}/{repo}/{commit_hash}/{path}"
+    try:
+        resp = requests.get(url, timeout=30)
+        if resp.ok:
+            return resp.content
+    except requests.RequestException:
+        pass
+    return None
+
+
+def _fetch_release_asset_text(
+    org: str, repo: str, tag: str, asset_name: str,
+) -> str | None:
+    """Fetch a named release asset's text content from a tag.
+
+    Two-hop: first the release lookup gives us the asset's API id; then
+    we GET the asset URL with ``Accept: application/octet-stream`` to
+    follow the binary redirect.  Used to fetch the small text-format
+    ``SHA256SUMS`` artifact, not the binaries themselves.
+    """
+    url = f"https://api.github.com/repos/{org}/{repo}/releases/tags/{tag}"
+    headers = {"Accept": "application/vnd.github+json"}
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        resp = requests.get(url, headers=headers, timeout=15)
+        if not resp.ok:
+            return None
+        for asset in resp.json().get("assets", []):
+            if asset.get("name") != asset_name:
+                continue
+            asset_url = asset.get("url")
+            if not asset_url:
+                return None
+            asset_headers = {**headers, "Accept": "application/octet-stream"}
+            resp2 = requests.get(asset_url, headers=asset_headers, timeout=30)
+            if resp2.ok:
+                return resp2.text
+            return None
+    except requests.RequestException:
+        pass
+    return None
+
+
+def _parse_sha256sums(content: str) -> dict[str, str]:
+    """Parse standard ``SHA256SUMS`` format (``<sha>  <filename>``) into
+    ``{filename: sha256_hex_lowercase}``.
+
+    Tolerant of:
+      * ``<sha> *<filename>`` (binary-mode marker prefix on the name).
+      * Comments (``#`` at line start) and blank lines.
+      * Trailing whitespace.
+
+    Lines that don't parse cleanly (wrong length, non-hex digest) are
+    silently skipped — the caller treats "unknown filename" as a fail
+    further down.
+    """
+    result: dict[str, str] = {}
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        parts = stripped.split(maxsplit=1)
+        if len(parts) != 2:
+            continue
+        digest = parts[0].lower()
+        name = parts[1].lstrip("*").strip()
+        if len(digest) == 64 and all(c in "0123456789abcdef" for c in digest):
+            result[name] = digest
+    return result
+
+
+def _resolve_tag_for_commit(
+    org: str, repo: str, commit_hash: str,
+) -> str | None:
+    """Most-specific tag pointing at ``commit_hash``, or None.
+
+    Wraps the existing ``release_lookup._find_tags_for_commit`` so the
+    binary-verification path doesn't have to reach into that module's
+    private API directly.  Local import avoids a top-level cycle.
+    """
+    from .release_lookup import _find_tags_for_commit
+    tags = _find_tags_for_commit(org, repo, commit_hash)
+    return tags[0] if tags else None
+
+
+def _verify_via_gh_attestation(
+    org: str, content: bytes,
+) -> bool:
+    """Verify a binary's content has a SLSA attestation on GitHub.
+
+    Saves the bytes to a temp file, calls ``gh attestation verify <path>
+    --owner <org>`` and returns whether the gh CLI succeeded.  Returns
+    False on any failure, including ``gh`` not installed or the
+    attestations API returning no match for the artifact's digest.
+    """
+    if not shutil.which("gh"):
+        return False
+    fd, tmp_path = tempfile.mkstemp(prefix="verify-action-bin-", suffix=".bin")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(content)
+        result = subprocess.run(
+            ["gh", "attestation", "verify", tmp_path, "--owner", org],
+            capture_output=True, text=True, timeout=60,
+        )
+        return result.returncode == 0
+    except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError):
+        return False
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+
+def analyze_in_tree_binaries(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+) -> list[str]:
+    """Flag pre-compiled native binaries shipped in the action's tree
+    that lack verifiable upstream provenance.
+
+    An action that commits a Go/Rust/C binary alongside ``action.yml``
+    and exec's it from a small launcher is running opaque executable
+    code on the runner that no rebuild check can reconcile with source.
+    Verifiable provenance closes that gap; without it, the binary is
+    untrustworthy.
+
+    Each detected binary is verified through this cascade (first hit
+    wins):
+
+      1. ``gh attestation verify`` — bytes saved to a temp file and
+         checked against the GitHub attestation transparency log,
+         scoped to ``--owner <org>``.  Strongest signal: ties the
+         artifact's SHA256 digest to the workflow run that produced it.
+      2. ``SHA256SUMS`` release asset — tag's release asset is fetched
+         and parsed, and each binary's filename is matched + its
+         SHA256 hash compared.  Slightly weaker (no signature on the
+         checksum file itself; that's a future enhancement).
+
+    Binaries that pass either step are reported as ✓.  Binaries that
+    pass neither become hard errors.  An action that ships in-tree
+    binaries with no verification chain at all returns one error per
+    unverified binary; reviewers should treat that as "reject unless
+    upstream adds provenance".
+
+    Returns a list of error strings (empty = pass).
+    """
+    errors: list[str] = []
+
+    paths = _list_repo_files(org, repo, commit_hash)
+    if not paths:
+        return errors
+
+    prefix = f"{sub_path.rstrip('/')}/" if sub_path else ""
+    binaries: list[str] = []
+    for path in paths:
+        if prefix and not path.startswith(prefix):
+            continue
+        rel = path[len(prefix):] if prefix else path
+        if _looks_like_in_tree_binary(rel):
+            binaries.append(rel)
+
+    if not binaries:
+        return errors
+
+    console.print()
+    console.rule("[bold]In-tree Binary Check[/bold]")
+
+    # Look up the tag once — both verification paths key off the release
+    # for this commit.
+    tag_name = _resolve_tag_for_commit(org, repo, commit_hash)
+    sha256sums: dict[str, str] | None = None
+    if tag_name:
+        text = _fetch_release_asset_text(org, repo, tag_name, "SHA256SUMS")
+        if text:
+            sha256sums = _parse_sha256sums(text)
+
+    verified_attestation: list[str] = []
+    verified_sha256sums: list[str] = []
+    unverified: list[tuple[str, str]] = []  # (path, reason)
+
+    for binary in binaries:
+        full_path = f"{prefix}{binary}"
+        content = _fetch_blob_bytes(org, repo, commit_hash, full_path)
+        if content is None:
+            unverified.append((binary, "could not fetch from repo"))
+            continue
+
+        # 1. Attestation (preferred).
+        if _verify_via_gh_attestation(org, content):
+            verified_attestation.append(binary)
+            continue
+
+        # 2. SHA256SUMS fallback.
+        if sha256sums is not None:
+            name = binary.rsplit("/", 1)[-1]
+            expected = sha256sums.get(name)
+            if expected is None:
+                unverified.append((
+                    binary,
+                    f"not listed in SHA256SUMS at release {tag_name}",
+                ))
+                continue
+            actual = hashlib.sha256(content).hexdigest()
+            if actual != expected:
+                unverified.append((
+                    binary,
+                    f"SHA256 mismatch (expected {expected[:12]}…, got {actual[:12]}…)",
+                ))
+                continue
+            verified_sha256sums.append(binary)
+            continue
+
+        # Neither mechanism available.
+        if tag_name:
+            reason = (
+                f"no SLSA attestation and release {tag_name} has no SHA256SUMS"
+            )
+        else:
+            reason = (
+                "no tag found for this commit; cannot fetch release SHA256SUMS"
+            )
+        unverified.append((binary, reason))
+
+    # Summary block.
+    if verified_attestation:
+        console.print(
+            f"  [green]✓[/green] {len(verified_attestation)} binary(ies) "
+            f"verified via gh attestation (SLSA provenance):"
+        )
+        for path in verified_attestation:
+            console.print(f"    [green]✓[/green] {path}")
+    if verified_sha256sums:
+        console.print(
+            f"  [green]✓[/green] {len(verified_sha256sums)} binary(ies) "
+            f"verified against [bold]{tag_name}[/bold] release SHA256SUMS:"
+        )
+        for path in verified_sha256sums:
+            console.print(f"    [green]✓[/green] {path}")
+    if unverified:
+        console.print(
+            f"  [red]✗[/red] {len(unverified)} pre-compiled binary file(s) "
+            f"could not be verified:"
+        )
+        for path, reason in unverified[:10]:
+            console.print(f"    [red]{path}[/red]: [dim]{reason}[/dim]")
+        if len(unverified) > 10:
+            console.print(f"    [dim]    ... and {len(unverified) - 10} more[/dim]")
+
+    if not unverified:
+        return errors
+
+    console.print(
+        "  [dim]Action ships opaque executable code without verifiable "
+        "provenance for[/dim]"
+    )
+    console.print(
+        "  [dim]the listed binaries.  Reject unless upstream adds SLSA "
+        "attestations[/dim]"
+    )
+    console.print(
+        "  [dim](actions/attest-build-provenance) or a SHA256SUMS file at "
+        "the release.[/dim]"
+    )
+
+    sample = ", ".join(p for p, _ in unverified[:3])
+    if len(unverified) > 3:
+        sample += f", ... ({len(unverified) - 3} more)"
+    errors.append(
+        f"action ships {len(unverified)} unverified pre-compiled binary "
+        f"file(s) in-tree ({sample}) — no SLSA attestation and no "
+        f"matching SHA256SUMS at the release"
+    )
+    return errors

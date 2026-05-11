@@ -22,6 +22,7 @@ from verify_action_build.security import (
     analyze_binary_downloads,
     analyze_binary_downloads_recursive,
     analyze_dockerfile,
+    analyze_in_tree_binaries,
     analyze_lock_files,
     analyze_scripts,
     analyze_action_metadata,
@@ -30,6 +31,8 @@ from verify_action_build.security import (
 from verify_action_build.security import (
     _file_is_pure_data_fetch,
     _find_binary_downloads_js,
+    _looks_like_in_tree_binary,
+    _parse_sha256sums,
 )
 
 
@@ -1231,3 +1234,361 @@ const createHash = customLibrary.createHash('blake2')
         # Other existing patterns kept.
         for snippet in ("import * as sigstore from 'sigstore'", "cosign verify-blob"):
             assert self._has_verification(snippet) is True, snippet
+
+
+class TestLooksLikeInTreeBinary:
+    """Path-only heuristic for catching pre-compiled binary files in an
+    action's tree.  These tests pin the boundaries of the regex + extension
+    list so future tweaks don't accidentally widen or narrow the catch.
+    """
+
+    def test_go_cross_compile_naming(self):
+        # The runs-on/action shape: <name>-<os>-<arch>(.exe)?
+        for name in (
+            "main-linux-amd64",
+            "main-linux-arm64",
+            "main-darwin-amd64",
+            "main-darwin-arm64",
+            "main-windows-amd64.exe",
+            "tool-freebsd-amd64",
+            "agent-aix-ppc64le",
+        ):
+            assert _looks_like_in_tree_binary(name), name
+
+    def test_known_binary_extensions(self):
+        for name in (
+            "foo.exe", "foo.dll", "foo.so", "foo.dylib", "foo.bin",
+            "package.deb", "package.rpm", "Installer.msi", "App.dmg",
+            "archive.appimage",
+            "module.wasm",
+            "Library.jar", "App.war", "Foo.class",
+            "object.o", "object.a", "object.lib", "object.obj",
+        ):
+            assert _looks_like_in_tree_binary(name), name
+
+    def test_extension_is_case_insensitive(self):
+        # Windows PE files often have an upper-case ``.EXE``.
+        assert _looks_like_in_tree_binary("Setup.EXE") is True
+        assert _looks_like_in_tree_binary("App.DLL") is True
+
+    def test_normal_action_files_not_flagged(self):
+        for name in (
+            "action.yml", "package.json", "package-lock.json",
+            "tsconfig.json", "README.md", "CHANGELOG.md",
+            "index.js", "post.js", "index.template.js",
+            "src/main.ts", "dist/index.js", "dist/index.js.map",
+            "go.mod", "go.sum", "main.go",
+            "Makefile", ".gitignore", "LICENSE",
+        ):
+            assert not _looks_like_in_tree_binary(name), name
+
+    def test_substring_matches_dont_falsely_match(self):
+        # ``binsearch.md`` ends in ``-md`` but isn't ``-darwin-..``.
+        # ``setup-node-cache`` contains a hyphen but no os/arch suffix.
+        # ``configure-aws-credentials`` ditto.
+        for name in (
+            "binsearch.md",
+            "setup-node-cache",
+            "configure-aws-credentials",
+            "node-fetch-helper.js",
+            "linux-distro-detect.sh",
+        ):
+            assert not _looks_like_in_tree_binary(name), name
+
+    def test_licenses_txt_exempt(self):
+        # webpack/ncc commonly ship a licenses.txt next to the bundle.
+        # It's text metadata, not a binary, even though some bundlers
+        # name it confusingly.
+        assert _looks_like_in_tree_binary("dist/licenses.txt") is False
+        assert _looks_like_in_tree_binary("licenses.txt") is False
+
+
+class TestParseSha256sums:
+    """Parse the standard ``<sha>  <filename>`` format used by ``sha256sum``
+    and emitted by GitHub's ``actions/attest-build-provenance`` example
+    workflows.  Tolerant of comments, blank lines, the ``*`` binary-mode
+    marker and trailing whitespace; rejects malformed lines silently."""
+
+    def test_canonical_format(self):
+        text = (
+            "ef4c45e8f554efa1c79c7ef8213856698209cd693d32dc268a02dd38ff770b1b  main-linux-amd64\n"
+            "9c5e12573ff6d953068da8def2133d08a907d431c9ebf77ecff7036ef2792332  main-linux-arm64\n"
+            "75adbbab7aaf4ca05294d198a2175eeb921ababcd7faf9b07b328cddd4e13e54  main-windows-amd64.exe\n"
+        )
+        result = _parse_sha256sums(text)
+        assert result == {
+            "main-linux-amd64": "ef4c45e8f554efa1c79c7ef8213856698209cd693d32dc268a02dd38ff770b1b",
+            "main-linux-arm64": "9c5e12573ff6d953068da8def2133d08a907d431c9ebf77ecff7036ef2792332",
+            "main-windows-amd64.exe": "75adbbab7aaf4ca05294d198a2175eeb921ababcd7faf9b07b328cddd4e13e54",
+        }
+
+    def test_binary_mode_marker_stripped(self):
+        # ``sha256sum -b`` emits "<sha> *<filename>" — must still parse.
+        text = "ef4c45e8f554efa1c79c7ef8213856698209cd693d32dc268a02dd38ff770b1b *main-linux-amd64\n"
+        result = _parse_sha256sums(text)
+        assert "main-linux-amd64" in result
+        assert result["main-linux-amd64"].startswith("ef4c45e8")
+
+    def test_uppercase_digest_normalised_to_lowercase(self):
+        text = "EF4C45E8F554EFA1C79C7EF8213856698209CD693D32DC268A02DD38FF770B1B  X\n"
+        result = _parse_sha256sums(text)
+        assert result == {"X": "ef4c45e8f554efa1c79c7ef8213856698209cd693d32dc268a02dd38ff770b1b"}
+
+    def test_comments_and_blank_lines_ignored(self):
+        text = (
+            "# This is a comment\n"
+            "\n"
+            "ef4c45e8f554efa1c79c7ef8213856698209cd693d32dc268a02dd38ff770b1b  X\n"
+            "  \n"
+        )
+        assert _parse_sha256sums(text) == {
+            "X": "ef4c45e8f554efa1c79c7ef8213856698209cd693d32dc268a02dd38ff770b1b",
+        }
+
+    def test_malformed_lines_dropped(self):
+        text = (
+            "not-a-hash main-linux-amd64\n"
+            "deadbeef  too-short-digest\n"
+            "ef4c45e8f554efa1c79c7ef8213856698209cd693d32dc268a02dd38ff770b1b  good\n"
+            "z" * 64 + "  non-hex\n"
+        )
+        assert _parse_sha256sums(text) == {
+            "good": "ef4c45e8f554efa1c79c7ef8213856698209cd693d32dc268a02dd38ff770b1b",
+        }
+
+    def test_empty_input(self):
+        assert _parse_sha256sums("") == {}
+
+
+class TestAnalyzeInTreeBinaries:
+    """Whole-action check.  Detects pre-compiled binaries; verifies each
+    against ``gh attestation verify`` (preferred) or the release's
+    ``SHA256SUMS`` asset; only unverified binaries fail the action.
+    """
+
+    @staticmethod
+    def _mocked_env(
+        paths,
+        *,
+        tag=None,
+        sha256sums_text=None,
+        attest_ok=False,
+        blob_bytes=None,
+    ):
+        """Mock the whole verification cascade.  Defaults: no tag found,
+        no release SHA256SUMS, gh attestation says no — i.e. nothing to
+        verify against, so detected binaries become hard errors."""
+        # Use a tiny non-empty payload so SHA256 is deterministic across
+        # tests but not coincidentally any real release's hash.
+        default_bytes = b"BIN"
+        return _Patches(
+            mock.patch(
+                "verify_action_build.security._list_repo_files",
+                return_value=list(paths),
+            ),
+            mock.patch(
+                "verify_action_build.security._fetch_blob_bytes",
+                return_value=blob_bytes if blob_bytes is not None else default_bytes,
+            ),
+            mock.patch(
+                "verify_action_build.security._resolve_tag_for_commit",
+                return_value=tag,
+            ),
+            mock.patch(
+                "verify_action_build.security._fetch_release_asset_text",
+                return_value=sha256sums_text,
+            ),
+            mock.patch(
+                "verify_action_build.security._verify_via_gh_attestation",
+                return_value=attest_ok,
+            ),
+        )
+
+    def test_runs_on_action_shape_without_provenance_fails(self):
+        # The exact shape that prompted this check: pre-compiled Go
+        # binaries committed in the repo root next to a tiny launcher,
+        # AND no SHA256SUMS / attestation available — i.e. v2.1.1 era,
+        # before runs-on/action#37 added provenance.
+        paths = [
+            ".gitignore", "LICENSE", "Makefile", "README.md",
+            "action.yml", "go.mod", "go.sum",
+            "index.js", "index.template.js", "post.js", "main.go",
+            "main-linux-amd64", "main-linux-arm64",
+            "main-windows-amd64.exe",
+        ]
+        with self._mocked_env(paths):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert len(errors) == 1
+        msg = errors[0]
+        assert "main-linux-amd64" in msg
+        assert "3 unverified pre-compiled binary" in msg
+
+    def test_runs_on_action_shape_with_attestation_passes(self):
+        # v2.1.2 era: same in-tree binaries, but now ``gh attestation
+        # verify`` succeeds for each.  Action passes the check.
+        paths = [
+            "action.yml", "go.mod", "go.sum", "index.js", "main.go",
+            "main-linux-amd64", "main-linux-arm64",
+            "main-windows-amd64.exe",
+        ]
+        with self._mocked_env(paths, attest_ok=True):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert errors == []
+
+    def test_sha256sums_match_passes(self):
+        # No attestation, but the release ships SHA256SUMS and the in-
+        # tree binary's hash matches.
+        import hashlib as _hashlib
+        content = b"runs-on-binary"
+        digest = _hashlib.sha256(content).hexdigest()
+        sha256sums = f"{digest}  main-linux-amd64\n"
+        with self._mocked_env(
+            ["action.yml", "main-linux-amd64"],
+            tag="v2.1.2",
+            sha256sums_text=sha256sums,
+            attest_ok=False,
+            blob_bytes=content,
+        ):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert errors == []
+
+    def test_sha256sums_hash_mismatch_fails(self):
+        # SHA256SUMS lists the file but with a different hash than what
+        # the in-tree blob actually contains — the binary was tampered
+        # with after the release was built.  Hard fail.
+        wrong_digest = "0" * 64
+        sha256sums = f"{wrong_digest}  main-linux-amd64\n"
+        with self._mocked_env(
+            ["action.yml", "main-linux-amd64"],
+            tag="v2.1.2",
+            sha256sums_text=sha256sums,
+            blob_bytes=b"ACTUAL CONTENT",
+        ):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert len(errors) == 1
+        assert "1 unverified" in errors[0]
+
+    def test_binary_not_listed_in_sha256sums_fails(self):
+        # SHA256SUMS exists but doesn't list this binary — that's a
+        # publisher-side gap (forgot to include it in the checksum
+        # generation).  Treat as unverified.
+        sha256sums = "deadbeef" + "0" * 56 + "  some-other-file\n"
+        with self._mocked_env(
+            ["action.yml", "main-linux-amd64"],
+            tag="v2.1.2",
+            sha256sums_text=sha256sums,
+        ):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert len(errors) == 1
+
+    def test_attestation_preferred_over_sha256sums(self):
+        # When both mechanisms are available, attestation wins.  Pass an
+        # intentionally-broken SHA256SUMS to prove the SHA256SUMS path
+        # was never taken (otherwise we'd hit the mismatch branch).
+        with self._mocked_env(
+            ["action.yml", "main-linux-amd64"],
+            tag="v2.1.2",
+            sha256sums_text="0" * 64 + "  main-linux-amd64\n",
+            attest_ok=True,
+            blob_bytes=b"DIFFERENT FROM SHA256SUMS",
+        ):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert errors == []
+
+    def test_blob_fetch_failure_fails_that_binary(self):
+        # If we can't even fetch the binary's bytes, we can't verify —
+        # treat as unverified.  Other binaries that DO fetch are
+        # evaluated independently.
+        with self._mocked_env(
+            ["action.yml", "main-linux-amd64"],
+            blob_bytes=None,  # _fetch_blob_bytes returns None
+        ):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert len(errors) == 1
+        assert "1 unverified" in errors[0]
+
+    def test_normal_node_action_passes(self):
+        # No binaries detected → nothing to verify, no errors.  The
+        # mocks for verification helpers don't need to match anything.
+        paths = [
+            "action.yml", "package.json", "package-lock.json",
+            "README.md", "tsconfig.json",
+            "src/main.ts", "src/util.ts",
+            "dist/index.js", "dist/index.js.map", "dist/licenses.txt",
+        ]
+        with self._mocked_env(paths):
+            assert analyze_in_tree_binaries("org", "repo", "a" * 40) == []
+
+    def test_composite_action_passes(self):
+        paths = ["action.yml", "Dockerfile", "scripts/install.sh"]
+        with self._mocked_env(paths):
+            assert analyze_in_tree_binaries("org", "repo", "a" * 40) == []
+
+    def test_single_exe_at_root_fails(self):
+        with self._mocked_env(["action.yml", "tool.exe", "index.js"]):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert len(errors) == 1
+        assert "tool.exe" in errors[0]
+
+    def test_jar_in_lib_directory_fails(self):
+        with self._mocked_env(["action.yml", "lib/runtime.jar"]):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert len(errors) == 1
+        assert "lib/runtime.jar" in errors[0]
+
+    def test_sub_path_filters_to_subaction(self):
+        paths = [
+            "other-action/main-linux-amd64",
+            "my-action/action.yml",
+            "my-action/index.js",
+        ]
+        with self._mocked_env(paths):
+            assert analyze_in_tree_binaries(
+                "org", "repo", "a" * 40, sub_path="my-action",
+            ) == []
+
+    def test_sub_path_flags_within_subaction(self):
+        paths = [
+            "my-action/action.yml",
+            "my-action/main-linux-amd64",
+        ]
+        with self._mocked_env(paths):
+            errors = analyze_in_tree_binaries(
+                "org", "repo", "a" * 40, sub_path="my-action",
+            )
+        assert len(errors) == 1
+        assert "main-linux-amd64" in errors[0]
+
+    def test_empty_tree_returns_no_errors(self):
+        with self._mocked_env([]):
+            assert analyze_in_tree_binaries("org", "repo", "a" * 40) == []
+
+    def test_many_binaries_truncates_in_message(self):
+        paths = ["action.yml"] + [
+            f"main-linux-amd64-{i}.exe" for i in range(20)
+        ]
+        with self._mocked_env(paths):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert len(errors) == 1
+        msg = errors[0]
+        assert "20 unverified pre-compiled binary" in msg
+        assert "17 more" in msg
+
+
+class _Patches:
+    """Tiny context manager that enters/exits a sequence of mock.patch
+    objects together — used by TestAnalyzeInTreeBinaries to keep the
+    cascade of patches readable."""
+
+    def __init__(self, *patches):
+        self._patches = patches
+        self._entered: list = []
+
+    def __enter__(self):
+        for p in self._patches:
+            self._entered.append(p.__enter__())
+        return self
+
+    def __exit__(self, *args):
+        for p in reversed(self._patches):
+            p.__exit__(*args)
