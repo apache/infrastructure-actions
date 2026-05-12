@@ -49,6 +49,7 @@
 - aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7
 - aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37
 - aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885
+- azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
 - azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4
 - azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2
 - azure/setup-kubectl@776406bce94f63e41d621b960d78ee25c8b76ede
