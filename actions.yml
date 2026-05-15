@@ -80,9 +80,6 @@ astral-sh/setup-uv:
     # needed for helm/chart-testing-action @ v2.8.0
     tag: v7.0.0
     expires_at: 2026-06-27
-  681c641aba71e4a1c380be3ab5e12ad51f415867:
-    tag: v7.1.6
-    expires_at: 2026-05-15
   eac588ad8def6316056a12d4907a9d4d84ff7a3b:
     tag: v7.3.0
     expires_at: 2026-05-24
@@ -245,9 +242,6 @@ coursier/cache-action:
 coursier/setup-action:
   '*':
     keep: true
-  f7be3eb3dcef84a4e16fc8cd75c87beb2e5cbcc9:
-    tag: v2.0.2
-    expires_at: 2026-05-15
   7acb5c9ea69bc1a1bb185ec45ebce2ac114f3628:
     tag: v2.0.3
     expires_at: 2026-06-13
