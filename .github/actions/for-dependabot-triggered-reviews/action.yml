@@ -215,7 +215,7 @@ runs:
       if: false
     - uses: sbt/setup-sbt@93e926cbdb4a428e41b4ef754124ec82925ffdc2  # v1.1.23
       if: false
-    - uses: scalacenter/sbt-dependency-submission@f43202114d7522a4b233e052f82c2eea8d658134  # v3.2.1
+    - uses: scalacenter/sbt-dependency-submission@1cc96a7038ea2b014c200c1dae3a0cc92293b91d  # v3.2.2
       if: false
     - uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c  # v3.0.3
       if: false
