@@ -215,6 +215,9 @@ commit-check/commit-check-action:
     expires_at: 2026-07-14
   7c158d4541309c5952de3343151750882b036d10:
     tag: v2.6.0
+    expires_at: 2026-08-08
+  2239d8980732e84a380552fdd71e1d49e149baf3:
+    tag: v2.6.1
 conda-incubator/setup-miniconda:
   '*':
     keep: true
@@ -525,6 +528,9 @@ j178/prek-action:
     expires_at: 2026-07-27
   6ad80277337ad479fe43bd70701c3f7f8aa74db3:
     tag: v2.0.3
+    expires_at: 2026-08-08
+  bdca6f102f98e2b4c7029491a53dfd366469e33d:
+    tag: v2.0.4
 JamesIves/github-pages-deploy-action:
   d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
     tag: v4.8.0
