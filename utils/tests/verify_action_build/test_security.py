@@ -1085,6 +1085,73 @@ const data = JSON.parse(await response.readBody())
 """
         assert _file_is_pure_data_fetch(content) is True
 
+    # The exact pattern that triggered the false positive on PR #848
+    # (manusa/actions-setup-minikube@v2.17.0): a thin axios wrapper that
+    # sets ``headers.Authorization = `token ${githubToken}`` and returns
+    # the raw response.  The file is a transport-layer helper — no
+    # data-parse markers, no binary handling — but the Authorization
+    # header is an unambiguous "authenticated API call" signal.
+    MANUSA_GITHUB_API_HELPER = """\
+'use strict';
+
+const axios = require('axios');
+
+const apiBaseUrl = process.env.GITHUB_API_URL || 'https://api.github.com';
+const serverBaseUrl = process.env.GITHUB_SERVER_URL || 'https://github.com';
+
+const gitHubRequest = async ({url, githubToken, options = {}}) => {
+  const headers = {};
+  if (githubToken) {
+    headers.Authorization = `token ${githubToken}`;
+  }
+  return axios({method: 'GET', ...options, url, headers});
+};
+
+module.exports = {gitHubRequest, apiBaseUrl, serverBaseUrl};
+"""
+
+    def test_authorization_token_header_exempts(self):
+        # axios call + Authorization: `token ${...}` → API client shape,
+        # not a binary download.
+        assert _file_is_pure_data_fetch(self.MANUSA_GITHUB_API_HELPER) is True
+        assert _find_binary_downloads_js(self.MANUSA_GITHUB_API_HELPER) == []
+
+    def test_authorization_bearer_header_exempts(self):
+        # The other half of the same family — Bearer-prefixed auth.
+        bearer_client = """\
+const axios = require('axios');
+async function call(url, jwt) {
+  return axios({
+    method: 'GET',
+    url,
+    headers: { Authorization: `Bearer ${jwt}` },
+  });
+}
+"""
+        assert _file_is_pure_data_fetch(bearer_client) is True
+        assert _find_binary_downloads_js(bearer_client) == []
+
+    def test_authorization_with_extract_in_same_file_not_exempt(self):
+        # An API helper that *also* extracts a downloaded binary in the
+        # same file must keep the strict check — auth alone shouldn't
+        # whitewash a real binary handler.
+        mixed = """\
+const axios = require('axios');
+const tc = require('@actions/tool-cache');
+
+async function fetchManifest(token) {
+  return axios({ url: 'https://api.example.com/manifest',
+                 headers: { Authorization: `Bearer ${token}` } });
+}
+
+const archive = await tc.downloadTool('https://x/foo.tar.gz');
+await tc.extractTar(archive, dest);
+"""
+        assert _file_is_pure_data_fetch(mixed) is False
+        findings = _find_binary_downloads_js(mixed)
+        # Both the axios call and the downloadTool stay flagged.
+        assert len(findings) == 2
+
 
 class TestFunctionDefinitionNotADownload:
     """Regression: ``async function downloadTool(...)`` is a function

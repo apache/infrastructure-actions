@@ -1153,6 +1153,17 @@ _JS_DATA_PARSE_PATTERNS = [
     # graalvm/setup-graalvm's GDS metadata calls
     # (``http.get(requestUrl, { accept: 'application/json' })``) hit this.
     re.compile(r"['\"`]accept['\"`]\s*:\s*['\"`]application/json", re.IGNORECASE),
+    # Authorization header with token/Bearer auth: the file is making
+    # an authenticated API call, not pulling a public binary.  Public
+    # release-asset downloads from S3/CDN/GitHub Releases don't use
+    # bearer auth, so this is a strong "API client, not downloader"
+    # signal. manusa/actions-setup-minikube's ``src/github.js`` helper
+    # — a thin axios wrapper that sets ``headers.Authorization =
+    # `token ${githubToken}`` and returns the raw response — hits this.
+    re.compile(
+        r"\bAuthorization\b\s*[:=]\s*[`\"'](?:token |Bearer )",
+        re.IGNORECASE,
+    ),
 ]
 
 # Markers indicating the response is treated as a binary or executable —
