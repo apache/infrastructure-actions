@@ -1302,6 +1302,32 @@ class TestLooksLikeInTreeBinary:
         assert _looks_like_in_tree_binary("dist/licenses.txt") is False
         assert _looks_like_in_tree_binary("licenses.txt") is False
 
+    def test_matlab_platform_dir_naming(self):
+        # MATLAB's launcher convention: dist/bin/<platform>/run-matlab-command
+        # where <platform> is MATLAB's own arch identifier and the file has
+        # no extension.  matlab-actions/run-tests@v3.1.1 ships these:
+        for path in (
+            "dist/bin/glnxa64/run-matlab-command",
+            "dist/bin/maca64/run-matlab-command",
+            "dist/bin/maci64/run-matlab-command",
+        ):
+            assert _looks_like_in_tree_binary(path), path
+        # The .exe sibling was already caught by extension; keep it green.
+        assert _looks_like_in_tree_binary("dist/bin/win64/run-matlab-command.exe")
+
+    def test_matlab_sibling_text_files_not_flagged(self):
+        # license.txt and thirdpartylicenses.txt sit in dist/bin/ directly,
+        # not under a <platform>/ subdir — and licenses.txt is exempt by
+        # name anyway.
+        assert not _looks_like_in_tree_binary("dist/bin/license.txt")
+        assert not _looks_like_in_tree_binary("dist/bin/thirdpartylicenses.txt")
+
+    def test_platform_dir_requires_parent(self):
+        # A file *named* glnxa64 at the repo root is not a binary launcher.
+        # The signal is parent-directory == platform, not filename.
+        assert not _looks_like_in_tree_binary("glnxa64")
+        assert not _looks_like_in_tree_binary("docs/glnxa64.md")
+
 
 class TestParseSha256sums:
     """Parse the standard ``<sha>  <filename>`` format used by ``sha256sum``
