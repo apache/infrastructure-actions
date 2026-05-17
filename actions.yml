@@ -1019,3 +1019,6 @@ zizmorcore/zizmor-action:
     expires_at: 2026-07-08
   b1d7e1fb5de872772f31590499237e7cce841e8e:
     tag: v0.5.3
+    expires_at: 2026-08-09
+  5f14fd08f7cf1cb1609c1e344975f152c7ee938d:
+    tag: v0.5.6
