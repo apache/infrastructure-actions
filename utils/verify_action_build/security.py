@@ -1651,6 +1651,18 @@ _PLATFORM_ARCH_BINARY_RE = re.compile(
     r"(?:\.exe)?$"
 )
 
+# Some toolchains drop platform info into the *parent directory* rather
+# than the filename, so the cross-compile regex above misses them.
+# MATLAB's launcher ships at ``dist/bin/<platform>/run-matlab-command``
+# where ``<platform>`` is MATLAB's own identifier (``glnxa64`` = Linux
+# x86_64, ``maca64`` = macOS arm64, ``maci64`` = macOS x86_64).  The
+# Windows sibling has a ``.exe`` and is already caught by extension.
+_PLATFORM_DIR_NAMES = frozenset({
+    "glnxa64",
+    "maca64",
+    "maci64",
+})
+
 # Filename patterns that LOOK binary but are conventional in JS/TS or other
 # textual sources — don't false-positive these.
 _IN_TREE_BINARY_EXEMPT_NAMES = {
@@ -1664,8 +1676,9 @@ def _looks_like_in_tree_binary(path: str) -> bool:
     pre-compiled native binary by name alone.
 
     Cheap path-only heuristic — no fetch, no magic-byte sniff.  Known
-    binary extensions and cross-compile platform/arch suffixes both
-    trigger; conventional text artifacts are exempted.
+    binary extensions, cross-compile platform/arch suffixes and
+    platform-named parent directories all trigger; conventional text
+    artifacts are exempted.
     """
     name = path.rsplit("/", 1)[-1]
     if name in _IN_TREE_BINARY_EXEMPT_NAMES:
@@ -1674,6 +1687,9 @@ def _looks_like_in_tree_binary(path: str) -> bool:
     if lower.endswith(_IN_TREE_BINARY_EXTENSIONS):
         return True
     if _PLATFORM_ARCH_BINARY_RE.search(lower):
+        return True
+    parts = path.split("/")
+    if len(parts) >= 2 and parts[-2] in _PLATFORM_DIR_NAMES:
         return True
     return False
 
