@@ -176,6 +176,14 @@ bytedeco/javacpp-presets:
 carabiner-dev/actions/ampel/verify:
   e0e3b8149dafed833431095bc148d50e7eade4e8:
     tag: v1.2.0
+carabiner-dev/actions/install/ampel:
+  2a11d59a135c5e291f305f249a92ad7903e3ee0f:
+    # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
+    tag: v1.1.7
+carabiner-dev/actions/install/bnd:
+  2a11d59a135c5e291f305f249a92ad7903e3ee0f:
+    # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
+    tag: v1.1.7
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
