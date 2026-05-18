@@ -181,18 +181,16 @@ carabiner-dev/actions/install/ampel:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
     tag: v1.1.7
 carabiner-dev/actions/install/ampel-bootstrap:
+  # level-3 transitive: called by install/download-and-verify; commit is untagged
+  # (per upstream: "bootstrap rotated to ampel v1.2.1")
   0a075bb75a68646d05f99c85cbbf2be40dd8e442:
-    # level-3 transitive: called by install/download-and-verify
-    # (per upstream: "bootstrap rotated to ampel v1.2.1")
-    tag: v1.1.7
 carabiner-dev/actions/install/bnd:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
     tag: v1.1.7
 carabiner-dev/actions/install/download-and-verify:
+  # level-2 transitive: called by install/{ampel,bnd} @ v1.1.7; commit is untagged
   6022a065d6420de5d86333ecfb2b25c57f84b699:
-    # level-2 transitive: called by install/{ampel,bnd} @ v1.1.7
-    tag: v1.1.7
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
