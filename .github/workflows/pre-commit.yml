@@ -38,6 +38,6 @@ jobs:
       - name: Run pre-commit checks
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
-          uv tool install pre-commit
+          uv tool install prek
           uv tool ensurepath
-          pre-commit run --all-files --color always --show-diff-on-failure
+          prek run --all-files --color always --show-diff-on-failure
