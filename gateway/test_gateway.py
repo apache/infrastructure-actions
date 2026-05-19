@@ -82,6 +82,23 @@ def test_update_refs():
     update_refs(steps, refs)
     assert refs == expected_refs
 
+def test_update_refs_none_details():
+    steps = load_yaml_string('''
+    - uses: carabiner-dev/actions/install/ampel-bootstrap@9db1a064ca5691ef6f5d983031739ca287de0968
+    ''')
+
+    refs: ActionsYAML = load_yaml_string('''
+    carabiner-dev/actions/install/ampel-bootstrap:
+      0a075bb75a68646d05f99c85cbbf2be40dd8e442:
+    ''')
+
+    update_refs(steps, refs)
+
+    bootstrap = refs["carabiner-dev/actions/install/ampel-bootstrap"]
+    assert bootstrap["0a075bb75a68646d05f99c85cbbf2be40dd8e442"]["expires_at"] == calculate_expiry(12)
+    assert "9db1a064ca5691ef6f5d983031739ca287de0968" in bootstrap
+
+
 def test_update_refs_expiry():
     steps = [
         {"uses": "dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36"},
