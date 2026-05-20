@@ -234,7 +234,9 @@ def update_refs(
 
         refs = action_refs[name]
         if new_ref not in refs:
-            for _, details in refs.items():
+            for ref_key, details in list(refs.items()):
+                if details is None:
+                    refs[ref_key] = details = {}
                 if not details.get("keep"):
                     new_expiry = calculate_expiry(12)
                     if "expires_at" not in details or details["expires_at"] > new_expiry:
