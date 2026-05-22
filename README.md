@@ -121,11 +121,11 @@ graph LR
     dependabot-->composite
     dependabot-.verified by.-verify["verify_dependabot_action.yml<br/>(rebuild &amp; diff)"]
 
-    composite=="update_actions.yml<br/>(on merge)"==>actions
+    composite=="update_allowlist.yml<br/>(on merge)"==>actions
     cron=="remove_expired.yml"==>actions
 
-    actions=="update_composite_action.yml"==>composite
-    actions=="update_composite_action.yml"==>approved
+    actions=="update_allowlist.yml"==>composite
+    actions=="update_allowlist.yml"==>approved
 
     guard["check_approved_limit.yml<br/>(fails at 800 / 1000)"]-.monitors.-approved
 
@@ -149,11 +149,11 @@ Solid arrows (`==>`) are workflow regeneration edges — the "source → generat
 ```mermaid
 graph TD;
     manual["manual PR"]--new entry-->actions.yml
-    actions.yml--"update_composite_action.yml"-->composite[".github/actions/for-dependabot-triggered-reviews/action.yml"]
-    actions.yml--"update_composite_action.yml"-->approved["approved_patterns.yml"]
+    actions.yml--"update_allowlist.yml"-->composite[".github/actions/for-dependabot-triggered-reviews/action.yml"]
+    actions.yml--"update_allowlist.yml"-->approved["approved_patterns.yml"]
 ```
 
-A human-authored PR edits `actions.yml` directly. Once it merges to `main`, the **`update_composite_action.yml`** workflow regenerates both `.github/actions/for-dependabot-triggered-reviews/action.yml` and `approved_patterns.yml` from the new entries, so contributors never have to hand-edit the generated files.
+A human-authored PR edits `actions.yml` directly. Once it merges to `main`, the **`update_allowlist.yml`** workflow regenerates both `.github/actions/for-dependabot-triggered-reviews/action.yml` and `approved_patterns.yml` from the new entries, so contributors never have to hand-edit the generated files.
 
 To request addition of an action to the allow list:
 
@@ -185,14 +185,14 @@ The infrastructure team will review your request and either approve, request cha
 graph TD;
     dependabot--"PR updates"-->composite[".github/actions/for-dependabot-triggered-reviews/action.yml"]
     dependabot-.verified by.-verify["verify_dependabot_action.yml"]
-    composite--"update_actions.yml (on merge)"-->actions.yml
-    actions.yml--"update_actions.yml"-->approved["approved_patterns.yml"]
+    composite--"update_allowlist.yml (on merge)"-->actions.yml
+    actions.yml--"update_allowlist.yml"-->approved["approved_patterns.yml"]
 ```
 
 In most cases, new versions are automatically added through Dependabot:
 - Dependabot opens PRs against `.github/actions/for-dependabot-triggered-reviews/action.yml` to update actions to the newest releases
 - **`verify_dependabot_action.yml`** runs on each such PR, rebuilds the action's compiled JavaScript in Docker, and diffs it against the published version (see [Automated Verification in CI](#automated-verification-in-ci))
-- Once a reviewer merges the PR, **`update_actions.yml`** reflects the new commit SHAs back into `actions.yml` and regenerates `approved_patterns.yml`
+- Once a reviewer merges the PR, **`update_allowlist.yml`** reflects the new commit SHAs back into `actions.yml` and regenerates `approved_patterns.yml`
 - The previously approved version is marked with an `expires_at` date 3 months out, giving projects a grace period to update their workflows; see [Automatic Expiration of Old Versions](#automatic-expiration-of-old-versions) for how the cleanup runs
 
 Projects are encouraged to help review updates to actions they use. Please have a look at the diff and mention in your approval what you have checked and why you think the action is safe.
@@ -356,15 +356,15 @@ If you add older version of the action and want to set an expiration date for it
 ```mermaid
 graph TD;
     entry["actions.yml entry<br/>with expires_at"]--"remove_expired.yml (daily, 02:04 UTC)"-->actions.yml
-    actions.yml--"update_composite_action.yml"-->composite[".github/actions/for-dependabot-triggered-reviews/action.yml"]
-    actions.yml--"update_composite_action.yml"-->approved["approved_patterns.yml"]
+    actions.yml--"update_allowlist.yml"-->composite[".github/actions/for-dependabot-triggered-reviews/action.yml"]
+    actions.yml--"update_allowlist.yml"-->approved["approved_patterns.yml"]
 ```
 
 Routine cleanup of superseded versions is automated:
 
 - Any entry in `actions.yml` with an `expires_at: YYYY-MM-DD` field is a candidate for removal.
 - Dependabot-driven updates (see [Updating Version of Already Approved Action](#updating-version-of-already-approved-action)) set `expires_at` to **3 months out** on the previously approved version. For manually added older versions, set `expires_at` explicitly (see [Manual Addition of Specific Versions](#manual-addition-of-specific-versions)).
-- The **`remove_expired.yml`** workflow runs daily at **02:04 UTC**. Every entry whose `expires_at` date has passed is deleted from `actions.yml`; the workflow then commits the change and lets `update_composite_action.yml` regenerate `approved_patterns.yml` and the dependabot composite.
+- The **`remove_expired.yml`** workflow runs daily at **02:04 UTC**. Every entry whose `expires_at` date has passed is deleted from `actions.yml`; the workflow then commits the change and lets `update_allowlist.yml` regenerate `approved_patterns.yml` and the dependabot composite.
 - Entries without `expires_at` (for example, `keep: true` wildcards and the current approved version) are never auto-removed — removal of those requires a manual PR.
 
 No human action is required for the routine case: projects get a 3-month grace window after a version bump, and the old entry disappears on its own afterwards.
