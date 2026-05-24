@@ -671,6 +671,9 @@ manusa/actions-setup-minikube:
     expires_at: 2026-06-14
   96202dee4ae1c2f46a62fe197273aaf22b83f42d:
     tag: v2.16.1
+    expires_at: 2026-08-16
+  b65276017fdec6f1e6498129fb740e34e260dc55:
+    tag: v2.18.0
 matlab-actions/run-tests:
   4a3d2e8bdc811f72defb8122e46a009312acc198:
     tag: v2.3.1
