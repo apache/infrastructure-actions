@@ -454,6 +454,9 @@ golangci/golangci-lint-action:
     expires_at: 2026-06-12
   1e7e51e771db61008b38414a730f564565cf7c20:
     tag: v9.2.0
+    expires_at: 2026-08-16
+  82606bf257cbaff209d206a39f5134f0cfbfd2ee:
+    tag: v9.2.1
 google-github-actions/auth:
   7c6bc770dae815cd3e89ee6cdf493a5fab2cc093:
     tag: v3.0.0
@@ -735,6 +738,9 @@ opentofu/setup-opentofu:
     expires_at: 2026-06-14
   fc711fa910b93cba0f3fbecaafc9f42fd0c411cb:
     tag: v2.0.0
+    expires_at: 2026-08-16
+  847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4:
+    tag: v2.0.1
 oracle-actions/setup-java:
   '*':
     keep: true

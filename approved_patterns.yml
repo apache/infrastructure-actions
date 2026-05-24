@@ -163,6 +163,7 @@
 - golangci/*@*
 - golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd
 - golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20
+- golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee
 - google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
 - google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
 - gr2m/twitter-together@*
@@ -257,6 +258,7 @@
 - olafurpg/setup-scala@*
 - opentofu/setup-opentofu@9d84900f3238fab8cd84ce47d658d25dd008be2f
 - opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb
+- opentofu/setup-opentofu@847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4
 - oracle-actions/setup-java@*
 - orhun/git-cliff-action@e16f179f0be49ecdfe63753837f20b9531642772
 - orhun/git-cliff-action@c93ef52f3d0ddcdcc9bd5447d98d458a11cd4f72
