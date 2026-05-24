@@ -103,7 +103,7 @@ runs:
       if: false
     - uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98  # v3.1.0
       if: false
-    - uses: docker/bake-action@a66e1c87e2eca0503c343edf1d208c716d54b8a8  # v7.1.0
+    - uses: docker/bake-action@6614cfa25eff9a0b2b2697efb0b6159e7680d584  # v7.2.0
       if: false
     - uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf  # v7.2.0
       if: false
