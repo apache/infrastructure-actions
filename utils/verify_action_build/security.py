@@ -1579,6 +1579,46 @@ def analyze_binary_downloads(
     if not any_downloads:
         console.print("  [green]✓[/green] No binary downloads detected")
 
+    # Per-action trusted-download escape hatch: if every failure on this
+    # action can be reattributed to a download path whose trust anchor is
+    # GitHub-level (immutable release + GitHub-attested Sigstore bundle),
+    # downgrade the failures to warnings.  The check is opt-in per action
+    # via :data:`TRUSTED_DOWNLOAD_PROVENANCE` — actions without an entry
+    # see no behaviour change.  The provenance is verified at scan time;
+    # an entry alone is not enough.
+    if failures and f"{org}/{repo}" in TRUSTED_DOWNLOAD_PROVENANCE:
+        passed, reason = verify_trusted_download_provenance(org, repo)
+        config = TRUSTED_DOWNLOAD_PROVENANCE[f"{org}/{repo}"]
+        if passed:
+            console.print()
+            console.print(
+                f"  [yellow]![/yellow] [bold]Trusted-download provenance accepted[/bold]: "
+                f"{reason}"
+            )
+            console.print(
+                f"  [dim]Rationale: {config['rationale']}[/dim]"
+            )
+            console.print(
+                f"  [yellow]![/yellow] {len(failures)} unverified-download "
+                f"finding(s) reclassified as warnings"
+            )
+            warnings.extend(
+                f"trusted via GitHub release provenance ({reason}): {f}"
+                for f in failures
+            )
+            failures = []
+        else:
+            console.print()
+            console.print(
+                f"  [red]✗[/red] [bold]Trusted-download provenance check FAILED[/bold]: "
+                f"{reason}"
+            )
+            console.print(
+                f"  [dim]Action {org}/{repo} is in TRUSTED_DOWNLOAD_PROVENANCE but "
+                f"the runtime check did not confirm the trust anchor; treating "
+                f"failures as unverified.[/dim]"
+            )
+
     return warnings, failures
 
 
@@ -1840,6 +1880,204 @@ def _verify_via_gh_attestation(
             os.unlink(tmp_path)
         except OSError:
             pass
+
+
+# Per-action declarative trust for runtime binary downloads that the action
+# does NOT verify with an in-source checksum but which we accept on the basis
+# of GitHub-level release provenance (release marked ``immutable`` on GitHub
+# + Sigstore attestation published by ``actions/attest-build-provenance``).
+#
+# Adding an entry here is a security review decision: it asserts that the
+# trust anchor for binaries this action downloads at runtime lives at the
+# GitHub / Sigstore layer rather than in the action's own source.  At scan
+# time the verify pipeline confirms both halves of that assertion before
+# downgrading any unverified-download finding for the action.
+#
+# Schema:
+#   "<org>/<repo>": {
+#       "release_repo": "<org>/<repo>",   # repo whose releases publish the binaries
+#       "rationale":    "<why we accept this — link the upstream confirmation>",
+#   }
+TRUSTED_DOWNLOAD_PROVENANCE: dict[str, dict[str, str]] = {
+    "golangci/golangci-lint-action": {
+        "release_repo": "golangci/golangci-lint",
+        "rationale": (
+            "Maintainer @ldez confirmed in "
+            "https://github.com/golangci/golangci-lint-action/issues/1396 "
+            "that golangci-lint releases since v2.12.2 are immutable on "
+            "GitHub and publish SLSA attestations via actions/attest, and "
+            "that the action itself is immutable since v9.2.1. Trust anchor "
+            "is GitHub release immutability + Sigstore attestation rather "
+            "than an in-source checksum check."
+        ),
+    },
+}
+
+
+# Asset-name preferences for the attestation spot-check. ``gh attestation
+# verify`` filters by the SLSA-provenance predicate type by default, so the
+# spot-check asset must have a SLSA attestation attached — not every release
+# asset does. SBOM JSON files published by ``actions/attest-build-provenance``
+# carry a SLSA attestation and are typically a few hundred KB (vs tens of
+# MB for the per-platform binary tarballs), so they make the cheapest valid
+# probe; binary tarballs are the durable fallback when no SBOM is present.
+# A combined ``checksums.txt`` / ``SHA256SUMS`` file is intentionally NOT
+# preferred — those usually carry only an in-toto release attestation, not
+# SLSA provenance, and would cause ``gh attestation verify`` to 404.
+_PROVENANCE_ASSET_PREFERENCES = (
+    ".sbom.json",
+    ".intoto.jsonl",
+    ".tar.gz",
+    ".zip",
+)
+
+
+def _fetch_release_metadata(
+    org: str, repo: str, tag_or_latest: str = "latest",
+) -> dict | None:
+    """Fetch the GitHub release metadata for ``tag_or_latest``.
+
+    ``tag_or_latest="latest"`` resolves to the ``releases/latest`` endpoint;
+    any other value is treated as a tag name and resolved via
+    ``releases/tags/<tag>``.  Returns the parsed JSON dict on success or
+    None on any error (network, 404, JSON parse failure).
+    """
+    if tag_or_latest == "latest":
+        url = f"https://api.github.com/repos/{org}/{repo}/releases/latest"
+    else:
+        url = f"https://api.github.com/repos/{org}/{repo}/releases/tags/{tag_or_latest}"
+    headers = {"Accept": "application/vnd.github+json"}
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        resp = requests.get(url, headers=headers, timeout=15)
+        if not resp.ok:
+            return None
+        return resp.json()
+    except requests.RequestException:
+        return None
+
+
+def _fetch_release_asset_bytes(
+    org: str, repo: str, release: dict, name_preferences: tuple[str, ...] = (),
+) -> tuple[str | None, bytes | None]:
+    """Fetch the raw bytes of one asset from a fetched release dict.
+
+    Strategy:
+      * Prefer the first asset whose name contains any of
+        ``name_preferences`` substrings (case-insensitive), in order.
+      * Fall back to the smallest available asset by reported size.
+      * Download via the API id with ``Accept: application/octet-stream``
+        so GitHub redirects to the binary content.
+
+    Returns ``(asset_name, bytes)`` on success, ``(None, None)`` on any
+    failure.  Bounded by a 60s timeout to keep CI predictable.
+    """
+    assets = release.get("assets") or []
+    if not assets:
+        return None, None
+
+    chosen = None
+    for substr in name_preferences:
+        substr_lower = substr.lower()
+        for asset in assets:
+            if substr_lower in (asset.get("name") or "").lower():
+                chosen = asset
+                break
+        if chosen:
+            break
+    if chosen is None:
+        chosen = min(assets, key=lambda a: a.get("size") or (1 << 30))
+
+    asset_url = chosen.get("url")
+    if not asset_url:
+        return None, None
+
+    headers = {
+        "Accept": "application/octet-stream",
+    }
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        resp = requests.get(asset_url, headers=headers, timeout=60)
+        if resp.ok:
+            return chosen.get("name"), resp.content
+        return None, None
+    except requests.RequestException:
+        return None, None
+
+
+def verify_trusted_download_provenance(
+    action_org: str, action_repo: str,
+) -> tuple[bool, str]:
+    """Verify GitHub release provenance for an action's runtime downloads.
+
+    For actions listed in :data:`TRUSTED_DOWNLOAD_PROVENANCE`, the trust
+    anchor for binaries the action downloads at runtime is the GitHub /
+    Sigstore layer rather than an in-source checksum.  This function
+    confirms both halves of that anchor at scan time:
+
+      1. The configured release repo's ``releases/latest`` is marked
+         ``immutable`` on GitHub — i.e. the release metadata and assets
+         cannot be silently modified after publication.
+      2. At least one asset of that release has a valid GitHub-attested
+         Sigstore bundle retrievable via ``gh attestation verify``.
+
+    Returns ``(passed, reason)``.  ``passed`` is False (with an empty
+    reason) when the action has no entry in
+    :data:`TRUSTED_DOWNLOAD_PROVENANCE` — the caller should treat that as
+    "no opinion" and keep the existing failure.  When an entry exists,
+    ``passed`` reflects whether both checks succeeded and ``reason`` is a
+    one-line summary suitable for the check-result display.
+
+    The asset attestation spot-check downloads exactly one small text
+    asset (checksums.txt / SHA256SUMS / .sbom.json by preference,
+    smallest available otherwise) — enough to confirm the release's
+    publishing process emits attestations without paying the cost of
+    every per-platform binary.
+    """
+    config = TRUSTED_DOWNLOAD_PROVENANCE.get(f"{action_org}/{action_repo}")
+    if not config:
+        return False, ""
+
+    release_repo = config["release_repo"]
+    release_org, release_name = release_repo.split("/", 1)
+
+    release = _fetch_release_metadata(release_org, release_name, "latest")
+    if release is None:
+        return False, (
+            f"could not fetch latest release of {release_repo} "
+            f"(network failure or repo unavailable)"
+        )
+    tag = release.get("tag_name") or "unknown"
+    if not release.get("immutable"):
+        return False, (
+            f"latest release {release_repo}@{tag} is NOT marked immutable "
+            f"on GitHub (release.immutable=false)"
+        )
+
+    asset_name, asset_bytes = _fetch_release_asset_bytes(
+        release_org, release_name, release, _PROVENANCE_ASSET_PREFERENCES,
+    )
+    if not asset_bytes:
+        return False, (
+            f"{release_repo}@{tag} is immutable but no asset could be "
+            f"downloaded for the attestation spot-check"
+        )
+
+    if not _verify_via_gh_attestation(release_org, asset_bytes):
+        return False, (
+            f"{release_repo}@{tag} is immutable but `gh attestation verify` "
+            f"failed for asset {asset_name} — no Sigstore bundle found or "
+            f"signature did not verify"
+        )
+
+    return True, (
+        f"{release_repo}@{tag} is GitHub-immutable and asset {asset_name} "
+        f"has GitHub-attested Sigstore provenance"
+    )
 
 
 def analyze_in_tree_binaries(
