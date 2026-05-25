@@ -195,6 +195,9 @@ In most cases, new versions are automatically added through Dependabot:
 - Once a reviewer merges the PR, **`update_allowlist.yml`** reflects the new commit SHAs back into `actions.yml` and regenerates `approved_patterns.yml`
 - The previously approved version is marked with an `expires_at` date 3 months out, giving projects a grace period to update their workflows; see [Automatic Expiration of Old Versions](#automatic-expiration-of-old-versions) for how the cleanup runs
 
+> [!NOTE]
+> **Why `update_allowlist.yml` uses a PAT (`ALLOWLIST_WORKFLOW_TOKEN`) instead of `GITHUB_TOKEN`.** When the workflow commits the regenerated `actions.yml` / `approved_patterns.yml` / composite back to `main`, that push needs to re-trigger the downstream workflows that watch those files (e.g. `check_approved_limit.yml`, which runs on push to `approved_patterns.yml`, and any future audit workflow). GitHub deliberately suppresses the recursive trigger when the push is authenticated with the default `GITHUB_TOKEN`: per the [GitHub Actions docs](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow), *"when you use the repository's `GITHUB_TOKEN` to perform tasks, events triggered by the `GITHUB_TOKEN` will not create a new workflow run"*. Using a fine-grained PAT (or GitHub App installation token) stored in `ALLOWLIST_WORKFLOW_TOKEN` makes the push look like a regular commit to GitHub, so the downstream push-triggered workflows do run. The workflow falls back to `github.token` when the secret is absent (e.g. in forks), in which case the downstream chain simply won't fire — that's safe but means a manual re-run is needed.
+
 Projects are encouraged to help review updates to actions they use. Please have a look at the diff and mention in your approval what you have checked and why you think the action is safe.
 
 #### Verifying Compiled JavaScript

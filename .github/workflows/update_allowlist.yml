@@ -58,6 +58,13 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: true
+          # PAT (or GitHub App token) so the push at the end of this
+          # workflow re-triggers downstream push-triggered workflows
+          # (e.g. check_approved_limit.yml on approved_patterns.yml).
+          # GITHUB_TOKEN-authored pushes don't create new workflow runs,
+          # see https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow.
+          # Falls back to github.token in forks (downstream chain won't
+          # fire there — safe, but a manual re-run is needed).
           token: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }} # zizmor: ignore[secrets-outside-env]
           # On push/dispatch, check out the current tip of main rather
           # than the trigger SHA. A queued run that started on an older
@@ -115,6 +122,10 @@ jobs:
       - name: Commit and push changes
         if: ${{ github.event_name != 'pull_request' }}
         env:
+          # Same PAT/fallback as the checkout step: the push needs to
+          # re-trigger downstream push-triggered workflows, which a
+          # GITHUB_TOKEN push wouldn't. See the comment on the
+          # `actions/checkout` step above.
           GH_TOKEN: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }} # zizmor: ignore[secrets-outside-env]
         run: |
           AUTHOR_NAME=$(gh api /user --jq '.login' 2>/dev/null || echo "asfgit")
