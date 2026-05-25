@@ -29,10 +29,12 @@ from verify_action_build.security import (
     analyze_repo_metadata,
 )
 from verify_action_build.security import (
+    _fetch_release_asset_bytes,
     _file_is_pure_data_fetch,
     _find_binary_downloads_js,
     _looks_like_in_tree_binary,
     _parse_sha256sums,
+    verify_trusted_download_provenance,
 )
 
 
@@ -1702,6 +1704,322 @@ class TestAnalyzeInTreeBinaries:
         msg = errors[0]
         assert "20 unverified pre-compiled binary" in msg
         assert "17 more" in msg
+
+
+class TestVerifyTrustedDownloadProvenance:
+    """Runtime check that backs the TRUSTED_DOWNLOAD_PROVENANCE escape
+    hatch. The config alone is not enough — at scan time we must confirm
+    the release repo publishes immutable releases AND has a valid
+    Sigstore attestation on at least one asset.
+    """
+
+    _CONFIG = {
+        "testorg/testaction": {
+            "release_repo": "testorg/testtool",
+            "rationale": "test rationale",
+        },
+    }
+
+    def test_no_config_returns_no_opinion(self):
+        # Action without an entry: returns (False, "") so the caller
+        # leaves the existing failure as-is.
+        passed, reason = verify_trusted_download_provenance("unknown", "action")
+        assert passed is False
+        assert reason == ""
+
+    def test_release_fetch_failure(self):
+        with mock.patch.dict(
+            "verify_action_build.security.TRUSTED_DOWNLOAD_PROVENANCE",
+            self._CONFIG, clear=True,
+        ):
+            with mock.patch(
+                "verify_action_build.security._fetch_release_metadata",
+                return_value=None,
+            ):
+                passed, reason = verify_trusted_download_provenance(
+                    "testorg", "testaction",
+                )
+        assert passed is False
+        assert "could not fetch latest release" in reason
+        assert "testorg/testtool" in reason
+
+    def test_release_not_immutable_fails(self):
+        release = {
+            "tag_name": "v1.2.3",
+            "immutable": False,
+            "assets": [{"name": "tool.sbom.json", "size": 1024, "url": "u"}],
+        }
+        with mock.patch.dict(
+            "verify_action_build.security.TRUSTED_DOWNLOAD_PROVENANCE",
+            self._CONFIG, clear=True,
+        ):
+            with mock.patch(
+                "verify_action_build.security._fetch_release_metadata",
+                return_value=release,
+            ):
+                passed, reason = verify_trusted_download_provenance(
+                    "testorg", "testaction",
+                )
+        assert passed is False
+        assert "NOT marked immutable" in reason
+        assert "v1.2.3" in reason
+
+    def test_no_asset_downloadable_fails(self):
+        # Release is immutable but every asset download attempt fails —
+        # we can't run the attestation spot-check, so we can't accept
+        # the trust anchor.
+        release = {"tag_name": "v1.2.3", "immutable": True, "assets": []}
+        with mock.patch.dict(
+            "verify_action_build.security.TRUSTED_DOWNLOAD_PROVENANCE",
+            self._CONFIG, clear=True,
+        ):
+            with mock.patch(
+                "verify_action_build.security._fetch_release_metadata",
+                return_value=release,
+            ):
+                with mock.patch(
+                    "verify_action_build.security._fetch_release_asset_bytes",
+                    return_value=(None, None),
+                ):
+                    passed, reason = verify_trusted_download_provenance(
+                        "testorg", "testaction",
+                    )
+        assert passed is False
+        assert "no asset could be downloaded" in reason
+
+    def test_attestation_verify_failure(self):
+        release = {
+            "tag_name": "v2.12.2",
+            "immutable": True,
+            "assets": [{"name": "tool.sbom.json", "size": 340_000, "url": "u"}],
+        }
+        with mock.patch.dict(
+            "verify_action_build.security.TRUSTED_DOWNLOAD_PROVENANCE",
+            self._CONFIG, clear=True,
+        ):
+            with mock.patch(
+                "verify_action_build.security._fetch_release_metadata",
+                return_value=release,
+            ):
+                with mock.patch(
+                    "verify_action_build.security._fetch_release_asset_bytes",
+                    return_value=("tool.sbom.json", b"sbom-bytes"),
+                ):
+                    with mock.patch(
+                        "verify_action_build.security._verify_via_gh_attestation",
+                        return_value=False,
+                    ):
+                        passed, reason = verify_trusted_download_provenance(
+                            "testorg", "testaction",
+                        )
+        assert passed is False
+        assert "gh attestation verify" in reason
+        assert "tool.sbom.json" in reason
+
+    def test_happy_path(self):
+        # Immutable release + asset downloads + gh attestation verifies
+        # → escape hatch accepts the trust anchor.
+        release = {
+            "tag_name": "v2.12.2",
+            "immutable": True,
+            "assets": [{"name": "tool.sbom.json", "size": 340_000, "url": "u"}],
+        }
+        with mock.patch.dict(
+            "verify_action_build.security.TRUSTED_DOWNLOAD_PROVENANCE",
+            self._CONFIG, clear=True,
+        ):
+            with mock.patch(
+                "verify_action_build.security._fetch_release_metadata",
+                return_value=release,
+            ):
+                with mock.patch(
+                    "verify_action_build.security._fetch_release_asset_bytes",
+                    return_value=("tool.sbom.json", b"sbom-bytes"),
+                ):
+                    with mock.patch(
+                        "verify_action_build.security._verify_via_gh_attestation",
+                        return_value=True,
+                    ):
+                        passed, reason = verify_trusted_download_provenance(
+                            "testorg", "testaction",
+                        )
+        assert passed is True
+        assert "GitHub-immutable" in reason
+        assert "Sigstore provenance" in reason
+        assert "tool.sbom.json" in reason
+
+
+class TestFetchReleaseAssetBytes:
+    """Asset selection for the attestation spot-check: name-preference
+    ordering picks the cheapest valid probe (sbom > intoto > tarball >
+    zip); smallest-asset fallback only fires when no preference matches.
+    """
+
+    def test_prefers_sbom_over_tarball(self):
+        release = {
+            "assets": [
+                {"name": "tool-linux-amd64.tar.gz", "size": 50_000_000,
+                 "url": "https://api/tar"},
+                {"name": "tool.sbom.json", "size": 340_000,
+                 "url": "https://api/sbom"},
+            ],
+        }
+
+        captured_url = {}
+
+        def fake_get(url, headers=None, timeout=None):
+            captured_url["url"] = url
+            resp = mock.Mock()
+            resp.ok = True
+            resp.content = b"sbom-bytes"
+            return resp
+
+        with mock.patch(
+            "verify_action_build.security.requests.get",
+            side_effect=fake_get,
+        ):
+            name, content = _fetch_release_asset_bytes(
+                "org", "repo", release, (".sbom.json", ".tar.gz"),
+            )
+        assert name == "tool.sbom.json"
+        assert content == b"sbom-bytes"
+        assert captured_url["url"] == "https://api/sbom"
+
+    def test_falls_back_to_smallest_when_no_preference_matches(self):
+        # No asset matches the preference list — picks smallest by size.
+        release = {
+            "assets": [
+                {"name": "big.bin", "size": 100_000_000, "url": "https://api/big"},
+                {"name": "small.bin", "size": 1_000, "url": "https://api/small"},
+                {"name": "medium.bin", "size": 10_000, "url": "https://api/medium"},
+            ],
+        }
+
+        captured_url = {}
+
+        def fake_get(url, headers=None, timeout=None):
+            captured_url["url"] = url
+            resp = mock.Mock()
+            resp.ok = True
+            resp.content = b"x"
+            return resp
+
+        with mock.patch(
+            "verify_action_build.security.requests.get",
+            side_effect=fake_get,
+        ):
+            name, content = _fetch_release_asset_bytes(
+                "org", "repo", release, (".sbom.json",),
+            )
+        assert name == "small.bin"
+        assert captured_url["url"] == "https://api/small"
+
+    def test_empty_assets_returns_none(self):
+        name, content = _fetch_release_asset_bytes(
+            "org", "repo", {"assets": []}, (".sbom.json",),
+        )
+        assert name is None
+        assert content is None
+
+
+class TestAnalyzeBinaryDownloadsTrustedDownloadEscapeHatch:
+    """The branch inside analyze_binary_downloads that reclassifies
+    unverified-download failures as warnings when the action has a
+    TRUSTED_DOWNLOAD_PROVENANCE entry AND the runtime provenance check
+    passes."""
+
+    _CONFIG = {
+        "testorg/testaction": {
+            "release_repo": "testorg/testtool",
+            "rationale": "linked upstream confirmation",
+        },
+    }
+
+    # Action.yml with one unverified runtime download — generates a
+    # failure under the normal rules; the escape hatch decides whether
+    # that failure stands or is reclassified.
+    _ACTION_YML = """\
+name: Test
+runs:
+  using: composite
+  steps:
+    - name: Download tool
+      shell: bash
+      run: |
+        curl -fsSLO https://example.com/tool.tar.gz
+        tar xf tool.tar.gz
+"""
+
+    def test_passing_provenance_reclassifies_failures_to_warnings(self):
+        with mock.patch.dict(
+            "verify_action_build.security.TRUSTED_DOWNLOAD_PROVENANCE",
+            self._CONFIG, clear=True,
+        ):
+            with mock.patch(
+                "verify_action_build.security.fetch_action_yml",
+                return_value=self._ACTION_YML,
+            ):
+                with mock.patch(
+                    "verify_action_build.security.fetch_file_from_github",
+                    return_value=None,
+                ):
+                    with mock.patch(
+                        "verify_action_build.security.verify_trusted_download_provenance",
+                        return_value=(True, "testorg/testtool@v1 verified"),
+                    ):
+                        warnings, failures = analyze_binary_downloads(
+                            "testorg", "testaction", "a" * 40,
+                        )
+        assert failures == []
+        assert any("trusted via GitHub release provenance" in w for w in warnings)
+
+    def test_failing_provenance_preserves_failures(self):
+        with mock.patch.dict(
+            "verify_action_build.security.TRUSTED_DOWNLOAD_PROVENANCE",
+            self._CONFIG, clear=True,
+        ):
+            with mock.patch(
+                "verify_action_build.security.fetch_action_yml",
+                return_value=self._ACTION_YML,
+            ):
+                with mock.patch(
+                    "verify_action_build.security.fetch_file_from_github",
+                    return_value=None,
+                ):
+                    with mock.patch(
+                        "verify_action_build.security.verify_trusted_download_provenance",
+                        return_value=(False, "release not immutable"),
+                    ):
+                        warnings, failures = analyze_binary_downloads(
+                            "testorg", "testaction", "a" * 40,
+                        )
+        assert len(failures) >= 1
+        assert any("tool.tar.gz" in f for f in failures)
+
+    def test_no_config_entry_leaves_failures_alone(self):
+        # Action not in TRUSTED_DOWNLOAD_PROVENANCE: the escape hatch
+        # branch is skipped entirely and verify_trusted_download_provenance
+        # is never even consulted.
+        with mock.patch.dict(
+            "verify_action_build.security.TRUSTED_DOWNLOAD_PROVENANCE",
+            {}, clear=True,
+        ):
+            with mock.patch(
+                "verify_action_build.security.fetch_action_yml",
+                return_value=self._ACTION_YML,
+            ):
+                with mock.patch(
+                    "verify_action_build.security.fetch_file_from_github",
+                    return_value=None,
+                ):
+                    with mock.patch(
+                        "verify_action_build.security.verify_trusted_download_provenance",
+                    ) as verify_mock:
+                        warnings, failures = analyze_binary_downloads(
+                            "other", "action", "a" * 40,
+                        )
+        assert len(failures) >= 1
+        verify_mock.assert_not_called()
 
 
 class _Patches:
