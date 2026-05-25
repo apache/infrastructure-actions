@@ -22,6 +22,12 @@
 # overlapping pushes, silently overwriting one direction's edit. This
 # single workflow always runs both directions in order, so neither edit
 # is lost regardless of which file triggered the run. See #866.
+#
+# Also subsumes the former `check_approved_limit.yml`: the 800/1000-entry
+# cap on approved_patterns.yml is now enforced inline (see the "Check
+# approved actions count" step). Folding it in here means no downstream
+# push-triggered workflow needs to fire after this workflow commits, so
+# the workflow can authenticate with the default GITHUB_TOKEN — no PAT.
 name: Update Allowlist
 on:
   workflow_dispatch:
@@ -58,35 +64,11 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: true
-          # PAT (or GitHub App token) so the push at the end of this
-          # workflow re-triggers downstream push-triggered workflows
-          # (e.g. check_approved_limit.yml on approved_patterns.yml).
-          # GITHUB_TOKEN-authored pushes don't create new workflow runs,
-          # see https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow.
-          # Falls back to github.token in forks (downstream chain won't
-          # fire there — safe, but a manual re-run is needed).
-          token: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }} # zizmor: ignore[secrets-outside-env]
           # On push/dispatch, check out the current tip of main rather
           # than the trigger SHA. A queued run that started on an older
           # SHA would otherwise regenerate from stale inputs and either
           # undo the prior run's commit or fail to push.
           ref: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && 'main' || '' }}
-
-      - name: Print token details
-        if: ${{ github.event_name != 'pull_request' }}
-        env:
-          GH_TOKEN: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN }} # zizmor: ignore[secrets-outside-env]
-        run: |
-          echo "::group::Token details"
-          echo "Token user and permissions:"
-          gh api /user --jq '"Login: \(.login)\nName: \(.name)\nEmail: \(.email)"'
-          echo ""
-          echo "Token expiration:"
-          gh api /installation/token --jq '.expires_at' 2>/dev/null || echo "Token expiration not available (likely a PAT, not an installation token)"
-          echo ""
-          echo "Token scopes:"
-          curl -sS -H "Authorization: token ${GH_TOKEN}" -I https://api.github.com/ 2>/dev/null | grep -i 'x-oauth-scopes' || echo "No OAuth scopes header (fine-grained or app token)"
-          echo "::endgroup::"
 
       - run: pipx install uv
 
@@ -119,14 +101,26 @@ jobs:
           g.update_patterns(patterns, actions)
           PYEOF
 
+      - name: Check approved actions count
+        # Inlined from the former check_approved_limit.yml. The org-wide
+        # approved_patterns list has a hard limit of 1000 entries; we
+        # fail at 800 to give maintainers room to act before hitting the
+        # wall. Runs after regeneration and before commit/push, so an
+        # over-cap state never lands on main. See
+        # https://github.com/apache/infrastructure-actions/issues/602
+        run: |
+          LIMIT=800
+          COUNT=$(grep -c '^- ' approved_patterns.yml)
+          echo "Approved actions count: $COUNT / 1000 (warning threshold: $LIMIT)"
+          if [ "$COUNT" -ge "$LIMIT" ]; then
+            echo "::error::Approved actions count ($COUNT) has reached the warning threshold of $LIMIT. The org-wide limit is 1000. Time to clean up unused actions or explore workarounds. See https://github.com/apache/infrastructure-actions/issues/602"
+            exit 1
+          fi
+
       - name: Commit and push changes
         if: ${{ github.event_name != 'pull_request' }}
         env:
-          # Same PAT/fallback as the checkout step: the push needs to
-          # re-trigger downstream push-triggered workflows, which a
-          # GITHUB_TOKEN push wouldn't. See the comment on the
-          # `actions/checkout` step above.
-          GH_TOKEN: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }} # zizmor: ignore[secrets-outside-env]
+          GH_TOKEN: ${{ github.token }}
         run: |
           AUTHOR_NAME=$(gh api /user --jq '.login' 2>/dev/null || echo "asfgit")
           AUTHOR_EMAIL=$(gh api /user --jq '.email // "\(.login)@users.noreply.github.com"' 2>/dev/null || echo "asfgit@users.noreply.github.com")
