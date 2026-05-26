@@ -221,7 +221,7 @@ runs:
       if: false
     - uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe  # v1.0.4
       if: false
-    - uses: sbt/setup-sbt@2e222825582620cc38d2a54e674f3c01b7c14f5d  # v1.1.24
+    - uses: sbt/setup-sbt@4ed7b7ec4bfa2074fe48554c09e341267397247c  # v1.2.0
       if: false
     - uses: scalacenter/sbt-dependency-submission@1cc96a7038ea2b014c200c1dae3a0cc92293b91d  # v3.2.2
       if: false
