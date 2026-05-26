@@ -305,7 +305,6 @@
 - rust-lang/crates-io-auth-action@b7e9a28eded4986ec6b1fa40eeee8f8f165559ec
 - rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe
 - rustsec/*@*
-- sbt/setup-sbt@1cad58d595b729a71ca2254cdf5b43dd6f42d4bb
 - sbt/setup-sbt@6bec67c98f542b9e17369bfca0ec822ac1363194
 - sbt/setup-sbt@dd1ef7d7798fab5ce802a6adab3b782817b8c2d0
 - sbt/setup-sbt@508b753e53cb6095967669e0911487d2b9bc9f41
