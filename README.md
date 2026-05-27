@@ -122,7 +122,7 @@ graph LR
     dependabot-.verified by.-verify["<b>verify</b> job<br/>(rebuild &amp; diff)"]
 
     composite=="<b>update</b> job<br/>(on merge)"==>actions
-    cron=="<b>clean_up</b> job"==>actions
+    cron=="<b>remove_expired</b> job"==>actions
 
     actions=="<b>update</b> job"==>composite
     actions=="<b>update</b> job<br/>(cap check + regen)"==>approved
@@ -137,10 +137,10 @@ graph LR
     class verify job
 ```
 
-Solid arrows (`==>`) are regeneration edges — the "source → generated" flows that keep `actions.yml`, `approved_patterns.yml` and the dependabot composite in sync. Thin arrows feed the pipeline with new content (human or Dependabot PRs, cron), and dotted arrows are observer jobs that verify rather than mutate. Bold labels are job names (rather than workflow filenames) — `update` lives in `update_allowlist.yml`, `verify` in `verify_dependabot_action.yml` / `verify_manual_action.yml`, `clean_up` in `remove_expired.yml`.
+Solid arrows (`==>`) are regeneration edges — the "source → generated" flows that keep `actions.yml`, `approved_patterns.yml` and the dependabot composite in sync. Thin arrows feed the pipeline with new content (human or Dependabot PRs, cron), and dotted arrows are observer jobs that verify rather than mutate. Bold labels are job names (rather than workflow filenames) — `update` lives in `update.yml`, `verify` in `verify_dependabot_action.yml` / `verify_manual_action.yml`, `remove_expired` in `remove_expired.yml`.
 
 > [!NOTE]
-> The 800/1000-entry cap on `approved_patterns.yml` is enforced as a step inside the `update` job (formerly the separate `check_approved_limit.yml`). It runs after regeneration and before commit/push, so an over-cap state never lands on `main`. Folding the check in here also lets the workflow push with the default `GITHUB_TOKEN` — no PAT, no downstream-trigger requirement.
+> The 800/1000-entry cap on `approved_patterns.yml` is enforced as a step inside the `update` job. It runs after regeneration and before commit/push, so an over-cap state never lands on `main`. Because the check runs in the same workflow, the push uses the default `GITHUB_TOKEN` — no PAT, no downstream-trigger requirement.
 
 ### Adding a New Action to the Allow List
 
@@ -151,7 +151,7 @@ graph TD;
     actions.yml--"<b>update</b> job"-->approved["approved_patterns.yml"]
 ```
 
-A human-authored PR edits `actions.yml` directly. Once it merges to `main`, the **`update`** job (in `update_allowlist.yml`) regenerates both `.github/actions/for-dependabot-triggered-reviews/action.yml` and `approved_patterns.yml` from the new entries, so contributors never have to hand-edit the generated files.
+A human-authored PR edits `actions.yml` directly. Once it merges to `main`, the **`update`** job (in `update.yml`) regenerates both `.github/actions/for-dependabot-triggered-reviews/action.yml` and `approved_patterns.yml` from the new entries, so contributors never have to hand-edit the generated files.
 
 To request addition of an action to the allow list:
 
@@ -190,7 +190,7 @@ graph TD;
 In most cases, new versions are automatically added through Dependabot:
 - Dependabot opens PRs against `.github/actions/for-dependabot-triggered-reviews/action.yml` to update actions to the newest releases
 - The **`verify`** job (in `verify_dependabot_action.yml`) runs on each such PR, rebuilds the action's compiled JavaScript in Docker, and diffs it against the published version (see [Automated Verification in CI](#automated-verification-in-ci))
-- Once a reviewer merges the PR, the **`update`** job (in `update_allowlist.yml`) reflects the new commit SHAs back into `actions.yml`, regenerates `approved_patterns.yml`, and enforces the 800/1000-entry cap inline before pushing
+- Once a reviewer merges the PR, the **`update`** job (in `update.yml`) reflects the new commit SHAs back into `actions.yml`, regenerates `approved_patterns.yml`, and enforces the 800/1000-entry cap inline before pushing
 - The previously approved version is marked with an `expires_at` date 3 months out, giving projects a grace period to update their workflows; see [Automatic Expiration of Old Versions](#automatic-expiration-of-old-versions) for how the cleanup runs
 
 Projects are encouraged to help review updates to actions they use. Please have a look at the diff and mention in your approval what you have checked and why you think the action is safe.
@@ -353,7 +353,7 @@ If you add older version of the action and want to set an expiration date for it
 
 ```mermaid
 graph TD;
-    entry["actions.yml entry<br/>with expires_at"]--"<b>clean_up</b> job (daily, 02:04 UTC)"-->actions.yml
+    entry["actions.yml entry<br/>with expires_at"]--"<b>remove_expired</b> job (daily, 02:04 UTC)"-->actions.yml
     actions.yml--"<b>update</b> job"-->composite[".github/actions/for-dependabot-triggered-reviews/action.yml"]
     actions.yml--"<b>update</b> job"-->approved["approved_patterns.yml"]
 ```
@@ -362,14 +362,14 @@ Routine cleanup of superseded versions is automated:
 
 - Any entry in `actions.yml` with an `expires_at: YYYY-MM-DD` field is a candidate for removal.
 - Dependabot-driven updates (see [Updating Version of Already Approved Action](#updating-version-of-already-approved-action)) set `expires_at` to **3 months out** on the previously approved version. For manually added older versions, set `expires_at` explicitly (see [Manual Addition of Specific Versions](#manual-addition-of-specific-versions)).
-- The **`clean_up`** job (in `remove_expired.yml`) runs daily at **02:04 UTC**. Every entry whose `expires_at` date has passed is deleted from `actions.yml`; the job then commits the change and lets the `update` job in `update_allowlist.yml` regenerate `approved_patterns.yml` and the dependabot composite.
+- The **`remove_expired`** job (in `remove_expired.yml`) runs daily at **02:04 UTC**. Every entry whose `expires_at` date has passed is deleted from `actions.yml`; the job then commits the change and lets the `update` job in `update.yml` regenerate `approved_patterns.yml` and the dependabot composite.
 - Entries without `expires_at` (for example, `keep: true` wildcards and the current approved version) are never auto-removed — removal of those requires a manual PR.
 
 No human action is required for the routine case: projects get a 3-month grace window after a version bump, and the old entry disappears on its own afterwards.
 
 ### Removing a version manually
 
-Routine removal is already automated: set `expires_at` on the entry and the daily `clean_up` job (in `remove_expired.yml`) will delete it once the date passes. Use the manual process below only when you need an immediate removal that can't wait for the entry to expire.
+Routine removal is already automated: set `expires_at` on the entry and the daily `remove_expired` job (in `remove_expired.yml`) will delete it once the date passes. Use the manual process below only when you need an immediate removal that can't wait for the entry to expire.
 
 > [!IMPORTANT]
 > If a version or entire action needs to be removed immediately due to a security vulnerability:
