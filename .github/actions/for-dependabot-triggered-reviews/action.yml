@@ -38,7 +38,7 @@ runs:
   using: "composite"
   steps:
     - uses: 1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259  # v4.0.0
-      if: false
+      if: false  # zizmor: ignore[unpinned-tools] step never runs; allowlist registration only
     - uses: 1Password/load-secrets-action/configure@92467eb28f72e8255933372f1e0707c567ce2259  # v4.0.0
       if: false
     - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185  # v3
