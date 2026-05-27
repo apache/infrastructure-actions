@@ -26,7 +26,9 @@
 # Also enforces the 800/1000-entry cap on `approved_patterns.yml` inline
 # (see the "Check approved actions count" step) — running after
 # regeneration and before commit/push, so an over-cap state never lands
-# on `main`. Pushes use the default `GITHUB_TOKEN`; no PAT.
+# on `main`. The commit-and-push step uses the `ALLOWLIST_WORKFLOW_TOKEN`
+# PAT because `main` is a protected branch; see the comment on the
+# `token:` input below for the full rationale.
 name: Update Allowlist and Composite Action
 on:
   workflow_dispatch:
@@ -68,6 +70,16 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: true
+          # The PAT is required because `main` is a protected branch and
+          # the default `GITHUB_TOKEN` cannot push to it — every push from
+          # a `GITHUB_TOKEN`-authenticated commit step fails with
+          # `GH006: Protected branch update failed`. The
+          # `ALLOWLIST_WORKFLOW_TOKEN` secret is configured with bypass
+          # rights for this workflow's commit so the regenerated
+          # `actions.yml`, composite, and `approved_patterns.yml` can
+          # land. Fallback to `github.token` is only useful for PR/fork
+          # runs, where the commit step is skipped anyway.
+          token: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }} # zizmor: ignore[secrets-outside-env]
           # On push/dispatch, check out the current tip of main rather
           # than the trigger SHA. A queued run that started on an older
           # SHA would otherwise regenerate from stale inputs and either
@@ -122,7 +134,12 @@ jobs:
       - name: Commit and push changes
         if: ${{ github.event_name != 'pull_request' }}
         env:
-          GH_TOKEN: ${{ github.token }}
+          # Same PAT as the checkout step above — `main` is a protected
+          # branch and only the `ALLOWLIST_WORKFLOW_TOKEN` PAT has bypass
+          # rights for this workflow's automated push. Without it, the
+          # push fails with `GH006: Protected branch update failed` and
+          # the regenerated files never land.
+          GH_TOKEN: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }} # zizmor: ignore[secrets-outside-env]
         run: |
           AUTHOR_NAME=$(gh api /user --jq '.login' 2>/dev/null || echo "asfgit")
           AUTHOR_EMAIL=$(gh api /user --jq '.email // "\(.login)@users.noreply.github.com"' 2>/dev/null || echo "asfgit@users.noreply.github.com")

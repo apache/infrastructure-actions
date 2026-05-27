@@ -140,7 +140,7 @@ graph LR
 Solid arrows (`==>`) are regeneration edges — the "source → generated" flows that keep `actions.yml`, `approved_patterns.yml` and the dependabot composite in sync. Thin arrows feed the pipeline with new content (human or Dependabot PRs, cron), and dotted arrows are observer jobs that verify rather than mutate. Bold labels are job names (rather than workflow filenames) — `update` lives in `update.yml`, `verify` in `verify_dependabot_action.yml` / `verify_manual_action.yml`, `remove_expired` in `remove_expired.yml`.
 
 > [!NOTE]
-> The 800/1000-entry cap on `approved_patterns.yml` is enforced as a step inside the `update` job. It runs after regeneration and before commit/push, so an over-cap state never lands on `main`. Because the check runs in the same workflow, the push uses the default `GITHUB_TOKEN` — no PAT, no downstream-trigger requirement.
+> The 800/1000-entry cap on `approved_patterns.yml` is enforced as a step inside the `update` job. It runs after regeneration and before commit/push, so an over-cap state never lands on `main`. The push uses the `ALLOWLIST_WORKFLOW_TOKEN` PAT because `main` is a protected branch and the default `GITHUB_TOKEN` is blocked by branch protection (`GH006`); the PAT has bypass rights for this workflow's automated commit.
 
 ### Adding a New Action to the Allow List
 
