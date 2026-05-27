@@ -201,8 +201,36 @@ runs:
             details = refs[ref]
             steps.append(f"    - uses: {name}@{ref}" + (f"  # {details['tag']}" if details and 'tag' in details else ''))
             steps.append( "      if: false")
+            # zizmor's `unpinned-tools` audit flags certain actions whose
+            # default behavior is to install the "latest" version of an
+            # external tool. The remediation is to set `with.version` to
+            # a specific value. These steps never execute (`if: false`);
+            # the value is cosmetic, only here so the static analyser is
+            # satisfied. See https://docs.zizmor.sh/audits/#unpinned-tools
+            pin = _unpinned_tool_version_pin(name)
+            if pin is not None:
+                steps.append("      with:")
+                steps.append(f'        version: "{pin}"')
 
     return header + "\n".join(steps) + "\n" + "    - run: echo Success!\n" + "      shell: bash\n"
+
+
+# zizmor's `unpinned-tools` audit (zizmor source:
+# crates/zizmor/src/audit/unpinned_tools.rs) reports a Medium finding when one
+# of these actions is used without a static `with.version`. Keys are matched
+# case-insensitively against the bare repo name and any subpath under it.
+_UNPINNED_TOOLS_VERSION_PINS = {
+    "1password/load-secrets-action": "2.30.0",
+    "aquasecurity/setup-trivy": "v0.55.0",
+}
+
+
+def _unpinned_tool_version_pin(name: str) -> str | None:
+    name_l = name.lower()
+    for prefix, version in _UNPINNED_TOOLS_VERSION_PINS.items():
+        if name_l == prefix or name_l.startswith(prefix + "/"):
+            return version
+    return None
 
 
 def update_refs(
