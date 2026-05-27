@@ -1,0 +1,174 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# Keeps the allowlist trio in sync: `actions.yml` (source of truth),
+# `.github/actions/for-dependabot-triggered-reviews/action.yml` (the
+# composite Dependabot watches), and `approved_patterns.yml` (the
+# org-wide allow list). A single concurrency group serialises edits so
+# neither direction's change is lost when both files move in overlapping
+# pushes (see #866 for the race this prevents).
+#
+# Also enforces the 800/1000-entry cap on `approved_patterns.yml` inline
+# (see the "Check approved actions count" step) — running after
+# regeneration and before commit/push, so an over-cap state never lands
+# on `main`. Pushes use the default `GITHUB_TOKEN`; no PAT.
+name: Update Allowlist and Composite Action
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "actions.yml"
+      - ".github/actions/for-dependabot-triggered-reviews/action.yml"
+  pull_request:
+    paths:
+      - ".github/workflows/update.yml"
+      - ".github/actions/for-dependabot-triggered-reviews/action.yml"
+      - "actions.yml"
+      - "gateway/*"
+
+permissions:
+  contents: read
+
+# Single group across both inputs so no two updates touch the allowlist
+# files in parallel. Don't cancel — every queued run must finish so we
+# don't drop a dependabot bump or a manual actions.yml edit.
+concurrency:
+  group: "${{ github.ref }}-update"
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    # `contents: write` is required on push/dispatch so the commit step
+    # can push the regenerated files back to `main`. The workflow also
+    # runs on `pull_request`, where GitHub automatically downgrades the
+    # GITHUB_TOKEN to read-only regardless of what's declared here, so
+    # PRs from forks can't acquire write access via this workflow.
+    permissions:
+      contents: write
+    steps:
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: true
+          # On push/dispatch, check out the current tip of main rather
+          # than the trigger SHA. A queued run that started on an older
+          # SHA would otherwise regenerate from stale inputs and either
+          # undo the prior run's commit or fail to push.
+          ref: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && 'main' || '' }}
+
+      - run: pipx install uv
+
+      - name: Sync composite action, actions.yml, and approved_patterns.yml
+        run: |
+          uv run python << 'PYEOF'
+          import sys
+          sys.path.append("./gateway/")
+
+          import gateway as g
+
+          composite = ".github/actions/for-dependabot-triggered-reviews/action.yml"
+          actions = "actions.yml"
+          patterns = "approved_patterns.yml"
+
+          # Run both directions every time, regardless of which file
+          # triggered us — the outcome is the same either way.
+          #
+          # 1. Pull any new refs from the composite (e.g. dependabot
+          #    bumps) into actions.yml. Additive: existing entries stay
+          #    and get their expiry refreshed.
+          g.update_actions(composite, actions)
+
+          # 2. Regenerate the composite from the (now-merged)
+          #    actions.yml so a manual actions.yml edit is reflected.
+          g.update_workflow(composite, actions)
+
+          # 3. Regenerate the approved patterns from actions.yml.
+          g.update_patterns(patterns, actions)
+          PYEOF
+
+      - name: Check approved actions count
+        # The org-wide approved_patterns list has a hard limit of 1000
+        # entries; we fail at 800 to give maintainers room to act before
+        # hitting the wall. Runs after regeneration and before
+        # commit/push, so an over-cap state never lands on main. See
+        # https://github.com/apache/infrastructure-actions/issues/602
+        run: |
+          LIMIT=800
+          COUNT=$(grep -c '^- ' approved_patterns.yml)
+          echo "Approved actions count: $COUNT / 1000 (warning threshold: $LIMIT)"
+          if [ "$COUNT" -ge "$LIMIT" ]; then
+            echo "::error::Approved actions count ($COUNT) has reached the warning threshold of $LIMIT. The org-wide limit is 1000. Time to clean up unused actions or explore workarounds. See https://github.com/apache/infrastructure-actions/issues/602"
+            exit 1
+          fi
+
+      - name: Commit and push changes
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          AUTHOR_NAME=$(gh api /user --jq '.login' 2>/dev/null || echo "asfgit")
+          AUTHOR_EMAIL=$(gh api /user --jq '.email // "\(.login)@users.noreply.github.com"' 2>/dev/null || echo "asfgit@users.noreply.github.com")
+          git config --local user.name "${AUTHOR_NAME}"
+          git config --local user.email "${AUTHOR_EMAIL}"
+
+          composite=".github/actions/for-dependabot-triggered-reviews/action.yml"
+          if git diff --quiet -- actions.yml approved_patterns.yml "${composite}"; then
+            echo "No changes"
+            exit 0
+          fi
+
+          git add -f actions.yml approved_patterns.yml "${composite}"
+          git commit \
+            -m "Sync actions.yml, composite action, and approved_patterns.yml" \
+            -m "Generated by .github/workflows/update.yml"
+
+          # If a concurrent push (e.g. remove_expired.yml) advanced main
+          # while we were computing, rebase and retry. The sync script is
+          # idempotent so re-running on the rebased tree is safe.
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push rejected on attempt ${attempt}; rebasing and re-running sync"
+            git fetch origin main
+            git reset --hard origin/main
+            uv run python << 'PYEOF'
+          import sys
+          sys.path.append("./gateway/")
+          import gateway as g
+          composite = ".github/actions/for-dependabot-triggered-reviews/action.yml"
+          actions = "actions.yml"
+          patterns = "approved_patterns.yml"
+          g.update_actions(composite, actions)
+          g.update_workflow(composite, actions)
+          g.update_patterns(patterns, actions)
+          PYEOF
+            if git diff --quiet -- actions.yml approved_patterns.yml "${composite}"; then
+              echo "Already in sync after rebase; nothing to push"
+              exit 0
+            fi
+            git add -f actions.yml approved_patterns.yml "${composite}"
+            git commit \
+              -m "Sync actions.yml, composite action, and approved_patterns.yml" \
+              -m "Generated by .github/workflows/update.yml"
+          done
+          echo "Failed to push after 3 attempts"
+          exit 1

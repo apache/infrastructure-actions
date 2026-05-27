@@ -30,7 +30,7 @@ on:
 permissions: {}
 
 jobs:
-  clean_up:
+  remove_expired:
     runs-on: ubuntu-latest
     steps:
 
