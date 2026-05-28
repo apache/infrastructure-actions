@@ -38,7 +38,7 @@ runs:
   using: "composite"
   steps:
     - uses: 1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259  # v4.0.0
-      if: false  # zizmor: ignore[unpinned-tools] step never runs; allowlist registration only
+      if: false
     - uses: 1Password/load-secrets-action/configure@92467eb28f72e8255933372f1e0707c567ce2259  # v4.0.0
       if: false
     - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185  # v3
@@ -186,6 +186,8 @@ runs:
     - uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411  # v2.8.0
       if: false
     - uses: manusa/actions-setup-minikube@b65276017fdec6f1e6498129fb740e34e260dc55  # v2.18.0
+      if: false
+    - uses: matlab-actions/run-tests@4c375221b861dd3f7ea9b31704a3cf45d35073f1  # v3.1.2
       if: false
     - uses: matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f  # v3.0.1
       if: false
