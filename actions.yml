@@ -191,6 +191,10 @@ carabiner-dev/actions/install/bnd:
   e0e3b8149dafed833431095bc148d50e7eade4e8:
     tag: v1.2.0
 carabiner-dev/actions/install/download-and-verify:
+  2a11d59a135c5e291f305f249a92ad7903e3ee0f:
+    # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
+    tag: v1.1.7
+    expires_at: 2026-08-16
   # level-2 transitive: called by install/{ampel,bnd} @ v1.1.7; commit is untagged
   6022a065d6420de5d86333ecfb2b25c57f84b699:
     expires_at: 2026-08-16
