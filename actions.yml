@@ -695,6 +695,9 @@ matlab-actions/run-tests:
     expires_at: 2026-07-05
   4c375221b861dd3f7ea9b31704a3cf45d35073f1:
     tag: v3.1.2
+    expires_at: 2026-08-21
+  ae0e80cb44fdec28d35d0831d8acf38ee4fdf91a:
+    tag: v3.2.0
 matlab-actions/setup-matlab:
   aa8bbc7b76daa63c5d456d1430cbd6cb5b626ab4:
     tag: v2.7.0
