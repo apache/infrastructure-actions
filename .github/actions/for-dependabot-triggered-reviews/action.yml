@@ -187,7 +187,7 @@ runs:
       if: false
     - uses: manusa/actions-setup-minikube@b65276017fdec6f1e6498129fb740e34e260dc55  # v2.18.0
       if: false
-    - uses: matlab-actions/run-tests@4c375221b861dd3f7ea9b31704a3cf45d35073f1  # v3.1.2
+    - uses: matlab-actions/run-tests@ae0e80cb44fdec28d35d0831d8acf38ee4fdf91a  # v3.2.0
       if: false
     - uses: matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f  # v3.0.1
       if: false
