@@ -75,7 +75,7 @@ dev = [
     "types-PyYAML>=6.0",
     "types-requests>=2.33.0.20260513",
     "types-beautifulsoup4>=4.12.0.20250516",
-    "types-markdown>=3.10.2.20260508",
+    "types-markdown>=3.10.2.20260518",
 ]
 
 [project.urls]
