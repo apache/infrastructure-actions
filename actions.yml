@@ -106,6 +106,9 @@ aws-actions/configure-aws-credentials:
     expires_at: 2026-08-20
   acca2b1b2070338fb9fd1ca27ecee81d687e58e5:
     tag: v6.1.2
+    expires_at: 2026-08-21
+  99214aa6889fcddfa57764031d71add364327e59:
+    tag: v6.1.3
 azure/login:
   532459ea530d8321f2fb9bb10d1e0bcf23869a43:
     keep: true
