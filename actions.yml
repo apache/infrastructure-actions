@@ -564,7 +564,7 @@ ilammy/setup-nasm:
   72793074d3c8cdda771dba85f6deafe00623038b:
     tag: v1.5.2
 italia/publiccode-parser-action:
-  '21086c73ec0563e14c6748787efa1b34b025ad8c':
+  21086c73ec0563e14c6748787efa1b34b025ad8c:
     tag: v1.5.1
 j178/prek-action:
   cbc2f23eb5539cf20d82d1aabd0d0ecbcc56f4e3:
