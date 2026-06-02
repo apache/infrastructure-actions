@@ -20,7 +20,7 @@
 
 # Helper script to run the action tag verification.
 #
-# You must have a GH_TOKEN environment variable set to a GitHub PAT w/ read accessto public repos.
+# You must have a GH_TOKEN environment variable set to a GitHub PAT w/ read access to public repos.
 #
 # From a local environment use:
 #       uvx --with ruyaml python gateway/run_action_tags.py
@@ -36,7 +36,7 @@ from gateway import update_actions, update_patterns
 
 def run_main():
     if not 'GH_TOKEN' in os.environ:
-        raise Exception("GH_TOKEN environment variable should be must.")
+        raise Exception("GH_TOKEN environment variable must be set.")
 
     cwd = Path(os.getcwd())
     dummy_workflow = cwd / ".github/actions/for-dependabot-triggered-reviews/action.yml"
@@ -46,6 +46,8 @@ def run_main():
     if not dummy_workflow.exists() or not actions_yaml.exists() or not approved_patterns_yaml.exists():
         raise Exception(f"Missing required files: {dummy_workflow.absolute()}, {actions_yaml.absolute()}, {approved_patterns_yaml.absolute()}")
 
+    # Keep the verification inputs in sync with the generated allowlist artifacts
+    # before checking tags, matching the update workflow's behavior.
     update_actions(dummy_workflow, actions_yaml)
     update_patterns(approved_patterns_yaml, actions_yaml)
 

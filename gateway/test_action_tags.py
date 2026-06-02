@@ -63,6 +63,20 @@ def test_sha_non_existent():
     ]
     assert result.warnings == []
 
+def test_invalid_sha_records_failure_without_crashing():
+    # noinspection PyTypeChecker
+    result = verify_actions({
+        "dtolnay/rust-toolchain": {
+            "stable": {
+            },
+        },
+    })
+
+    assert result.failures == [
+        "GitHub action dtolnay/rust-toolchain references an invalid Git SHA 'stable'"
+    ]
+    assert result.warnings == []
+
 @pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_tag_sha_vs_commit_sha():
     # noinspection PyTypeChecker
@@ -194,6 +208,59 @@ def test_branch_compare_api_failure():
         "API URL: https://api.github.test\ncompare failed"
     ]
     assert result.warnings == []
+
+def test_branch_compare_api_failure_can_be_ignored():
+    with (
+        mock.patch("action_tags._gh_matching_tags", return_value=_api_response(200, "[]")),
+        mock.patch("action_tags._gh_get_branch", return_value=_api_response(200, "{}")),
+        mock.patch(
+            "action_tags._gh_compare",
+            return_value=_api_response(500, "compare failed", "Internal Server Error"),
+        ),
+    ):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "dtolnay/rust-toolchain": {
+                DTOLNAY_RUST_TOOLCHAIN_SHA: {
+                    "tag": "stable",
+                    "ignore_gh_api_errors": True,
+                },
+            },
+        })
+
+    assert result.failures == []
+    assert result.warnings == [
+        "ignore_gh_api_errors is set to true: will ignore GH API errors for action "
+        f"dtolnay/rust-toolchain ref '{DTOLNAY_RUST_TOOLCHAIN_SHA}'",
+        "Failed to find Git SHA "
+        f"'{DTOLNAY_RUST_TOOLCHAIN_SHA}' on Git branch 'stable' in GitHub repo "
+        "'https://github.com/dtolnay/rust-toolchain': HTTP/500: Internal Server Error, "
+        "API URL: https://api.github.test\ncompare failed",
+    ]
+
+def test_branch_lookup_api_failure_can_be_ignored():
+    with (
+        mock.patch("action_tags._gh_matching_tags", return_value=_api_response(200, "[]")),
+        mock.patch("action_tags._gh_get_branch", return_value=_api_response(500, "branch failed", "Internal Server Error")),
+    ):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "dtolnay/rust-toolchain": {
+                DTOLNAY_RUST_TOOLCHAIN_SHA: {
+                    "tag": "stable",
+                    "ignore_gh_api_errors": True,
+                },
+            },
+        })
+
+    assert result.failures == []
+    assert result.warnings == [
+        "ignore_gh_api_errors is set to true: will ignore GH API errors for action "
+        f"dtolnay/rust-toolchain ref '{DTOLNAY_RUST_TOOLCHAIN_SHA}'",
+        "Failed to check Git branch 'stable' against GitHub repo "
+        "'https://github.com/dtolnay/rust-toolchain': HTTP/500: Internal Server Error, "
+        "API URL: https://api.github.test\nbranch failed",
+    ]
 
 def test_missing_branch_falls_back_to_missing_tag_failure():
     with (

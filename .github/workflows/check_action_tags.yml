@@ -24,12 +24,20 @@ on:
     branches:
       - main
     paths:
-      - ".github/workflows/dummy.yml"
+      - ".github/workflows/check_action_tags.yml"
+      - ".github/workflows/update.yml"
+      - ".github/actions/for-dependabot-triggered-reviews/action.yml"
+      - "actions.yml"
+      - "approved_patterns.yml"
+      - "gateway/**"
   pull_request:
     paths:
-      - ".github/workflows/update_actions.yml"
-      - ".github/workflows/dummy.yml"
-      - gateway/*
+      - ".github/workflows/check_action_tags.yml"
+      - ".github/workflows/update.yml"
+      - ".github/actions/for-dependabot-triggered-reviews/action.yml"
+      - "actions.yml"
+      - "approved_patterns.yml"
+      - "gateway/**"
 
 permissions:
   contents: read

@@ -85,7 +85,7 @@ def _gh_api_get(url_abspath: str) -> ApiResponse:
     # Unauthorized GH API requests are quite rate-limited.
     # Tip: add an extra space before 'export' to prevent adding the line to the shell history.
     #    export GH_TOKEN=$(gh auth token)
-    gh_token = os.environ['GH_TOKEN']
+    gh_token = os.environ.get('GH_TOKEN')
     if gh_token:
         headers['Authorization'] = f"Bearer {gh_token}"
     req_url = f"https://api.github.com{url_abspath}"
@@ -120,7 +120,7 @@ def _gh_compare(owner_repo: str, tag: str, requested_sha: str) -> ApiResponse:
     requested_sha = urllib.parse.quote(requested_sha, safe="")
     return _gh_api_get(f"/repos/{owner_repo}/compare/{requested_sha}...{tag}")
 
-def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = True, today: date = date.today()) -> ActionTagsCheckResult:
+def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = True, today: date | None = None) -> ActionTagsCheckResult:
     """
     Validates the contents of the actions file against GitHub.
 
@@ -152,9 +152,12 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
         log_to_console: Whether to log messages immediately to the console (default: True)
         today: The current date (default: today)
     """
+    if today is None:
+        today = date.today()
+
     if on_gha():
         print(f"::group::Verify GitHub Actions")
-        gh_token = os.environ['GH_TOKEN']
+        gh_token = os.environ.get('GH_TOKEN')
         if not gh_token or len(gh_token) == 0:
             raise Exception("GH_TOKEN environment variable is not set or empty")
 
@@ -280,7 +283,6 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                         result.warning(f"GitHub action {name} references an invalid Git SHA but 'ignore_invalid_git_sha' is set: will ignore invalid Git SHA '{ref}'", "  ..")
                     else:
                         result.failure(f"GitHub action {name} references an invalid Git SHA '{ref}'", "  ..")
-                        raise Exception("foo")
 
             for req_tag, req_shas in requested_shas_by_tag.items():
                 result.log(f"  .. checking tag '{req_tag}'")
@@ -377,7 +379,7 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                     f.write('```\n')
                     for msg in result.warnings:
                         f.write(f"{msg}\n\n")
-                f.write('```\n')
+                    f.write('```\n')
                 f.write(f"## Log\n")
                 f.write('```\n')
                 for msg in result.logs:
