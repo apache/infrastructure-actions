@@ -969,9 +969,11 @@ scacap/action-surefire-report:
   fa13579fdd93ed8fc7e717a25eceedcfcbc39dda:
     tag: v1.10.0
     expires_at: 2026-07-31
+    ignore_gh_api_errors: true
   3dacff26879cd2a7f2160d101254032a3707fe6f:
     expires_at: 2026-08-01
     tag: v1.12.0
+    ignore_gh_api_errors: true
 scalacenter/sbt-dependency-submission:
   f43202114d7522a4b233e052f82c2eea8d658134:
     tag: v3.2.1
