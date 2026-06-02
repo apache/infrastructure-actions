@@ -18,7 +18,15 @@
 #
 
 import pytest
+from unittest import mock
+
 from action_tags import *
+
+DTOLNAY_RUST_TOOLCHAIN_SHA = "29eef336d9b2848a0b548edc03f92a220660cdb8"
+
+
+def _api_response(status: int, body: str = "", reason: str = "OK") -> ApiResponse:
+    return ApiResponse("https://api.github.test", status, reason, {}, body)
 
 def test_patterns():
     assert re.match(re_github_actions_repo, "foo/bar")
@@ -112,6 +120,97 @@ def test_non_existing_tag_sha():
     })
     assert result.failures == [
         "GitHub action astral-sh/setup-uv references Git tag 'v7.1.2' via SHAs '{'b75a909f75acd358c2196fb9a5f1299a9a8868a4'}' but none of those matches the valid SHAs '{'85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41'}'"
+    ]
+    assert result.warnings == []
+
+def test_branch_contains_sha():
+    with (
+        mock.patch("action_tags._gh_matching_tags", return_value=_api_response(200, "[]")),
+        mock.patch("action_tags._gh_get_branch", return_value=_api_response(200, "{}")),
+        mock.patch(
+            "action_tags._gh_compare",
+            return_value=_api_response(200, f'{{"merge_base_commit": {{"sha": "{DTOLNAY_RUST_TOOLCHAIN_SHA}"}}}}'),
+        ),
+    ):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "dtolnay/rust-toolchain": {
+                DTOLNAY_RUST_TOOLCHAIN_SHA: {
+                    "tag": "stable",
+                },
+            },
+        })
+
+    assert result.failures == []
+    assert result.warnings == [
+        f"GitHub action dtolnay/rust-toolchain references Git tag 'stable' via SHAs '{{'{DTOLNAY_RUST_TOOLCHAIN_SHA}'}}' but that references a Git branch"
+    ]
+
+def test_branch_does_not_contain_sha():
+    with (
+        mock.patch("action_tags._gh_matching_tags", return_value=_api_response(200, "[]")),
+        mock.patch("action_tags._gh_get_branch", return_value=_api_response(200, "{}")),
+        mock.patch(
+            "action_tags._gh_compare",
+            return_value=_api_response(200, '{"merge_base_commit": {"sha": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"}}'),
+        ),
+    ):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "dtolnay/rust-toolchain": {
+                DTOLNAY_RUST_TOOLCHAIN_SHA: {
+                    "tag": "stable",
+                },
+            },
+        })
+
+    assert result.failures == [
+        f"GitHub action dtolnay/rust-toolchain references Git branch 'stable' via SHAs '{{'{DTOLNAY_RUST_TOOLCHAIN_SHA}'}}' but none of those SHAs are ancestors of that branch"
+    ]
+    assert result.warnings == []
+
+def test_branch_compare_api_failure():
+    with (
+        mock.patch("action_tags._gh_matching_tags", return_value=_api_response(200, "[]")),
+        mock.patch("action_tags._gh_get_branch", return_value=_api_response(200, "{}")),
+        mock.patch(
+            "action_tags._gh_compare",
+            return_value=_api_response(500, "compare failed", "Internal Server Error"),
+        ),
+    ):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "dtolnay/rust-toolchain": {
+                DTOLNAY_RUST_TOOLCHAIN_SHA: {
+                    "tag": "stable",
+                },
+            },
+        })
+
+    assert result.failures == [
+        "Failed to find Git SHA "
+        f"'{DTOLNAY_RUST_TOOLCHAIN_SHA}' on Git branch 'stable' in GitHub repo "
+        "'https://github.com/dtolnay/rust-toolchain': HTTP/500: Internal Server Error, "
+        "API URL: https://api.github.test\ncompare failed"
+    ]
+    assert result.warnings == []
+
+def test_missing_branch_falls_back_to_missing_tag_failure():
+    with (
+        mock.patch("action_tags._gh_matching_tags", return_value=_api_response(200, "[]")),
+        mock.patch("action_tags._gh_get_branch", return_value=_api_response(404, "missing", "Not Found")),
+    ):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "dtolnay/rust-toolchain": {
+                DTOLNAY_RUST_TOOLCHAIN_SHA: {
+                    "tag": "stable",
+                },
+            },
+        })
+
+    assert result.failures == [
+        f"GitHub action dtolnay/rust-toolchain references Git tag 'stable' via SHAs '{{'{DTOLNAY_RUST_TOOLCHAIN_SHA}'}}' but no SHAs for tag could be found - does the Git tag exist?"
     ]
     assert result.warnings == []
 

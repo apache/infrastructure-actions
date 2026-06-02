@@ -19,6 +19,7 @@
 
 import os
 import re
+import urllib.parse
 from urllib.error import HTTPError
 
 import ruyaml
@@ -99,13 +100,25 @@ def _gh_api_get(url_abspath: str) -> ApiResponse:
         raise e
 
 def _gh_get_commit_object(owner_repo: str, sha: str) -> ApiResponse:
+    sha = urllib.parse.quote(sha, safe="")
     return _gh_api_get(f"/repos/{owner_repo}/git/commits/{sha}")
 
 def _gh_get_tag(owner_repo: str, tag_sha: str) -> ApiResponse:
+    tag_sha = urllib.parse.quote(tag_sha, safe="")
     return _gh_api_get(f"/repos/{owner_repo}/git/tags/{tag_sha}")
 
 def _gh_matching_tags(owner_repo: str, tag: str) -> ApiResponse:
+    tag = urllib.parse.quote(tag, safe="")
     return _gh_api_get(f"/repos/{owner_repo}/git/matching-refs/tags/{tag}")
+
+def _gh_get_branch(owner_repo: str, tag: str) -> ApiResponse:
+    tag = urllib.parse.quote(tag, safe="")
+    return _gh_api_get(f"/repos/{owner_repo}/branches/{tag}")
+
+def _gh_compare(owner_repo: str, tag: str, requested_sha: str) -> ApiResponse:
+    tag = urllib.parse.quote(tag, safe="")
+    requested_sha = urllib.parse.quote(requested_sha, safe="")
+    return _gh_api_get(f"/repos/{owner_repo}/compare/{requested_sha}...{tag}")
 
 def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = True, today: date = date.today()) -> ActionTagsCheckResult:
     """
@@ -171,7 +184,7 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                         continue
 
                 # noinspection PyTypedDict
-                ignore_gh_api_errors = details and 'ignore_gh_api_errors' in details and details['ignore_gh_api_errors'] == True
+                ignore_gh_api_errors = bool(details and 'ignore_gh_api_errors' in details and details['ignore_gh_api_errors'])
                 if ignore_gh_api_errors:
                     result.warning(f"ignore_gh_api_errors is set to true: will ignore GH API errors for action {name} ref '{ref}'", "  ..")
 
@@ -250,6 +263,7 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                                         case "commit":
                                             valid_shas_for_tag.add(tag_object_sha)
                                         case "branch":
+                                            # Practically impossible to get here, because _gh_matching_tags loads only tags
                                             result.failure(f"Branch references mentioned for Git tag '{tag}' for GitHub action {name}", "        ..")
                                         case _:
                                             result.failure(f"Invalid Git object type '{tag_object['type']}' for Git tag '{tag}' in GitHub repo 'https://github.com/{owner_repo}'", "        ..")
@@ -274,11 +288,64 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                 valid_shas = valid_shas_by_tag.get(req_tag)
                 result.log(f"    .. verified SHAs: {valid_shas if len(valid_shas)>0 else '(none)'}")
                 if not valid_shas:
-                    m = f"GitHub action {name} references Git tag '{req_tag}' via SHAs '{req_shas}' but no SHAs for tag could be found - does the Git tag exist?"
-                    if has_ignored_api_errors:
-                        result.warning(m, "")
-                    else:
-                        result.failure(m, "")
+                    # No tag refs found for req_tag. Maybe req_tag is a branch.
+                    result.log(f"    .. checking branch '{req_tag}'")
+                    on_branch = False
+                    any_on_branch = False
+                    branch_check_failed = False
+                    branch_resp = _gh_get_branch(owner_repo, req_tag)
+                    ignore_gh_api_errors = False
+                    for req_sha in req_shas:
+                        details = action.get(req_sha)
+                        if bool(details and 'ignore_gh_api_errors' in details and details['ignore_gh_api_errors']):
+                            ignore_gh_api_errors = True
+                            break
+                    match branch_resp.status:
+                        case 200:
+                            on_branch = True
+                            for req_sha in req_shas:
+                                result.log(f"    .. checking for commit '{req_sha}' on branch '{req_tag}'")
+                                cmp_response = _gh_compare(owner_repo, req_tag, req_sha)
+                                match cmp_response.status:
+                                    case 200:
+                                        cmp_json: CommentedSeq = ruyaml.YAML().load(cmp_response.body)
+                                        on_branch = True
+
+                                        if cmp_json["merge_base_commit"]["sha"] == req_sha:
+                                            # branch exists and contains requested SHA: accept
+                                            any_on_branch = True
+                                            m = f"GitHub action {name} references Git tag '{req_tag}' via SHAs '{req_shas}' but that references a Git branch"
+                                            result.warning(m, "")
+                                            break
+                                    case 404:
+                                        pass
+                                    case _:
+                                        m = f"Failed to find Git SHA '{req_sha}' on Git branch '{req_tag}' in GitHub repo 'https://github.com/{owner_repo}': HTTP/{cmp_response.status}: {cmp_response.reason}, API URL: {cmp_response.req_url}\n{cmp_response.body}"
+                                        if ignore_gh_api_errors:
+                                            result.warning(m, "      ..")
+                                            has_ignored_api_errors = True
+                                        else:
+                                            result.failure(m, "      ..")
+                                        branch_check_failed = True
+                        case 404:
+                            pass
+                        case _:
+                            m = f"Failed to check Git branch '{req_tag}' against GitHub repo 'https://github.com/{owner_repo}': HTTP/{branch_resp.status}: {branch_resp.reason}, API URL: {branch_resp.req_url}\n{branch_resp.body}"
+                            if ignore_gh_api_errors:
+                                result.warning(m, "      ..")
+                                has_ignored_api_errors = True
+                            else:
+                                result.failure(m, "      ..")
+                            branch_check_failed = True
+                    if not branch_check_failed and (not on_branch or not any_on_branch):
+                        if on_branch:
+                            m = f"GitHub action {name} references Git branch '{req_tag}' via SHAs '{req_shas}' but none of those SHAs are ancestors of that branch"
+                        else:
+                            m = f"GitHub action {name} references Git tag '{req_tag}' via SHAs '{req_shas}' but no SHAs for tag could be found - does the Git tag exist?"
+                        if has_ignored_api_errors:
+                            result.warning(m, "")
+                        else:
+                            result.failure(m, "")
                 elif req_shas.isdisjoint(valid_shas):
                     m = f"GitHub action {name} references Git tag '{req_tag}' via SHAs '{req_shas}' but none of those matches the valid SHAs '{valid_shas}'"
                     result.failure(m, "")
