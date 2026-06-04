@@ -71,15 +71,15 @@ runs:
       if: false
     - uses: burnett01/rsync-deployments@66257cad6bfeb2171d3b6bfa6c9a22279dd9c3a1  # 8.0.5
       if: false
-    - uses: carabiner-dev/actions/ampel/verify@e0e3b8149dafed833431095bc148d50e7eade4e8  # v1.2.0
+    - uses: carabiner-dev/actions/ampel/verify@94f29392187fe5082d1195a7d4cae3a7ddf09d9c  # v1.2.1
       if: false
-    - uses: carabiner-dev/actions/install/ampel@e0e3b8149dafed833431095bc148d50e7eade4e8  # v1.2.0
+    - uses: carabiner-dev/actions/install/ampel@94f29392187fe5082d1195a7d4cae3a7ddf09d9c  # v1.2.1
       if: false
-    - uses: carabiner-dev/actions/install/ampel-bootstrap@9db1a064ca5691ef6f5d983031739ca287de0968
+    - uses: carabiner-dev/actions/install/ampel-bootstrap@b60791af41423360b892a1a3cee90cd4e131f381
       if: false
-    - uses: carabiner-dev/actions/install/bnd@e0e3b8149dafed833431095bc148d50e7eade4e8  # v1.2.0
+    - uses: carabiner-dev/actions/install/bnd@94f29392187fe5082d1195a7d4cae3a7ddf09d9c  # v1.2.1
       if: false
-    - uses: carabiner-dev/actions/install/download-and-verify@9db1a064ca5691ef6f5d983031739ca287de0968
+    - uses: carabiner-dev/actions/install/download-and-verify@b60791af41423360b892a1a3cee90cd4e131f381
       if: false
     - uses: carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3  # v1.0.10
       if: false
