@@ -892,6 +892,12 @@ rubygems/configure-rubygems-credentials:
 rubygems/release-gem:
   6317d8d1f7e28c24d28f6eff169ea854948bd9f7:
     tag: v1.2.0
+  f0d7faff26625599a847d40d9fa28ace24c2aacc:
+    # Please add a `tag` when release-gem has a new release.
+    # Read more https://github.com/rubygems/release-gem/issues/36
+    # 
+    # After that, add a `expires_at` to 3 months out on previous version.
+    keep: true
 runs-on/action:
   cd2b598b0515d39d78c38a02d529db87d2196d1e:
     tag: v2.0.3
