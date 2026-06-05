@@ -1207,6 +1207,19 @@ _JS_VERIFICATION_PATTERNS = [
     re.compile(r"\bcalculate(?:SHA[\d]+|Checksum|Digest)\b", re.IGNORECASE),
     re.compile(r"\bverifyHash\b"),
     re.compile(r"\bcomputeChecksum\b"),
+    # ``validate*`` checksum helpers — the call site counts as verification
+    # even when the helper's implementation lives in a sibling module.
+    # astral-sh/setup-uv's ``src/download/download-version.ts`` downloads via
+    # ``tc.downloadTool`` then immediately calls ``validateChecksum(checksum,
+    # downloadPath, …)`` (imported from ``./checksum/checksum``), which SHA-256s
+    # the artifact against a provided checksum or the built-in KNOWN_CHECKSUMS
+    # table.  v8.2.0 extracted that validation into the sibling module, moving
+    # the ``createHash`` token out of this file and tripping the same-file
+    # heuristic — the call name is the evidence that survives the refactor.
+    re.compile(
+        r"\bvalidate(?:Checksum|Hash|Digest|SHA\d*|FileChecksum)\b",
+        re.IGNORECASE,
+    ),
 ]
 
 _JS_SOURCE_EXTENSIONS = (".ts", ".js", ".mjs", ".cjs")
