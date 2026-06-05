@@ -1283,6 +1283,42 @@ const createHash = customLibrary.createHash('blake2')
             content = f"const sha = {func_name}(downloadPath)\n"
             assert self._has_verification(content) is True, func_name
 
+    def test_validate_checksum_function_name_recognized(self):
+        # astral-sh/setup-uv@v8.2.0 shape: ``src/download/download-version.ts``
+        # downloads via ``tc.downloadTool`` then calls ``validateChecksum(...)``,
+        # whose implementation was extracted into a sibling module
+        # (``./checksum/checksum``).  The call name is the in-file evidence the
+        # scanner must accept; without it, #910 false-flagged the download as
+        # unverified.
+        for func_name in (
+            "validateChecksum",
+            "validateFileCheckSum",
+            "validateHash",
+            "validateDigest",
+            "validateSHA256",
+        ):
+            content = (
+                "const downloadPath = await tc.downloadTool(url)\n"
+                f"await {func_name}(checksum, downloadPath, arch, platform, version)\n"
+            )
+            assert self._has_verification(content) is True, func_name
+
+    def test_validate_checksum_real_setup_uv_snippet_recognized(self):
+        # Faithful trim of the real download → validate sequence so the
+        # regression is anchored to the actual source, not just the bare name.
+        content = """\
+import * as tc from "@actions/tool-cache";
+import { validateChecksum } from "./checksum/checksum";
+
+const downloadPath = await tc.downloadTool(
+  downloadUrl,
+  undefined,
+  githubToken,
+);
+await validateChecksum(checksum, downloadPath, arch, platform, version);
+"""
+        assert self._has_verification(content) is True
+
     def test_verify_hash_function_recognized(self):
         # Whether named ``verifyHash`` or referenced inline.
         for snippet in (
