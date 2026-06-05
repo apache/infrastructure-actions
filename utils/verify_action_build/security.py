@@ -2032,11 +2032,24 @@ def verify_trusted_download_provenance(
     ``passed`` reflects whether both checks succeeded and ``reason`` is a
     one-line summary suitable for the check-result display.
 
-    The asset attestation spot-check downloads exactly one small text
-    asset (checksums.txt / SHA256SUMS / .sbom.json by preference,
-    smallest available otherwise) — enough to confirm the release's
+    The asset attestation spot-check downloads exactly one small asset
+    (SBOM / in-toto / archive by preference — see
+    :data:`_PROVENANCE_ASSET_PREFERENCES`; a combined ``checksums.txt`` /
+    ``SHA256SUMS`` is intentionally *not* preferred, as it usually carries
+    only an in-toto release attestation rather than SLSA provenance and
+    would 404 under ``gh attestation verify``).  Downloading the smallest
+    available asset otherwise is enough to confirm the release's
     publishing process emits attestations without paying the cost of
     every per-platform binary.
+
+    Scope caveat: this proves the *release repo's publishing pipeline*
+    emits attestations and that its latest release is immutable.  It does
+    **not** machine-verify the binding asserted in
+    :data:`TRUSTED_DOWNLOAD_PROVENANCE` — that the action actually
+    downloads from ``release_repo``, nor that the *specific version* it
+    fetches is itself immutable (only ``releases/latest`` is checked).
+    Those remain review-time assertions backed by the entry's
+    ``rationale``.
     """
     config = TRUSTED_DOWNLOAD_PROVENANCE.get(f"{action_org}/{action_repo}")
     if not config:
