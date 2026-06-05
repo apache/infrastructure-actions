@@ -91,6 +91,9 @@ astral-sh/setup-uv:
     expires_at: 2026-07-11
   08807647e7069bb48b6ef5acd8ec9567f424441b:
     tag: v8.1.0
+    expires_at: 2026-08-28
+  fac544c07dec837d0ccb6301d7b5580bf5edae39:
+    tag: v8.2.0
 awalsh128/cache-apt-pkgs-action:
   '*':
     keep: true
