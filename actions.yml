@@ -109,6 +109,9 @@ aws-actions/configure-aws-credentials:
     expires_at: 2026-08-21
   99214aa6889fcddfa57764031d71add364327e59:
     tag: v6.1.3
+    expires_at: 2026-08-28
+  e7f100cf4c008499ea8adda475de1042d6975c7b:
+    tag: v6.2.0
 azure/login:
   532459ea530d8321f2fb9bb10d1e0bcf23869a43:
     keep: true
@@ -494,6 +497,9 @@ graalvm/setup-graalvm:
     expires_at: 2026-08-01
   bef4b0e916c7dd079bf60fb95d49139f67e32c5f:
     tag: v1.5.3
+    expires_at: 2026-08-28
+  329c42c5f4c343bceb505f0b28cc8499bc2bf174:
+    tag: v1.5.4
 gradle/actions/dependency-submission:
   0723195856401067f7a2779048b490ace7a47d7c:
     tag: v5.0.2
@@ -980,6 +986,9 @@ slsa-framework/source-actions:
     tag: v0.1.0
 snok/install-poetry:
   76e04a911780d5b312d89783f7b1cd627778900a:
+    tag: v1
+    expires_at: 2026-08-28
+  a783c322200f0519c7926aa6faa857c4e23e9263:
     tag: v1
 softprops/action-gh-release:
   '*':

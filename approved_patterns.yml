@@ -48,6 +48,7 @@
 - aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885
 - aws-actions/configure-aws-credentials@acca2b1b2070338fb9fd1ca27ecee81d687e58e5
 - aws-actions/configure-aws-credentials@99214aa6889fcddfa57764031d71add364327e59
+- aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b
 - azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
 - azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4
 - azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2
@@ -176,6 +177,7 @@
 - graalvm/setup-graalvm@f744c72a42b1995d7b0cbc314bde4bace7ac1fe1
 - graalvm/setup-graalvm@60c26726de13f8b90771df4bc1641a52a3159994
 - graalvm/setup-graalvm@bef4b0e916c7dd079bf60fb95d49139f67e32c5f
+- graalvm/setup-graalvm@329c42c5f4c343bceb505f0b28cc8499bc2bf174
 - gradle/actions/dependency-submission@0723195856401067f7a2779048b490ace7a47d7c
 - gradle/actions/dependency-submission@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f
 - gradle/actions/dependency-submission@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e
@@ -338,6 +340,7 @@
 - slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c
 - slsa-framework/source-actions@dea965cdca5e0cb422bf7b2653c9d15f678ad01c
 - snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a
+- snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263
 - softprops/action-gh-release@*
 - SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
 - SonarSource/sonarqube-scan-action@299e4b793aaa83bf2aba7c9c14bedbb485688ec4
