@@ -137,7 +137,7 @@ runs:
       if: false
     - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3.0.1
       if: false
-    - uses: graalvm/setup-graalvm@bef4b0e916c7dd079bf60fb95d49139f67e32c5f  # v1.5.3
+    - uses: graalvm/setup-graalvm@329c42c5f4c343bceb505f0b28cc8499bc2bf174  # v1.5.4
       if: false
     - uses: gradle/actions/dependency-submission@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e  # v6.1.0
       if: false
