@@ -24,6 +24,7 @@
 # ///
 
 import os
+import re
 from datetime import date, timedelta
 from io import StringIO
 from pathlib import Path
@@ -49,6 +50,11 @@ ActionRefs = Dict[str, RefDetails]
 
 ActionsYAML = Dict[str, ActionRefs]
 """Dictionary mapping action names to their reference details"""
+
+ZIZMOR_UNPINNED_TOOLS_IGNORE = "zizmor: ignore[unpinned-tools] generated sentinel step is never executed"
+ZIZMOR_UNPINNED_TOOLS_ACTIONS = {
+    "1Password/load-secrets-action",
+}
 
 
 def calculate_expiry(weeks=4):
@@ -199,7 +205,12 @@ runs:
         elif len(ref_to_update) == 1:
             ref = ref_to_update[0]
             details = refs[ref]
-            steps.append(f"    - uses: {name}@{ref}" + (f"  # {details['tag']}" if details and 'tag' in details else ''))
+            comments = []
+            if details and 'tag' in details:
+                comments.append(details['tag'])
+            if name in ZIZMOR_UNPINNED_TOOLS_ACTIONS:
+                comments.append(f"# {ZIZMOR_UNPINNED_TOOLS_IGNORE}")
+            steps.append(f"    - uses: {name}@{ref}" + (f"  # {'  '.join(comments)}" if comments else ''))
             steps.append( "      if: false")
 
     return header + "\n".join(steps) + "\n" + "    - run: echo Success!\n" + "      shell: bash\n"
@@ -227,7 +238,12 @@ def update_refs(
         name, new_ref = uses.split("@")
         new_tag = None
         if hasattr(step, 'ca') and 'uses' in step.ca.items:
-            new_tag = step.ca.items['uses'][2].value[1:].strip()
+            uses_comment = step.ca.items['uses'][2].value[1:].strip()
+            if (
+                not uses_comment.startswith("zizmor:")
+                and (match := re.match(r"(?P<tag>\S+)(?:\s+#?\s*zizmor:.*)?$", uses_comment))
+            ):
+                new_tag = match.group("tag")
 
         if name not in action_refs:
             action_refs[name] = {}
