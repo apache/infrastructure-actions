@@ -39,8 +39,12 @@ runs:
   steps:
     - uses: 1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259  # v4.0.0
       if: false
+      with:
+        version: "2.30.0"
     - uses: 1Password/load-secrets-action/configure@92467eb28f72e8255933372f1e0707c567ce2259  # v4.0.0
       if: false
+      with:
+        version: "2.30.0"
     - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185  # v3
       if: false
     - uses: advanced-security/dismiss-alerts@046d6b48d2e43cf563f96f67332c47c432eff83e  # v2.0.2
