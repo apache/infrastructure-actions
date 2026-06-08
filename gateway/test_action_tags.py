@@ -17,24 +17,92 @@
 # under the License.
 #
 
+import os
+import pytest
+import re
+import ruyaml
+from datetime import date
 from unittest import mock
 
-from action_tags import *
+from action_tags import (
+    ApiResponse,
+    re_docker_image,
+    re_git_sha,
+    re_github_actions_repo,
+    verify_actions,
+    # Need to explicitly import these:
+    _gh_compare,
+    _gh_get_branch,
+    _gh_get_commit_object,
+    _gh_get_tag,
+    _gh_matching_tags,
+)
+from gateway import ActionsYAML
 
 DTOLNAY_RUST_TOOLCHAIN_SHA = "29eef336d9b2848a0b548edc03f92a220660cdb8"
+ACTIONS_CHECKOUT_V4_2_2_SHA = "11bd71901bbe5b1630ceea73d27597364c9af683"
+ACTIONS_CHECKOUT_V2_BETA_TAG_SHA = "95784fc5bbede4a44d9abcfbde7a64f16e6dbedd"
+LIVE_GITHUB_API_SKIP_REASON = "GH_TOKEN environment variable should be set for this test as it issues GitHub API requests."
 
 
-def _api_response(status: int, body: str = "", reason: str = "OK") -> ApiResponse:
-    return ApiResponse("https://api.github.test", status, reason, {}, body)
+#
+# Live-API tests only run when the GH_TOKEN environment variable is set
+#
 
-def _commit_ref_response(tag: str, sha: str) -> ApiResponse:
-    return _api_response(200, f'[{{"ref": "refs/tags/{tag}", "object": {{"type": "commit", "sha": "{sha}"}}}}]')
+def _response_json(response: ApiResponse):
+    return ruyaml.YAML().load(response.body)
 
-def _tag_ref_response(tag: str, sha: str) -> ApiResponse:
-    return _api_response(200, f'[{{"ref": "refs/tags/{tag}", "object": {{"type": "tag", "sha": "{sha}"}}}}]')
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason=LIVE_GITHUB_API_SKIP_REASON)
+def test_live_gh_get_commit_object_actions_checkout():
+    response = _gh_get_commit_object("actions/checkout", ACTIONS_CHECKOUT_V4_2_2_SHA)
 
-def _tag_object_response(sha: str) -> ApiResponse:
-    return _api_response(200, f'{{"object": {{"sha": "{sha}"}}}}')
+    assert response.status == 200
+    response_json = _response_json(response)
+    assert response_json["sha"] == ACTIONS_CHECKOUT_V4_2_2_SHA
+    assert re.match(re_git_sha, response_json["tree"]["sha"])
+
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason=LIVE_GITHUB_API_SKIP_REASON)
+def test_live_gh_matching_tags_actions_checkout():
+    response = _gh_matching_tags("actions/checkout", "v4.2.2")
+
+    assert response.status == 200
+    response_json = _response_json(response)
+    assert len(response_json) == 1
+    assert response_json[0]["ref"] == "refs/tags/v4.2.2"
+    assert response_json[0]["object"]["type"] == "commit"
+    assert response_json[0]["object"]["sha"] == ACTIONS_CHECKOUT_V4_2_2_SHA
+
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason=LIVE_GITHUB_API_SKIP_REASON)
+def test_live_gh_get_tag_actions_checkout():
+    response = _gh_get_tag("actions/checkout", ACTIONS_CHECKOUT_V2_BETA_TAG_SHA)
+
+    assert response.status == 200
+    response_json = _response_json(response)
+    assert response_json["sha"] == ACTIONS_CHECKOUT_V2_BETA_TAG_SHA
+    assert response_json["object"]["type"] == "commit"
+    assert re.match(re_git_sha, response_json["object"]["sha"])
+
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason=LIVE_GITHUB_API_SKIP_REASON)
+def test_live_gh_get_branch_actions_checkout():
+    response = _gh_get_branch("actions/checkout", "main")
+
+    assert response.status == 200
+    response_json = _response_json(response)
+    assert response_json["name"] == "main"
+    assert re.match(re_git_sha, response_json["commit"]["sha"])
+
+@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason=LIVE_GITHUB_API_SKIP_REASON)
+def test_live_gh_compare_actions_checkout():
+    response = _gh_compare("actions/checkout", "main", ACTIONS_CHECKOUT_V4_2_2_SHA)
+
+    assert response.status == 200
+    response_json = _response_json(response)
+    assert response_json["base_commit"]["sha"] == ACTIONS_CHECKOUT_V4_2_2_SHA
+    assert re.match(re_git_sha, response_json["merge_base_commit"]["sha"])
+
+#
+# Unit tests, no live-API calls
+#
 
 def test_patterns():
     assert re.match(re_github_actions_repo, "foo/bar")
@@ -370,7 +438,7 @@ def test_wildcard_warnings_2():
             },
         })
 
-def _mock_wildcard_tags(owner_repo: str, tag: str) -> ApiResponse:
+def _mock_wildcard_tags(tag: str) -> ApiResponse:
     tags = {
         "v1.1.13": "17575ea4e18dd928fe5968dbe32294b97923d65b",
         "v1.1.14": "3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd",
@@ -390,3 +458,16 @@ def _test_wildcard_warnings(refs: ActionsYAML):
     assert "  .. ref '*' is expired, skipping" in result.logs
     assert result.failures == []
     assert result.warnings == []
+
+def _api_response(status: int, body: str = "", reason: str = "OK") -> ApiResponse:
+    return ApiResponse("https://api.github.test", status, reason, {}, body)
+
+def _commit_ref_response(tag: str, sha: str) -> ApiResponse:
+    return _api_response(200, f'[{{"ref": "refs/tags/{tag}", "object": {{"type": "commit", "sha": "{sha}"}}}}]')
+
+def _tag_ref_response(tag: str, sha: str) -> ApiResponse:
+    return _api_response(200, f'[{{"ref": "refs/tags/{tag}", "object": {{"type": "tag", "sha": "{sha}"}}}}]')
+
+def _tag_object_response(sha: str) -> ApiResponse:
+    return _api_response(200, f'{{"object": {{"sha": "{sha}"}}}}')
+
