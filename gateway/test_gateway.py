@@ -187,6 +187,53 @@ def test_update_tagged_ref():
     update_refs(steps, refs)
     assert refs == expected_refs
 
+def test_update_tagged_ref_with_generated_zizmor_ignore():
+    steps = load_yaml_string(f'''
+    - uses: 1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259   # v4.0.0  # {ZIZMOR_UNPINNED_TOOLS_IGNORE}
+    ''')
+
+    refs: ActionsYAML = {}
+
+    update_refs(steps, refs)
+
+    assert refs == {
+        "1Password/load-secrets-action": {
+            "92467eb28f72e8255933372f1e0707c567ce2259": {
+                "tag": "v4.0.0",
+            }
+        },
+    }
+
+def test_generate_composite_action_includes_zizmor_ignore_only_for_selected_actions():
+    actions: ActionsYAML = {
+        "1Password/load-secrets-action": {
+            "92467eb28f72e8255933372f1e0707c567ce2259": {
+                "tag": "v4.0.0",
+            }
+        },
+        "DavidAnson/markdownlint-cli2-action": {
+            "ded1f9488f68a970bc66ea5619e13e9b52e601cd": {
+                "tag": "v23.2.0",
+            }
+        },
+        "carabiner-dev/actions/install/ampel-bootstrap": {
+            "9db1a064ca5691ef6f5d983031739ca287de0968": {},
+        },
+    }
+
+    generated = generate_composite_action(actions)
+
+    assert (
+        f"1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259  "
+        f"# v4.0.0  # {ZIZMOR_UNPINNED_TOOLS_IGNORE}"
+    ) in generated
+    assert (
+        "DavidAnson/markdownlint-cli2-action@ded1f9488f68a970bc66ea5619e13e9b52e601cd  "
+        "# v23.2.0"
+    ) in generated
+    assert "carabiner-dev/actions/install/ampel-bootstrap@9db1a064ca5691ef6f5d983031739ca287de0968\n" in generated
+    assert generated.count(ZIZMOR_UNPINNED_TOOLS_IGNORE) == 1
+
 
 def test_create_pattern():
     actions = {
