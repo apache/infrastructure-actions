@@ -52,10 +52,10 @@ jobs:
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - run: pip install ruyaml 
+      - run: pipx install uv
 
       - name: Update actions.yml and check action tags
         # This step is similar to the one in update_actions.yml but also verifies the actions' tags
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python gateway/run_action_tags.py
+        run: uvx --with ruyaml python gateway/run_action_tags.py
