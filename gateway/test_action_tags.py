@@ -35,6 +35,10 @@ def test_patterns():
     assert re.match(re_github_actions_repo, "foo/bar/.github/actions/some.yml")
     assert re.match(re_docker_image, "docker://foo/bar")
 
+# The token-gated tests below intentionally exercise live GitHub API responses
+# and known public repository state, so they may need updates when upstream
+# repositories change.
+
 @pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_sha_without_tag():
     # noinspection PyTypeChecker
