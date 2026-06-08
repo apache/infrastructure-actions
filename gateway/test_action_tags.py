@@ -17,7 +17,6 @@
 # under the License.
 #
 
-import pytest
 from unittest import mock
 
 from action_tags import *
@@ -28,6 +27,15 @@ DTOLNAY_RUST_TOOLCHAIN_SHA = "29eef336d9b2848a0b548edc03f92a220660cdb8"
 def _api_response(status: int, body: str = "", reason: str = "OK") -> ApiResponse:
     return ApiResponse("https://api.github.test", status, reason, {}, body)
 
+def _commit_ref_response(tag: str, sha: str) -> ApiResponse:
+    return _api_response(200, f'[{{"ref": "refs/tags/{tag}", "object": {{"type": "commit", "sha": "{sha}"}}}}]')
+
+def _tag_ref_response(tag: str, sha: str) -> ApiResponse:
+    return _api_response(200, f'[{{"ref": "refs/tags/{tag}", "object": {{"type": "tag", "sha": "{sha}"}}}}]')
+
+def _tag_object_response(sha: str) -> ApiResponse:
+    return _api_response(200, f'{{"object": {{"sha": "{sha}"}}}}')
+
 def test_patterns():
     assert re.match(re_github_actions_repo, "foo/bar")
     assert not re.match(re_github_actions_repo, "foo/*")
@@ -35,35 +43,33 @@ def test_patterns():
     assert re.match(re_github_actions_repo, "foo/bar/.github/actions/some.yml")
     assert re.match(re_docker_image, "docker://foo/bar")
 
-# The token-gated tests below intentionally exercise live GitHub API responses
-# and known public repository state, so they may need updates when upstream
-# repositories change.
-
-@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_sha_without_tag():
-    # noinspection PyTypeChecker
-    result = verify_actions({
-        "sbt/setup-sbt": {
-          "3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd": {
-          },
-        },
-    })
+    with mock.patch("action_tags._gh_get_commit_object", return_value=_api_response(200)):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "sbt/setup-sbt": {
+              "3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd": {
+              },
+            },
+        })
+
     assert result.failures == []
     assert result.warnings == [
         "GitHub action sbt/setup-sbt references existing commit SHA '3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd' but does not specify the tag name for it."
     ]
 
-@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_sha_non_existent():
-    # noinspection PyTypeChecker
-    result = verify_actions({
-        "sbt/setup-sbt": {
-          "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef": {
-          },
-        },
-    })
+    with mock.patch("action_tags._gh_get_commit_object", return_value=_api_response(404, reason="Not Found")):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "sbt/setup-sbt": {
+              "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef": {
+              },
+            },
+        })
+
     assert result.failures == [
-        "GitHub action sbt/setup-sbt references non existing commit SHA 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef': HTTP/404: Not Found, API URL: https://api.github.com/repos/sbt/setup-sbt/git/commits/deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+        "GitHub action sbt/setup-sbt references non existing commit SHA 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef': HTTP/404: Not Found, API URL: https://api.github.test"
     ]
     assert result.warnings == []
 
@@ -81,61 +87,74 @@ def test_invalid_sha_records_failure_without_crashing():
     ]
     assert result.warnings == []
 
-@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_tag_sha_vs_commit_sha():
-    # noinspection PyTypeChecker
-    result = verify_actions({
-        "1Password/load-secrets-action": {
-          "e4feb4d8a7cd938b64370099b1893e05c58c3a84": {
-              "tag": "v3.0.0"
-          },
-        },
-    })
+    with (
+        mock.patch("action_tags._gh_matching_tags", return_value=_tag_ref_response("v3.0.0", "e4feb4d8a7cd938b64370099b1893e05c58c3a84")),
+        mock.patch("action_tags._gh_get_tag", return_value=_tag_object_response("13f58eec611f8e5db52ec16247f58c508398f3e6")),
+    ):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "1Password/load-secrets-action": {
+              "e4feb4d8a7cd938b64370099b1893e05c58c3a84": {
+                  "tag": "v3.0.0"
+              },
+            },
+        })
+
     assert "      .. GH yields tag SHA 'e4feb4d8a7cd938b64370099b1893e05c58c3a84' for 'refs/tags/v3.0.0'" in result.logs
     assert "        .. GH returns commit SHA '13f58eec611f8e5db52ec16247f58c508398f3e6' for previous tag SHA" in result.logs
     assert result.failures == []
     assert result.warnings == []
 
-@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_tag_sha_eq_commit_sha():
-    # noinspection PyTypeChecker
-    result = verify_actions({
-        "1Password/load-secrets-action": {
-          "13f58eec611f8e5db52ec16247f58c508398f3e6": {
-              "tag": "v3.0.0"
-          },
-        },
-    })
+    with (
+        mock.patch("action_tags._gh_matching_tags", return_value=_tag_ref_response("v3.0.0", "e4feb4d8a7cd938b64370099b1893e05c58c3a84")),
+        mock.patch("action_tags._gh_get_tag", return_value=_tag_object_response("13f58eec611f8e5db52ec16247f58c508398f3e6")),
+    ):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "1Password/load-secrets-action": {
+              "13f58eec611f8e5db52ec16247f58c508398f3e6": {
+                  "tag": "v3.0.0"
+              },
+            },
+        })
+
     assert "      .. GH yields tag SHA 'e4feb4d8a7cd938b64370099b1893e05c58c3a84' for 'refs/tags/v3.0.0'" in result.logs
     assert "        .. GH returns commit SHA '13f58eec611f8e5db52ec16247f58c508398f3e6' for previous tag SHA" in result.logs
     assert result.failures == []
     assert result.warnings == []
 
-@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_non_existing_tag():
-    # noinspection PyTypeChecker
-    result = verify_actions({
-        "1Password/load-secrets-action": {
-          "13f58eec611f8e5db52ec16247f58c508398f3e6": {
-              "tag": "v_ne_3.0.0"
-          },
-        },
-    })
+    with (
+        mock.patch("action_tags._gh_matching_tags", return_value=_api_response(200, "[]")),
+        mock.patch("action_tags._gh_get_branch", return_value=_api_response(404, "missing", "Not Found")),
+    ):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "1Password/load-secrets-action": {
+              "13f58eec611f8e5db52ec16247f58c508398f3e6": {
+                  "tag": "v_ne_3.0.0"
+              },
+            },
+        })
+
     assert result.failures == [
         "GitHub action 1Password/load-secrets-action references Git tag 'v_ne_3.0.0' via SHAs '{'13f58eec611f8e5db52ec16247f58c508398f3e6'}' but no SHAs for tag could be found - does the Git tag exist?"
     ]
     assert result.warnings == []
 
-@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_non_existing_tag_sha():
-    # noinspection PyTypeChecker
-    result = verify_actions({
-        "astral-sh/setup-uv": {
-          "b75a909f75acd358c2196fb9a5f1299a9a8868a4": {
-              "tag": "v7.1.2"
-          },
-        },
-    })
+    with mock.patch("action_tags._gh_matching_tags", return_value=_commit_ref_response("v7.1.2", "85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41")):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "astral-sh/setup-uv": {
+              "b75a909f75acd358c2196fb9a5f1299a9a8868a4": {
+                  "tag": "v7.1.2"
+              },
+            },
+        })
+
     assert result.failures == [
         "GitHub action astral-sh/setup-uv references Git tag 'v7.1.2' via SHAs '{'b75a909f75acd358c2196fb9a5f1299a9a8868a4'}' but none of those matches the valid SHAs '{'85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41'}'"
     ]
@@ -285,64 +304,78 @@ def test_missing_branch_falls_back_to_missing_tag_failure():
     ]
     assert result.warnings == []
 
-@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_repo_multiple_actions_repo_works():
-    # noinspection PyTypeChecker
-    result = verify_actions({
-        "gradle/actions/setup-gradle": {
-          "4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2": {
-              "tag": "v5.0.0"
-          },
-        },
-        "gradle/actions/wrapper-validation": {
-          "748248ddd2a24f49513d8f472f81c3a07d4d50e1": {
-              "tag": "v4.4.4"
-          },
-        },
-    })
+    with mock.patch(
+        "action_tags._gh_matching_tags",
+        side_effect=[
+            _commit_ref_response("v5.0.0", "4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2"),
+            _commit_ref_response("v4.4.4", "748248ddd2a24f49513d8f472f81c3a07d4d50e1"),
+        ],
+    ):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "gradle/actions/setup-gradle": {
+              "4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2": {
+                  "tag": "v5.0.0"
+              },
+            },
+            "gradle/actions/wrapper-validation": {
+              "748248ddd2a24f49513d8f472f81c3a07d4d50e1": {
+                  "tag": "v4.4.4"
+              },
+            },
+        })
+
     assert result.failures == []
     assert result.warnings == []
     assert "  ✅ GitHub action gradle/actions/setup-gradle definition for tag 'v5.0.0' is good!" in result.logs
     assert "  ✅ GitHub action gradle/actions/wrapper-validation definition for tag 'v4.4.4' is good!" in result.logs
 
-@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_wildcard_warnings_1():
-    # noinspection PyTypeChecker
-    _test_wildcard_warnings({
-        "sbt/setup-sbt": {
-          '*': {
-            "expires_at": date(2026, 2,28),
-          },
-          "17575ea4e18dd928fe5968dbe32294b97923d65b": {
-            "expires_at": date(2025, 12,29),
-            "tag": "v1.1.13"
-          },
-          "3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd": {
-            "tag": "v1.1.14"
-          },
-        },
-    })
+    with mock.patch("action_tags._gh_matching_tags", side_effect=_mock_wildcard_tags):
+        # noinspection PyTypeChecker
+        _test_wildcard_warnings({
+            "sbt/setup-sbt": {
+              '*': {
+                "expires_at": date(2026, 2,28),
+              },
+              "17575ea4e18dd928fe5968dbe32294b97923d65b": {
+                "expires_at": date(2025, 12,29),
+                "tag": "v1.1.13"
+              },
+              "3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd": {
+                "tag": "v1.1.14"
+              },
+            },
+        })
 
-@pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason="GH_TOKEN environment variable should be set for this test as it issues GitHub API requests.")
 def test_wildcard_warnings_2():
     """
     Similar to test_wildcard_warnings_1, but with the wildcard SHA at the end.
     """
-    # noinspection PyTypeChecker
-    _test_wildcard_warnings({
-        "sbt/setup-sbt": {
-          "17575ea4e18dd928fe5968dbe32294b97923d65b": {
-            "expires_at": date(2025, 12,29),
-            "tag": "v1.1.13"
-          },
-          "3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd": {
-            "tag": "v1.1.14"
-          },
-          '*': {
-            "expires_at": date(2026, 2,28),
-          },
-        },
-    })
+    with mock.patch("action_tags._gh_matching_tags", side_effect=_mock_wildcard_tags):
+        # noinspection PyTypeChecker
+        _test_wildcard_warnings({
+            "sbt/setup-sbt": {
+              "17575ea4e18dd928fe5968dbe32294b97923d65b": {
+                "expires_at": date(2025, 12,29),
+                "tag": "v1.1.13"
+              },
+              "3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd": {
+                "tag": "v1.1.14"
+              },
+              '*': {
+                "expires_at": date(2026, 2,28),
+              },
+            },
+        })
+
+def _mock_wildcard_tags(owner_repo: str, tag: str) -> ApiResponse:
+    tags = {
+        "v1.1.13": "17575ea4e18dd928fe5968dbe32294b97923d65b",
+        "v1.1.14": "3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd",
+    }
+    return _commit_ref_response(tag, tags[tag])
 
 def _test_wildcard_warnings(refs: ActionsYAML):
     result = verify_actions(refs, today=date(2025, 12, 21))
