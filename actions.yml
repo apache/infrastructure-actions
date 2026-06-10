@@ -276,15 +276,6 @@ container-tools/microshift-action:
   '*':
     keep: true
 coursier/cache-action:
-  e47d7d35a0d3a2c7f649ca5c63dfc2bbfaa002e7:
-    tag: v8.0.1
-    expires_at: 2026-06-10
-  c5ca79321d170b8a18c288d9cadc2a6037166d0f:
-    tag: v8.0.0
-    expires_at: 2026-06-10
-  bebeeb0e6f48ebad66d3783946588ecf43114433:
-    tag: v7.0.0
-    expires_at: 2026-06-10
   90c37294538be80a558fd665531fcdc2b467b475:
     tag: v8.1.0
     expires_at: 2026-08-05
@@ -860,9 +851,6 @@ pypa/gh-action-pypi-publish:
   ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e:
     keep: true
     tag: v1.13.0
-  76f52bc884231f62b9a034ebfe128415bbaabdfc:
-    tag: v1.12.4
-    expires_at: 2026-06-10
 pyTooling/Actions:
   '*':
     keep: true
@@ -930,9 +918,6 @@ rustsec/*:
   '*':
     keep: true
 sbt/setup-sbt:
-  6bec67c98f542b9e17369bfca0ec822ac1363194:
-    tag: v1.1.19
-    expires_at: 2026-06-10
   dd1ef7d7798fab5ce802a6adab3b782817b8c2d0:
     tag: v1.1.20
     expires_at: 2026-06-17

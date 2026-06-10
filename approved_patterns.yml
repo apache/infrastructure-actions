@@ -103,9 +103,6 @@
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - container-tools/microshift-action@*
-- coursier/cache-action@e47d7d35a0d3a2c7f649ca5c63dfc2bbfaa002e7
-- coursier/cache-action@c5ca79321d170b8a18c288d9cadc2a6037166d0f
-- coursier/cache-action@bebeeb0e6f48ebad66d3783946588ecf43114433
 - coursier/cache-action@90c37294538be80a558fd665531fcdc2b467b475
 - coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d
 - coursier/setup-action@*
@@ -299,7 +296,6 @@
 - pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084
 - pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266
 - pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e
-- pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
 - pyTooling/Actions@*
 - pytooling/actions@*
 - pytooling/actions/with-post-step@*
@@ -321,7 +317,6 @@
 - rust-lang/crates-io-auth-action@b7e9a28eded4986ec6b1fa40eeee8f8f165559ec
 - rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe
 - rustsec/*@*
-- sbt/setup-sbt@6bec67c98f542b9e17369bfca0ec822ac1363194
 - sbt/setup-sbt@dd1ef7d7798fab5ce802a6adab3b782817b8c2d0
 - sbt/setup-sbt@508b753e53cb6095967669e0911487d2b9bc9f41
 - sbt/setup-sbt@93e926cbdb4a428e41b4ef754124ec82925ffdc2
