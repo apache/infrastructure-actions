@@ -173,6 +173,7 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
             valid_shas_by_tag: dict[str, set[str]] = {}
             requested_shas_by_tag: dict[str, set[str]] = {}
             has_wildcard = False
+            has_specific_sha = False
             has_wildcard_msg_emitted = False
             # Flag whether to not error out on tag/SHA mismatches due to explicitly ignored GH API errors.
             has_ignored_api_errors = False
@@ -192,13 +193,14 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                 if ref == '*':
                     # "wildcard" SHA - what would we...
                     result.log(f"  .. detected wildcard ref")
-                    if len(requested_shas_by_tag) > 0 and not has_wildcard_msg_emitted:
+                    if has_specific_sha and not has_wildcard_msg_emitted:
                         result.warning(f"GitHub action {name} references a wildcard SHA but also has specific SHAs", "    ..")
                         has_wildcard_msg_emitted = True
                     has_wildcard = True
                     continue
                 elif re.match(re_git_sha, ref):
                     result.log(f"  .. detected entry with Git SHA '{ref}'")
+                    has_specific_sha = True
                     if has_wildcard and not has_wildcard_msg_emitted:
                         result.warning(f"GitHub action {name} references a wildcard SHA but also has specific SHAs", "    ..")
                         has_wildcard_msg_emitted = True

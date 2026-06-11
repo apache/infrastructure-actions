@@ -671,6 +671,26 @@ def test_tag_with_multiple_shas_succeeds_when_one_sha_matches():
     assert result.failures == []
     assert result.warnings == []
 
+def test_wildcard_after_untagged_sha_records_mixed_ref_warning():
+    sha = "3e125ece5c3e5248e18da9ed8d2cce3d335ec8dd"
+    with mock.patch("action_tags._gh_get_commit_object", return_value=_api_response(200)):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "sbt/setup-sbt": {
+              sha: {
+              },
+              "*": {
+              },
+            },
+        })
+
+    assert result.failures == []
+    assert result.warnings == [
+        "GitHub action sbt/setup-sbt references existing commit SHA "
+        f"'{sha}' but does not specify the tag name for it.",
+        "GitHub action sbt/setup-sbt references a wildcard SHA but also has specific SHAs",
+    ]
+
 def test_wildcard_warnings_1():
     with mock.patch("action_tags._gh_matching_tags", side_effect=_mock_wildcard_tags):
         # noinspection PyTypeChecker
