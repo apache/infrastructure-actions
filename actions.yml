@@ -1021,6 +1021,9 @@ SonarSource/sonarqube-scan-action:
     expires_at: 2026-08-16
   7006c4492b2e0ee0f816d36501671557c97f5995:
     tag: v8.1.0
+    expires_at: 2026-09-03
+  713881670b6b3676cda39549040e2d88c70d582e:
+    tag: v8.2.0
 SonarSource/sonarqube-scan-action/install-build-wrapper:
   a31c9398be7ace6bbfaf30c0bd5d415f843d45e9:
     tag: v7.0.0
@@ -1033,6 +1036,9 @@ SonarSource/sonarqube-scan-action/install-build-wrapper:
     expires_at: 2026-08-16
   7006c4492b2e0ee0f816d36501671557c97f5995:
     tag: v8.1.0
+    expires_at: 2026-09-03
+  713881670b6b3676cda39549040e2d88c70d582e:
+    tag: v8.2.0
 stCarolas/setup-maven:
   '*':
     keep: true

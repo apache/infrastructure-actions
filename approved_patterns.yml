@@ -351,10 +351,12 @@
 - SonarSource/sonarqube-scan-action@299e4b793aaa83bf2aba7c9c14bedbb485688ec4
 - SonarSource/sonarqube-scan-action@59db25f34e16620e48ab4bb9e4a5dce155cb5432
 - SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995
+- SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e
 - SonarSource/sonarqube-scan-action/install-build-wrapper@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
 - SonarSource/sonarqube-scan-action/install-build-wrapper@299e4b793aaa83bf2aba7c9c14bedbb485688ec4
 - SonarSource/sonarqube-scan-action/install-build-wrapper@59db25f34e16620e48ab4bb9e4a5dce155cb5432
 - SonarSource/sonarqube-scan-action/install-build-wrapper@7006c4492b2e0ee0f816d36501671557c97f5995
+- SonarSource/sonarqube-scan-action/install-build-wrapper@713881670b6b3676cda39549040e2d88c70d582e
 - stCarolas/setup-maven@*
 - subosito/flutter-action@*
 - swatinem/rust-cache@*
