@@ -489,6 +489,9 @@ google-github-actions/auth:
 google-github-actions/setup-gcloud:
   aa5489c8933f4cc7a4f7d45035b3b1440c9c10db:
     tag: v3.0.1
+goreleaser/goreleaser-action:
+  5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89:
+    tag: v7.2.2
 gr2m/twitter-together:
   '*':
     keep: true
