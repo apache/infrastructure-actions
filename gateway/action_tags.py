@@ -17,17 +17,15 @@
 # under the License.
 #
 
+import json
 import os
 import re
 import urllib.parse
 from urllib.error import HTTPError
 
-import ruyaml
-
 from datetime import date
 from urllib.request import Request, urlopen
 from pathlib import Path
-from ruyaml import CommentedMap, CommentedSeq
 from gateway import ActionsYAML, load_yaml, on_gha
 
 re_github_actions_repo_wildcard = r"^[A-Za-z0-9-_.]+/[*]$"
@@ -175,6 +173,7 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
             valid_shas_by_tag: dict[str, set[str]] = {}
             requested_shas_by_tag: dict[str, set[str]] = {}
             has_wildcard = False
+            has_specific_sha = False
             has_wildcard_msg_emitted = False
             # Flag whether to not error out on tag/SHA mismatches due to explicitly ignored GH API errors.
             has_ignored_api_errors = False
@@ -194,13 +193,14 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                 if ref == '*':
                     # "wildcard" SHA - what would we...
                     result.log(f"  .. detected wildcard ref")
-                    if len(requested_shas_by_tag) > 0 and not has_wildcard_msg_emitted:
+                    if has_specific_sha and not has_wildcard_msg_emitted:
                         result.warning(f"GitHub action {name} references a wildcard SHA but also has specific SHAs", "    ..")
                         has_wildcard_msg_emitted = True
                     has_wildcard = True
                     continue
                 elif re.match(re_git_sha, ref):
                     result.log(f"  .. detected entry with Git SHA '{ref}'")
+                    has_specific_sha = True
                     if has_wildcard and not has_wildcard_msg_emitted:
                         result.warning(f"GitHub action {name} references a wildcard SHA but also has specific SHAs", "    ..")
                         has_wildcard_msg_emitted = True
@@ -237,21 +237,24 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                         response = _gh_matching_tags(owner_repo, tag)
                         match response.status:
                             case 200:
-                                response_json: CommentedSeq = ruyaml.YAML().load(response.body)
+                                response_json = json.loads(response.body)
                                 for msg in response_json:
-                                    tag_ref_map: CommentedMap = msg
-                                    tag_object: CommentedMap = tag_ref_map["object"]
-                                    tab_object_type: str = tag_object["type"]
+                                    tag_ref_map = msg
+                                    if tag_ref_map["ref"] != f"refs/tags/{tag}":
+                                        result.log(f"      .. ignoring prefix-matched Git ref '{tag_ref_map['ref']}' for tag '{tag}'")
+                                        continue
+                                    tag_object = tag_ref_map["object"]
+                                    tag_object_type: str = tag_object["type"]
                                     tag_object_sha: str = tag_object["sha"]
-                                    result.log(f"      .. GH yields {tab_object_type} SHA '{tag_object_sha}' for '{tag_ref_map['ref']}'")
-                                    match tab_object_type:
+                                    result.log(f"      .. GH yields {tag_object_type} SHA '{tag_object_sha}' for '{tag_ref_map['ref']}'")
+                                    match tag_object_type:
                                         case "tag":
                                             valid_shas_for_tag.add(tag_object_sha)
                                             # https://docs.github.com/en/rest/git/tags?apiVersion=2022-11-28#get-a-tag
                                             response2 = _gh_get_tag(owner_repo, tag_object_sha)
                                             match response2.status:
                                                 case 200:
-                                                    tag_object_sha = ruyaml.YAML().load(response2.body)["object"]["sha"]
+                                                    tag_object_sha = json.loads(response2.body)["object"]["sha"]
                                                     valid_shas_for_tag.add(tag_object_sha)
                                                     result.log(f"        .. GH returns commit SHA '{tag_object_sha}' for previous tag SHA")
                                                 case 404:
@@ -310,7 +313,7 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                                 cmp_response = _gh_compare(owner_repo, req_tag, req_sha)
                                 match cmp_response.status:
                                     case 200:
-                                        cmp_json: CommentedSeq = ruyaml.YAML().load(cmp_response.body)
+                                        cmp_json = json.loads(cmp_response.body)
                                         on_branch = True
 
                                         if cmp_json["merge_base_commit"]["sha"] == req_sha:
