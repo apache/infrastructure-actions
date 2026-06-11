@@ -853,6 +853,9 @@ pypa/cibuildwheel:
     expires_at: 2026-07-05
   8d2b08b68458a16aeb24b64e68a09ab1c8e82084:
     tag: v3.4.1
+    expires_at: 2026-09-03
+  f03ac7617d6cff873ccf24cc0d567ef5ba5a9e6d:
+    tag: v4.0.0
 pypa/gh-action-pip-audit:
   1220774d901786e6f652ae159f7b6bc8fea6d266:
     tag: v1.1.0
