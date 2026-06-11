@@ -239,10 +239,10 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                                 for msg in response_json:
                                     tag_ref_map = msg
                                     tag_object = tag_ref_map["object"]
-                                    tab_object_type: str = tag_object["type"]
+                                    tag_object_type: str = tag_object["type"]
                                     tag_object_sha: str = tag_object["sha"]
-                                    result.log(f"      .. GH yields {tab_object_type} SHA '{tag_object_sha}' for '{tag_ref_map['ref']}'")
-                                    match tab_object_type:
+                                    result.log(f"      .. GH yields {tag_object_type} SHA '{tag_object_sha}' for '{tag_ref_map['ref']}'")
+                                    match tag_object_type:
                                         case "tag":
                                             valid_shas_for_tag.add(tag_object_sha)
                                             # https://docs.github.com/en/rest/git/tags?apiVersion=2022-11-28#get-a-tag
