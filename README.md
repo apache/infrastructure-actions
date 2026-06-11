@@ -273,8 +273,9 @@ Two workflows in `.github/workflows/` run `verify-action-build` on PRs that touc
 
 - **`verify` job in `verify_dependabot_action.yml`** — triggers on Dependabot PRs that modify `.github/actions/for-dependabot-triggered-reviews/action.yml`. Extracts the action reference from the PR, rebuilds the compiled JavaScript in Docker, and compares it against the published version.
 - **`verify` job in `verify_manual_action.yml`** — triggers on human-authored PRs that modify `actions.yml` or `approved_patterns.yml` (i.e. manual allow-list additions / version bumps). Dependabot-authored PRs are skipped, since they are already covered by the workflow above.
+- **`check_action_tags` job in `check_action_tags.yml`** — triggers when `actions.yml`, `approved_patterns.yml`, the generated Dependabot composite action, the update workflow, or gateway verification code changes. It verifies that configured action SHAs exist and, when a `tag` is recorded, that the SHA is reachable from that Git tag or branch.
 
-Both workflows use a regular `pull_request` trigger with read-only permissions and no PR comments — pass/fail is surfaced through the status check. Neither workflow auto-approves or merges; a human reviewer must still approve.
+These workflows use regular `pull_request` triggers with read-only permissions and no PR comments — pass/fail is surfaced through the status check. They do not auto-approve or merge; a human reviewer must still approve.
 
 The script exits with code **1** (failure) when something is unexpectedly broken — for example, the action cannot be compiled, the rebuilt JavaScript is invalid, or required tools are missing. In all other cases it exits with code **0** and produces reviewable diffs: a large diff does not by itself cause an error (e.g. major version bumps will naturally have big diffs). It is always up to a human reviewer to inspect the output, assess the changes, and decide whether the update is safe to approve.
 
