@@ -17,10 +17,10 @@
 # under the License.
 #
 
+import json
 import os
 import pytest
 import re
-import ruyaml
 from datetime import date
 from unittest import mock
 
@@ -50,7 +50,7 @@ LIVE_GITHUB_API_SKIP_REASON = "GH_TOKEN environment variable should be set for t
 #
 
 def _response_json(response: ApiResponse):
-    return ruyaml.YAML().load(response.body)
+    return json.loads(response.body)
 
 @pytest.mark.skipif(os.environ.get('GH_TOKEN') is None, reason=LIVE_GITHUB_API_SKIP_REASON)
 def test_live_gh_get_commit_object_actions_checkout():
