@@ -175,6 +175,7 @@
 - golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee
 - google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
 - google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+- goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89
 - gr2m/twitter-together@*
 - graalvm/setup-graalvm@54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1
 - graalvm/setup-graalvm@f744c72a42b1995d7b0cbc314bde4bace7ac1fe1
