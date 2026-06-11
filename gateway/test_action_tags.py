@@ -267,6 +267,32 @@ def test_non_existing_tag_sha():
     ]
     assert result.warnings == []
 
+def test_matching_tag_prefix_results_do_not_satisfy_shorter_tag():
+    exact_tag_sha = "1111111111111111111111111111111111111111"
+    sibling_tag_sha = "2222222222222222222222222222222222222222"
+    with mock.patch(
+        "action_tags._gh_matching_tags",
+        return_value=_commit_refs_response({
+            "v3": exact_tag_sha,
+            "v3.1.0": sibling_tag_sha,
+        }),
+    ):
+        # noinspection PyTypeChecker
+        result = verify_actions({
+            "foo/bar": {
+              sibling_tag_sha: {
+                  "tag": "v3"
+              },
+            },
+        })
+
+    assert result.failures == [
+        "GitHub action foo/bar references Git tag 'v3' via SHAs "
+        f"'{{'{sibling_tag_sha}'}}' but none of those matches the valid SHAs "
+        f"'{{'{exact_tag_sha}'}}'"
+    ]
+    assert result.warnings == []
+
 def test_matching_tags_api_failure_can_be_ignored():
     with (
         mock.patch(
@@ -728,6 +754,13 @@ def _api_response(status: int, body: str = "", reason: str = "OK") -> ApiRespons
 
 def _commit_ref_response(tag: str, sha: str) -> ApiResponse:
     return _api_response(200, f'[{{"ref": "refs/tags/{tag}", "object": {{"type": "commit", "sha": "{sha}"}}}}]')
+
+def _commit_refs_response(refs: dict[str, str]) -> ApiResponse:
+    body = [
+        {"ref": f"refs/tags/{tag}", "object": {"type": "commit", "sha": sha}}
+        for tag, sha in refs.items()
+    ]
+    return _api_response(200, json.dumps(body))
 
 def _tag_ref_response(tag: str, sha: str) -> ApiResponse:
     return _api_response(200, f'[{{"ref": "refs/tags/{tag}", "object": {{"type": "tag", "sha": "{sha}"}}}}]')

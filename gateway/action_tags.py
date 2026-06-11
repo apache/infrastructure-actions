@@ -238,6 +238,9 @@ def verify_actions(actions: Path | ActionsYAML | str, log_to_console: bool = Tru
                                 response_json = json.loads(response.body)
                                 for msg in response_json:
                                     tag_ref_map = msg
+                                    if tag_ref_map["ref"] != f"refs/tags/{tag}":
+                                        result.log(f"      .. ignoring prefix-matched Git ref '{tag_ref_map['ref']}' for tag '{tag}'")
+                                        continue
                                     tag_object = tag_ref_map["object"]
                                     tag_object_type: str = tag_object["type"]
                                     tag_object_sha: str = tag_object["sha"]
