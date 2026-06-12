@@ -68,7 +68,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pelican[markdown]>=4.11,<4.12",
-    "ruff>=0.15.15",
+    "ruff>=0.15.16",
     "pytest>=8",
     "mypy>=2.1.0",
     "pylint>=3",
