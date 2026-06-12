@@ -19,10 +19,8 @@
 # This file was generated from actions.yml by gateway/gateway.py.
 # It will be regenerated and committed as part of various workflows.
 # DO NOT UPDATE MANUALLY. Update /actions.yml instead.
-- 1Password/load-secrets-action@8d0d610af187e78a2772c2d18d627f4c52d3fbfb
 - 1Password/load-secrets-action@dafbe7cb03502b260e2b2893c753c352eee545bf
 - 1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259
-- 1Password/load-secrets-action/configure@8d0d610af187e78a2772c2d18d627f4c52d3fbfb
 - 1Password/load-secrets-action/configure@dafbe7cb03502b260e2b2893c753c352eee545bf
 - 1Password/load-secrets-action/configure@92467eb28f72e8255933372f1e0707c567ce2259
 - actions-cool/check-user-permission@*
@@ -94,7 +92,6 @@
 - codecov/codecov-action@*
 - codelytv/pr-size-labeler@*
 - codspeedhq/action@*
-- commit-check/commit-check-action@be79b5cd5953c8afd4266004c5bbb1431f544df1
 - commit-check/commit-check-action@443fb6a114414358496e6243105294c3b11610c5
 - commit-check/commit-check-action@2fe41833054c561710099d8e3e22bbeab4fe204a
 - commit-check/commit-check-action@7c158d4541309c5952de3343151750882b036d10
@@ -110,7 +107,6 @@
 - coursier/setup-action@fd1707a76b027efdfb66ca79318b4d29b72e5a02
 - cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8
 - crate-ci/typos@*
-- crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec
 - crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd
 - damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
 - dart-lang/setup-dart@e51d8e571e22473a2ddebf0ef8a2123f0ab2c02c
@@ -152,7 +148,6 @@
 - docker://pandoc/core@sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93
 - dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
 - dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d
-- dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637
 - dorny/test-reporter@3d76b34a4535afbd0600d347b09a6ee5deb3ed7f
 - dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451
 - dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
@@ -170,7 +165,6 @@
 - geekyeggo/delete-artifact@*
 - golang/govulncheck-action@*
 - golangci/*@*
-- golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd
 - golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20
 - golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee
 - google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
@@ -198,12 +192,10 @@
 - gradle/develocity-actions/setup-maven@974e8dbcbda40db6828fc35f349c80a7c0e71529
 - gsactions/commit-message-checker@*
 - hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5
-- hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
 - hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85
 - hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
 - helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f
 - helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f
-- helm/kind-action@92086f6be054225fa813e0a4b13787fc9088faab
 - helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc
 - houseabsolute/actions-rust-cross@*
 - ilammy/msvc-dev-cmd@*
@@ -278,7 +270,6 @@
 - opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb
 - opentofu/setup-opentofu@847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4
 - oracle-actions/setup-java@*
-- orhun/git-cliff-action@e16f179f0be49ecdfe63753837f20b9531642772
 - orhun/git-cliff-action@c93ef52f3d0ddcdcc9bd5447d98d458a11cd4f72
 - orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5
 - ossf/scorecard-action@*

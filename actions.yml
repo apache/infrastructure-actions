@@ -22,18 +22,12 @@
 # update expiry dates for previous versions.
 # Versions that are known to be problematic should be removed explicitly manually.
 1Password/load-secrets-action:
-  8d0d610af187e78a2772c2d18d627f4c52d3fbfb:
-    tag: v3.1.0
-    expires_at: 2026-06-12
   dafbe7cb03502b260e2b2893c753c352eee545bf:
     tag: v3.2.1
     expires_at: 2026-06-17
   92467eb28f72e8255933372f1e0707c567ce2259:
     tag: v4.0.0
 1Password/load-secrets-action/configure:
-  8d0d610af187e78a2772c2d18d627f4c52d3fbfb:
-    tag: v3.1.0
-    expires_at: 2026-06-12
   dafbe7cb03502b260e2b2893c753c352eee545bf:
     tag: v3.2.1
     expires_at: 2026-06-17
@@ -249,9 +243,6 @@ codspeedhq/action:
   '*':
     keep: true
 commit-check/commit-check-action:
-  be79b5cd5953c8afd4266004c5bbb1431f544df1:
-    tag: v2.2.1
-    expires_at: 2026-06-12
   443fb6a114414358496e6243105294c3b11610c5:
     tag: v2.4.2
     expires_at: 2026-07-07
@@ -296,9 +287,6 @@ crate-ci/typos:
   '*':
     keep: true
 crazy-max/ghaction-import-gpg:
-  e89d40939c28e39f97cf32126055eeae86ba74ec:
-    tag: v6.3.0
-    expires_at: 2026-06-12
   2dc316deee8e90f13e1a351ab510b4d5bc0c82cd:
     tag: v7.0.0
 damccorm/tag-ur-it:
@@ -420,9 +408,6 @@ dorny/paths-filter:
   fbd0ab8f3e69293af611ebaee6363fc25e6d187d:
     tag: v4.0.1
 dorny/test-reporter:
-  b082adf0eced0765477756c2a610396589b8c637:
-    tag: v2.5.0
-    expires_at: 2026-06-12
   3d76b34a4535afbd0600d347b09a6ee5deb3ed7f:
     tag: v2.6.0
     expires_at: 2026-06-14
@@ -475,9 +460,6 @@ golangci/*:
   '*':
     keep: true
 golangci/golangci-lint-action:
-  1481404843c368bc19ca9406f87d6e0fc97bdcfd:
-    tag: v7.0.0
-    expires_at: 2026-06-12
   1e7e51e771db61008b38414a730f564565cf7c20:
     tag: v9.2.0
     expires_at: 2026-08-16
@@ -559,9 +541,6 @@ hadolint/hadolint-action:
   2332a7b74a6de0dda2e2221d575162eba76ba5e5:
     tag: v3.3.0
 hashicorp/setup-terraform:
-  b9cd54a3c349d3f38e8881555d616ced269862dd:
-    tag: v3
-    expires_at: 2026-06-12
   5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85:
     tag: v4.0.0
     expires_at: 2026-08-06
@@ -574,9 +553,6 @@ helm/chart-testing-action:
   6ec842c01de15ebb84c8627d2744a0c2f2755c9f:
     tag: v2.8.0
 helm/kind-action:
-  92086f6be054225fa813e0a4b13787fc9088faab:
-    tag: v1.13.0
-    expires_at: 2026-06-12
   ef37e7f390d99f746eb8b610417061a60e82a6cc:
     tag: v1.14.0
 houseabsolute/actions-rust-cross:
@@ -797,9 +773,6 @@ oracle-actions/setup-java:
   '*':
     keep: true
 orhun/git-cliff-action:
-  e16f179f0be49ecdfe63753837f20b9531642772:
-    tag: v4.7.0
-    expires_at: 2026-06-12
   c93ef52f3d0ddcdcc9bd5447d98d458a11cd4f72:
     tag: v4.7.1
     expires_at: 2026-07-20
