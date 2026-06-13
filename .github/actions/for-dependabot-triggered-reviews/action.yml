@@ -145,11 +145,11 @@ runs:
       if: false
     - uses: graalvm/setup-graalvm@329c42c5f4c343bceb505f0b28cc8499bc2bf174  # v1.5.4
       if: false
-    - uses: gradle/actions/dependency-submission@5e2ebd065dc2488b7a6ad670704656cbbe1e8f60  # v6.1.1
+    - uses: gradle/actions/dependency-submission@3f131e8634966bd73d06cc69884922b02e6faf92  # v6.2.0
       if: false
-    - uses: gradle/actions/setup-gradle@5e2ebd065dc2488b7a6ad670704656cbbe1e8f60  # v6.1.1
+    - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92  # v6.2.0
       if: false
-    - uses: gradle/actions/wrapper-validation@5e2ebd065dc2488b7a6ad670704656cbbe1e8f60  # v6.1.1
+    - uses: gradle/actions/wrapper-validation@3f131e8634966bd73d06cc69884922b02e6faf92  # v6.2.0
       if: false
     - uses: gradle/develocity-actions/maven-publish-build-scan@974e8dbcbda40db6828fc35f349c80a7c0e71529  # v2.1
       if: false
