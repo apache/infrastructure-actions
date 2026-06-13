@@ -275,9 +275,6 @@ coursier/cache-action:
 coursier/setup-action:
   '*':
     keep: true
-  7acb5c9ea69bc1a1bb185ec45ebce2ac114f3628:
-    tag: v2.0.3
-    expires_at: 2026-06-13
   fd1707a76b027efdfb66ca79318b4d29b72e5a02:
     tag: v3.0.0
 cpp-linter/cpp-linter-action:
@@ -970,9 +967,6 @@ sigstore/cosign-installer:
     expires_at: 2026-12-31
     tag: v4.0.0
 slackapi/slack-github-action:
-  91efab103c0de0a537f72a35f6b8cda0ee76bf0a:
-    tag: v2.1.1
-    expires_at: 2026-06-13
   af78098f536edbc4de71162a307590698245be95:
     tag: v3.0.1
     expires_at: 2026-07-18

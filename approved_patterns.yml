@@ -103,7 +103,6 @@
 - coursier/cache-action@90c37294538be80a558fd665531fcdc2b467b475
 - coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d
 - coursier/setup-action@*
-- coursier/setup-action@7acb5c9ea69bc1a1bb185ec45ebce2ac114f3628
 - coursier/setup-action@fd1707a76b027efdfb66ca79318b4d29b72e5a02
 - cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8
 - crate-ci/typos@*
@@ -332,7 +331,6 @@
 - shogo82148/actions-setup-perl@*
 - shufo/auto-assign-reviewer-by-files@*
 - sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad
-- slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
 - slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95
 - slackapi/slack-github-action@03ea5433c137af7c0495bc0cad1af10403fc800c
 - slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c
