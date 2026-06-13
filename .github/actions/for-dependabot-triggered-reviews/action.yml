@@ -225,7 +225,7 @@ runs:
       if: false
     - uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a  # v2.1.0
       if: false
-    - uses: rubygems/release-gem@6317d8d1f7e28c24d28f6eff169ea854948bd9f7  # v1.2.0
+    - uses: rubygems/release-gem@052cc82692552de3ef2b81fd670e41d13cba8092  # v1.4.0
       if: false
     - uses: runs-on/action@d141ef83eb66d096ce8afc767e09115a65c63b60  # v2.1.2
       if: false
