@@ -247,7 +247,7 @@ runs:
       if: false
     - uses: terraform-linters/setup-tflint@b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93  # v6.2.2
       if: false
-    - uses: untitaker/hyperlink@fb5bb9c5011a3d143a54b4b30aedc30ec5bc0f89  # 0.2.0
+    - uses: untitaker/hyperlink@1ae2cef25222e3307a82bc7388f0667137f4240b  # 0.2.1
       if: false
     - uses: uraimo/run-on-arch-action@f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9  # v3.1.0
       if: false
