@@ -707,6 +707,139 @@ def process_eccn(fname, debug):
              for proj in sorted(j['eccnmatrix'],
                                 key=operator.itemgetter('name'))]
 
+# create sequence of sequences of ASF Events data.
+# event_type:
+#   future   -> events with endDate > today, sorted ascending
+#   archived -> events with endDate <= today, sorted descending
+def process_events(fname, debug, event_type='future'):
+    if debug:
+        print(f'-----\nEVENTS ({event_type.upper()}): {fname}')
+    if fname.startswith("https://"):
+        j = yaml.safe_load(requests.get(fname, timeout=REQUESTS_TIMEOUT).text)
+    else:
+        j = yaml.safe_load(open(fname))
+
+    # Helper function to process colocated events
+    def make_colocated_events(colocated_events):
+        if not colocated_events or not isinstance(colocated_events, list):
+            return []
+
+        processed_events = []
+        for colocated_event in colocated_events:
+            if isinstance(colocated_event, dict):
+                # Full event object with properties
+                processed_events.append(Event(
+                    name=colocated_event.get('name', ''),
+                    href=colocated_event.get('href', ''),
+                    endDate=colocated_event.get('endDate', ''),
+                    displayDate=colocated_event.get('displayDate', ''),
+                    image=colocated_event.get('image', ''),
+                    description=colocated_event.get('description', ''),
+                    gallery=colocated_event.get('gallery', [])
+                ))
+            elif isinstance(colocated_event, str):
+                # Simple string reference
+                processed_events.append(Event(name=colocated_event, href='', endDate='', displayDate='', image='', description='', gallery=[]))
+
+        return processed_events
+
+    if event_type not in ('future', 'archived'):
+        raise ValueError(f'Invalid event_type: {event_type}. Expected "future" or "archived"')
+
+    # Get today's date for filtering
+    today = datetime.date.today()
+
+    # Filter events according to requested type
+    selected_events = []
+    for event in j['events']:
+        try:
+            # Handle both string and date object formats
+            event_date_value = event['endDate']
+            if isinstance(event_date_value, str):
+                # Parse the event date string (assuming YYYY-MM-DD format)
+                event_date = datetime.datetime.strptime(event_date_value, '%Y-%m-%d').date()
+            elif isinstance(event_date_value, datetime.date):
+                # Already a date object
+                event_date = event_date_value
+            else:
+                # Convert datetime to date if needed
+                event_date = event_date_value.date() if hasattr(event_date_value, 'date') else event_date_value
+
+            is_future = event_date > today
+            if (event_type == 'future' and is_future) or (event_type == 'archived' and not is_future):
+                # Create a copy of the event with normalized date for consistent sorting
+                event_copy = event.copy()
+                event_copy['date_obj'] = event_date  # Store the date object for sorting
+                event_copy['endDate'] = event_date.strftime('%Y-%m-%d')  # Store as string for Event object
+                selected_events.append(event_copy)
+        except (ValueError, AttributeError, TypeError) as e:
+            # Skip events with invalid date formats
+            if debug:
+                print(f'Skipping event with invalid date format: {event.get("name", "Unknown")} - {event.get("endDate", "No date")} - Error: {e}')
+            continue
+
+    reverse_sort = event_type == 'archived'
+    return [Event(name=event['name'],
+                  ref=event['ref'],
+                  href=event['href'],
+                  nav=event['nav'],
+                  registrationHref=event['registrationHref'],
+                  startDate=event['startDate'],
+                  endDate=event['endDate'],
+                  displayDate=event['displayDate'],
+                  year=event['year'],
+                  location=event['location'],
+                  image=event.get('image'),
+                  gallery=event.get('gallery', []),
+                  colocatedEvents=make_colocated_events(event.get('colocatedEvents')))
+            for event in sorted(selected_events, key=operator.itemgetter('date_obj'), reverse=reverse_sort)]
+
+# Process sponsors data from multiple JSON files and create Sponsor objects.
+def process_sponsors(sponsor_files, debug):
+    """
+    Args:
+        sponsor_files (dict): Dictionary of event names to JSON file paths
+        debug (bool): Enable debug output
+    Returns:
+        dict: Dictionary of event names to sponsor data
+    """
+    if debug:
+        print('-----\nSPONSORS:', sponsor_files)
+    
+    sponsors_data = {}
+    
+    for event_name, file_path in sponsor_files.items():
+        try:
+            if debug:
+                print(f'Loading sponsors for {event_name} from {file_path}')
+            
+            # Load JSON data
+            sponsor_data = file_data(file_path, debug)
+            
+            # Process each sponsorship level
+            processed_sponsors = {}
+            for level, sponsor_list in sponsor_data.items():
+                if isinstance(sponsor_list, list):
+                    # Create sponsor objects
+                    processed_sponsors[level] = [
+                        Sponsor(
+                            name=sponsor.get('name', ''),
+                            logo=sponsor.get('logo', sponsor.get('value', '')),  # fallback to 'value' if 'logo' not present
+                            link=sponsor.get('link', '')
+                        ) for sponsor in sponsor_list
+                    ]
+                    if debug:
+                        print(f'{event_name} {level}: {len(processed_sponsors[level])} sponsors')
+            
+            sponsors_data[event_name] = processed_sponsors
+            
+        except Exception as e:
+            if debug:
+                print(f'Error loading sponsors for {event_name}: {e}')
+            sponsors_data[event_name] = {}
+    
+    return sponsors_data
+
 
 # object wrappers
 class wrapper:
@@ -730,8 +863,15 @@ class Product(wrapper):
 class Project(wrapper):
     pass
 
+class Event(wrapper):
+    pass
+
 
 class Blog(wrapper):
+    pass
+
+
+class Sponsor(wrapper):
     pass
 
 
@@ -773,6 +913,25 @@ def config_read_data(pel_ob):
                 metadata[key] = v = process_eccn(fname, debug)
                 if debug:
                     print('ECCN V:', v)
+                continue
+            if key == 'events':
+                # process events data
+                fname = config_data[key]['file']
+                metadata[key] = v = process_events(fname, debug, 'future')
+                if debug:
+                    print('EVENTS V:', v)
+                # Also process archived events using the same data source
+                metadata['archived_events'] = v_archived = process_events(fname, debug, 'archived')
+                if debug:
+                    print('ARCHIVED EVENTS V:', v_archived)
+                continue
+            
+            if key == 'sponsors':
+                # process sponsors data
+                sponsor_files = config_data[key]
+                metadata[key] = v = process_sponsors(sponsor_files, debug)
+                if debug:
+                    print('SPONSORS V:', v)
                 continue
 
             if key == 'twitter':
