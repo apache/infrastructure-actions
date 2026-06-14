@@ -74,9 +74,6 @@ astral-sh/setup-uv:
     # needed for helm/chart-testing-action @ v2.8.0
     tag: v7.0.0
     expires_at: 2026-06-27
-  5a095e7a2014a4212f075830d4f7277575a9d098:
-    tag: v7.3.1
-    expires_at: 2026-06-14
   37802adc94f370d6bfd71619e3f0bf239e1f3b78:
     tag: v7.6.0
     expires_at: 2026-06-27
@@ -141,9 +138,6 @@ betahuhn/repo-file-sync-action:
   8b92be3375cf1d1b0cd579af488a9255572e4619:
     tag: v1.21.1
 biomejs/setup-biome:
-  29711cbb52afee00eb13aeb30636592f9edc0088:
-    tag: v2.7.0
-    expires_at: 2026-06-14
   4c91541eaada48f67d7dbd7833600ce162b68f51:
     tag: v2.7.1
 BobAnkh/auto-generate-changelog:
@@ -310,9 +304,6 @@ dawidd6/action-download-artifact:
   '*':
     keep: true
 dawidd6/action-send-mail:
-  6d98ae34d733f9a723a9e04e94f2f24ba05e1402:
-    tag: v6
-    expires_at: 2026-06-14
   d38f3f7cd391cdebfe0d38efc3998b935e951c4f:
     tag: v16
     expires_at: 2026-07-21
@@ -340,9 +331,6 @@ docker/bake-action:
   6614cfa25eff9a0b2b2697efb0b6159e7680d584:
     tag: v7.2.0
 docker/build-push-action:
-  10e90e3645eae34f1e60eeb005ba3a3d33f178e8:
-    tag: v6.19.2
-    expires_at: 2026-06-14
   d08e5c354a6adb9ed34480a06d141179aa583294:
     tag: v7.0.0
     expires_at: 2026-07-07
@@ -355,9 +343,6 @@ docker/build-push-action:
   f9f3042f7e2789586610d6e8b85c8f03e5195baf:
     tag: v7.2.0
 docker/login-action:
-  c94ce9fb468520275223c153574b00df6fe4bcc9:
-    tag: v3.7.0
-    expires_at: 2026-06-14
   b45d80f862d83dbcd57f89517bcf500b2ab88fb2:
     tag: v4.0.0
     expires_at: 2026-07-05
@@ -367,27 +352,18 @@ docker/login-action:
   650006c6eb7dba73a995cc03b0b2d7f5ca915bee:
     tag: v4.2.0
 docker/metadata-action:
-  c299e40c65443455700f0fdfc63efafe5b349051:
-    tag: v5.10.0
-    expires_at: 2026-06-14
   030e881283bb7a6894de51c315a6bfe6a94e05cf:
     tag: v6.0.0
     expires_at: 2026-08-16
   80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9:
     tag: v6.1.0
 docker/setup-buildx-action:
-  8d2750c68a42422c14e847fe6c8ac0403b4cbd6f:
-    tag: v3.12.0
-    expires_at: 2026-06-14
   4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd:
     tag: v4.0.0
     expires_at: 2026-08-16
   d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5:
     tag: v4.1.0
 docker/setup-qemu-action:
-  29109295f81e9208d7d86ff1c6c12d2833863392:
-    tag: v3.6.0
-    expires_at: 2026-06-14
   ce360397dd3f832beb865e1373c09c0e9f86d70a:
     tag: v4.0.0
     expires_at: 2026-08-19
@@ -402,15 +378,9 @@ docker://pandoc/core:
   sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93:
     tag: 3.7.0.2
 dorny/paths-filter:
-  de90cc6fb38fc0963ad72b210f1f284cd68cea36:
-    tag: v3.0.2
-    expires_at: 2026-06-14
   fbd0ab8f3e69293af611ebaee6363fc25e6d187d:
     tag: v4.0.1
 dorny/test-reporter:
-  3d76b34a4535afbd0600d347b09a6ee5deb3ed7f:
-    tag: v2.6.0
-    expires_at: 2026-06-14
   df6247429542221bc30d46a036ee47af1102c451:
     tag: v2.7.0
     expires_at: 2026-06-17
@@ -478,9 +448,6 @@ gr2m/twitter-together:
   '*':
     keep: true
 graalvm/setup-graalvm:
-  54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1:
-    tag: v1.4.5
-    expires_at: 2026-06-14
   f744c72a42b1995d7b0cbc314bde4bace7ac1fe1:
     tag: v1.5.0
     expires_at: 2026-06-29
@@ -695,9 +662,6 @@ lycheeverse/lychee-action:
 manusa/actions-setup-minikube:
   '*':
     keep: true
-  8234275e0386fe1cdaf519d28c90f4f03fad89e4:
-    tag: v2.15.0
-    expires_at: 2026-06-14
   96202dee4ae1c2f46a62fe197273aaf22b83f42d:
     tag: v2.16.1
     expires_at: 2026-08-16
@@ -752,9 +716,6 @@ nanasess/setup-chromedriver:
   '*':
     keep: true
 ncipollo/release-action:
-  b7eabc95ff50cbeeedec83973935c8f306dfcd0b:
-    tag: v1.20.0
-    expires_at: 2026-06-14
   339a81892b84b4eeb0f6e744e4574d79d0d9b8dd:
     tag: v1.21.0
 nick-fields/retry:
@@ -770,9 +731,6 @@ olafurpg/setup-scala:
   '*':
     keep: true
 opentofu/setup-opentofu:
-  9d84900f3238fab8cd84ce47d658d25dd008be2f:
-    tag: v1.0.8
-    expires_at: 2026-06-14
   fc711fa910b93cba0f3fbecaafc9f42fd0c411cb:
     tag: v2.0.0
     expires_at: 2026-08-16
@@ -830,9 +788,6 @@ PyO3/maturin-action:
   '*':
     keep: true
 pypa/cibuildwheel:
-  298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e:
-    tag: v3.3.1
-    expires_at: 2026-06-14
   ee02a1537ce3071a004a6b08c41e72f0fdc42d9a:
     tag: v3.4.0
     expires_at: 2026-07-05
@@ -906,9 +861,6 @@ rubygems/release-gem:
   052cc82692552de3ef2b81fd670e41d13cba8092:
     tag: v1.4.0
 runs-on/action:
-  cd2b598b0515d39d78c38a02d529db87d2196d1e:
-    tag: v2.0.3
-    expires_at: 2026-06-14
   742bf56072eb4845a0f94b3394673e4903c90ff0:
     tag: v2.1.0
     expires_at: 2026-08-01
@@ -1058,9 +1010,6 @@ tcort/github-action-markdown-link-check:
   e7c7a18363c842693fadde5d41a3bd3573a7a225:
     tag: v1.1.2
 terraform-linters/setup-tflint:
-  4cb9feea73331a35b422df102992a03a44a3bb33:
-    tag: v6.2.1
-    expires_at: 2026-06-14
   b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93:
     tag: v6.2.2
 test-summary/action:
