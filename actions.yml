@@ -22,15 +22,9 @@
 # update expiry dates for previous versions.
 # Versions that are known to be problematic should be removed explicitly manually.
 1Password/load-secrets-action:
-  dafbe7cb03502b260e2b2893c753c352eee545bf:
-    tag: v3.2.1
-    expires_at: 2026-06-17
   92467eb28f72e8255933372f1e0707c567ce2259:
     tag: v4.0.0
 1Password/load-secrets-action/configure:
-  dafbe7cb03502b260e2b2893c753c352eee545bf:
-    tag: v3.2.1
-    expires_at: 2026-06-17
   92467eb28f72e8255933372f1e0707c567ce2259:
     tag: v4.0.0
 actions-cool/check-user-permission:
@@ -381,9 +375,6 @@ dorny/paths-filter:
   fbd0ab8f3e69293af611ebaee6363fc25e6d187d:
     tag: v4.0.1
 dorny/test-reporter:
-  df6247429542221bc30d46a036ee47af1102c451:
-    tag: v2.7.0
-    expires_at: 2026-06-17
   a43b3a5f7366b97d083190328d2c652e1a8b6aa2:
     tag: v3.0.0
 dtolnay/rust-toolchain:
@@ -876,9 +867,6 @@ rustsec/*:
   '*':
     keep: true
 sbt/setup-sbt:
-  dd1ef7d7798fab5ce802a6adab3b782817b8c2d0:
-    tag: v1.1.20
-    expires_at: 2026-06-17
   508b753e53cb6095967669e0911487d2b9bc9f41:
     tag: v1.1.22
     expires_at: 2026-07-27

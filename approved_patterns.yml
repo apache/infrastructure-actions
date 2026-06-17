@@ -19,9 +19,7 @@
 # This file was generated from actions.yml by gateway/gateway.py.
 # It will be regenerated and committed as part of various workflows.
 # DO NOT UPDATE MANUALLY. Update /actions.yml instead.
-- 1Password/load-secrets-action@dafbe7cb03502b260e2b2893c753c352eee545bf
 - 1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259
-- 1Password/load-secrets-action/configure@dafbe7cb03502b260e2b2893c753c352eee545bf
 - 1Password/load-secrets-action/configure@92467eb28f72e8255933372f1e0707c567ce2259
 - actions-cool/check-user-permission@*
 - actions-cool/issues-helper@*
@@ -139,7 +137,6 @@
 - docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
 - docker://pandoc/core@sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93
 - dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d
-- dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451
 - dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
 - dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8
 - easimon/maximize-build-space@*
@@ -303,7 +300,6 @@
 - rust-lang/crates-io-auth-action@b7e9a28eded4986ec6b1fa40eeee8f8f165559ec
 - rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe
 - rustsec/*@*
-- sbt/setup-sbt@dd1ef7d7798fab5ce802a6adab3b782817b8c2d0
 - sbt/setup-sbt@508b753e53cb6095967669e0911487d2b9bc9f41
 - sbt/setup-sbt@93e926cbdb4a428e41b4ef754124ec82925ffdc2
 - sbt/setup-sbt@2e222825582620cc38d2a54e674f3c01b7c14f5d
