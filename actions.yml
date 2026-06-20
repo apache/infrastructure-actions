@@ -111,18 +111,12 @@ azure/setup-helm:
   dda3372f752e03dde6b3237bc9431cdc2f7a02a2:
     tag: v5.0.0
 azure/setup-kubectl:
-  776406bce94f63e41d621b960d78ee25c8b76ede:
-    tag: v4.0.1
-    expires_at: 2026-06-20
   15650b3ad78fff148532a140b8a4c821796b2d7b:
     tag: v5.0.0
     expires_at: 2026-07-11
   829323503d1be3d00ca8346e5391ca0b07a9ab0d:
     tag: v5.1.0
 bazel-contrib/setup-bazel:
-  083175551ceeceebc757ebee2127fde78840ca77:
-    tag: 0.18.0
-    expires_at: 2026-06-20
   c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86:
     tag: 0.19.0
 benchmark-action/github-action-benchmark:
@@ -286,9 +280,6 @@ dart-lang/setup-dart:
   65eb853c7ba17dde3be364c3d2858773e7144260:
     tag: v1.7.2
 DavidAnson/markdownlint-cli2-action:
-  07035fd053f7be764496c0f8d8f9f41f98305101:
-    tag: v22.0.0
-    expires_at: 2026-06-20
   ce4853d43830c74c1753b39f3cf40f71c2031eb9:
     tag: v23.0.0
     expires_at: 2026-07-29
@@ -451,9 +442,6 @@ graalvm/setup-graalvm:
   329c42c5f4c343bceb505f0b28cc8499bc2bf174:
     tag: v1.5.4
 gradle/actions/dependency-submission:
-  0723195856401067f7a2779048b490ace7a47d7c:
-    tag: v5.0.2
-    expires_at: 2026-06-20
   39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f:
     tag: v6.0.1
     expires_at: 2026-07-05
@@ -466,9 +454,6 @@ gradle/actions/dependency-submission:
   3f131e8634966bd73d06cc69884922b02e6faf92:
     tag: v6.2.0
 gradle/actions/setup-gradle:
-  0723195856401067f7a2779048b490ace7a47d7c:
-    tag: v5.0.2
-    expires_at: 2026-06-20
   39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f:
     tag: v6.0.1
     expires_at: 2026-07-05
@@ -481,9 +466,6 @@ gradle/actions/setup-gradle:
   3f131e8634966bd73d06cc69884922b02e6faf92:
     tag: v6.2.0
 gradle/actions/wrapper-validation:
-  0723195856401067f7a2779048b490ace7a47d7c:
-    tag: v5.0.2
-    expires_at: 2026-06-20
   39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f:
     tag: v6.0.1
     expires_at: 2026-07-05
@@ -562,9 +544,6 @@ jidicula/clang-format-action:
   '*':
     keep: true
 Jimver/cuda-toolkit:
-  b6fc3a9f3f15256d9d94ffe1254f9c5a2565cde6:
-    tag: v0.2.30
-    expires_at: 2026-06-20
   406fa58d8abbf1bad2edd217b58b073dd2f548e4:
     tag: v0.2.34
     expires_at: 2026-06-27
@@ -858,9 +837,6 @@ runs-on/action:
   d141ef83eb66d096ce8afc767e09115a65c63b60:
     tag: v2.1.2
 rust-lang/crates-io-auth-action:
-  b7e9a28eded4986ec6b1fa40eeee8f8f165559ec:
-    tag: v1.0.3
-    expires_at: 2026-06-20
   bbd81622f20ce9e2dd9622e3218b975523e45bbe:
     tag: v1.0.4
 rustsec/*:
