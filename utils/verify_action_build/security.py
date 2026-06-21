@@ -1694,6 +1694,21 @@ _IN_TREE_BINARY_EXEMPT_NAMES = {
     "licenses.txt",
 }
 
+# Repo-relative path suffixes for binaries that are build-time tooling of
+# the *upstream* repo rather than action-runtime code, and are themselves
+# independently verifiable — so flagging them as opaque runtime binaries
+# is a false positive.  Matched by full canonical suffix (not bare name)
+# so a same-named blob dropped elsewhere is still caught.
+_IN_TREE_BINARY_EXEMPT_PATH_SUFFIXES = (
+    # Gradle's build wrapper, committed to virtually every Gradle project.
+    # It is invoked by ``./gradlew`` during the upstream repo's own build —
+    # never executed on a consumer's runner when the action runs — and is
+    # checksum-verifiable against Gradle's published list (cf.
+    # gradle/wrapper-validation-action).  Seen on JetBrains/qodana-action,
+    # a node24 action that never shells out to Gradle at runtime.
+    "gradle/wrapper/gradle-wrapper.jar",
+)
+
 
 def _looks_like_in_tree_binary(path: str) -> bool:
     """Return True if ``path`` (a repo-relative blob path) looks like a
@@ -1706,6 +1721,8 @@ def _looks_like_in_tree_binary(path: str) -> bool:
     """
     name = path.rsplit("/", 1)[-1]
     if name in _IN_TREE_BINARY_EXEMPT_NAMES:
+        return False
+    if path.lower().endswith(_IN_TREE_BINARY_EXEMPT_PATH_SUFFIXES):
         return False
     lower = name.lower()
     if lower.endswith(_IN_TREE_BINARY_EXTENSIONS):
