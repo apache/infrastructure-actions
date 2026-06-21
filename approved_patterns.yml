@@ -92,6 +92,7 @@
 - commit-check/commit-check-action@2239d8980732e84a380552fdd71e1d49e149baf3
 - commit-check/commit-check-action@f237ed0085f49444ab5c85bdfa5cdcd490fc09c5
 - commit-check/commit-check-action@c7245f6139b55db23f92266c2f0ff8429c64de80
+- commit-check/commit-check-action@60e903b3fb06f5e64580b959f58d5b9406a3e002
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - container-tools/microshift-action@*
@@ -292,12 +293,14 @@
 - runs-on/action@742bf56072eb4845a0f94b3394673e4903c90ff0
 - runs-on/action@d141ef83eb66d096ce8afc767e09115a65c63b60
 - rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe
+- rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18
 - rustsec/*@*
 - sbt/setup-sbt@508b753e53cb6095967669e0911487d2b9bc9f41
 - sbt/setup-sbt@93e926cbdb4a428e41b4ef754124ec82925ffdc2
 - sbt/setup-sbt@2e222825582620cc38d2a54e674f3c01b7c14f5d
 - sbt/setup-sbt@4ed7b7ec4bfa2074fe48554c09e341267397247c
 - sbt/setup-sbt@af116cce31c00823d3903ce687f9cda3a4f19f1b
+- sbt/setup-sbt@3afe9cf056c5d139bfc46579af1192d77a2f0821
 - scacap/action-surefire-report@*
 - scacap/action-surefire-report@5609ce4db72c09db044803b344a8968fd1f315da
 - scacap/action-surefire-report@fa13579fdd93ed8fc7e717a25eceedcfcbc39dda

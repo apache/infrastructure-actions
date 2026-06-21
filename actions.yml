@@ -242,6 +242,9 @@ commit-check/commit-check-action:
     expires_at: 2026-09-05
   c7245f6139b55db23f92266c2f0ff8429c64de80:
     tag: v2.8.0
+    expires_at: 2026-09-13
+  60e903b3fb06f5e64580b959f58d5b9406a3e002:
+    tag: v2.9.0
 conda-incubator/setup-miniconda:
   '*':
     keep: true
@@ -839,6 +842,9 @@ runs-on/action:
 rust-lang/crates-io-auth-action:
   bbd81622f20ce9e2dd9622e3218b975523e45bbe:
     tag: v1.0.4
+    expires_at: 2026-09-13
+  c6f97d42243bad5fab37ca0427f495c86d5b1a18:
+    tag: v1.0.5
 rustsec/*:
   '*':
     keep: true
@@ -857,6 +863,9 @@ sbt/setup-sbt:
     expires_at: 2026-08-21
   af116cce31c00823d3903ce687f9cda3a4f19f1b:
     tag: v1.2.1
+    expires_at: 2026-09-13
+  3afe9cf056c5d139bfc46579af1192d77a2f0821:
+    tag: v1.4.0
 scacap/action-surefire-report:
   # GH API requests from GH hosted runners fail with 403 and the following error message:
   # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
