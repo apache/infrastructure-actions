@@ -466,6 +466,11 @@ gradle/actions/dependency-submission:
   3f131e8634966bd73d06cc69884922b02e6faf92:
     tag: v6.2.0
 gradle/actions/setup-gradle:
+  0723195856401067f7a2779048b490ace7a47d7c:
+    tag: v5.0.2
+    # Projects have deliberately chosen to not use v6 of the setup-gradle action due to licensing model changes.
+    # See https://github.com/apache/infrastructure-actions/pull/953
+    keep: true
   39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f:
     tag: v6.0.1
     expires_at: 2026-07-05
