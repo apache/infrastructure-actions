@@ -24,9 +24,15 @@
 1Password/load-secrets-action:
   92467eb28f72e8255933372f1e0707c567ce2259:
     tag: v4.0.0
+    expires_at: 2026-09-14
+  3a12b0ab99d9cd590a3e9b5a90ea017210ed9556:
+    tag: v4.0.1
 1Password/load-secrets-action/configure:
   92467eb28f72e8255933372f1e0707c567ce2259:
     tag: v4.0.0
+    expires_at: 2026-09-14
+  3a12b0ab99d9cd590a3e9b5a90ea017210ed9556:
+    tag: v4.0.1
 actions-cool/check-user-permission:
   '*':
     keep: true
@@ -706,6 +712,9 @@ nick-fields/retry:
 nwtgck/actions-netlify:
   4cbaf4c08f1a7bfa537d6113472ef4424e4eb654:
     tag: v3.0.0
+    expires_at: 2026-09-14
+  d22a32a27c918fe470bbc562e984f80ec48c2668:
+    tag: v4.0.0
 ocaml/setup-ocaml:
   '*':
     keep: true
