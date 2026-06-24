@@ -72,6 +72,7 @@
 - carabiner-dev/actions/install/ampel-bootstrap@0a075bb75a68646d05f99c85cbbf2be40dd8e442
 - carabiner-dev/actions/install/ampel-bootstrap@9db1a064ca5691ef6f5d983031739ca287de0968
 - carabiner-dev/actions/install/ampel-bootstrap@b60791af41423360b892a1a3cee90cd4e131f381
+- carabiner-dev/actions/install/ampel-bootstrap@e0e3b8149dafed833431095bc148d50e7eade4e8
 - carabiner-dev/actions/install/bnd@2a11d59a135c5e291f305f249a92ad7903e3ee0f
 - carabiner-dev/actions/install/bnd@e0e3b8149dafed833431095bc148d50e7eade4e8
 - carabiner-dev/actions/install/bnd@94f29392187fe5082d1195a7d4cae3a7ddf09d9c
@@ -79,6 +80,7 @@
 - carabiner-dev/actions/install/download-and-verify@6022a065d6420de5d86333ecfb2b25c57f84b699
 - carabiner-dev/actions/install/download-and-verify@9db1a064ca5691ef6f5d983031739ca287de0968
 - carabiner-dev/actions/install/download-and-verify@b60791af41423360b892a1a3cee90cd4e131f381
+- carabiner-dev/actions/install/download-and-verify@e0e3b8149dafed833431095bc148d50e7eade4e8
 - carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3
 - carlosperate/arm-none-eabi-gcc-action@*
 - check-spelling/check-spelling@*
