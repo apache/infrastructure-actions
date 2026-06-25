@@ -113,6 +113,9 @@ azure/login:
 azure/setup-helm:
   dda3372f752e03dde6b3237bc9431cdc2f7a02a2:
     tag: v5.0.0
+    expires_at: 2026-09-17
+  9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310:
+    tag: v5.0.1
 azure/setup-kubectl:
   15650b3ad78fff148532a140b8a4c821796b2d7b:
     tag: v5.0.0
@@ -149,6 +152,9 @@ burnett01/rsync-deployments:
     expires_at: 2026-07-11
   66257cad6bfeb2171d3b6bfa6c9a22279dd9c3a1:
     tag: 8.0.5
+    expires_at: 2026-09-17
+  4d419d1dc46d4a8a2b6ceab2f951f0f93b2da8f5:
+    tag: 9.0.0
 burrunan/gradle-cache-action:
   '*':
     keep: true
@@ -258,6 +264,9 @@ commit-check/commit-check-action:
     expires_at: 2026-09-13
   60e903b3fb06f5e64580b959f58d5b9406a3e002:
     tag: v2.9.0
+    expires_at: 2026-09-17
+  0e0ac2f48ed0d43062a4ab46bf74127e27aab58f:
+    tag: v2.10.0
 conda-incubator/setup-miniconda:
   '*':
     keep: true

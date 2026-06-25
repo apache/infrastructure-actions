@@ -49,6 +49,7 @@
 - aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b
 - azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
 - azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2
+- azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
 - azure/setup-kubectl@15650b3ad78fff148532a140b8a4c821796b2d7b
 - azure/setup-kubectl@829323503d1be3d00ca8346e5391ca0b07a9ab0d
 - bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86
@@ -61,6 +62,7 @@
 - bufbuild/buf-setup-action@*
 - burnett01/rsync-deployments@dc0d5d44c4728aad3f02154a87309809e62a960f
 - burnett01/rsync-deployments@66257cad6bfeb2171d3b6bfa6c9a22279dd9c3a1
+- burnett01/rsync-deployments@4d419d1dc46d4a8a2b6ceab2f951f0f93b2da8f5
 - burrunan/gradle-cache-action@*
 - bytedeco/javacpp-presets@*
 - carabiner-dev/actions/ampel/verify@e0e3b8149dafed833431095bc148d50e7eade4e8
@@ -96,6 +98,7 @@
 - commit-check/commit-check-action@f237ed0085f49444ab5c85bdfa5cdcd490fc09c5
 - commit-check/commit-check-action@c7245f6139b55db23f92266c2f0ff8429c64de80
 - commit-check/commit-check-action@60e903b3fb06f5e64580b959f58d5b9406a3e002
+- commit-check/commit-check-action@0e0ac2f48ed0d43062a4ab46bf74127e27aab58f
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - container-tools/microshift-action@*
