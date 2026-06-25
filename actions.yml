@@ -111,9 +111,6 @@ azure/login:
     keep: true
     tag: v3.0.0
 azure/setup-helm:
-  1a275c3b69536ee54be43f2070a358922e12c8d4:
-    tag: v4.3.1
-    expires_at: 2026-06-25
   dda3372f752e03dde6b3237bc9431cdc2f7a02a2:
     tag: v5.0.0
 azure/setup-kubectl:
