@@ -184,12 +184,14 @@ carabiner-dev/actions/install/ampel-bootstrap:
     expires_at: 2026-08-16
   9db1a064ca5691ef6f5d983031739ca287de0968:
     expires_at: 2026-08-28
-  b60791af41423360b892a1a3cee90cd4e131f381: {}
+  b60791af41423360b892a1a3cee90cd4e131f381:
+    expires_at: 2026-09-18
   # transitive dep pulled by ampel/verify @ v1.2.0 (e0e3b814); allowlisted
   # but not dependabot-tracked (b60791af above stays the live ref).
   e0e3b8149dafed833431095bc148d50e7eade4e8:
     tag: v1.2.0
     expires_at: 2026-08-16
+  f882fa9eb795141737eecac4ffb056df5ad14954: {}
 carabiner-dev/actions/install/bnd:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -210,12 +212,14 @@ carabiner-dev/actions/install/download-and-verify:
     expires_at: 2026-08-16
   9db1a064ca5691ef6f5d983031739ca287de0968:
     expires_at: 2026-08-28
-  b60791af41423360b892a1a3cee90cd4e131f381: {}
+  b60791af41423360b892a1a3cee90cd4e131f381:
+    expires_at: 2026-09-18
   # transitive dep pulled by ampel/verify @ v1.2.0 (e0e3b814); allowlisted
   # but not dependabot-tracked (b60791af above stays the live ref).
   e0e3b8149dafed833431095bc148d50e7eade4e8:
     tag: v1.2.0
     expires_at: 2026-08-16
+  f882fa9eb795141737eecac4ffb056df5ad14954: {}
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
