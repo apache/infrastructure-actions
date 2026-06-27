@@ -162,7 +162,9 @@ class TestVerify:
         url = "https://npm.example.com/foo/-/foo-1.0.0.tgz"
         result = _run(_tree_for(PKG_FILES), _lock(resolved=url), tarballs={url: PKG_TGZ})
         assert result.ok is True
-        assert any("npm.example.com" in f for f in result.foreign)
+        # Exact match (not a substring check) — asserts the precise foreign
+        # entry and avoids CodeQL's URL-substring-sanitization heuristic.
+        assert result.foreign == ["foo (registry: npm.example.com)"]
         assert "foo" in result.verified
 
     def test_truncated_tree_cannot_pass(self):
