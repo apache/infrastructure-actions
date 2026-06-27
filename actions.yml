@@ -70,13 +70,6 @@ arduino/setup-protoc:
   '*':
     keep: true
 astral-sh/setup-uv:
-  eb1897b8dc4b5d5bfe39a428a8f2304605e0983c:
-    # needed for helm/chart-testing-action @ v2.8.0
-    tag: v7.0.0
-    expires_at: 2026-06-27
-  37802adc94f370d6bfd71619e3f0bf239e1f3b78:
-    tag: v7.6.0
-    expires_at: 2026-06-27
   cec208311dfd045dd5311c1add060b2062131d57:
     tag: v8.0.0
     expires_at: 2026-07-11
@@ -408,9 +401,6 @@ easimon/maximize-build-space:
   '*':
     keep: true
 editorconfig-checker/action-editorconfig-checker:
-  4b6cd6190d435e7e084fb35e36a096e98506f7b9:
-    tag: v2.1.0
-    expires_at: 2026-06-27
   840e866d93b8e032123c23bac69dece044d4d84c:
     tag: v2.2.0
 EnricoMi/publish-unit-test-result-action:
@@ -593,18 +583,12 @@ jidicula/clang-format-action:
   '*':
     keep: true
 Jimver/cuda-toolkit:
-  406fa58d8abbf1bad2edd217b58b073dd2f548e4:
-    tag: v0.2.34
-    expires_at: 2026-06-27
   3d45d157f327c09c04b50ee6ccdea2d9d017ec76:
     tag: v0.2.35
 jlumbroso/free-disk-space:
   '*':
     keep: true
 jrouly/scalafmt-native-action:
-  14620cde093e5ff6bfbbecd4f638370024287b9d:
-    tag: v4
-    expires_at: 2026-06-27
   '*':
     keep: true
   a9c8e1032a02004c425d53ef8ce420fe2179eba7:
