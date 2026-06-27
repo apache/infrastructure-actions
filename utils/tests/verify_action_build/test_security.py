@@ -1407,6 +1407,22 @@ class TestLooksLikeInTreeBinary:
         assert _looks_like_in_tree_binary("dist/licenses.txt") is False
         assert _looks_like_in_tree_binary("licenses.txt") is False
 
+    def test_gradle_wrapper_jar_exempt(self):
+        # gradle/wrapper/gradle-wrapper.jar is Gradle's build wrapper:
+        # build-time tooling of the upstream repo, never executed on a
+        # consumer's runner, and checksum-verifiable in its own right.
+        # JetBrains/qodana-action (a node24 action) ships it and was
+        # false-flagged before this exemption.
+        assert _looks_like_in_tree_binary("gradle/wrapper/gradle-wrapper.jar") is False
+        # Exempt under a nested action sub-path too.
+        assert _looks_like_in_tree_binary(
+            "subdir/gradle/wrapper/gradle-wrapper.jar"
+        ) is False
+        # Precision: a stray jar of the same name elsewhere is still caught,
+        # as is any other .jar (the suffix match needs the canonical path).
+        assert _looks_like_in_tree_binary("dist/gradle-wrapper.jar") is True
+        assert _looks_like_in_tree_binary("Library.jar") is True
+
     def test_matlab_platform_dir_naming(self):
         # MATLAB's launcher convention: dist/bin/<platform>/run-matlab-command
         # where <platform> is MATLAB's own arch identifier and the file has
