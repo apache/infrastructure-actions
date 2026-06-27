@@ -35,8 +35,6 @@
 - anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
 - anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2
 - arduino/setup-protoc@*
-- astral-sh/setup-uv@eb1897b8dc4b5d5bfe39a428a8f2304605e0983c
-- astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
 - astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
 - astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
 - astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
@@ -119,6 +117,7 @@
 - dawidd6/action-download-artifact@*
 - dawidd6/action-send-mail@d38f3f7cd391cdebfe0d38efc3998b935e951c4f
 - dawidd6/action-send-mail@42942bc2f8fba4e611b459a018967a6a7c78c68c
+- dawidd6/action-send-mail@94de994a9f6fffee200243214e17002e2920bb59
 - delaguardo/setup-graalvm@*
 - dependabot/fetch-metadata@ffa630c65fa7e0ecfa0625b5ceda64399aea1b36
 - dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98
@@ -146,7 +145,6 @@
 - dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
 - dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8
 - easimon/maximize-build-space@*
-- editorconfig-checker/action-editorconfig-checker@4b6cd6190d435e7e084fb35e36a096e98506f7b9
 - editorconfig-checker/action-editorconfig-checker@840e866d93b8e032123c23bac69dece044d4d84c
 - EnricoMi/publish-unit-test-result-action@*
 - eps1lon/actions-label-merge-conflict@*
@@ -206,10 +204,8 @@
 - JetBrains/qodana-action@89eb4357efd2b52e639f3216e63edaf33b82622b
 - JetBrains/qodana-action@d7b5ec2fbec32197ef447c450e00589ed5f34fd5
 - jidicula/clang-format-action@*
-- Jimver/cuda-toolkit@406fa58d8abbf1bad2edd217b58b073dd2f548e4
 - Jimver/cuda-toolkit@3d45d157f327c09c04b50ee6ccdea2d9d017ec76
 - jlumbroso/free-disk-space@*
-- jrouly/scalafmt-native-action@14620cde093e5ff6bfbbecd4f638370024287b9d
 - jrouly/scalafmt-native-action@*
 - jrouly/scalafmt-native-action@a9c8e1032a02004c425d53ef8ce420fe2179eba7
 - julia-actions/julia-buildpkg@*
