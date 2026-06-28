@@ -45,6 +45,7 @@
 - aws-actions/configure-aws-credentials@acca2b1b2070338fb9fd1ca27ecee81d687e58e5
 - aws-actions/configure-aws-credentials@99214aa6889fcddfa57764031d71add364327e59
 - aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b
+- aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b
 - azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
 - azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2
 - azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
