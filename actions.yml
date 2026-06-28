@@ -171,6 +171,10 @@ carabiner-dev/actions/install/ampel:
   94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
     tag: v1.2.1
 carabiner-dev/actions/install/ampel-bootstrap:
+  2a11d59a135c5e291f305f249a92ad7903e3ee0f:
+    # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
+    tag: v1.1.7
+    expires_at: 2026-08-16
   # level-3 transitive: called by install/download-and-verify; commit is untagged
   # (per upstream: "bootstrap rotated to ampel v1.2.1")
   0a075bb75a68646d05f99c85cbbf2be40dd8e442:
