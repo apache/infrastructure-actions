@@ -141,7 +141,7 @@ runs:
       if: false
     - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3.0.1
       if: false
-    - uses: goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89  # v7.2.2
+    - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94  # v7.2.3
       if: false
     - uses: graalvm/setup-graalvm@6f3fa030c4b8f77c1f554a860f593a654538fa38  # v1.5.6
       if: false
