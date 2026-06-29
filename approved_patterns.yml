@@ -163,6 +163,7 @@
 - google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
 - google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
 - goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89
+- goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94
 - gr2m/twitter-together@*
 - graalvm/setup-graalvm@60c26726de13f8b90771df4bc1641a52a3159994
 - graalvm/setup-graalvm@bef4b0e916c7dd079bf60fb95d49139f67e32c5f
