@@ -455,9 +455,6 @@ gr2m/twitter-together:
   '*':
     keep: true
 graalvm/setup-graalvm:
-  f744c72a42b1995d7b0cbc314bde4bace7ac1fe1:
-    tag: v1.5.0
-    expires_at: 2026-06-29
   60c26726de13f8b90771df4bc1641a52a3159994:
     tag: v1.5.2
     expires_at: 2026-08-01
@@ -968,9 +965,6 @@ softprops/action-gh-release:
   '*':
     keep: true
 SonarSource/sonarqube-scan-action:
-  a31c9398be7ace6bbfaf30c0bd5d415f843d45e9:
-    tag: v7.0.0
-    expires_at: 2026-06-29
   299e4b793aaa83bf2aba7c9c14bedbb485688ec4:
     tag: v7.1.0
     expires_at: 2026-07-24
@@ -983,9 +977,6 @@ SonarSource/sonarqube-scan-action:
   713881670b6b3676cda39549040e2d88c70d582e:
     tag: v8.2.0
 SonarSource/sonarqube-scan-action/install-build-wrapper:
-  a31c9398be7ace6bbfaf30c0bd5d415f843d45e9:
-    tag: v7.0.0
-    expires_at: 2026-06-29
   299e4b793aaa83bf2aba7c9c14bedbb485688ec4:
     tag: v7.1.0
     expires_at: 2026-07-24
