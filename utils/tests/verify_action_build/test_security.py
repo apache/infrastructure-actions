@@ -274,6 +274,37 @@ class TestAnalyzeBinaryDownloads:
                 warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
         assert failures == []
 
+    def test_gh_attestation_verify_passes_and_prints_note(self, capsys):
+        # Mirrors the untitaker/hyperlink shape: action.yml runs an installer
+        # script that downloads from GitHub releases and verifies the download
+        # via `gh attestation verify`.
+        action_yml = """\
+name: Test
+runs:
+  using: composite
+  steps:
+    - name: Install
+      shell: bash
+      run: scripts/install.sh
+"""
+        files = {
+            "scripts/install.sh": (
+                "#!/bin/sh\n"
+                "curl -fsSLO https://github.com/org/repo/releases/download/v1/installer.sh\n"
+                "gh attestation verify installer.sh --repo org/repo "
+                "--signer-workflow org/repo/.github/workflows/release.yml\n"
+                "sh installer.sh\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+        out = capsys.readouterr().err
+        assert "GitHub build attestation verification detected" in out
+        assert "Assumptions" in out
+        assert "fail-open" in out
+
     def test_apk_add_not_flagged(self):
         files = {
             "Dockerfile": (
