@@ -1028,6 +1028,9 @@ TobKed/label-when-approved-action:
 untitaker/hyperlink:
   fb5bb9c5011a3d143a54b4b30aedc30ec5bc0f89:
     tag: 0.2.0
+    expires_at: 2026-09-21
+  9375bc4063712ad490d5eb3d54df0b6aade15e54:
+    tag: 0.3.2
 uraimo/run-on-arch-action:
   d94c13912ea685de38fccc1109385b83fd79427d:
     tag: v3.0.1
