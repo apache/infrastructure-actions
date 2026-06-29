@@ -80,6 +80,41 @@ When creating a PR via `gh pr create --web`, GitHub will present a template choo
 template that matches the type of change. When opening a PR URL directly, you can append
 `&template=action_approval.md` or `&template=code_change.md` to pre-fill the appropriate template.
 
+## GitHub messages drafted by agents
+
+Anything an agent drafts that ends up posted to GitHub on a user's account — PR / issue comments,
+PR-level reviews, line-level review comments, discussion replies — must end with an attribution
+footer disclosing that it was AI-generated. The footer is **required whether or not a human
+reviewed the draft** first; what changes between the two cases is the wording. (Same convention as
+`apache/airflow` and the `apache-magpie` / `apache/airflow-steward` framework.)
+
+Place the footer on its own paragraph at the end of the message, separated from the body by a blank
+line and a horizontal rule. Use the same agent name string used in the `Generated-by:` commit
+trailer (for example, `Claude Code (Opus 4.8)`).
+
+- **Agent draft, posted without prior human review** (autonomous / routine work, scheduled triage,
+  etc.):
+
+  ```
+  ---
+  Drafted-by: <Agent Name and Version> (no human review before posting)
+  ```
+
+- **Agent draft, reviewed and approved by a human before posting:**
+
+  ```
+  ---
+  Drafted-by: <Agent Name and Version>; reviewed by @<github-handle> before posting
+  ```
+
+  The `@<github-handle>` is the human who actually read the draft and approved posting it as-is —
+  not the account the agent merely runs on behalf of if no review took place (that is the first
+  form, not this one).
+
+This footer is **in addition to**, not a replacement for, the `Generated-by:` commit trailer and any
+PR-body AI disclosure. Do not skip it to shorten a message — attribution applies regardless of
+message length.
+
 ## Documentation
 
 When you add, change, or remove a user-visible feature, workflow, script, or flag, update the
