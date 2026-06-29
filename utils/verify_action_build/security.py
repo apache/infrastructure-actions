@@ -1390,6 +1390,36 @@ def _has_verification(content: str) -> bool:
     return any(p.search(content) for p in _VERIFICATION_PATTERNS)
 
 
+# Subset of the verification signal that specifically denotes GitHub build
+# attestation verification (``gh attestation verify``). When a downloader
+# script carries this we surface a dedicated, explicit note — it is the
+# strongest of the verification mechanisms, but also one whose *enforcement*
+# this static scan cannot prove (see the printed assumptions).
+_ATTESTATION_VERIFY_PATTERN = re.compile(r"\bgh\s+attestation\s+verify\b")
+
+
+def _has_attestation_verification(content: str) -> bool:
+    return bool(_ATTESTATION_VERIFY_PATTERN.search(content))
+
+
+def _print_attestation_note(path: str) -> None:
+    """Explain, in green, that attestation verification was detected and what
+    the static scan did (and did not) confirm by detecting it."""
+    console.print(
+        f"    [green]✓ GitHub build attestation verification detected "
+        f"(`gh attestation verify`) in {path}[/green]"
+    )
+    console.print(
+        "    [dim]Assumptions: this is a static text match. It confirms an "
+        "attestation-verify command is present in the same file as the "
+        "download; it does NOT run the installer, does NOT confirm the verify "
+        "call targets the artifact that gets downloaded, and does NOT detect "
+        "fail-open behaviour (e.g. verification skipped/warned when `gh` is "
+        "unavailable). Treat it as 'verification mechanism present', not "
+        "'verification proven to be enforced'.[/dim]"
+    )
+
+
 def _action_yml_uses_external_verification(action_yml: str) -> bool:
     return any(p.search(action_yml) for p in _VERIFICATION_USES_PATTERNS)
 
@@ -1521,6 +1551,8 @@ def analyze_binary_downloads(
             console.print(
                 f"  [green]✓[/green] {path}: {len(downloads)} download(s), {note}"
             )
+            if _has_attestation_verification(content):
+                _print_attestation_note(path)
             for line_num, snippet in downloads[:3]:
                 console.print(f"    [dim]line {line_num}:[/dim] [dim]{snippet}[/dim]")
             if len(downloads) > 3:
