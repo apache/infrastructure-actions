@@ -200,6 +200,7 @@
 - j178/prek-action@cbc2f23eb5539cf20d82d1aabd0d0ecbcc56f4e3
 - j178/prek-action@6ad80277337ad479fe43bd70701c3f7f8aa74db3
 - j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d
+- j178/prek-action@e98a699c41eb69ab013a45817a0406469a748f8d
 - JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f
 - jarvusinnovations/background-action@*
 - jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5
@@ -347,6 +348,7 @@
 - taiki-e/install-action@*
 - tcort/github-action-markdown-link-check@e7c7a18363c842693fadde5d41a3bd3573a7a225
 - terraform-linters/setup-tflint@b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93
+- terraform-linters/setup-tflint@6e1e0642c0289bd619021bf6b34e3c08ed1e005a
 - test-summary/action@*
 - testlens-app/setup-testlens@*
 - timonvs/pr-labeler-action@*

@@ -568,6 +568,9 @@ j178/prek-action:
     expires_at: 2026-08-08
   bdca6f102f98e2b4c7029491a53dfd366469e33d:
     tag: v2.0.4
+    expires_at: 2026-09-23
+  e98a699c41eb69ab013a45817a0406469a748f8d:
+    tag: v2.0.5
 JamesIves/github-pages-deploy-action:
   d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
     tag: v4.8.0
@@ -1016,6 +1019,9 @@ tcort/github-action-markdown-link-check:
 terraform-linters/setup-tflint:
   b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93:
     tag: v6.2.2
+    expires_at: 2026-09-23
+  6e1e0642c0289bd619021bf6b34e3c08ed1e005a:
+    tag: v6.3.0
 test-summary/action:
   '*':
     keep: true
