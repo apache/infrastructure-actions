@@ -127,10 +127,12 @@
 - docker/bake-action@aefd381cbaa93c62a1e8b02194ae420cc36269d2
 - docker/bake-action@a66e1c87e2eca0503c343edf1d208c716d54b8a8
 - docker/bake-action@6614cfa25eff9a0b2b2697efb0b6159e7680d584
+- docker/bake-action@d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b
 - docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
 - docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f
 - docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25
 - docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf
+- docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
 - docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2
 - docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121
 - docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
@@ -319,6 +321,7 @@
 - sbt/setup-sbt@4ed7b7ec4bfa2074fe48554c09e341267397247c
 - sbt/setup-sbt@af116cce31c00823d3903ce687f9cda3a4f19f1b
 - sbt/setup-sbt@3afe9cf056c5d139bfc46579af1192d77a2f0821
+- sbt/setup-sbt@66fb4376e81982c7d92a4074170846fff88e2e30
 - scacap/action-surefire-report@*
 - scacap/action-surefire-report@5609ce4db72c09db044803b344a8968fd1f315da
 - scacap/action-surefire-report@fa13579fdd93ed8fc7e717a25eceedcfcbc39dda
