@@ -1220,6 +1220,16 @@ _JS_VERIFICATION_PATTERNS = [
         r"\bvalidate(?:Checksum|Hash|Digest|SHA\d*|FileChecksum)\b",
         re.IGNORECASE,
     ),
+    # Helper call whose name denotes hashing a file with an explicit SHA
+    # algorithm — e.g. ``fileSHA256(path)``, ``getSHA512(...)``.  As with the
+    # ``validate*`` helpers above, the ``createHash`` implementation often
+    # lives in a sibling util module, so within the downloader file the call
+    # name is the surviving verification evidence.  opentofu/setup-opentofu's
+    # ``lib/setup-tofu.js`` computes ``await fileSHA256(pathToCLIZip)`` (the
+    # ``createHash('sha256')`` body is in ``lib/util.js``) and throws when the
+    # hash isn't in the release's ``SHA256SUMS`` list; without this the v2.0.2
+    # bump (#980) false-flagged the download as unverified.
+    re.compile(r"\b\w*SHA(?:1|256|384|512)\w*\s*\(", re.IGNORECASE),
 ]
 
 _JS_SOURCE_EXTENSIONS = (".ts", ".js", ".mjs", ".cjs")
