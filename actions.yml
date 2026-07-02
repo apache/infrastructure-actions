@@ -404,6 +404,9 @@ docker/setup-qemu-action:
     expires_at: 2026-07-28
   06116385d9baf250c9f4dcb4858b16962ea869c3:
     tag: v4.1.0
+    expires_at: 2026-09-24
+  96fe6ef7f33517b61c61be40b68a1882f3264fb8:
+    tag: v4.2.0
 docker://jekyll/jekyll:
   sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625:
 docker://pandoc/core:

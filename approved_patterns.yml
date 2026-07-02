@@ -146,6 +146,7 @@
 - docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a
 - docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130
 - docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3
+- docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8
 - docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
 - docker://pandoc/core@sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93
 - dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d
