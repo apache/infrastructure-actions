@@ -368,6 +368,9 @@ docker/login-action:
     expires_at: 2026-08-16
   650006c6eb7dba73a995cc03b0b2d7f5ca915bee:
     tag: v4.2.0
+    expires_at: 2026-09-24
+  c99871dec2022cc055c062a10cc1a1310835ceb4:
+    tag: v4.3.0
 docker/metadata-action:
   030e881283bb7a6894de51c315a6bfe6a94e05cf:
     tag: v6.0.0
@@ -383,6 +386,9 @@ docker/setup-buildx-action:
     expires_at: 2026-08-16
   d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5:
     tag: v4.1.0
+    expires_at: 2026-09-24
+  bb05f3f5519dd87d3ba754cc423b652a5edd6d2c:
+    tag: v4.2.0
 docker/setup-qemu-action:
   ce360397dd3f832beb865e1373c09c0e9f86d70a:
     tag: v4.0.0
@@ -651,6 +657,9 @@ Kesin11/actions-timeline:
     expires_at: 2026-07-19
   44c9c178ffb2fb1d9859614a3ffa79ccfb77565e:
     tag: v3.1.0
+    expires_at: 2026-09-24
+  7bf79990b7c09f5dfb570ac30b814ca597bd538e:
+    tag: v3.1.1
 kiegroup/github-action-build-chain:
   '*':
     keep: true
@@ -885,6 +894,9 @@ runs-on/action:
     expires_at: 2026-08-01
   d141ef83eb66d096ce8afc767e09115a65c63b60:
     tag: v2.1.2
+    expires_at: 2026-09-24
+  4e5f72399b6b17f2e79c511c1b38a315a64d22dc:
+    tag: v2.2.0
 rust-lang/crates-io-auth-action:
   bbd81622f20ce9e2dd9622e3218b975523e45bbe:
     tag: v1.0.4
