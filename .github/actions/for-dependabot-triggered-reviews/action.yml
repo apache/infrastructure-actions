@@ -207,7 +207,7 @@ runs:
       if: false
     - uses: nwtgck/actions-netlify@d22a32a27c918fe470bbc562e984f80ec48c2668  # v4.0.0
       if: false
-    - uses: opentofu/setup-opentofu@847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4  # v2.0.1
+    - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4  # v2.0.2
       if: false
     - uses: orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5  # v4.8.0
       if: false
