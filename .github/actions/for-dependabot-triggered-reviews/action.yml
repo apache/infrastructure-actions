@@ -107,17 +107,17 @@ runs:
       if: false
     - uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98  # v3.1.0
       if: false
-    - uses: docker/bake-action@6614cfa25eff9a0b2b2697efb0b6159e7680d584  # v7.2.0
+    - uses: docker/bake-action@d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b  # v7.3.0
       if: false
-    - uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf  # v7.2.0
+    - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7.3.0
       if: false
-    - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee  # v4.2.0
+    - uses: docker/login-action@c99871dec2022cc055c062a10cc1a1310835ceb4  # v4.3.0
       if: false
-    - uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9  # v6.1.0
+    - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302  # v6.2.0
       if: false
-    - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5  # v4.1.0
+    - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c  # v4.2.0
       if: false
-    - uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3  # v4.1.0
+    - uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8  # v4.2.0
       if: false
     - uses: docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
       if: false
@@ -185,7 +185,7 @@ runs:
       if: false
     - uses: jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d  # v1.2
       if: false
-    - uses: Kesin11/actions-timeline@44c9c178ffb2fb1d9859614a3ffa79ccfb77565e  # v3.1.0
+    - uses: Kesin11/actions-timeline@7bf79990b7c09f5dfb570ac30b814ca597bd538e  # v3.1.1
       if: false
     - uses: leafo/gh-actions-luarocks@35d062def313a7699a0d513e996bcf4352f05389  # v6.1.0
       if: false
@@ -207,7 +207,7 @@ runs:
       if: false
     - uses: nwtgck/actions-netlify@d22a32a27c918fe470bbc562e984f80ec48c2668  # v4.0.0
       if: false
-    - uses: opentofu/setup-opentofu@847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4  # v2.0.1
+    - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4  # v2.0.2
       if: false
     - uses: orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5  # v4.8.0
       if: false
@@ -227,11 +227,11 @@ runs:
       if: false
     - uses: rubygems/release-gem@052cc82692552de3ef2b81fd670e41d13cba8092  # v1.4.0
       if: false
-    - uses: runs-on/action@d141ef83eb66d096ce8afc767e09115a65c63b60  # v2.1.2
+    - uses: runs-on/action@4e5f72399b6b17f2e79c511c1b38a315a64d22dc  # v2.2.0
       if: false
     - uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18  # v1.0.5
       if: false
-    - uses: sbt/setup-sbt@3afe9cf056c5d139bfc46579af1192d77a2f0821  # v1.4.0
+    - uses: sbt/setup-sbt@66fb4376e81982c7d92a4074170846fff88e2e30  # v1.5.0
       if: false
     - uses: scalacenter/sbt-dependency-submission@d84eef4c09e633bcf5f113bcad7fd5e9af1baee9  # v3.2.3
       if: false

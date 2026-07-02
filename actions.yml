@@ -347,6 +347,9 @@ docker/bake-action:
     expires_at: 2026-08-16
   6614cfa25eff9a0b2b2697efb0b6159e7680d584:
     tag: v7.2.0
+    expires_at: 2026-09-24
+  d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b:
+    tag: v7.3.0
 docker/build-push-action:
   d08e5c354a6adb9ed34480a06d141179aa583294:
     tag: v7.0.0
@@ -359,6 +362,9 @@ docker/build-push-action:
     expires_at: 2026-07-28
   f9f3042f7e2789586610d6e8b85c8f03e5195baf:
     tag: v7.2.0
+    expires_at: 2026-09-24
+  53b7df96c91f9c12dcc8a07bcb9ccacbed38856a:
+    tag: v7.3.0
 docker/login-action:
   b45d80f862d83dbcd57f89517bcf500b2ab88fb2:
     tag: v4.0.0
@@ -368,18 +374,27 @@ docker/login-action:
     expires_at: 2026-08-16
   650006c6eb7dba73a995cc03b0b2d7f5ca915bee:
     tag: v4.2.0
+    expires_at: 2026-09-24
+  c99871dec2022cc055c062a10cc1a1310835ceb4:
+    tag: v4.3.0
 docker/metadata-action:
   030e881283bb7a6894de51c315a6bfe6a94e05cf:
     tag: v6.0.0
     expires_at: 2026-08-16
   80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9:
     tag: v6.1.0
+    expires_at: 2026-09-24
+  dc802804100637a589fabce1cb79ff13a1411302:
+    tag: v6.2.0
 docker/setup-buildx-action:
   4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd:
     tag: v4.0.0
     expires_at: 2026-08-16
   d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5:
     tag: v4.1.0
+    expires_at: 2026-09-24
+  bb05f3f5519dd87d3ba754cc423b652a5edd6d2c:
+    tag: v4.2.0
 docker/setup-qemu-action:
   ce360397dd3f832beb865e1373c09c0e9f86d70a:
     tag: v4.0.0
@@ -389,6 +404,9 @@ docker/setup-qemu-action:
     expires_at: 2026-07-28
   06116385d9baf250c9f4dcb4858b16962ea869c3:
     tag: v4.1.0
+    expires_at: 2026-09-24
+  96fe6ef7f33517b61c61be40b68a1882f3264fb8:
+    tag: v4.2.0
 docker://jekyll/jekyll:
   sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625:
 docker://pandoc/core:
@@ -401,7 +419,7 @@ dorny/test-reporter:
   a43b3a5f7366b97d083190328d2c652e1a8b6aa2:
     tag: v3.0.0
 dtolnay/rust-toolchain:
-  29eef336d9b2848a0b548edc03f92a220660cdb8:
+  4be7066ada62dd38de10e7b70166bc74ed198c30:
     keep: true
     tag: stable
 easimon/maximize-build-space:
@@ -639,6 +657,9 @@ Kesin11/actions-timeline:
     expires_at: 2026-07-19
   44c9c178ffb2fb1d9859614a3ffa79ccfb77565e:
     tag: v3.1.0
+    expires_at: 2026-09-24
+  7bf79990b7c09f5dfb570ac30b814ca597bd538e:
+    tag: v3.1.1
 kiegroup/github-action-build-chain:
   '*':
     keep: true
@@ -746,6 +767,9 @@ opentofu/setup-opentofu:
     expires_at: 2026-08-16
   847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4:
     tag: v2.0.1
+    expires_at: 2026-09-24
+  a1320f892987e89d278cc92dc5adc984fb93aca4:
+    tag: v2.0.2
 oracle-actions/setup-java:
   '*':
     keep: true
@@ -873,6 +897,9 @@ runs-on/action:
     expires_at: 2026-08-01
   d141ef83eb66d096ce8afc767e09115a65c63b60:
     tag: v2.1.2
+    expires_at: 2026-09-24
+  4e5f72399b6b17f2e79c511c1b38a315a64d22dc:
+    tag: v2.2.0
 rust-lang/crates-io-auth-action:
   bbd81622f20ce9e2dd9622e3218b975523e45bbe:
     tag: v1.0.4
@@ -900,6 +927,9 @@ sbt/setup-sbt:
     expires_at: 2026-09-13
   3afe9cf056c5d139bfc46579af1192d77a2f0821:
     tag: v1.4.0
+    expires_at: 2026-09-24
+  66fb4376e81982c7d92a4074170846fff88e2e30:
+    tag: v1.5.0
 scacap/action-surefire-report:
   # GH API requests from GH hosted runners fail with 403 and the following error message:
   # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
