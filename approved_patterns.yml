@@ -136,6 +136,7 @@
 - docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
 - docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf
 - docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9
+- docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302
 - docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd
 - docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
 - docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a
@@ -145,7 +146,7 @@
 - docker://pandoc/core@sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93
 - dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d
 - dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
-- dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8
+- dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
 - easimon/maximize-build-space@*
 - editorconfig-checker/action-editorconfig-checker@840e866d93b8e032123c23bac69dece044d4d84c
 - EnricoMi/publish-unit-test-result-action@*
