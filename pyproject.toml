@@ -27,7 +27,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "jsbeautifier>=1.15",
+    "jsbeautifier>=2.0.1",
     "pytest",
     "pyyaml>=6.0",
     "requests>=2.34.2",
