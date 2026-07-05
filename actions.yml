@@ -82,9 +82,6 @@ awalsh128/cache-apt-pkgs-action:
   '*':
     keep: true
 aws-actions/configure-aws-credentials:
-  8df5847569e6427dd6c4fb1cf565c83acfa8afa7:
-    tag: v6.0.0
-    expires_at: 2026-07-05
   ec61189d14ec14c8efccab744f656cffd0e33f37:
     tag: v6.1.0
     expires_at: 2026-07-30
@@ -366,9 +363,6 @@ docker/build-push-action:
   53b7df96c91f9c12dcc8a07bcb9ccacbed38856a:
     tag: v7.3.0
 docker/login-action:
-  b45d80f862d83dbcd57f89517bcf500b2ab88fb2:
-    tag: v4.0.0
-    expires_at: 2026-07-05
   4907a6ddec9925e35a0a9e82d7399ccc52663121:
     tag: v4.1.0
     expires_at: 2026-08-16
@@ -441,9 +435,6 @@ erisu/apache-rat-action:
   30c94d10ed21e6f6fd5590dc5c158f58cae7a0dd:
     tag: v3.0.0
 erisu/license-checker-action:
-  99cffa11264fe545fd0baa6c13bca5a00ae608f2:
-    tag: v2.0.1
-    expires_at: 2026-07-05
   04511f4c052b5773f11e1c65b42cda88235c62ae:
     tag: v2.1.0
 erlef/setup-beam:
@@ -495,9 +486,6 @@ graalvm/setup-graalvm:
   6f3fa030c4b8f77c1f554a860f593a654538fa38:
     tag: v1.5.6
 gradle/actions/dependency-submission:
-  39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f:
-    tag: v6.0.1
-    expires_at: 2026-07-05
   50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
     tag: v6.1.0
     expires_at: 2026-09-03
@@ -512,9 +500,6 @@ gradle/actions/setup-gradle:
     # Projects have deliberately chosen to not use v6 of the setup-gradle action due to licensing model changes.
     # See https://github.com/apache/infrastructure-actions/pull/953
     keep: true
-  39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f:
-    tag: v6.0.1
-    expires_at: 2026-07-05
   50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
     tag: v6.1.0
     expires_at: 2026-09-03
@@ -524,9 +509,6 @@ gradle/actions/setup-gradle:
   3f131e8634966bd73d06cc69884922b02e6faf92:
     tag: v6.2.0
 gradle/actions/wrapper-validation:
-  39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f:
-    tag: v6.0.1
-    expires_at: 2026-07-05
   50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
     tag: v6.1.0
     expires_at: 2026-09-03
@@ -643,9 +625,6 @@ juliaregistries/tagbot:
   '*':
     keep: true
 JustinBeckwith/linkinator-action:
-  f62ba0c110a76effb2ee6022cc6ce4ab161085e3:
-    tag: v2.4.0
-    expires_at: 2026-07-05
   363572b2714d25a059fceb2fa332a98e7ea3baff:
     tag: v2.4.1
     expires_at: 2026-07-12
@@ -705,24 +684,12 @@ manusa/actions-setup-minikube:
   b65276017fdec6f1e6498129fb740e34e260dc55:
     tag: v2.18.0
 matlab-actions/run-tests:
-  4a3d2e8bdc811f72defb8122e46a009312acc198:
-    tag: v2.3.1
-    expires_at: 2026-07-05
-  4be3345d41da8b1bf8cc5cb01a5e19c4611cb15d:
-    tag: v3.0.0
-    expires_at: 2026-07-05
   4c375221b861dd3f7ea9b31704a3cf45d35073f1:
     tag: v3.1.2
     expires_at: 2026-08-21
   ae0e80cb44fdec28d35d0831d8acf38ee4fdf91a:
     tag: v3.2.0
 matlab-actions/setup-matlab:
-  aa8bbc7b76daa63c5d456d1430cbd6cb5b626ab4:
-    tag: v2.7.0
-    expires_at: 2026-07-05
-  c6998d116f15c400d5e16e05318e3450abdcf053:
-    tag: v3.0.0
-    expires_at: 2026-07-05
   a0180c939fb1a28de13f44f7b778b912384ced1f:
     tag: v3.0.1
 maxim-lobanov/setup-xcode:
@@ -831,9 +798,6 @@ PyO3/maturin-action:
   '*':
     keep: true
 pypa/cibuildwheel:
-  ee02a1537ce3071a004a6b08c41e72f0fdc42d9a:
-    tag: v3.4.0
-    expires_at: 2026-07-05
   8d2b08b68458a16aeb24b64e68a09ab1c8e82084:
     tag: v3.4.1
     expires_at: 2026-09-03
