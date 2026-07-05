@@ -418,6 +418,9 @@ docker://pandoc/core:
 dorny/paths-filter:
   fbd0ab8f3e69293af611ebaee6363fc25e6d187d:
     tag: v4.0.1
+    expires_at: 2026-09-27
+  7b450fff21473bca461d4b92ce414b9d0420d706:
+    tag: v4.0.2
 dorny/test-reporter:
   a43b3a5f7366b97d083190328d2c652e1a8b6aa2:
     tag: v3.0.0

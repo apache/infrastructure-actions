@@ -151,6 +151,7 @@
 - docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
 - docker://pandoc/core@sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93
 - dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d
+- dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706
 - dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
 - dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
 - easimon/maximize-build-space@*
