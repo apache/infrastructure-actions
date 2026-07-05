@@ -137,6 +137,7 @@
 - docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121
 - docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
 - docker/login-action@c99871dec2022cc055c062a10cc1a1310835ceb4
+- docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0
 - docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf
 - docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9
 - docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302
