@@ -40,16 +40,17 @@ This repository hosts GitHub Actions developed by the ASF community and approved
 You can let your CI workflows check if the Actions used in your project are approved for use in the ASF.
 
 An example workflow that can be used as a template for your project's CI can be found
-[here `check-actions-usage/sample-ci-workflow.yml`](check-actions-usage/sample-ci-workflow.yml).
+[here `allowlist-check/README.md`](allowlist-check/README.md).
 It is usually enough to add the following job to an existing `.github/workflows/ci.yml` file:
 ```yaml
 jobs:
-  check:
-    name: Check actions usage
-    uses: apache/infrastructure-actions/.github/workflows/check-project-actions.yml@main
-    permissions:
-      # Only read access to the repository's content
-      contents: read
+  asf-allowlist-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: apache/infrastructure-actions/allowlist-check@main
 ```
 
 When calling the `check-project-actions` workflow from a `push` or `pull_request` event, it should work
