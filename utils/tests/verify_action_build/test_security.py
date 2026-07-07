@@ -1360,6 +1360,43 @@ await validateChecksum(checksum, downloadPath, arch, platform, version);
         ):
             assert self._has_verification(snippet) is True, snippet
 
+    def test_file_sha_helper_name_recognized(self):
+        # ``fileSHA256(path)`` shape: a helper whose name denotes hashing a
+        # file with an explicit SHA algorithm.  Several actions define the
+        # ``createHash`` body in a sibling util module, so the call name is
+        # the in-file verification evidence.
+        for func_name in (
+            "fileSHA256",
+            "fileSHA512",
+            "getSHA256",
+            "sha256File",
+        ):
+            content = f"const checksum = await {func_name}(pathToCLIZip)\n"
+            assert self._has_verification(content) is True, func_name
+
+    def test_file_sha_helper_real_setup_opentofu_snippet_recognized(self):
+        # Faithful trim of opentofu/setup-opentofu@v2.0.2's real download →
+        # verify sequence in ``lib/setup-tofu.js``.  ``fileSHA256`` is imported
+        # from the sibling ``./util.js`` (where the ``createHash('sha256')``
+        # body lives), and the artifact is rejected when its hash isn't in the
+        # release's ``SHA256SUMS`` list.  Without recognizing the call name the
+        # v2.0.2 bump (#980) false-flagged this download as unverified.
+        content = """\
+import { downloadTool, extractZip } from '@actions/tool-cache';
+import { fileSHA256 } from './util.js';
+
+async function downloadAndExtractCLI (url, checksums) {
+  const pathToCLIZip = await downloadTool(url);
+  if (checksums.length > 0) {
+    const checksum = await fileSHA256(pathToCLIZip);
+    if (!checksums.includes(checksum)) {
+      throw new Error(`Failed to validate OpenTofu CLI zip checksum.`);
+    }
+  }
+}
+"""
+        assert self._has_verification(content) is True
+
     def test_existing_crypto_dotted_form_still_matches(self):
         # Regression: the original ``crypto\.createHash\(`` matcher
         # must still fire — existing actions that use the dotted form.
