@@ -209,6 +209,7 @@
 - JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f
 - jarvusinnovations/background-action@*
 - jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5
+- jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db
 - JetBrains/qodana-action@89eb4357efd2b52e639f3216e63edaf33b82622b
 - JetBrains/qodana-action@d7b5ec2fbec32197ef447c450e00589ed5f34fd5
 - JetBrains/qodana-action@4861e015da555e86a72b862892aba6c2b93e6891
