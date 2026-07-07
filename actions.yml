@@ -248,9 +248,6 @@ codspeedhq/action:
   '*':
     keep: true
 commit-check/commit-check-action:
-  443fb6a114414358496e6243105294c3b11610c5:
-    tag: v2.4.2
-    expires_at: 2026-07-07
   2fe41833054c561710099d8e3e22bbeab4fe204a:
     tag: v2.5.0
     expires_at: 2026-07-14
@@ -354,9 +351,6 @@ docker/bake-action:
   d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b:
     tag: v7.3.0
 docker/build-push-action:
-  d08e5c354a6adb9ed34480a06d141179aa583294:
-    tag: v7.0.0
-    expires_at: 2026-07-07
   bcafcacb16a39f128d818304e6c9c0c18556b85f:
     tag: v7.1.0
     expires_at: 2026-08-16

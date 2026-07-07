@@ -93,7 +93,6 @@
 - codecov/codecov-action@*
 - codelytv/pr-size-labeler@*
 - codspeedhq/action@*
-- commit-check/commit-check-action@443fb6a114414358496e6243105294c3b11610c5
 - commit-check/commit-check-action@2fe41833054c561710099d8e3e22bbeab4fe204a
 - commit-check/commit-check-action@7c158d4541309c5952de3343151750882b036d10
 - commit-check/commit-check-action@2239d8980732e84a380552fdd71e1d49e149baf3
@@ -129,7 +128,6 @@
 - docker/bake-action@a66e1c87e2eca0503c343edf1d208c716d54b8a8
 - docker/bake-action@6614cfa25eff9a0b2b2697efb0b6159e7680d584
 - docker/bake-action@d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b
-- docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
 - docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f
 - docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25
 - docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf
