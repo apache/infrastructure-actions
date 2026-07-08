@@ -241,7 +241,6 @@
 - leafo/gh-actions-luarocks@4c082a5fad45388feaeb0798dbd82dbd7dc65bca
 - leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248
 - leafo/gh-actions-luarocks@35d062def313a7699a0d513e996bcf4352f05389
-- lhotari/sandboxed-trivy-action@555963036b2012b44c1071508a236e569db28ebb
 - lhotari/sandboxed-trivy-action@f01374b6cc3bf7264ab238293e94f6db7ada6dd0
 - lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411
 - manusa/actions-setup-minikube@*
@@ -369,7 +368,6 @@
 - vishalsinha21/dynamic-checklist@*
 - wei/curl@*
 - xpol/setup-lua@*
-- zizmorcore/zizmor-action@71321a20a9ded102f6e9ce5718a2fcec2c4f70d8
 - zizmorcore/zizmor-action@b1d7e1fb5de872772f31590499237e7cce841e8e
 - zizmorcore/zizmor-action@5f14fd08f7cf1cb1609c1e344975f152c7ee938d
 - zizmorcore/zizmor-action@192e21d79ab29983730a13d1382995c2307fbcaa

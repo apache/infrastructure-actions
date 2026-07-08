@@ -691,9 +691,6 @@ leafo/gh-actions-luarocks:
   35d062def313a7699a0d513e996bcf4352f05389:
     tag: v6.1.0
 lhotari/sandboxed-trivy-action:
-  555963036b2012b44c1071508a236e569db28ebb:
-    tag: v1.0.1
-    expires_at: 2026-07-08
   f01374b6cc3bf7264ab238293e94f6db7ada6dd0:
     tag: v1.0.2
 lycheeverse/lychee-action:
@@ -1083,9 +1080,6 @@ xpol/setup-lua:
   '*':
     keep: true
 zizmorcore/zizmor-action:
-  71321a20a9ded102f6e9ce5718a2fcec2c4f70d8:
-    tag: v0.5.2
-    expires_at: 2026-07-08
   b1d7e1fb5de872772f31590499237e7cce841e8e:
     tag: v0.5.3
     expires_at: 2026-08-09
