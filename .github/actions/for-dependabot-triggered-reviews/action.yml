@@ -47,7 +47,7 @@ runs:
         version: "2.30.0"
     - uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185  # v3
       if: false
-    - uses: advanced-security/dismiss-alerts@046d6b48d2e43cf563f96f67332c47c432eff83e  # v2.0.2
+    - uses: advanced-security/dismiss-alerts@a18f986bdb40edba0dd7a74382c15d4a3d50a1c8  # v2.0.3
       if: false
     - uses: al-cheb/configure-pagefile-action@9b6da52fb72a3c6147c1aad2df22d8d905681adc  # v1.5
       if: false
