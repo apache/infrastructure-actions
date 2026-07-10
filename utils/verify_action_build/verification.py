@@ -33,6 +33,7 @@ from .diff_node_modules import diff_node_modules
 from .diff_source import diff_approved_vs_new
 from .docker_build import build_in_docker
 from .github_client import GitHubClient
+from .npm_registry_verify import verify_vendored_node_modules
 from .release_lookup import (
     format_release_time,
     get_release_or_commit_time,
@@ -190,6 +191,7 @@ def verify_single_action(
     binary_download_failures: list[str] = []
     lock_file_errors: list[str] = []
     in_tree_binary_errors: list[str] = []
+    npm_registry_failed = False
 
     # Detect source-detached release tags (orphan commits containing only
     # distributable artifacts) and resolve the default-branch source commit
@@ -339,6 +341,38 @@ def verify_single_action(
                 "In-tree binary check", "pass",
                 "no in-tree binaries (or all verified via attestation / SHA256SUMS)",
             ))
+
+        # Vendored npm dependency check: when an action commits its
+        # node_modules tree, verify every package directly against the npm
+        # registry (tarball integrity + file-by-file), which is
+        # deterministic — unlike the npm-ci rebuild that the JS-build check
+        # relies on.  Returns None when nothing is vendored.
+        npm_registry_result = verify_vendored_node_modules(
+            org, repo, commit_hash, sub_path,
+        )
+        if npm_registry_result is not None:
+            npm_registry_failed = not npm_registry_result.ok
+            if npm_registry_result.ok:
+                detail = (
+                    f"{len(npm_registry_result.verified)} vendored package(s) "
+                    f"match registry-verified tarballs"
+                )
+                if npm_registry_result.skipped:
+                    detail += f"; {len(npm_registry_result.skipped)} not registry-verifiable"
+                status = "warn" if (
+                    npm_registry_result.skipped or npm_registry_result.foreign
+                ) else "pass"
+                checks_performed.append(("Vendored npm registry check", status, detail))
+            else:
+                if npm_registry_result.truncated:
+                    detail = "repo tree too large to enumerate — cannot verify"
+                else:
+                    detail = (
+                        f"{len(npm_registry_result.mismatched)} modified, "
+                        f"{len(npm_registry_result.extra)} extra, "
+                        f"{len(npm_registry_result.errors)} error(s) vs registry"
+                    )
+                checks_performed.append(("Vendored npm registry check", "fail", detail))
 
         if not is_js_action:
             console.print()
@@ -558,6 +592,7 @@ def verify_single_action(
         and not binary_download_failures
         and not lock_file_errors
         and not in_tree_binary_errors
+        and not npm_registry_failed
     )
 
     console.print()
@@ -612,6 +647,12 @@ def verify_single_action(
                 f"{len(in_tree_binary_errors)} unverified pre-compiled binary(ies) "
                 f"in repo (no SLSA attestation, no matching SHA256SUMS at release)"
                 f"[/red bold]"
+            )
+        elif npm_registry_failed:
+            fail_msg = (
+                f"[red bold]{action_type} action — vendored node_modules do not "
+                f"match registry-published packages (modified or extra files, or "
+                f"integrity mismatch)[/red bold]"
             )
         else:
             fail_msg = f"[red bold]{action_type} action — verification failed[/red bold]"
