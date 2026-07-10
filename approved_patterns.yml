@@ -248,6 +248,7 @@
 - leafo/gh-actions-luarocks@35d062def313a7699a0d513e996bcf4352f05389
 - lhotari/sandboxed-trivy-action@f01374b6cc3bf7264ab238293e94f6db7ada6dd0
 - lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411
+- lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8
 - manusa/actions-setup-minikube@*
 - manusa/actions-setup-minikube@96202dee4ae1c2f46a62fe197273aaf22b83f42d
 - manusa/actions-setup-minikube@b65276017fdec6f1e6498129fb740e34e260dc55

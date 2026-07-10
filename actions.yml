@@ -711,6 +711,9 @@ lhotari/sandboxed-trivy-action:
 lycheeverse/lychee-action:
   8646ba30535128ac92d33dfc9133794bfdd9b411:
     tag: v2.8.0
+    expires_at: 2026-10-02
+  e7477775783ea5526144ba13e8db5eec57747ce8:
+    tag: v2.9.0
 manusa/actions-setup-minikube:
   '*':
     keep: true
