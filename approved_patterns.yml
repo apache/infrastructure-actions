@@ -29,6 +29,7 @@
 - addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185
 - AdoptOpenJDK/install-jdk@*
 - advanced-security/dismiss-alerts@046d6b48d2e43cf563f96f67332c47c432eff83e
+- advanced-security/dismiss-alerts@a18f986bdb40edba0dd7a74382c15d4a3d50a1c8
 - al-cheb/configure-pagefile-action@9b6da52fb72a3c6147c1aad2df22d8d905681adc
 - amannn/action-semantic-pull-request@*
 - ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c
@@ -104,6 +105,7 @@
 - commit-check/commit-check-action@60e903b3fb06f5e64580b959f58d5b9406a3e002
 - commit-check/commit-check-action@0e0ac2f48ed0d43062a4ab46bf74127e27aab58f
 - commit-check/commit-check-action@a9ee0cfa8e2b0399715e016e1dd4624e08427281
+- commit-check/commit-check-action@bbb6580f01838e475563514f115ec7ef41c9ddc7
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - container-tools/microshift-action@*
