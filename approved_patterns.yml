@@ -36,7 +36,6 @@
 - anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
 - anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2
 - arduino/setup-protoc@*
-- astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
 - astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
 - astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
 - astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3
@@ -53,7 +52,6 @@
 - azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
 - azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2
 - azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
-- azure/setup-kubectl@15650b3ad78fff148532a140b8a4c821796b2d7b
 - azure/setup-kubectl@829323503d1be3d00ca8346e5391ca0b07a9ab0d
 - bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86
 - benchmark-action/github-action-benchmark@52576c92bccf6ac60c8223ec7eb2565637cae9ba
@@ -63,7 +61,6 @@
 - bufbuild/buf-breaking-action@*
 - bufbuild/buf-lint-action@*
 - bufbuild/buf-setup-action@*
-- burnett01/rsync-deployments@dc0d5d44c4728aad3f02154a87309809e62a960f
 - burnett01/rsync-deployments@66257cad6bfeb2171d3b6bfa6c9a22279dd9c3a1
 - burnett01/rsync-deployments@4d419d1dc46d4a8a2b6ceab2f951f0f93b2da8f5
 - burrunan/gradle-cache-action@*

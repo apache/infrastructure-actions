@@ -73,9 +73,6 @@ arduino/setup-protoc:
   '*':
     keep: true
 astral-sh/setup-uv:
-  cec208311dfd045dd5311c1add060b2062131d57:
-    tag: v8.0.0
-    expires_at: 2026-07-11
   08807647e7069bb48b6ef5acd8ec9567f424441b:
     tag: v8.1.0
     expires_at: 2026-08-28
@@ -125,9 +122,6 @@ azure/setup-helm:
   9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310:
     tag: v5.0.1
 azure/setup-kubectl:
-  15650b3ad78fff148532a140b8a4c821796b2d7b:
-    tag: v5.0.0
-    expires_at: 2026-07-11
   829323503d1be3d00ca8346e5391ca0b07a9ab0d:
     tag: v5.1.0
 bazel-contrib/setup-bazel:
@@ -155,9 +149,6 @@ bufbuild/buf-setup-action:
   '*':
     keep: true
 burnett01/rsync-deployments:
-  dc0d5d44c4728aad3f02154a87309809e62a960f:
-    tag: 8.0.4
-    expires_at: 2026-07-11
   66257cad6bfeb2171d3b6bfa6c9a22279dd9c3a1:
     tag: 8.0.5
     expires_at: 2026-09-17
