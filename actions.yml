@@ -755,6 +755,9 @@ ncipollo/release-action:
 nick-fields/retry:
   '*':
     keep: true
+NuGet/login:
+  8d196754b4036150537f80ac539e15c2f1028841:
+    tag: v1.2.0
 nwtgck/actions-netlify:
   4cbaf4c08f1a7bfa537d6113472ef4424e4eb654:
     tag: v3.0.0
