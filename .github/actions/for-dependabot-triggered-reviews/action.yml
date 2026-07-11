@@ -205,6 +205,8 @@ runs:
       if: false
     - uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd  # v1.21.0
       if: false
+    - uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841  # v1.2.0
+      if: false
     - uses: nwtgck/actions-netlify@d22a32a27c918fe470bbc562e984f80ec48c2668  # v4.0.0
       if: false
     - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4  # v2.0.2
