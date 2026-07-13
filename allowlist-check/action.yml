@@ -29,6 +29,13 @@ inputs:
     description: "Glob pattern for YAML files to scan for action refs"
     required: false
     default: ".github/**/*.yml"
+  expiry-warning-days:
+    description: >
+      Emit a (non-failing) warning when a workflow pins an allowlisted action
+      whose approved version expires within this many days. Set to 0 to warn
+      only once a pin has actually expired.
+    required: false
+    default: "30"
 
 runs:
   using: composite
@@ -36,14 +43,25 @@ runs:
     - name: Install ruyaml
       shell: bash
       run: pip install ruyaml
-    - name: Fetch latest approved_patterns.yml from main
+    - name: Fetch latest approved_patterns.yml and actions.yml from main
       shell: bash
       run: |
         curl -sSfL \
           "https://raw.githubusercontent.com/apache/infrastructure-actions/main/approved_patterns.yml" \
           -o "${{ runner.temp }}/approved_patterns.yml"
+        # actions.yml carries the expires_at metadata used for expiry warnings.
+        # Best-effort: if it can't be fetched, the check still runs, just
+        # without expiry warnings.
+        curl -sSfL \
+          "https://raw.githubusercontent.com/apache/infrastructure-actions/main/actions.yml" \
+          -o "${{ runner.temp }}/actions.yml" \
+          || echo "::notice::Could not fetch actions.yml; expiry warnings disabled for this run."
     - name: Verify all action refs are allowlisted
       shell: bash
-      run: python3 "${{ github.action_path }}/check_asf_allowlist.py" "${{ runner.temp }}/approved_patterns.yml"
+      run: |
+        python3 "${{ github.action_path }}/check_asf_allowlist.py" \
+          "${{ runner.temp }}/approved_patterns.yml" \
+          "${{ runner.temp }}/actions.yml"
       env:
         GITHUB_YAML_GLOB: ${{ inputs.scan-glob }}
+        EXPIRY_WARNING_DAYS: ${{ inputs.expiry-warning-days }}

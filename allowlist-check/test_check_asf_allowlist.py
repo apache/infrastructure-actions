@@ -24,13 +24,17 @@ import textwrap
 import unittest
 from unittest.mock import patch
 
+import datetime
+
 from check_asf_allowlist import (
     build_gh_pr_command,
     collect_action_refs,
     find_action_refs,
     is_allowed,
     load_allowlist,
+    load_expiry_map,
     main,
+    upcoming_expiry_warnings,
 )
 from insert_actions import insert_actions
 
@@ -469,6 +473,173 @@ class TestMainGhPrCommand(unittest.TestCase):
         self.assertIn("NOT ON ALLOWLIST", output)
         # Header line
         self.assertIn("Checking 2 unique action ref(s)", output)
+
+
+class TestLoadExpiryMap(unittest.TestCase):
+    """Tests for parsing expires_at metadata out of actions.yml."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.actions_yml = os.path.join(self.tmpdir, "actions.yml")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
+    def _write(self, text):
+        with open(self.actions_yml, "w") as f:
+            f.write(textwrap.dedent(text))
+
+    def test_extracts_only_expiring_exact_refs(self):
+        self._write(
+            """\
+            org/a:
+              '1111':
+                tag: v1
+                expires_at: 2026-08-16
+              '2222':
+                keep: true
+            org/wild:
+              '*':
+                keep: true
+            org/empty:
+              '3333': {}
+            """
+        )
+        result = load_expiry_map(self.actions_yml)
+        self.assertEqual(result, {"org/a@1111": datetime.date(2026, 8, 16)})
+
+    def test_string_dates_are_parsed(self):
+        # ruyaml normally yields datetime.date, but a quoted value stays a str.
+        self._write(
+            """\
+            org/a:
+              '1111':
+                expires_at: "2026-09-18"
+            """
+        )
+        self.assertEqual(
+            load_expiry_map(self.actions_yml),
+            {"org/a@1111": datetime.date(2026, 9, 18)},
+        )
+
+    def test_missing_file_returns_empty(self):
+        self.assertEqual(load_expiry_map("/no/such/actions.yml"), {})
+
+    def test_empty_file_returns_empty(self):
+        self._write("")
+        self.assertEqual(load_expiry_map(self.actions_yml), {})
+
+
+class TestUpcomingExpiryWarnings(unittest.TestCase):
+    """Tests for the pure expiry-window selection logic."""
+
+    TODAY = datetime.date(2026, 7, 13)
+
+    def _refs(self):
+        return {
+            "org/soon@aaa": ["a.yml"],
+            "org/later@bbb": ["b.yml"],
+            "org/nope@ccc": ["c.yml"],  # not in expiry_map
+        }
+
+    def _map(self):
+        return {
+            "org/soon@aaa": datetime.date(2026, 7, 20),   # 7 days away
+            "org/later@bbb": datetime.date(2026, 12, 1),  # far off
+        }
+
+    def test_only_within_window(self):
+        result = upcoming_expiry_warnings(self._refs(), self._map(), 30, self.TODAY)
+        self.assertEqual(len(result), 1)
+        filepath, ref, expiry, days = result[0]
+        self.assertEqual((filepath, ref, days), ("a.yml", "org/soon@aaa", 7))
+
+    def test_wider_window_includes_more(self):
+        result = upcoming_expiry_warnings(self._refs(), self._map(), 365, self.TODAY)
+        self.assertEqual({r[1] for r in result}, {"org/soon@aaa", "org/later@bbb"})
+
+    def test_already_expired_has_negative_days(self):
+        refs = {"org/x@aaa": ["w.yml"]}
+        emap = {"org/x@aaa": datetime.date(2026, 7, 10)}  # 3 days ago
+        result = upcoming_expiry_warnings(refs, emap, 30, self.TODAY)
+        self.assertEqual(result[0][3], -3)
+
+    def test_sorted_soonest_first(self):
+        refs = {"org/b@2": ["b"], "org/a@1": ["a"]}
+        emap = {
+            "org/b@2": datetime.date(2026, 7, 15),  # 2 days
+            "org/a@1": datetime.date(2026, 7, 14),  # 1 day
+        }
+        result = upcoming_expiry_warnings(refs, emap, 30, self.TODAY)
+        self.assertEqual([r[1] for r in result], ["org/a@1", "org/b@2"])
+
+    def test_no_expiry_data_no_warnings(self):
+        self.assertEqual(
+            upcoming_expiry_warnings(self._refs(), {}, 30, self.TODAY), []
+        )
+
+
+class TestMainExpiryWarnings(unittest.TestCase):
+    """Integration: main() emits ::warning:: annotations for expiring pins."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.github_dir = os.path.join(self.tmpdir, ".github", "workflows")
+        os.makedirs(self.github_dir)
+        self.sha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+        with open(os.path.join(self.github_dir, "ci.yml"), "w") as f:
+            f.write(
+                textwrap.dedent(
+                    f"""\
+                    name: CI
+                    on: push
+                    jobs:
+                      build:
+                        runs-on: ubuntu-latest
+                        steps:
+                          - uses: actions/checkout@v4
+                          - uses: some-org/some-action@{self.sha}
+                    """
+                )
+            )
+        # allowlist contains the pin, so it is NOT a violation.
+        self.allowlist_path = os.path.join(self.tmpdir, "allowlist.yml")
+        with open(self.allowlist_path, "w") as f:
+            f.write(f"- some-org/some-action@{self.sha}\n")
+
+        self.actions_path = os.path.join(self.tmpdir, "actions.yml")
+        soon = (datetime.date.today() + datetime.timedelta(days=10)).isoformat()
+        with open(self.actions_path, "w") as f:
+            f.write(f"some-org/some-action:\n  '{self.sha}':\n    expires_at: {soon}\n")
+
+        self.scan_glob = os.path.join(self.tmpdir, ".github/**/*.yml")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
+    def _run(self):
+        with (
+            patch.dict(os.environ, {"GITHUB_YAML_GLOB": self.scan_glob}),
+            patch(
+                "sys.argv",
+                ["check_asf_allowlist.py", self.allowlist_path, self.actions_path],
+            ),
+            patch("sys.stdout") as mock_stdout,
+        ):
+            # No violations -> main() returns without SystemExit.
+            main()
+        return "".join(c.args[0] for c in mock_stdout.write.call_args_list)
+
+    def test_warns_on_upcoming_expiry(self):
+        output = self._run()
+        self.assertIn("::warning", output)
+        self.assertIn(f"some-org/some-action@{self.sha}", output)
+        self.assertIn("expires on", output)
+
+    def test_no_warning_outside_window(self):
+        with patch.dict(os.environ, {"EXPIRY_WARNING_DAYS": "3"}):
+            output = self._run()
+        self.assertNotIn("::warning", output)
 
 
 if __name__ == "__main__":
