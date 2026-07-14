@@ -75,6 +75,7 @@
 - carabiner-dev/actions/install/ampel-bootstrap@b60791af41423360b892a1a3cee90cd4e131f381
 - carabiner-dev/actions/install/ampel-bootstrap@e0e3b8149dafed833431095bc148d50e7eade4e8
 - carabiner-dev/actions/install/ampel-bootstrap@f882fa9eb795141737eecac4ffb056df5ad14954
+- carabiner-dev/actions/install/ampel-bootstrap@94f29392187fe5082d1195a7d4cae3a7ddf09d9c
 - carabiner-dev/actions/install/bnd@2a11d59a135c5e291f305f249a92ad7903e3ee0f
 - carabiner-dev/actions/install/bnd@e0e3b8149dafed833431095bc148d50e7eade4e8
 - carabiner-dev/actions/install/bnd@94f29392187fe5082d1195a7d4cae3a7ddf09d9c
@@ -220,7 +221,6 @@
 - julia-actions/julia-runtest@*
 - julia-actions/setup-julia@*
 - juliaregistries/tagbot@*
-- JustinBeckwith/linkinator-action@363572b2714d25a059fceb2fa332a98e7ea3baff
 - JustinBeckwith/linkinator-action@7b6b0bc671f6264e1a8daa4488a5bd91ce61dcd4
 - jwgmeligmeyling/checkstyle-github-action@*
 - jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d
@@ -253,6 +253,7 @@
 - nanasess/setup-chromedriver@*
 - ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd
 - nick-fields/retry@*
+- NuGet/login@8d196754b4036150537f80ac539e15c2f1028841
 - nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654
 - nwtgck/actions-netlify@d22a32a27c918fe470bbc562e984f80ec48c2668
 - ocaml/setup-ocaml@*

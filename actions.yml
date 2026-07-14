@@ -192,6 +192,11 @@ carabiner-dev/actions/install/ampel-bootstrap:
     tag: v1.2.0
     expires_at: 2026-08-16
   f882fa9eb795141737eecac4ffb056df5ad14954: {}
+  # transitive dep pulled by install/download-and-verify @ v1.2.1 (f882fa9e);
+  # completes the v1.2.1 (94f29392) approval so the transitive-failures canary resolves.
+  94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
+    tag: v1.2.1
+    expires_at: 2026-10-05
 carabiner-dev/actions/install/bnd:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -239,9 +244,6 @@ codelytv/pr-size-labeler:
   '*':
     keep: true
 commit-check/commit-check-action:
-  2fe41833054c561710099d8e3e22bbeab4fe204a:
-    tag: v2.5.0
-    expires_at: 2026-07-14
   7c158d4541309c5952de3343151750882b036d10:
     tag: v2.6.0
     expires_at: 2026-08-08
@@ -628,9 +630,6 @@ juliaregistries/tagbot:
   '*':
     keep: true
 JustinBeckwith/linkinator-action:
-  363572b2714d25a059fceb2fa332a98e7ea3baff:
-    tag: v2.4.1
-    expires_at: 2026-07-12
   7b6b0bc671f6264e1a8daa4488a5bd91ce61dcd4:
     tag: v2.4.2
 jwgmeligmeyling/checkstyle-github-action:
@@ -725,6 +724,9 @@ ncipollo/release-action:
 nick-fields/retry:
   '*':
     keep: true
+NuGet/login:
+  8d196754b4036150537f80ac539e15c2f1028841:
+    tag: v1.2.0
 nwtgck/actions-netlify:
   4cbaf4c08f1a7bfa537d6113472ef4424e4eb654:
     tag: v3.0.0

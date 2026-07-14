@@ -63,6 +63,7 @@ That's it — two steps. The `actions/checkout` step checks out your repo so `.g
 | Input | Required | Default | Description |
 |---|---|---|---|
 | `scan-glob` | No | `.github/**/*.yml` | Glob pattern for YAML files to scan for action refs |
+| `expiry-warning-days` | No | `30` | Emit a non-failing warning when a workflow pins an allowlisted action whose approved version expires within this many days. Set to `0` to warn only once a pin has actually expired. |
 
 ### Custom scan glob
 
@@ -108,6 +109,34 @@ When all refs pass:
 
 ```
 All 15 unique action refs are on the ASF allowlist
+```
+
+### Expiry warnings
+
+Approved *versions* of an action don't live forever: when a newer version is
+approved, older pinned SHAs are given an `expires_at` date (a grace period,
+typically three months) and are eventually removed from the allowlist. Once a
+pin is removed, workflows still using it start failing the allowlist check.
+
+To give projects advance notice, the action also fetches
+[`actions.yml`](../actions.yml) (which carries the `expires_at` metadata) and
+emits a **non-failing** `::warning::` for any allowlisted pin in your workflows
+that expires within `expiry-warning-days` (default 30):
+
+```
+1 allowlisted ref(s) expiring within 30 day(s) -- bump these to a newer approved version before they are removed:
+::warning file=.github/workflows/ci.yml::some-org/some-action@abc123 is allowlisted but its approved pin expires on 2026-07-25 (in 12 day(s)); bump to a newer approved version to avoid a future CI failure.
+```
+
+Warnings never change the exit code — they surface in the job log and the PR
+"Files changed" annotations so you can bump the pin before it breaks. This is
+best-effort: if `actions.yml` can't be fetched, the check still runs, just
+without expiry warnings.
+
+```yaml
+- uses: apache/infrastructure-actions/allowlist-check@main
+  with:
+    expiry-warning-days: "60"   # start warning two months ahead
 ```
 
 ## Dependencies
