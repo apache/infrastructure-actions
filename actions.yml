@@ -157,9 +157,6 @@ burnett01/rsync-deployments:
 burrunan/gradle-cache-action:
   '*':
     keep: true
-bytedeco/javacpp-presets:
-  '*':
-    keep: true
 carabiner-dev/actions/ampel/verify:
   e0e3b8149dafed833431095bc148d50e7eade4e8:
     tag: v1.2.0
@@ -234,25 +231,16 @@ carloscastrojumo/github-cherry-pick-action:
 carlosperate/arm-none-eabi-gcc-action:
   '*':
     keep: true
-check-spelling/check-spelling:
-  '*':
-    keep: true
 chromaui/action:
   '*':
     keep: true
 cicirello/javadoc-cleanup:
   '*':
     keep: true
-clechasseur/rs-cargo:
-  '*':
-    keep: true
 codecov/codecov-action:
   '*':
     keep: true
 codelytv/pr-size-labeler:
-  '*':
-    keep: true
-codspeedhq/action:
   '*':
     keep: true
 commit-check/commit-check-action:
@@ -283,9 +271,6 @@ conda-incubator/setup-miniconda:
   '*':
     keep: true
 container-tools/kind-action:
-  '*':
-    keep: true
-container-tools/microshift-action:
   '*':
     keep: true
 coursier/cache-action:
@@ -337,9 +322,6 @@ dawidd6/action-send-mail:
     expires_at: 2026-09-19
   94de994a9f6fffee200243214e17002e2920bb59:
     tag: v18
-delaguardo/setup-graalvm:
-  '*':
-    keep: true
 dependabot/fetch-metadata:
   ffa630c65fa7e0ecfa0625b5ceda64399aea1b36:
     tag: v3.0.0
@@ -463,9 +445,6 @@ erlef/setup-beam:
 geekyeggo/delete-artifact:
   '*':
     keep: true
-golang/govulncheck-action:
-  '*':
-    keep: true
 golangci/*:
   '*':
     keep: true
@@ -558,9 +537,6 @@ gradle/develocity-actions/setup-maven:
     expires_at: 2026-09-13
   0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642:
     tag: v2.2
-gsactions/commit-message-checker:
-  '*':
-    keep: true
 hadolint/hadolint-action:
   2332a7b74a6de0dda2e2221d575162eba76ba5e5:
     tag: v3.3.0
@@ -606,9 +582,6 @@ j178/prek-action:
 JamesIves/github-pages-deploy-action:
   d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
     tag: v4.8.0
-jarvusinnovations/background-action:
-  '*':
-    keep: true
 jasonetco/create-an-issue:
   1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5:
     tag: v2
@@ -740,9 +713,6 @@ mozilla-actions/sccache-action:
   9e7fa8a12102821edf02ca5dbea1acd0f89a2696:
     tag: v0.0.10
 msys2/setup-msys2:
-  '*':
-    keep: true
-mvasigh/dispatch-action:
   '*':
     keep: true
 nanasess/setup-chromedriver:
@@ -974,9 +944,6 @@ shivammathur/setup-php:
 shogo82148/actions-setup-perl:
   '*':
     keep: true
-shufo/auto-assign-reviewer-by-files:
-  '*':
-    keep: true
 sigstore/cosign-installer:
   faadad0cce49287aee09b3a48701e75088a2c6ad:
     expires_at: 2026-12-31
@@ -1060,9 +1027,6 @@ test-summary/action:
 testlens-app/setup-testlens:
   '*':
     keep: true
-timonvs/pr-labeler-action:
-  '*':
-    keep: true
 TobKed/label-when-approved-action:
   '*':
     keep: true
@@ -1085,12 +1049,6 @@ vimtor/action-zip:
   5f1c4aa587ea41db1110df6a99981dbe19cee310:
     tag: v1
 vishalsinha21/dynamic-checklist:
-  '*':
-    keep: true
-wei/curl:
-  '*':
-    keep: true
-xpol/setup-lua:
   '*':
     keep: true
 zizmorcore/zizmor-action:
