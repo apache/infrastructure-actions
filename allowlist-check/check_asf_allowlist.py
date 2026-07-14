@@ -31,6 +31,7 @@ GITHUB_YAML_GLOB environment variable (default: .github/**/*.yml).
 Exits with code 1 if any action ref is not allowlisted.
 """
 
+import datetime
 import fnmatch
 import glob
 import os
@@ -54,6 +55,9 @@ SKIPPED_PREFIXES = ("./", "docker://")
 
 # YAML key that references a GitHub Action
 USES_KEY = "uses"
+
+# How many days before an allowlisted pin's expiry to start warning about it.
+DEFAULT_EXPIRY_WARNING_DAYS = 30
 
 
 def find_action_refs(node: Any) -> Generator[str, None, None]:
@@ -151,6 +155,85 @@ def is_allowed(action_ref: str, allowlist: list[str]) -> bool:
     return any(fnmatch.fnmatch(action_ref, pattern) for pattern in allowlist)
 
 
+def load_expiry_map(actions_path: str) -> dict[str, datetime.date]:
+    """Map each exactly-pinned, expiring allowlist ref to its expiry date.
+
+    Parses ``actions.yml`` (the source of truth, which -- unlike
+    ``approved_patterns.yml`` -- carries ``expires_at`` metadata) and returns a
+    mapping of ``owner/action@<sha>`` -> expiry date for every ref that has an
+    ``expires_at``. Wildcard / ``keep`` entries never expire and are omitted.
+
+    Returns an empty dict if the file is missing or unparseable, so expiry
+    warnings are strictly best-effort and never break the check.
+
+    Args:
+        actions_path: Path to the ``actions.yml`` source file.
+
+    Returns:
+        dict: Mapping of ``owner/action@ref`` to its expiry ``datetime.date``.
+    """
+    try:
+        yaml = ruyaml.YAML()
+        with open(actions_path) as f:
+            actions = yaml.load(f)
+    except (OSError, ruyaml.YAMLError):
+        return {}
+    if not actions:
+        return {}
+
+    expiry: dict[str, datetime.date] = {}
+    for name, refs in actions.items():
+        if not isinstance(refs, dict):
+            continue
+        for ref, details in refs.items():
+            if not isinstance(details, dict):
+                continue
+            when = details.get("expires_at")
+            if isinstance(when, datetime.date):
+                expiry[f"{name}@{ref}"] = when
+            elif isinstance(when, str):
+                try:
+                    expiry[f"{name}@{ref}"] = datetime.date.fromisoformat(when)
+                except ValueError:
+                    continue
+    return expiry
+
+
+def upcoming_expiry_warnings(
+    action_refs: dict[str, list[str]],
+    expiry_map: dict[str, datetime.date],
+    warning_days: int,
+    today: datetime.date,
+) -> list[tuple[str, str, datetime.date, int]]:
+    """Find caller refs whose allowlisted pin expires within ``warning_days``.
+
+    Only refs that exactly match an expiring ``actions.yml`` entry are
+    considered (a ref allowed via a ``@*`` wildcard has no expiry).
+
+    Args:
+        action_refs: Mapping of action ref -> files that use it.
+        expiry_map: Output of :func:`load_expiry_map`.
+        warning_days: Warn when a pin expires within this many days.
+        today: Reference date for the countdown (injected for testability).
+
+    Returns:
+        list: ``(filepath, action_ref, expiry_date, days_left)`` tuples, one per
+        (ref, file) pair, soonest expiry first. ``days_left`` is negative for a
+        pin that is already past its expiry but still listed.
+    """
+    warnings: list[tuple[str, str, datetime.date, int]] = []
+    for ref, filepaths in action_refs.items():
+        expiry_date = expiry_map.get(ref)
+        if expiry_date is None:
+            continue
+        days_left = (expiry_date - today).days
+        if days_left <= warning_days:
+            for filepath in filepaths:
+                warnings.append((filepath, ref, expiry_date, days_left))
+    warnings.sort(key=lambda w: (w[3], w[1], w[0]))
+    return warnings
+
+
 def build_gh_pr_command(action_name: str, refs: list[str], repo_name: str) -> str:
     """Build a shell command that creates a PR adding one action to the allowlist.
 
@@ -199,12 +282,59 @@ def build_gh_pr_command(action_name: str, refs: list[str], repo_name: str) -> st
     )
 
 
+def emit_expiry_warnings(
+    action_refs: dict[str, list[str]], actions_path: str
+) -> None:
+    """Print GitHub ``::warning::`` annotations for soon-to-expire pins.
+
+    Best-effort and never fatal: a missing/unparseable ``actions.yml`` or a bad
+    ``EXPIRY_WARNING_DAYS`` value simply yields no warnings.
+    """
+    try:
+        warning_days = int(
+            os.environ.get("EXPIRY_WARNING_DAYS", "") or DEFAULT_EXPIRY_WARNING_DAYS
+        )
+    except ValueError:
+        warning_days = DEFAULT_EXPIRY_WARNING_DAYS
+
+    expiry_map = load_expiry_map(actions_path)
+    warnings = upcoming_expiry_warnings(
+        action_refs, expiry_map, warning_days, datetime.date.today()
+    )
+    if not warnings:
+        return
+
+    print(
+        f"\n{len(warnings)} allowlisted ref(s) expiring within {warning_days} day(s) "
+        "-- bump these to a newer approved version before they are removed:"
+    )
+    for filepath, ref, expiry_date, days_left in warnings:
+        if days_left < 0:
+            detail = (
+                f"its approved pin EXPIRED on {expiry_date.isoformat()} "
+                f"({-days_left} day(s) ago)"
+            )
+        else:
+            detail = (
+                f"its approved pin expires on {expiry_date.isoformat()} "
+                f"(in {days_left} day(s))"
+            )
+        print(
+            f"::warning file={filepath}::{ref} is allowlisted but {detail}; "
+            "bump to a newer approved version to avoid a future CI failure."
+        )
+
+
 def main():
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <allowlist_path>", file=sys.stderr)
+    if len(sys.argv) not in (2, 3):
+        print(
+            f"Usage: {sys.argv[0]} <allowlist_path> [actions_yml_path]",
+            file=sys.stderr,
+        )
         sys.exit(2)
 
     allowlist_path = sys.argv[1]
+    actions_path = sys.argv[2] if len(sys.argv) == 3 else None
     allowlist = load_allowlist(allowlist_path)
     scan_glob = os.environ.get("GITHUB_YAML_GLOB", DEFAULT_GITHUB_YAML_GLOB)
     action_refs = collect_action_refs(scan_glob)
@@ -226,6 +356,11 @@ def main():
         if not allowed:
             for filepath in filepaths:
                 violations.append((filepath, action_ref))
+
+    # Best-effort expiry warnings (never fail the build); shown whether or not
+    # there are hard violations, so projects get advance notice to bump pins.
+    if actions_path:
+        emit_expiry_warnings(action_refs, actions_path)
 
     if violations:
         print(
