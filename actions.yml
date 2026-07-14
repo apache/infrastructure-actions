@@ -251,9 +251,6 @@ codspeedhq/action:
   '*':
     keep: true
 commit-check/commit-check-action:
-  2fe41833054c561710099d8e3e22bbeab4fe204a:
-    tag: v2.5.0
-    expires_at: 2026-07-14
   7c158d4541309c5952de3343151750882b036d10:
     tag: v2.6.0
     expires_at: 2026-08-08
