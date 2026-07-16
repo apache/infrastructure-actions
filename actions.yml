@@ -493,6 +493,9 @@ graalvm/setup-graalvm:
     expires_at: 2026-09-30
   186d0493a2df5eb62df5ecc498883d18fd58c303:
     tag: v1.6.2
+    expires_at: 2026-10-08
+  0def53c0fd8534bc13416c9469f5be45265824fd:
+    tag: v1.6.3
 gradle/actions/dependency-submission:
   50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
     tag: v6.1.0
