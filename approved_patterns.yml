@@ -312,6 +312,7 @@
 - sbt/setup-sbt@af116cce31c00823d3903ce687f9cda3a4f19f1b
 - sbt/setup-sbt@3afe9cf056c5d139bfc46579af1192d77a2f0821
 - sbt/setup-sbt@66fb4376e81982c7d92a4074170846fff88e2e30
+- sbt/setup-sbt@9d56cf12e9b58d219605e1d8bfe69a8395fedde0
 - scacap/action-surefire-report@*
 - scacap/action-surefire-report@5609ce4db72c09db044803b344a8968fd1f315da
 - scacap/action-surefire-report@fa13579fdd93ed8fc7e717a25eceedcfcbc39dda
