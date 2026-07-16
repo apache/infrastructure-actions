@@ -237,7 +237,7 @@ runs:
       if: false
     - uses: scalacenter/sbt-dependency-submission@d84eef4c09e633bcf5f113bcad7fd5e9af1baee9  # v3.2.3
       if: false
-    - uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc  # v3.0.5
+    - uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d  # v4.0.0
       if: false
     - uses: snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263  # v1
       if: false
