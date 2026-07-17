@@ -75,7 +75,7 @@ runs:
       if: false
     - uses: burnett01/rsync-deployments@4d419d1dc46d4a8a2b6ceab2f951f0f93b2da8f5  # 9.0.0
       if: false
-    - uses: carabiner-dev/actions/ampel/verify@94f29392187fe5082d1195a7d4cae3a7ddf09d9c  # v1.2.1
+    - uses: carabiner-dev/actions/ampel/verify@174f1c83779af3d3d7e451b7ead7ba824d0d2aa9  # v1.2.2
       if: false
     - uses: carabiner-dev/actions/install/ampel@94f29392187fe5082d1195a7d4cae3a7ddf09d9c  # v1.2.1
       if: false
