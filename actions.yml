@@ -710,9 +710,6 @@ mlugg/setup-zig:
   d1434d08867e3ee9daa34448df10607b98908d29:
     tag: v2.2.1
 mozilla-actions/sccache-action:
-  7d986dd989559c6ecdb630a3fd2557667be217ad:
-    tag: v0.0.9
-    expires_at: 2026-07-17
   9e7fa8a12102821edf02ca5dbea1acd0f89a2696:
     tag: v0.0.10
 msys2/setup-msys2:
@@ -916,10 +913,6 @@ scacap/action-surefire-report:
   # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
   '*':
     expires_at: 2026-08-01
-    ignore_gh_api_errors: true
-  5609ce4db72c09db044803b344a8968fd1f315da:
-    tag: v1.9.1
-    expires_at: 2026-07-17
     ignore_gh_api_errors: true
   fa13579fdd93ed8fc7e717a25eceedcfcbc39dda:
     tag: v1.10.0
