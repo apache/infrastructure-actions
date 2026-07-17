@@ -328,6 +328,7 @@
 - slackapi/slack-github-action@03ea5433c137af7c0495bc0cad1af10403fc800c
 - slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c
 - slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc
+- slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d
 - slsa-framework/source-actions@dea965cdca5e0cb422bf7b2653c9d15f678ad01c
 - snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a
 - snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263

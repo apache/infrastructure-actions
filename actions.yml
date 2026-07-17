@@ -959,6 +959,9 @@ slackapi/slack-github-action:
     expires_at: 2026-10-03
   0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc:
     tag: v3.0.5
+    expires_at: 2026-10-09
+  dcb1066f776dd043e64d0e8ba94ca15cc7e1875d:
+    tag: v4.0.0
 slsa-framework/source-actions:
   dea965cdca5e0cb422bf7b2653c9d15f678ad01c:
     expires_at: 2026-12-31
