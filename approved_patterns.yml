@@ -224,7 +224,6 @@
 - jwgmeligmeyling/checkstyle-github-action@*
 - jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d
 - jwgmeligmeyling/spotbugs-github-action@*
-- Kesin11/actions-timeline@e018cfefea60b4f44266998551211a35a58b8097
 - Kesin11/actions-timeline@44c9c178ffb2fb1d9859614a3ffa79ccfb77565e
 - Kesin11/actions-timeline@7bf79990b7c09f5dfb570ac30b814ca597bd538e
 - kiegroup/github-action-build-chain@*

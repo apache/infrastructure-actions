@@ -642,9 +642,6 @@ jwgmeligmeyling/spotbugs-github-action:
   '*':
     keep: true
 Kesin11/actions-timeline:
-  e018cfefea60b4f44266998551211a35a58b8097:
-    tag: v3.0.0
-    expires_at: 2026-07-19
   44c9c178ffb2fb1d9859614a3ffa79ccfb77565e:
     tag: v3.1.0
     expires_at: 2026-09-24
