@@ -173,6 +173,10 @@ carabiner-dev/actions/install/ampel:
     expires_at: 2026-08-28
   94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
     tag: v1.2.1
+  # transitive: v1.2.3 (2a4b2cd1) pins its internal action refs to this
+  # untagged commit (carabiner-dev/actions#83). Verified carabiner release-bot commit.
+  619a474b2178d06ccf274349397cd67a7802a4fe:
+    expires_at: 2026-10-19
 carabiner-dev/actions/install/ampel-bootstrap:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -199,6 +203,13 @@ carabiner-dev/actions/install/ampel-bootstrap:
     tag: v1.2.1
     expires_at: 2026-10-05
   be6b4fa42fa3a8432416475d74218b9aa51ea527: {}
+  # transitive: referenced by carabiner-dev/actions v1.2.3 internal refs.
+  # Verified carabiner release-bot commits.
+  174f1c83779af3d3d7e451b7ead7ba824d0d2aa9:
+    tag: v1.2.2
+    expires_at: 2026-10-19
+  619a474b2178d06ccf274349397cd67a7802a4fe:
+    expires_at: 2026-10-19
 carabiner-dev/actions/install/bnd:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -209,6 +220,10 @@ carabiner-dev/actions/install/bnd:
     expires_at: 2026-08-28
   94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
     tag: v1.2.1
+  # transitive: v1.2.3 (2a4b2cd1) pins its internal action refs to this
+  # untagged commit (carabiner-dev/actions#83). Verified carabiner release-bot commit.
+  619a474b2178d06ccf274349397cd67a7802a4fe:
+    expires_at: 2026-10-19
 carabiner-dev/actions/install/download-and-verify:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -227,6 +242,13 @@ carabiner-dev/actions/install/download-and-verify:
     tag: v1.2.0
     expires_at: 2026-08-16
   f882fa9eb795141737eecac4ffb056df5ad14954: {}
+  # transitive: referenced by carabiner-dev/actions v1.2.3 internal refs.
+  # Verified carabiner release-bot commits.
+  174f1c83779af3d3d7e451b7ead7ba824d0d2aa9:
+    tag: v1.2.2
+    expires_at: 2026-10-19
+  619a474b2178d06ccf274349397cd67a7802a4fe:
+    expires_at: 2026-10-19
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
