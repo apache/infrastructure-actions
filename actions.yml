@@ -178,8 +178,11 @@ carabiner-dev/actions/install/ampel:
     tag: v1.2.1
   # transitive: v1.2.3 (2a4b2cd1) pins its internal action refs to this
   # untagged commit (carabiner-dev/actions#83). Verified carabiner release-bot commit.
+    expires_at: 2026-10-11
   619a474b2178d06ccf274349397cd67a7802a4fe:
-    expires_at: 2026-10-19
+    expires_at: 2026-10-11
+  2a4b2cd115ede14629b03ef7e77586d3269d4c72:
+    tag: v1.2.3
 carabiner-dev/actions/install/ampel-bootstrap:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -225,8 +228,11 @@ carabiner-dev/actions/install/bnd:
     tag: v1.2.1
   # transitive: v1.2.3 (2a4b2cd1) pins its internal action refs to this
   # untagged commit (carabiner-dev/actions#83). Verified carabiner release-bot commit.
+    expires_at: 2026-10-11
   619a474b2178d06ccf274349397cd67a7802a4fe:
-    expires_at: 2026-10-19
+    expires_at: 2026-10-11
+  2a4b2cd115ede14629b03ef7e77586d3269d4c72:
+    tag: v1.2.3
 carabiner-dev/actions/install/download-and-verify:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
