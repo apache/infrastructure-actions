@@ -191,12 +191,14 @@ carabiner-dev/actions/install/ampel-bootstrap:
   e0e3b8149dafed833431095bc148d50e7eade4e8:
     tag: v1.2.0
     expires_at: 2026-08-16
-  f882fa9eb795141737eecac4ffb056df5ad14954: {}
+  f882fa9eb795141737eecac4ffb056df5ad14954:
+    expires_at: 2026-10-11
   # transitive dep pulled by install/download-and-verify @ v1.2.1 (f882fa9e);
   # completes the v1.2.1 (94f29392) approval so the transitive-failures canary resolves.
   94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
     tag: v1.2.1
     expires_at: 2026-10-05
+  be6b4fa42fa3a8432416475d74218b9aa51ea527: {}
 carabiner-dev/actions/install/bnd:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -307,6 +309,9 @@ DavidAnson/markdownlint-cli2-action:
     expires_at: 2026-09-27
   8de2aa07cae85fd17c0b35642db70cf5495f1d25:
     tag: v24.0.0
+    expires_at: 2026-10-11
+  6bf21b07787794f89a243495939cd651942aeabe:
+    tag: v24.1.0
 dawidd6/action-download-artifact:
   '*':
     keep: true
