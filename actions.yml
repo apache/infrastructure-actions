@@ -163,6 +163,9 @@ carabiner-dev/actions/ampel/verify:
     expires_at: 2026-08-28
   94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
     tag: v1.2.1
+    expires_at: 2026-10-11
+  2a4b2cd115ede14629b03ef7e77586d3269d4c72:
+    tag: v1.2.3
 carabiner-dev/actions/install/ampel:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
