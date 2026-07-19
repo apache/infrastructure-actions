@@ -561,6 +561,29 @@ def truncate_words(text, words):
     return content_text
 
 
+def format_blog_date(date_text):
+    if not date_text:
+        return ''
+
+    # Normalize common ISO-8601 timestamps like 2026-06-09T16:00:00Z
+    normalized = date_text.replace('Z', '+00:00')
+    parsed = None
+    try:
+        parsed = datetime.datetime.fromisoformat(normalized)
+    except ValueError:
+        for fmt in ('%Y-%m-%dT%H:%M:%S', '%Y-%m-%d'):
+            try:
+                parsed = datetime.datetime.strptime(date_text, fmt)
+                break
+            except ValueError:
+                continue
+
+    if parsed is None:
+        return date_text
+
+    return f'{parsed.strftime("%B")} {parsed.day}, {parsed.year}'
+
+
 # retrieve blog posts from an Atom feed.
 def process_blog(feed, count, words, debug):
     if debug:
@@ -590,7 +613,7 @@ def process_blog(feed, count, words, debug):
             {
                 'id': get_element_text(entry, 'id'),
                 'title': get_element_text(entry, 'title'),
-                'date': get_element_text(entry, 'published'),
+                'date': format_blog_date(get_element_text(entry, 'published')),
                 'content': content_text
             }
         )
