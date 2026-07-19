@@ -250,14 +250,16 @@ carabiner-dev/actions/install/download-and-verify:
   e0e3b8149dafed833431095bc148d50e7eade4e8:
     tag: v1.2.0
     expires_at: 2026-08-16
-  f882fa9eb795141737eecac4ffb056df5ad14954: {}
+  f882fa9eb795141737eecac4ffb056df5ad14954:
+    expires_at: 2026-10-11
   # transitive: referenced by carabiner-dev/actions v1.2.3 internal refs.
   # Verified carabiner release-bot commits.
   174f1c83779af3d3d7e451b7ead7ba824d0d2aa9:
     tag: v1.2.2
-    expires_at: 2026-10-19
+    expires_at: 2026-10-11
   619a474b2178d06ccf274349397cd67a7802a4fe:
-    expires_at: 2026-10-19
+    expires_at: 2026-10-11
+  be6b4fa42fa3a8432416475d74218b9aa51ea527: {}
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
