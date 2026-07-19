@@ -55,7 +55,7 @@ dependencies = []
 # desired, alongside `python3 test_*.py`.
 [dependency-groups]
 dev = [
-    "ruff>=0.15.20",
+    "ruff>=0.15.21",
     "mypy>=2.1.0",
     "pytest>=9.1.1",
 ]
