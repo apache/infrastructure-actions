@@ -223,10 +223,18 @@ def test_generate_composite_action_includes_zizmor_ignore_only_for_selected_acti
 
     generated = generate_composite_action(actions)
 
+    # The version tag stays the trailing token on the `uses:` line (so
+    # Dependabot keeps it in sync); the zizmor ignore moves to the `if: false`
+    # line, within the sentinel step's finding span. See #952.
     assert (
-        f"1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259  "
-        f"# v4.0.0  # {ZIZMOR_UNPINNED_TOOLS_IGNORE}"
+        "1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259  "
+        "# v4.0.0\n"
     ) in generated
+    assert f"      if: false  # {ZIZMOR_UNPINNED_TOOLS_IGNORE}\n" in generated
+    # ... and never on the uses: line, which would break Dependabot's updater.
+    for line in generated.splitlines():
+        if "1Password/load-secrets-action@92467" in line:
+            assert "zizmor: ignore" not in line
     assert (
         "DavidAnson/markdownlint-cli2-action@ded1f9488f68a970bc66ea5619e13e9b52e601cd  "
         "# v23.2.0"
