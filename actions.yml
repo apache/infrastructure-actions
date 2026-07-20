@@ -34,13 +34,8 @@
   3a12b0ab99d9cd590a3e9b5a90ea017210ed9556:
     tag: v4.0.1
 actions-cool/check-user-permission:
-  '*':
-    keep: true
-actions-cool/issues-helper:
-  '*':
-    keep: true
-actions-cool/maintain-one-comment:
-  '*':
+  c21884f3dda18dafc2f8b402fe807ccc9ec1aa5e:
+    tag: v2.4.0
     keep: true
 addnab/docker-run-action:
   4f65fabd2431ebc8d299f8e5a018d79a769ae185:

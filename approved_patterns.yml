@@ -23,9 +23,7 @@
 - 1Password/load-secrets-action@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556
 - 1Password/load-secrets-action/configure@92467eb28f72e8255933372f1e0707c567ce2259
 - 1Password/load-secrets-action/configure@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556
-- actions-cool/check-user-permission@*
-- actions-cool/issues-helper@*
-- actions-cool/maintain-one-comment@*
+- actions-cool/check-user-permission@c21884f3dda18dafc2f8b402fe807ccc9ec1aa5e
 - addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185
 - AdoptOpenJDK/install-jdk@*
 - advanced-security/dismiss-alerts@046d6b48d2e43cf563f96f67332c47c432eff83e
