@@ -219,7 +219,6 @@
 - JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f
 - jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5
 - jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db
-- JetBrains/qodana-action@89eb4357efd2b52e639f3216e63edaf33b82622b
 - JetBrains/qodana-action@d7b5ec2fbec32197ef447c450e00589ed5f34fd5
 - JetBrains/qodana-action@4861e015da555e86a72b862892aba6c2b93e6891
 - jidicula/clang-format-action@*
@@ -272,7 +271,6 @@
 - opentofu/setup-opentofu@847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4
 - opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4
 - oracle-actions/setup-java@*
-- orhun/git-cliff-action@c93ef52f3d0ddcdcc9bd5447d98d458a11cd4f72
 - orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5
 - ossf/scorecard-action@*
 - peaceiris/actions-gh-pages@*
@@ -366,7 +364,6 @@
 - TobKed/label-when-approved-action@*
 - untitaker/hyperlink@fb5bb9c5011a3d143a54b4b30aedc30ec5bc0f89
 - untitaker/hyperlink@9375bc4063712ad490d5eb3d54df0b6aade15e54
-- uraimo/run-on-arch-action@d94c13912ea685de38fccc1109385b83fd79427d
 - uraimo/run-on-arch-action@f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9
 - vapier/coverity-scan-action@2068473c7bdf8c2fb984a6a40ae76ee7facd7a85
 - vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310

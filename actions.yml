@@ -630,9 +630,6 @@ jdx/mise-action:
   5228313ee0372e111a38da051671ca30fc5a96db:
     keep: true
 JetBrains/qodana-action:
-  89eb4357efd2b52e639f3216e63edaf33b82622b:
-    tag: v2025.3.2
-    expires_at: 2026-07-20
   d7b5ec2fbec32197ef447c450e00589ed5f34fd5:
     tag: v2026.1.0
     expires_at: 2026-09-25
@@ -787,9 +784,6 @@ oracle-actions/setup-java:
   '*':
     keep: true
 orhun/git-cliff-action:
-  c93ef52f3d0ddcdcc9bd5447d98d458a11cd4f72:
-    tag: v4.7.1
-    expires_at: 2026-07-20
   f50e11560dce63f7c33227798f90b924471a88b5:
     tag: v4.8.0
 ossf/scorecard-action:
@@ -1077,9 +1071,6 @@ untitaker/hyperlink:
   9375bc4063712ad490d5eb3d54df0b6aade15e54:
     tag: 0.3.2
 uraimo/run-on-arch-action:
-  d94c13912ea685de38fccc1109385b83fd79427d:
-    tag: v3.0.1
-    expires_at: 2026-07-20
   f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9:
     tag: v3.1.0
 vapier/coverity-scan-action:
