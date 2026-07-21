@@ -124,10 +124,8 @@
 - DavidAnson/markdownlint-cli2-action@8de2aa07cae85fd17c0b35642db70cf5495f1d25
 - DavidAnson/markdownlint-cli2-action@6bf21b07787794f89a243495939cd651942aeabe
 - dawidd6/action-download-artifact@*
-- dawidd6/action-send-mail@d38f3f7cd391cdebfe0d38efc3998b935e951c4f
 - dawidd6/action-send-mail@42942bc2f8fba4e611b459a018967a6a7c78c68c
 - dawidd6/action-send-mail@94de994a9f6fffee200243214e17002e2920bb59
-- dependabot/fetch-metadata@ffa630c65fa7e0ecfa0625b5ceda64399aea1b36
 - dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98
 - dlang-community/setup-dlang@*
 - docker/bake-action@aefd381cbaa93c62a1e8b02194ae420cc36269d2
@@ -239,8 +237,6 @@
 - kiegroup/github-action-build-chain@*
 - korandoru/hawkeye@*
 - leafo/gh-actions-lua@*
-- leafo/gh-actions-luarocks@4c082a5fad45388feaeb0798dbd82dbd7dc65bca
-- leafo/gh-actions-luarocks@97053c556d6ce2c8e26eb7ac93743437c7af7248
 - leafo/gh-actions-luarocks@35d062def313a7699a0d513e996bcf4352f05389
 - lhotari/sandboxed-trivy-action@f01374b6cc3bf7264ab238293e94f6db7ada6dd0
 - lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411
@@ -279,7 +275,6 @@
 - phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e
 - phoenix-actions/test-reporting@7317eea6e13c47348dd0bb318669485157c518d6
 - pnpm/action-setup@*
-- posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237
 - posit-dev/setup-air@cf390573ff4fe0f198f35df3a642b1409328d859
 - potiuk/cancel-workflow-runs@*
 - pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd

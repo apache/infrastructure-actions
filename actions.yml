@@ -344,18 +344,12 @@ dawidd6/action-download-artifact:
   '*':
     keep: true
 dawidd6/action-send-mail:
-  d38f3f7cd391cdebfe0d38efc3998b935e951c4f:
-    tag: v16
-    expires_at: 2026-07-21
   42942bc2f8fba4e611b459a018967a6a7c78c68c:
     tag: v17
     expires_at: 2026-09-19
   94de994a9f6fffee200243214e17002e2920bb59:
     tag: v18
 dependabot/fetch-metadata:
-  ffa630c65fa7e0ecfa0625b5ceda64399aea1b36:
-    tag: v3.0.0
-    expires_at: 2026-07-21
   25dd0e34f4fe68f24cc83900b1fe3fe149efef98:
     tag: v3.1.0
 dlang-community/setup-dlang:
@@ -690,12 +684,6 @@ leafo/gh-actions-lua:
   '*':
     keep: true
 leafo/gh-actions-luarocks:
-  4c082a5fad45388feaeb0798dbd82dbd7dc65bca:
-    tag: v5
-    expires_at: 2026-07-21
-  97053c556d6ce2c8e26eb7ac93743437c7af7248:
-    tag: v6.0.0
-    expires_at: 2026-07-21
   35d062def313a7699a0d513e996bcf4352f05389:
     tag: v6.1.0
 lhotari/sandboxed-trivy-action:
@@ -809,9 +797,6 @@ pnpm/action-setup:
   '*':
     keep: true
 posit-dev/setup-air:
-  63e80dedb6d275c94a3841e15e5ff8691e1ab237:
-    tag: v1.0.0
-    expires_at: 2026-07-21
   cf390573ff4fe0f198f35df3a642b1409328d859:
     tag: v1.0.1
 potiuk/cancel-workflow-runs:
