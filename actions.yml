@@ -355,9 +355,6 @@ dependabot/fetch-metadata:
 dlang-community/setup-dlang:
   '*':
     keep: true
-docker://pandoc/core:
-  sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93:
-    tag: 3.7.0.2
 docker/bake-action:
   aefd381cbaa93c62a1e8b02194ae420cc36269d2:
     tag: v4.7.0
@@ -424,6 +421,9 @@ docker/setup-qemu-action:
     expires_at: 2026-09-24
   96fe6ef7f33517b61c61be40b68a1882f3264fb8:
     tag: v4.2.0
+docker://pandoc/core:
+  sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93:
+    tag: 3.7.0.2
 dorny/paths-filter:
   fbd0ab8f3e69293af611ebaee6363fc25e6d187d:
     tag: v4.0.1
