@@ -111,7 +111,7 @@ runs:
       if: false
     - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7.3.0
       if: false
-    - uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0  # v4.4.0
+    - uses: docker/login-action@06fb636fac595d6fb4b28a5dfcb21a6f5091859c  # v4.5.0
       if: false
     - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302  # v6.2.0
       if: false
@@ -257,7 +257,7 @@ runs:
       if: false
     - uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310  # v1
       if: false
-    - uses: zizmorcore/zizmor-action@6599ee8b7a49aef6a770f63d261d214911a7ce02  # v0.6.0
+    - uses: zizmorcore/zizmor-action@6fc4b006235f201fdab3722e17240ab420d580e5  # v0.6.1
       if: false
     - run: echo Success!
       shell: bash
