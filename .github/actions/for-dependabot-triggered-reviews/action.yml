@@ -41,7 +41,7 @@ runs:
       if: false  # zizmor: ignore[unpinned-tools] generated sentinel step is never executed
       with:
         version: "2.30.0"
-    - uses: 1Password/load-secrets-action/configure@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556  # v4.0.1
+    - uses: 1Password/load-secrets-action/configure@eb2efd0703da22a93c467f2d1ffbb6826c11e19c  # v4.1.1
       if: false
       with:
         version: "2.30.0"
