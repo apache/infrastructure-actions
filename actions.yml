@@ -394,6 +394,8 @@ docker/login-action:
     expires_at: 2026-09-27
   af1e73f918a031802d376d3c8bbc3fe56130a9b0:
     tag: v4.4.0
+  06fb636fac595d6fb4b28a5dfcb21a6f5091859c:
+    tag: v4.5.0
 docker/metadata-action:
   030e881283bb7a6894de51c315a6bfe6a94e05cf:
     tag: v6.0.0
