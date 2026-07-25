@@ -803,9 +803,6 @@ peter-evans/create-pull-request:
   '*':
     keep: true
 phoenix-actions/test-reporting:
-  f957cd93fc2d848d556fa0d03c57bc79127b6b5e:
-    tag: v15
-    expires_at: 2026-07-25
   7317eea6e13c47348dd0bb318669485157c518d6:
     tag: v16
 pnpm/action-setup:
@@ -975,9 +972,6 @@ sigstore/cosign-installer:
     expires_at: 2026-12-31
     tag: v4.0.0
 slackapi/slack-github-action:
-  03ea5433c137af7c0495bc0cad1af10403fc800c:
-    tag: v3.0.2
-    expires_at: 2026-07-25
   45a88b9581bfab2566dc881e2cd66d334e621e2c:
     tag: v3.0.3
     expires_at: 2026-10-03

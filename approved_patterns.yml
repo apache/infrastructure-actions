@@ -277,7 +277,6 @@
 - peaceiris/actions-mdbook@*
 - peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9
 - peter-evans/create-pull-request@*
-- phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e
 - phoenix-actions/test-reporting@7317eea6e13c47348dd0bb318669485157c518d6
 - pnpm/action-setup@*
 - posit-dev/setup-air@cf390573ff4fe0f198f35df3a642b1409328d859
@@ -332,7 +331,6 @@
 - shivammathur/setup-php@*
 - shogo82148/actions-setup-perl@*
 - sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad
-- slackapi/slack-github-action@03ea5433c137af7c0495bc0cad1af10403fc800c
 - slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c
 - slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc
 - slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d
