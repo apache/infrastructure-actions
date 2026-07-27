@@ -21,8 +21,10 @@
 # DO NOT UPDATE MANUALLY. Update /actions.yml instead.
 - 1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259
 - 1Password/load-secrets-action@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556
+- 1Password/load-secrets-action@eb2efd0703da22a93c467f2d1ffbb6826c11e19c
 - 1Password/load-secrets-action/configure@92467eb28f72e8255933372f1e0707c567ce2259
 - 1Password/load-secrets-action/configure@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556
+- 1Password/load-secrets-action/configure@eb2efd0703da22a93c467f2d1ffbb6826c11e19c
 - actions-cool/check-user-permission@c21884f3dda18dafc2f8b402fe807ccc9ec1aa5e
 - addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185
 - AdoptOpenJDK/install-jdk@*
@@ -82,6 +84,7 @@
 - carabiner-dev/actions/install/ampel-bootstrap@be6b4fa42fa3a8432416475d74218b9aa51ea527
 - carabiner-dev/actions/install/ampel-bootstrap@174f1c83779af3d3d7e451b7ead7ba824d0d2aa9
 - carabiner-dev/actions/install/ampel-bootstrap@619a474b2178d06ccf274349397cd67a7802a4fe
+- carabiner-dev/actions/install/ampel-bootstrap@60563b5460a9e4ae9921c0da551b4ddd6059ff45
 - carabiner-dev/actions/install/bnd@2a11d59a135c5e291f305f249a92ad7903e3ee0f
 - carabiner-dev/actions/install/bnd@e0e3b8149dafed833431095bc148d50e7eade4e8
 - carabiner-dev/actions/install/bnd@94f29392187fe5082d1195a7d4cae3a7ddf09d9c
@@ -96,6 +99,7 @@
 - carabiner-dev/actions/install/download-and-verify@174f1c83779af3d3d7e451b7ead7ba824d0d2aa9
 - carabiner-dev/actions/install/download-and-verify@619a474b2178d06ccf274349397cd67a7802a4fe
 - carabiner-dev/actions/install/download-and-verify@be6b4fa42fa3a8432416475d74218b9aa51ea527
+- carabiner-dev/actions/install/download-and-verify@60563b5460a9e4ae9921c0da551b4ddd6059ff45
 - carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3
 - carlosperate/arm-none-eabi-gcc-action@*
 - chromaui/action@*
@@ -285,6 +289,7 @@
 - pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084
 - pypa/cibuildwheel@f03ac7617d6cff873ccf24cc0d567ef5ba5a9e6d
 - pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55
+- pypa/cibuildwheel@4726cd35bb13f7bde50cf2761f2499ac7b3aa32c
 - pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266
 - pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e
 - pyTooling/Actions@*
@@ -317,6 +322,7 @@
 - sbt/setup-sbt@66fb4376e81982c7d92a4074170846fff88e2e30
 - sbt/setup-sbt@9d56cf12e9b58d219605e1d8bfe69a8395fedde0
 - sbt/setup-sbt@6444f4c8111de4b9059c3975def104b03cfaa5f0
+- sbt/setup-sbt@f6db8ab474efba716fc7f04441ab33714e4825af
 - scacap/action-surefire-report@*
 - scacap/action-surefire-report@fa13579fdd93ed8fc7e717a25eceedcfcbc39dda
 - scacap/action-surefire-report@3dacff26879cd2a7f2160d101254032a3707fe6f
