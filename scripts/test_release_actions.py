@@ -165,3 +165,86 @@ def test_commit_token_skip():
 
 def test_labels_are_case_insensitive():
     assert ra.determine_bump(["Release:Major"], "") == "major"
+
+
+# --------------------------------------------------------------------------- #
+# release publishing failures are reported, never swallowed
+# --------------------------------------------------------------------------- #
+class _FakeCompleted:
+    def __init__(self, returncode, stdout="", stderr=""):
+        self.returncode = returncode
+        self.stdout = stdout
+        self.stderr = stderr
+
+
+def test_run_reporting_returns_true_on_success(monkeypatch):
+    monkeypatch.setattr(ra.subprocess, "run", lambda *a, **k: _FakeCompleted(0))
+    assert ra._run_reporting(["gh", "release", "create"], "publishing") is True
+
+
+def test_run_reporting_surfaces_stderr(monkeypatch, capsys):
+    # The real regression: gh failed with HTTP 403 and the reason was
+    # discarded, so the run went green with no Release published.
+    monkeypatch.setattr(
+        ra.subprocess,
+        "run",
+        lambda *a, **k: _FakeCompleted(1, stderr="HTTP 403: Resource not accessible"),
+    )
+    assert ra._run_reporting(["gh", "release", "create"], "publishing X") is False
+    err = capsys.readouterr().err
+    assert "HTTP 403: Resource not accessible" in err
+    assert "::error::" in err
+    assert "publishing X" in err
+
+
+def test_run_reporting_reports_even_with_empty_output(monkeypatch, capsys):
+    monkeypatch.setattr(ra.subprocess, "run", lambda *a, **k: _FakeCompleted(2))
+    assert ra._run_reporting(["gh"], "publishing Y") is False
+    assert "no output" in capsys.readouterr().err
+
+
+def test_create_release_returns_false_when_release_fails(monkeypatch):
+    # Tags must still be pushed: they are what consumers and Dependabot pin.
+    tagged = []
+    monkeypatch.setattr(ra, "_run", lambda cmd, **k: tagged.append(cmd) or "")
+    monkeypatch.setattr(ra, "_run_reporting", lambda cmd, what: False)
+    action = ra.ACTIONS[0]
+    ok = ra.create_release(action, (1, 0, 0), "a" * 40, "org/repo", apply=True)
+    assert ok is False
+    assert any(cmd[:2] == ["git", "tag"] for cmd in tagged)
+    assert any(cmd[:2] == ["git", "push"] for cmd in tagged)
+
+
+def test_create_release_returns_true_when_release_published(monkeypatch):
+    monkeypatch.setattr(ra, "_run", lambda cmd, **k: "")
+    monkeypatch.setattr(ra, "_run_reporting", lambda cmd, what: True)
+    assert ra.create_release(
+        ra.ACTIONS[0], (1, 0, 0), "a" * 40, "org/repo", apply=True
+    ) is True
+
+
+def test_create_release_dry_run_is_success(monkeypatch):
+    called = []
+    monkeypatch.setattr(ra, "_run", lambda cmd, **k: called.append(cmd) or "")
+    assert ra.create_release(
+        ra.ACTIONS[0], (1, 0, 0), "a" * 40, "org/repo", apply=False
+    ) is True
+    assert called == []
+
+
+def test_main_exits_nonzero_when_a_release_is_not_published(monkeypatch, capsys):
+    monkeypatch.setattr(ra, "_run", lambda cmd, **k: "b" * 40)
+    monkeypatch.setattr(ra, "existing_tags", lambda: [])
+    monkeypatch.setattr(ra, "create_release", lambda *a, **k: False)
+    rc = ra.main(["--repo", "org/repo", "--after", "b" * 40,
+                  "--action", "pelican", "--bump", "patch", "--apply"])
+    assert rc == 1
+    assert "without a GitHub Release" in capsys.readouterr().err
+
+
+def test_main_exits_zero_when_releases_publish(monkeypatch):
+    monkeypatch.setattr(ra, "_run", lambda cmd, **k: "b" * 40)
+    monkeypatch.setattr(ra, "existing_tags", lambda: [])
+    monkeypatch.setattr(ra, "create_release", lambda *a, **k: True)
+    assert ra.main(["--repo", "org/repo", "--after", "b" * 40,
+                    "--action", "pelican", "--bump", "patch", "--apply"]) == 0

@@ -230,6 +230,29 @@ def pr_labels_for_commit(sha: str, repo: str) -> tuple[list[str], str]:
     return list(first.get("labels", [])), str(first.get("title", ""))
 
 
+def _run_reporting(cmd: list[str], what: str) -> bool:
+    """Run ``cmd``; on failure print why and return ``False``.
+
+    Deliberately not ``_run(check=False)``: that captures stderr and then
+    throws it away, so a step that could not do its job looks exactly like
+    one that succeeded. Anything whose failure is tolerated still has to
+    leave a reason in the workflow log.
+    """
+    result = subprocess.run(
+        cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    if result.returncode == 0:
+        return True
+    detail = (result.stderr or result.stdout or "").strip() or "no output"
+    # ::error:: renders as an annotation on the run, so a swallowed release
+    # failure is visible without reading the whole log.
+    print(
+        f"::error::{what} failed (exit {result.returncode}): {detail}",
+        file=sys.stderr,
+    )
+    return False
+
+
 def create_release(
     action: Action,
     version: tuple[int, int, int],
@@ -237,8 +260,13 @@ def create_release(
     repo: str,
     *,
     apply: bool,
-) -> None:
-    """Create the ``X.Y.Z`` tag, move the major tag, publish a GitHub release."""
+) -> bool:
+    """Create the ``X.Y.Z`` tag, move the major tag, publish a GitHub release.
+
+    Returns ``False`` if the GitHub Release could not be published. The tags
+    are still created in that case -- they are the part consumers and
+    Dependabot actually pin against -- but the caller reports a failed run.
+    """
     version_tag = format_tag(action.tag_prefix, version)
     major_tag = format_major_tag(action.tag_prefix, version)
     title = f"{action.consumed_path} {version_tag.split('/', 1)[1]}"
@@ -246,7 +274,7 @@ def create_release(
     print(f"  -> {version_tag}  (major {major_tag})  @ {sha[:12]}")
     if not apply:
         print("     [dry-run] skipping tag/push/release")
-        return
+        return True
 
     # Annotated version tag (immutable), pushed once.
     _run(["git", "tag", "-a", version_tag, "-m", title, sha])
@@ -256,8 +284,10 @@ def create_release(
     _run(["git", "tag", "-f", "-a", major_tag, "-m", f"{action.consumed_path} {major_tag.split('/', 1)[1]}", sha])
     _run(["git", "push", "--force", "origin", major_tag])
 
-    # GitHub Release with auto-generated notes for the version tag.
-    _run(
+    # GitHub Release with auto-generated notes for the version tag. A failure
+    # here does not abort the remaining actions, but it is reported and turns
+    # the run red rather than passing silently.
+    published = _run_reporting(
         [
             "gh",
             "release",
@@ -271,8 +301,13 @@ def create_release(
             "--target",
             sha,
         ],
-        check=False,
+        f"publishing GitHub Release {version_tag}",
     )
+    if published:
+        print(f"     published release {version_tag}")
+    else:
+        print(f"     tags for {version_tag} exist; release NOT published")
+    return published
 
 
 # --------------------------------------------------------------------------- #
@@ -334,13 +369,25 @@ def main(argv: list[str] | None = None) -> int:
 
     # 3. Cut a release per affected action.
     tags = existing_tags()
+    unpublished: list[str] = []
     for action in actions:
         current = latest_version(tags, action.tag_prefix)
         new_version = bump_version(current, bump)
         cur_str = format_tag(action.tag_prefix, current) if current else "(none)"
         print(f"{action.consumed_path}: {cur_str} --{bump}--> "
               f"{format_tag(action.tag_prefix, new_version)}")
-        create_release(action, new_version, after, args.repo, apply=args.apply)
+        if not create_release(action, new_version, after, args.repo, apply=args.apply):
+            unpublished.append(format_tag(action.tag_prefix, new_version))
+
+    if unpublished:
+        # The tags are pushed and usable; only the Releases are missing. Fail
+        # the run so that gap is noticed instead of being mistaken for success.
+        print(
+            f"error: {len(unpublished)} tag(s) pushed without a GitHub Release: "
+            f"{', '.join(unpublished)}",
+            file=sys.stderr,
+        )
+        return 1
 
     return 0
 
