@@ -19,6 +19,12 @@
 name: Test the Pelican build action
 on:
   push:
+    # Branches only. Release tags (pelican/v1.0.0, pelican/v1, ...) touch the
+    # same paths, and github.ref_name for a tag push is the tag name, which
+    # would make TARGET below "testsite-pelican/v1" -- not a branch this
+    # workflow can create. Naming any branches filter excludes tag pushes.
+    branches:
+      - '**'
     paths:
       - 'pelican/**'
       - '.github/workflows/pelican-action-test.yml'

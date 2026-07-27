@@ -20,6 +20,10 @@ name: Linting and MyPy (Pelican)
 
 on:
   push:
+    # Branches only: release tags (pelican/v1.0.0, ...) touch these paths and
+    # re-running the linters on a tag adds nothing over the branch run.
+    branches:
+      - '**'
     paths:
       - 'pelican/**.py'
       - 'pelican/pyproject.toml'
