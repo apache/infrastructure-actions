@@ -607,9 +607,6 @@ italia/publiccode-parser-action:
   21086c73ec0563e14c6748787efa1b34b025ad8c:
     tag: v1.5.1
 j178/prek-action:
-  cbc2f23eb5539cf20d82d1aabd0d0ecbcc56f4e3:
-    tag: v2.0.2
-    expires_at: 2026-07-27
   6ad80277337ad479fe43bd70701c3f7f8aa74db3:
     tag: v2.0.3
     expires_at: 2026-08-08
@@ -870,9 +867,6 @@ ruby/setup-ruby:
   '*':
     keep: true
 rubygems/configure-rubygems-credentials:
-  bc6dd217f8a4f919d6835fcfefd470ef821f5c44:
-    tag: v1.0.0
-    expires_at: 2026-07-27
   762a4b77c3300434bb57c7ce80b20e36231927aa:
     tag: v2.0.0
     expires_at: 2026-09-05
@@ -906,9 +900,6 @@ rustsec/*:
   '*':
     keep: true
 sbt/setup-sbt:
-  508b753e53cb6095967669e0911487d2b9bc9f41:
-    tag: v1.1.22
-    expires_at: 2026-07-27
   93e926cbdb4a428e41b4ef754124ec82925ffdc2:
     tag: v1.1.23
     expires_at: 2026-08-12

@@ -211,7 +211,6 @@
 - ilammy/msvc-dev-cmd@*
 - ilammy/setup-nasm@72793074d3c8cdda771dba85f6deafe00623038b
 - italia/publiccode-parser-action@21086c73ec0563e14c6748787efa1b34b025ad8c
-- j178/prek-action@cbc2f23eb5539cf20d82d1aabd0d0ecbcc56f4e3
 - j178/prek-action@6ad80277337ad479fe43bd70701c3f7f8aa74db3
 - j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d
 - j178/prek-action@e98a699c41eb69ab013a45817a0406469a748f8d
@@ -299,7 +298,6 @@
 - readthedocs/actions/preview@*
 - release-drafter/release-drafter@*
 - ruby/setup-ruby@*
-- rubygems/configure-rubygems-credentials@bc6dd217f8a4f919d6835fcfefd470ef821f5c44
 - rubygems/configure-rubygems-credentials@762a4b77c3300434bb57c7ce80b20e36231927aa
 - rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a
 - rubygems/release-gem@6317d8d1f7e28c24d28f6eff169ea854948bd9f7
@@ -311,7 +309,6 @@
 - rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe
 - rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18
 - rustsec/*@*
-- sbt/setup-sbt@508b753e53cb6095967669e0911487d2b9bc9f41
 - sbt/setup-sbt@93e926cbdb4a428e41b4ef754124ec82925ffdc2
 - sbt/setup-sbt@2e222825582620cc38d2a54e674f3c01b7c14f5d
 - sbt/setup-sbt@4ed7b7ec4bfa2074fe48554c09e341267397247c
