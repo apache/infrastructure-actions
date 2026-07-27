@@ -165,3 +165,32 @@ def test_commit_token_skip():
 
 def test_labels_are_case_insensitive():
     assert ra.determine_bump(["Release:Major"], "") == "major"
+
+
+# --------------------------------------------------------------------------- #
+# tags only: no GitHub Release is ever published
+# --------------------------------------------------------------------------- #
+def test_create_release_pushes_both_tags(monkeypatch):
+    cmds = []
+    monkeypatch.setattr(ra, "_run", lambda cmd, **k: cmds.append(cmd) or "")
+    ra.create_release(ra.ACTIONS[0], (1, 2, 3), "a" * 40, apply=True)
+    pushed = [c for c in cmds if c[:2] == ["git", "push"]]
+    assert any("allowlist-check/v1.2.3" in c for c in pushed)
+    assert any("allowlist-check/v1" in c for c in pushed)
+
+
+def test_create_release_never_invokes_gh_release(monkeypatch):
+    # Dependabot resolves versions from tags; publishing a Release is not part
+    # of any path a consumer depends on, so the script must not attempt one.
+    cmds = []
+    monkeypatch.setattr(ra, "_run", lambda cmd, **k: cmds.append(cmd) or "")
+    ra.create_release(ra.ACTIONS[2], (1, 0, 0), "b" * 40, apply=True)
+    assert not any(c[:1] == ["gh"] for c in cmds), cmds
+    assert not any("release" in part for c in cmds for part in c[:2]), cmds
+
+
+def test_create_release_dry_run_touches_nothing(monkeypatch):
+    cmds = []
+    monkeypatch.setattr(ra, "_run", lambda cmd, **k: cmds.append(cmd) or "")
+    ra.create_release(ra.ACTIONS[1], (2, 0, 0), "c" * 40, apply=False)
+    assert cmds == []

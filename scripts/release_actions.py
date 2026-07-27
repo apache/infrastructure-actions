@@ -234,18 +234,22 @@ def create_release(
     action: Action,
     version: tuple[int, int, int],
     sha: str,
-    repo: str,
     *,
     apply: bool,
 ) -> None:
-    """Create the ``X.Y.Z`` tag, move the major tag, publish a GitHub release."""
+    """Create the ``X.Y.Z`` tag and move the ``<prefix>/vN`` major tag.
+
+    Tags only: no GitHub Release is published. Dependabot's ``github_actions``
+    ecosystem resolves versions from the tags themselves, so a Release adds
+    nothing a consumer or a bump PR depends on.
+    """
     version_tag = format_tag(action.tag_prefix, version)
     major_tag = format_major_tag(action.tag_prefix, version)
     title = f"{action.consumed_path} {version_tag.split('/', 1)[1]}"
 
     print(f"  -> {version_tag}  (major {major_tag})  @ {sha[:12]}")
     if not apply:
-        print("     [dry-run] skipping tag/push/release")
+        print("     [dry-run] skipping tag/push")
         return
 
     # Annotated version tag (immutable), pushed once.
@@ -256,23 +260,7 @@ def create_release(
     _run(["git", "tag", "-f", "-a", major_tag, "-m", f"{action.consumed_path} {major_tag.split('/', 1)[1]}", sha])
     _run(["git", "push", "--force", "origin", major_tag])
 
-    # GitHub Release with auto-generated notes for the version tag.
-    _run(
-        [
-            "gh",
-            "release",
-            "create",
-            version_tag,
-            "--repo",
-            repo,
-            "--title",
-            title,
-            "--generate-notes",
-            "--target",
-            sha,
-        ],
-        check=False,
-    )
+    print(f"     tagged {version_tag} and {major_tag}")
 
 
 # --------------------------------------------------------------------------- #
@@ -340,7 +328,7 @@ def main(argv: list[str] | None = None) -> int:
         cur_str = format_tag(action.tag_prefix, current) if current else "(none)"
         print(f"{action.consumed_path}: {cur_str} --{bump}--> "
               f"{format_tag(action.tag_prefix, new_version)}")
-        create_release(action, new_version, after, args.repo, apply=args.apply)
+        create_release(action, new_version, after, apply=args.apply)
 
     return 0
 

@@ -19,10 +19,11 @@
 # Cuts path-prefixed, per-action releases so downstream projects can pin a
 # version (and Dependabot can propose bumps). On every push to main the
 # release_actions.py script works out which action(s) changed, computes the
-# next version from the newest existing <leaf>/vX.Y.Z tag, creates the tag,
-# moves the <leaf>/vX major tag and publishes a GitHub Release. The bump type
-# defaults to patch and can be raised per PR with a release:minor /
-# release:major label (or suppressed with release:skip). See RELEASING.md.
+# next version from the newest existing <leaf>/vX.Y.Z tag, creates the tag and
+# moves the <leaf>/vX major tag. Tags only -- no GitHub Release is published,
+# since Dependabot resolves versions from tags. The bump type defaults to patch
+# and can be raised per PR with a release:minor / release:major label (or
+# suppressed with release:skip). See RELEASING.md.
 name: Release actions
 
 on:
