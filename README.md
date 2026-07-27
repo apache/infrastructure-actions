@@ -23,6 +23,7 @@ This repository hosts GitHub Actions developed by the ASF community and approved
 - [Checking the Action Usage in an ASF Project](#checking-the-action-usage-in-an-asf-project)
 - [Submitting an Action](#submitting-an-action)
 - [Available GitHub Actions](#available-github-actions)
+- [Versioning and Pinning Actions](#versioning-and-pinning-actions)
 - [Organization-wide GitHub Actions Allow List](#management-of-organization-wide-github-actions-allow-list)
   - [Pipeline Overview](#pipeline-overview)
   - [Adding a New Action](#adding-a-new-action-to-the-allow-list)
@@ -55,6 +56,9 @@ jobs:
 
 When calling the `check-project-actions` workflow from a `push` or `pull_request` event, it should work
 automatically against the "right" reference. See the sample workflow linked above for more details.
+
+To pin to an immutable, Dependabot-trackable version instead of `@main`, see
+[Versioning and Pinning Actions](#versioning-and-pinning-actions).
 
 ## Submitting an Action
 
@@ -92,6 +96,33 @@ correctness of the action.
   - [ASF Infrastructure Pelican Action](/pelican/README.md): Generate and publish project websites with GitHub Actions
   - [Stash Action](/stash/README.md): Manage large build caches
   - [ASF Allowlist Check](/allowlist-check/README.md): Verify workflow action refs are on the ASF allowlist
+
+## Versioning and Pinning Actions
+
+The actions in this repo are a *monorepo of actions*, and each one is released
+under its own **path-prefixed tag** so you can pin a specific version and let
+Dependabot propose bumps. The tag prefix is the action's leaf directory name,
+which you repeat after the `@`:
+
+| Action                | Pin it like this                                                              |
+| --------------------- | ----------------------------------------------------------------------------- |
+| `allowlist-check`     | `apache/infrastructure-actions/allowlist-check@<sha>  # allowlist-check/v1.2.3`|
+| `pelican`             | `apache/infrastructure-actions/pelican@<sha>          # pelican/v1.2.3`        |
+| `stash/save`          | `apache/infrastructure-actions/stash/save@<sha>       # save/v1.2.3`           |
+| `stash/restore`       | `apache/infrastructure-actions/stash/restore@<sha>    # restore/v1.2.3`        |
+
+Pinning to a commit SHA with the version in a trailing comment is the
+recommended, [Zizmor](https://zizmor.sh/)-friendly form: the SHA is immutable,
+and Dependabot's `github_actions` ecosystem recognises the `# <prefix>/vX.Y.Z`
+comment and opens a PR (updating both the SHA and the comment) when a newer
+tag for that prefix is published. Support for this monorepo leaf-prefix scheme
+was added to Dependabot in
+[dependabot/dependabot-core#11286](https://github.com/dependabot/dependabot-core/pull/11286),
+contributed specifically for this repository.
+
+Tracking `@main` (as in the quick-start above) also works and always gives you
+the latest code, but it drifts from any pinned SHA and Zizmor will flag the
+unpinned ref. See [RELEASING.md](RELEASING.md) for how releases are cut.
 
 ## Management of Organization-wide GitHub Actions Allow List
 

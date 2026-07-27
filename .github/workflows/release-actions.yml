@@ -1,0 +1,107 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# Cuts path-prefixed, per-action releases so downstream projects can pin a
+# version (and Dependabot can propose bumps). On every push to main the
+# release_actions.py script works out which action(s) changed, computes the
+# next version from the newest existing <leaf>/vX.Y.Z tag, creates the tag,
+# moves the <leaf>/vX major tag and publishes a GitHub Release. The bump type
+# defaults to patch and can be raised per PR with a release:minor /
+# release:major label (or suppressed with release:skip). See RELEASING.md.
+name: Release actions
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "allowlist-check/**"
+      - "pelican/**"
+      - "stash/**"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Tag prefix to release (allowlist-check, pelican, save, restore). Leave empty to auto-detect from the latest commit."
+        required: false
+        default: ""
+      bump:
+        description: "Version bump to apply"
+        required: true
+        type: choice
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: read
+
+# Serialize releases so concurrent pushes to main can't race on tag creation.
+concurrency:
+  group: release-actions
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          # Credentials are persisted so the script can push tags; full
+          # history + tags are needed to diff the pushed range and to find
+          # the newest existing version tag per action.
+          persist-credentials: true
+          token: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }}  # zizmor: ignore[secrets-outside-env]
+          fetch-depth: 0
+          fetch-tags: true
+
+      - run: pipx install uv
+
+      - name: Configure git identity
+        env:
+          GH_TOKEN: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }}  # zizmor: ignore[secrets-outside-env]
+        run: |
+          AUTHOR_NAME=$(gh api /user --jq '.login' 2>/dev/null || echo "asfgit")
+          AUTHOR_EMAIL=$(gh api /user --jq '.email // "\(.login)@users.noreply.github.com"' 2>/dev/null || echo "asfgit@users.noreply.github.com")
+          git config --local user.name "${AUTHOR_NAME}"
+          git config --local user.email "${AUTHOR_EMAIL}"
+
+      - name: Release changed actions
+        env:
+          GH_TOKEN: ${{ secrets.ALLOWLIST_WORKFLOW_TOKEN || github.token }}  # zizmor: ignore[secrets-outside-env]
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+          INPUT_ACTION: ${{ github.event.inputs.action }}
+          INPUT_BUMP: ${{ github.event.inputs.bump }}
+        run: |
+          set -euo pipefail
+          args=(--repo "${REPO}" --after "${AFTER}" --apply)
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            args+=(--bump "${INPUT_BUMP}")
+            if [ -n "${INPUT_ACTION}" ]; then
+              args+=(--action "${INPUT_ACTION}")
+            fi
+          else
+            args+=(--before "${BEFORE}")
+          fi
+          uv run python scripts/release_actions.py "${args[@]}"
