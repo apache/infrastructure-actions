@@ -77,7 +77,7 @@ runs:
       if: false
     - uses: carabiner-dev/actions/ampel/verify@2a4b2cd115ede14629b03ef7e77586d3269d4c72  # v1.2.3
       if: false
-    - uses: carabiner-dev/actions/install/ampel@2a4b2cd115ede14629b03ef7e77586d3269d4c72  # v1.2.3
+    - uses: carabiner-dev/actions/install/ampel@36a39ef667efe7112df8b1a534a4e37f35fad6fd  # v1.2.6
       if: false
     - uses: carabiner-dev/actions/install/ampel-bootstrap@60563b5460a9e4ae9921c0da551b4ddd6059ff45
       if: false
