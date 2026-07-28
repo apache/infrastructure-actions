@@ -60,8 +60,20 @@ on every push to `main` that touches an action's files. The workflow runs
 2. Picks the bump type (see below).
 3. For each affected action, computes the next version from the newest
    existing `<prefix>/vX.Y.Z` tag (the first release seeds `v1.0.0`), creates
-   the annotated tag, moves the `<prefix>/vN` major tag and publishes a GitHub
-   Release with auto-generated notes.
+   the annotated tag and moves the `<prefix>/vN` major tag.
+
+### Tags only — no GitHub Releases
+
+A release here is **a pair of git tags and nothing else**. No GitHub Release
+object is created.
+
+That is deliberate: Dependabot's `github_actions` ecosystem discovers versions
+by listing *tags* and filtering them by prefix, so a Release is not part of any
+path a consumer or a bump PR depends on. The only thing its absence costs is
+the "Release notes" section of Dependabot's PR body, which is cosmetic.
+
+If GitHub Releases are wanted later, they can be added on top of the existing
+tags without disturbing them.
 
 ### Choosing the bump
 

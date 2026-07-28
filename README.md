@@ -120,6 +120,10 @@ was added to Dependabot in
 [dependabot/dependabot-core#11286](https://github.com/dependabot/dependabot-core/pull/11286),
 contributed specifically for this repository.
 
+A release is the tag pair (`<prefix>/vX.Y.Z` plus the moving `<prefix>/vN`) and
+nothing more — this repo publishes no GitHub Release objects, because
+Dependabot resolves versions from the tags themselves.
+
 Tracking `@main` (as in the quick-start above) also works and always gives you
 the latest code, but it drifts from any pinned SHA and Zizmor will flag the
 unpinned ref. See [RELEASING.md](RELEASING.md) for how releases are cut.
