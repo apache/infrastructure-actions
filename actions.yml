@@ -387,9 +387,6 @@ docker/build-push-action:
   bcafcacb16a39f128d818304e6c9c0c18556b85f:
     tag: v7.1.0
     expires_at: 2026-08-16
-  ca052bb54ab0790a636c9b5f226502c73d547a25:
-    tag: v5.4.0
-    expires_at: 2026-07-28
   f9f3042f7e2789586610d6e8b85c8f03e5195baf:
     tag: v7.2.0
     expires_at: 2026-09-24
@@ -435,9 +432,6 @@ docker/setup-qemu-action:
   ce360397dd3f832beb865e1373c09c0e9f86d70a:
     tag: v4.0.0
     expires_at: 2026-08-19
-  c7c53464625b32c7a7e944ae62b3e17d2b600130:
-    tag: v3.7.0
-    expires_at: 2026-07-28
   06116385d9baf250c9f4dcb4858b16962ea869c3:
     tag: v4.1.0
     expires_at: 2026-09-24
