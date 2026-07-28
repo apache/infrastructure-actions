@@ -173,6 +173,9 @@ carabiner-dev/actions/ampel/verify:
     expires_at: 2026-10-11
   2a4b2cd115ede14629b03ef7e77586d3269d4c72:
     tag: v1.2.3
+    expires_at: 2026-10-20
+  36a39ef667efe7112df8b1a534a4e37f35fad6fd:
+    tag: v1.2.6
 carabiner-dev/actions/install/ampel:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -190,6 +193,9 @@ carabiner-dev/actions/install/ampel:
     expires_at: 2026-10-11
   2a4b2cd115ede14629b03ef7e77586d3269d4c72:
     tag: v1.2.3
+    expires_at: 2026-10-20
+  36a39ef667efe7112df8b1a534a4e37f35fad6fd:
+    tag: v1.2.6
 carabiner-dev/actions/install/ampel-bootstrap:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -224,7 +230,9 @@ carabiner-dev/actions/install/ampel-bootstrap:
     expires_at: 2026-10-19
   619a474b2178d06ccf274349397cd67a7802a4fe:
     expires_at: 2026-10-19
-  60563b5460a9e4ae9921c0da551b4ddd6059ff45: {}
+  60563b5460a9e4ae9921c0da551b4ddd6059ff45:
+    expires_at: 2026-10-20
+  4c23ca5801511c2f0e9dd8c8dd011cab26a46be4: {}
 carabiner-dev/actions/install/bnd:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -242,6 +250,9 @@ carabiner-dev/actions/install/bnd:
     expires_at: 2026-10-11
   2a4b2cd115ede14629b03ef7e77586d3269d4c72:
     tag: v1.2.3
+    expires_at: 2026-10-20
+  36a39ef667efe7112df8b1a534a4e37f35fad6fd:
+    tag: v1.2.6
 carabiner-dev/actions/install/download-and-verify:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -270,7 +281,9 @@ carabiner-dev/actions/install/download-and-verify:
     expires_at: 2026-10-11
   be6b4fa42fa3a8432416475d74218b9aa51ea527:
     expires_at: 2026-10-19
-  60563b5460a9e4ae9921c0da551b4ddd6059ff45: {}
+  60563b5460a9e4ae9921c0da551b4ddd6059ff45:
+    expires_at: 2026-10-20
+  4c23ca5801511c2f0e9dd8c8dd011cab26a46be4: {}
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
@@ -410,6 +423,9 @@ docker/login-action:
     expires_at: 2026-10-16
   abd2ef45e78c5afb21d64d4ca52ee8550d9572c7:
     tag: v4.5.1
+    expires_at: 2026-10-20
+  371161bbe7024a29a25c5e19bfcbc0804fe9ad2c:
+    tag: v4.5.2
 docker/metadata-action:
   030e881283bb7a6894de51c315a6bfe6a94e05cf:
     tag: v6.0.0
@@ -933,6 +949,9 @@ sbt/setup-sbt:
     expires_at: 2026-10-19
   f6db8ab474efba716fc7f04441ab33714e4825af:
     tag: v1.5.4
+    expires_at: 2026-10-20
+  d059c39de700f4cc5cb64f9f56577315e44a984e:
+    tag: v1.5.5
 scacap/action-surefire-report:
   # GH API requests from GH hosted runners fail with 403 and the following error message:
   # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
@@ -1036,6 +1055,9 @@ taiki-e/install-action:
 tcort/github-action-markdown-link-check:
   e7c7a18363c842693fadde5d41a3bd3573a7a225:
     tag: v1.1.2
+    expires_at: 2026-10-20
+  e047c5b37f24ab722bbef1a27b6fab7f96bc4068:
+    tag: v1.1.3
 terraform-linters/setup-tflint:
   b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93:
     tag: v6.2.2
