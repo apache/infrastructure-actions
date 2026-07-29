@@ -196,6 +196,11 @@ carabiner-dev/actions/install/ampel:
     expires_at: 2026-10-20
   36a39ef667efe7112df8b1a534a4e37f35fad6fd:
     tag: v1.2.6
+  # transitive: ampel/verify @ v1.2.6 (36a39ef6) pins its internal action refs
+  # to this untagged commit. Verified carabiner release-bot commit, ancestor of
+  # 36a39ef6.
+  2fec8bd8e1dcfdea26080648070b4827f1fa0584:
+    expires_at: 2026-10-21
 carabiner-dev/actions/install/ampel-bootstrap:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -233,6 +238,12 @@ carabiner-dev/actions/install/ampel-bootstrap:
   60563b5460a9e4ae9921c0da551b4ddd6059ff45:
     expires_at: 2026-10-20
   4c23ca5801511c2f0e9dd8c8dd011cab26a46be4: {}
+  # transitive: install/download-and-verify @ 4c23ca58 pins this ref, and
+  # @ 2fec8bd8 in turn pins 16009dca. Verified carabiner release-bot commits.
+  2fec8bd8e1dcfdea26080648070b4827f1fa0584:
+    expires_at: 2026-10-21
+  16009dca48ac369882d4333f1d15d7cd3a4ded31:
+    expires_at: 2026-10-21
 carabiner-dev/actions/install/bnd:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -284,6 +295,13 @@ carabiner-dev/actions/install/download-and-verify:
   60563b5460a9e4ae9921c0da551b4ddd6059ff45:
     expires_at: 2026-10-20
   4c23ca5801511c2f0e9dd8c8dd011cab26a46be4: {}
+  # transitive: install/{ampel,bnd} @ v1.2.6 (36a39ef6) pin this ref, and
+  # install/ampel @ 2fec8bd8 in turn pins 16009dca. Verified carabiner
+  # release-bot commits.
+  2fec8bd8e1dcfdea26080648070b4827f1fa0584:
+    expires_at: 2026-10-21
+  16009dca48ac369882d4333f1d15d7cd3a4ded31:
+    expires_at: 2026-10-21
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
