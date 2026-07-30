@@ -417,6 +417,9 @@ docker/login-action:
     expires_at: 2026-10-20
   371161bbe7024a29a25c5e19bfcbc0804fe9ad2c:
     tag: v4.5.2
+    expires_at: 2026-10-22
+  dbcb813823bdd20940b903addbd779551569679f:
+    tag: v4.6.0
 docker/metadata-action:
   030e881283bb7a6894de51c315a6bfe6a94e05cf:
     tag: v6.0.0
@@ -750,6 +753,9 @@ mlugg/setup-zig:
 mozilla-actions/sccache-action:
   9e7fa8a12102821edf02ca5dbea1acd0f89a2696:
     tag: v0.0.10
+    expires_at: 2026-10-22
+  fc920bf0ec8de6ee65d409111f7ec508035751ba:
+    tag: v0.0.11
 msys2/setup-msys2:
   '*':
     keep: true
