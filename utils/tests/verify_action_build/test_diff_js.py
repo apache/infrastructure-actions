@@ -123,3 +123,108 @@ class TestDiffJsKeptFiles:
         )
 
         assert result is True
+
+
+class TestDiffJsOnlyInRebuilt:
+    """A file present only in the rebuild is not published by the action, so
+    it never runs on a consumer's runner and cannot be a supply-chain
+    vector.  It is reported but must not fail the JS check.
+
+    The real-world shape is JetBrains/qodana-action: ``main:
+    scan/dist/index.js`` makes OUT_DIR resolve to the whole ``scan/``
+    sub-project (the Dockerfile takes the first path component), so the
+    rebuild's stage-one ``tsc`` output ``scan/lib/*.js`` — gitignored
+    upstream via ``**/lib``, never committed, and consumed only by the
+    ``esbuild`` bundling step that writes ``scan/dist/index.js`` — shows up
+    inside the compared tree.  Before this was informational it hard-failed
+    the check on every qodana-action bump (apache/infrastructure-actions
+    #960, #1123).
+    """
+
+    def _setup_qodana_shape(self, tmp_path: Path) -> tuple[Path, Path]:
+        original = tmp_path / "original-dist"
+        rebuilt = tmp_path / "rebuilt-dist"
+        for base in (original, rebuilt):
+            (base / "dist").mkdir(parents=True)
+            # The published, non-minified esbuild bundle plus a config file:
+            # identical on both sides here so the only difference under test
+            # is the extra intermediate output.
+            (base / "dist" / "index.js").write_text(
+                "// esbuild bundle\n" + "var x = 1;\n" * 50
+            )
+            (base / "jest.config.js").write_text("module.exports = {};\n" * 12)
+        # Stage-one `tsc --build` output (outDir: ./lib), gitignored upstream
+        # and absent from the published tree.
+        (rebuilt / "lib").mkdir()
+        for name in ("annotations", "main", "output", "utils"):
+            (rebuilt / "lib" / f"{name}.js").write_text(
+                f'"use strict";\nexports.{name} = 1;\n' * 20
+            )
+        return original, rebuilt
+
+    def test_intermediate_build_output_does_not_fail(self, tmp_path):
+        original, rebuilt = self._setup_qodana_shape(tmp_path)
+
+        result = diff_js_files(
+            original, rebuilt, "JetBrains", "qodana-action", "b588768b6e7e" * 3,
+            out_dir_name="scan",
+            kept_files={Path("dist/index.js"), Path("jest.config.js")},
+        )
+
+        assert result is True
+
+    def test_only_in_original_still_fails(self, tmp_path):
+        """The inverse case is a real signal: the action publishes JS the
+        rebuild does not produce, so we cannot account for what ships."""
+        original, rebuilt = self._setup_qodana_shape(tmp_path)
+        # Kept short so the rendered diff fits one page — show_colored_diff
+        # pages interactively above ~20 diff lines and would read stdin.
+        (original / "dist" / "extra.js").write_text("// unaccounted for\n")
+
+        result = diff_js_files(
+            original, rebuilt, "JetBrains", "qodana-action", "b588768b6e7e" * 3,
+            out_dir_name="scan",
+            kept_files={Path("dist/index.js"), Path("jest.config.js")},
+        )
+
+        assert result is False
+
+    def test_published_tree_with_no_compiled_js_fails(self, tmp_path):
+        """Guard against the informational handling letting a wholly
+        unverifiable action pass: if the rebuild emits JS but the action
+        publishes none, there is nothing to reconcile against."""
+        original = tmp_path / "original-dist"
+        rebuilt = tmp_path / "rebuilt-dist"
+        original.mkdir()
+        (rebuilt / "lib").mkdir(parents=True)
+        (rebuilt / "lib" / "main.js").write_text("// rebuilt only\n" * 20)
+
+        result = diff_js_files(
+            original, rebuilt, "Org", "Repo", "deadbeef" * 5,
+            out_dir_name="scan",
+        )
+
+        assert result is False
+
+    def test_minified_content_mismatch_still_fails(self, tmp_path):
+        """The downgrade must not weaken the check that matters: a published
+        minified bundle whose content differs from the rebuild is still a
+        hard failure."""
+        original = tmp_path / "original-dist"
+        rebuilt = tmp_path / "rebuilt-dist"
+        (original / "dist").mkdir(parents=True)
+        (rebuilt / "dist").mkdir(parents=True)
+        # One long line, so is_minified() holds (avg line length > 500) while
+        # the beautified diff still fits a single page.
+        (original / "dist" / "index.js").write_text(f'var a = "{"a" * 600}";\n')
+        (rebuilt / "dist" / "index.js").write_text(f'var a = "{"b" * 600}";\n')
+        # Extra intermediate output alongside the real mismatch.
+        (rebuilt / "lib").mkdir()
+        (rebuilt / "lib" / "main.js").write_text("// intermediate\n" * 20)
+
+        result = diff_js_files(
+            original, rebuilt, "Org", "Repo", "deadbeef" * 5,
+            out_dir_name="scan",
+        )
+
+        assert result is False

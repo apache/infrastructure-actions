@@ -256,6 +256,8 @@ A clean result confirms that the compiled JS was built from the declared source.
 
 Non-minified compiled JS (e.g. Deno `deno task bundle` output, Dart `dart compile js` readable output) is handled differently: a clean rebuild for these tends to produce toolchain-version noise (esbuild/ncc/webpack boilerplate differences) rather than actionable diffs. The script keeps these files in place during the pre-rebuild deletion step and instead diffs them against the previously approved version of the action, so reviewers see real source changes rather than rebuild artifacts. The detection threshold mirrors the comparison heuristic — fewer than 10 lines or an average line length above 500 chars is treated as minified.
 
+Files that appear **only in the rebuild** are reported as informational rather than as a failure. The action does not publish them, so they never reach a consumer's runner and cannot be a supply-chain vector. In practice they are intermediate build output from a multi-stage build that upstream deliberately does not commit — for example `JetBrains/qodana-action` declares `main: scan/dist/index.js`, so the output directory resolves to the whole `scan/` sub-project and the rebuild's gitignored `scan/lib/*.js` (stage one of its `tsc` → `esbuild` build) lands inside the compared tree. The inverse remains a hard failure: JS present in the published tree but *absent* from the rebuild is unaccounted-for shipped code, as is a published tree with no compiled JS at all when the rebuild produced some — there is then nothing to reconcile the rebuild against.
+
 #### Security Review Checklist
 
 When reviewing an action (new or updated), watch for these potential issues in the source diff between the approved and new versions:
