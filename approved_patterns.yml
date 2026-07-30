@@ -221,6 +221,7 @@
 - j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d
 - j178/prek-action@e98a699c41eb69ab013a45817a0406469a748f8d
 - j178/prek-action@5337cb91e0fa35a7ff31b9ca345126d8bbbcdf16
+- j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece
 - JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f
 - jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5
 - jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db
@@ -328,6 +329,7 @@
 - sbt/setup-sbt@6444f4c8111de4b9059c3975def104b03cfaa5f0
 - sbt/setup-sbt@f6db8ab474efba716fc7f04441ab33714e4825af
 - sbt/setup-sbt@d059c39de700f4cc5cb64f9f56577315e44a984e
+- sbt/setup-sbt@bfea3c5f48abd221b04a6df4798aa5eb8b6a2baf
 - scacap/action-surefire-report@*
 - scacap/action-surefire-report@fa13579fdd93ed8fc7e717a25eceedcfcbc39dda
 - scacap/action-surefire-report@3dacff26879cd2a7f2160d101254032a3707fe6f

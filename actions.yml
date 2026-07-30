@@ -632,6 +632,9 @@ j178/prek-action:
     expires_at: 2026-10-11
   5337cb91e0fa35a7ff31b9ca345126d8bbbcdf16:
     tag: v2.0.6
+    expires_at: 2026-10-22
+  4e14d07f9231acabce116ccfca13b13dd9755ece:
+    tag: v3.0.0
 JamesIves/github-pages-deploy-action:
   d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
     tag: v4.8.0
@@ -952,6 +955,9 @@ sbt/setup-sbt:
     expires_at: 2026-10-20
   d059c39de700f4cc5cb64f9f56577315e44a984e:
     tag: v1.5.5
+    expires_at: 2026-10-22
+  bfea3c5f48abd221b04a6df4798aa5eb8b6a2baf:
+    tag: v1.5.6
 scacap/action-surefire-report:
   # GH API requests from GH hosted runners fail with 403 and the following error message:
   # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
