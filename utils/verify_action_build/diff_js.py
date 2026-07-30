@@ -63,6 +63,18 @@ def diff_js_files(
     they're non-minified bundles where a clean rebuild produces toolchain-
     version noise rather than actionable diffs, and are verified by the
     approved-vs-new source diff section instead.
+
+    Files present *only in the rebuild* are reported but do not fail the
+    check: a file the action does not publish never reaches a consumer's
+    runner, so it cannot be a supply-chain vector.  They are usually
+    intermediate build output that upstream deliberately does not commit —
+    e.g. JetBrains/qodana-action declares ``main: scan/dist/index.js``, so
+    OUT_DIR resolves to the whole ``scan/`` sub-project and the rebuild's
+    gitignored ``scan/lib/*.js`` (stage one of its ``tsc`` → ``esbuild``
+    build) lands in the compared tree.  Files only in the *original* remain
+    a hard failure, as does an original tree with no compiled JS at all
+    while the rebuild produced some — there is nothing published to
+    reconcile the rebuild against.
     """
     blob_url = f"https://github.com/{org}/{repo}/blob/{commit_hash}"
     kept_files = kept_files or set()
@@ -86,6 +98,18 @@ def diff_js_files(
     console.rule(f"[bold]Comparing {len(all_files)} JavaScript file(s)[/bold]")
 
     all_match = True
+
+    # The rebuild produced compiled JS but the published tree has none, so
+    # every file below is "only in rebuilt" and nothing can be reconciled
+    # against what actually ships.  Without this guard the per-file
+    # informational handling would let such an action pass unverified.
+    if not original_files and rebuilt_files:
+        console.print(
+            f"  [red]✗[/red] [red bold]No compiled JavaScript in the published "
+            f"{out_dir_name}/ to compare against[/red bold] — the rebuild produced "
+            f"{len(rebuilt_files)} file(s) but the action publishes none"
+        )
+        all_match = False
 
     def is_minified(content: str) -> bool:
         """Check if JS content appears to be minified."""
@@ -136,11 +160,13 @@ def diff_js_files(
             continue
 
         if rel_path not in original_files:
-            console.print(f"  [green]+[/green] {file_link} [dim](only in rebuilt)[/dim]")
-            with console.status(f"[dim]Beautifying {rel_path}...[/dim]"):
-                built_content = beautify_js(built_file.read_text(errors="replace"))
-            show_colored_diff(rel_path, "", built_content)
-            all_match = False
+            # Not published, so it never runs on a consumer's runner and
+            # cannot be a supply-chain vector.  Report it and move on — the
+            # content diff would just be a full dump of a file nobody ships.
+            console.print(
+                f"  [green]+[/green] {file_link} [dim](only in rebuilt — not published "
+                f"by the action; intermediate build output, informational)[/dim]"
+            )
             continue
 
         if rel_path not in rebuilt_files:
