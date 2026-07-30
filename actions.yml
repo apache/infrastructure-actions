@@ -95,9 +95,6 @@ awalsh128/cache-apt-pkgs-action:
   '*':
     keep: true
 aws-actions/configure-aws-credentials:
-  ec61189d14ec14c8efccab744f656cffd0e33f37:
-    tag: v6.1.0
-    expires_at: 2026-07-30
   d979d5b3a71173a29b74b5b88418bfda9437d885:
     tag: v6.1.1
     expires_at: 2026-08-20
@@ -382,9 +379,6 @@ dlang-community/setup-dlang:
   '*':
     keep: true
 docker/bake-action:
-  aefd381cbaa93c62a1e8b02194ae420cc36269d2:
-    tag: v4.7.0
-    expires_at: 2026-07-30
   a66e1c87e2eca0503c343edf1d208c716d54b8a8:
     tag: v7.1.0
     expires_at: 2026-08-16
