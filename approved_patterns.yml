@@ -331,7 +331,6 @@
 - sbt/setup-sbt@d059c39de700f4cc5cb64f9f56577315e44a984e
 - sbt/setup-sbt@bfea3c5f48abd221b04a6df4798aa5eb8b6a2baf
 - scacap/action-surefire-report@*
-- scacap/action-surefire-report@fa13579fdd93ed8fc7e717a25eceedcfcbc39dda
 - scacap/action-surefire-report@3dacff26879cd2a7f2160d101254032a3707fe6f
 - scalacenter/sbt-dependency-submission@f43202114d7522a4b233e052f82c2eea8d658134
 - scalacenter/sbt-dependency-submission@1cc96a7038ea2b014c200c1dae3a0cc92293b91d
