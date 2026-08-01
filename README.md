@@ -355,19 +355,23 @@ This repository uses a [Dependabot cooldown period](https://docs.github.com/en/c
 If you need to add a specific version of an already approved action (especially an older one):
 
 1. **Fork** this repository
-2. **Add** a new version entry to an existing action in `actions.yml` with the following format:
+2. **Add** a new version entry to an existing action in `actions.yml`. Choose its metadata based on
+   why the version is needed.
+
+For the newest version:
 
 ```yaml
 existing/action:
   '<exact-commit-sha>':
-    keep: true
     tag: vX.Y.Z
 ```
 
-if this is the newest version of the action (make sure to remove the `keep: true` from the
-previously newest version and add `expires_at: <date>` to it, if you want to set an expiration date for it),
+The current version must have neither `keep` nor `expires_at`, so that it is included in the
+composite action watched by Dependabot. Each action must have at most one such version. When adding
+a new current version manually, add `expires_at: <date>` to the previous current version to give
+projects time to migrate.
 
-or
+For an older version that is needed temporarily:
 
 ```yaml
 existing/action:
@@ -376,7 +380,20 @@ existing/action:
     tag: vX.Y.Z
 ```
 
-If you add older version of the action and want to set an expiration date for it.
+Use `keep: true` only as an exceptional alternative when an older version must remain available
+indefinitely:
+
+```yaml
+existing/action:
+  '<exact-commit-sha>':
+    # Explain why this version must remain available indefinitely.
+    keep: true
+    tag: vX.Y.Z
+```
+
+A reference with `keep: true` is retained indefinitely and is not watched for updates by
+Dependabot. To keep the action updated, it must also have a separate current version with neither
+`keep` nor `expires_at`. Never set both `keep` and `expires_at` on the same reference.
 
 
 3. **Create a PR** against the `main` branch
