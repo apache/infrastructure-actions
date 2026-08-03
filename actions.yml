@@ -954,6 +954,9 @@ sbt/setup-sbt:
     expires_at: 2026-10-22
   bfea3c5f48abd221b04a6df4798aa5eb8b6a2baf:
     tag: v1.5.6
+ScalableCapital/action-surefire-report:
+  3b3f3f1178bc72d43fe062d5eb7fc316ee1663eb:
+    tag: v2.0.4
 scalacenter/sbt-dependency-submission:
   f43202114d7522a4b233e052f82c2eea8d658134:
     tag: v3.2.1
