@@ -35,6 +35,20 @@ before sending.
 - `uv` installed (the verify-action-build CLI is invoked through it).
 - For node-action JS rebuilds: Docker running.
 
+### Environment gotchas
+
+`verify_action_build` shells out to `gh` and `docker`, so it needs both to
+work *from a child process* — not just from your own shell. Two setups break
+that, and both surface as errors that point away from the real cause:
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `Error: could not fetch diff for PR #<N>`, or `HTTP 401: Requires authentication` from a nested `gh` call, while `gh auth status` reports a healthy login | `gh` stores its token in the OS keyring (`gh auth status` says `Logged in to github.com account <user> (keyring)`). Keyring access can be lost in a child process or under a sandbox, so the nested `gh pr diff` authenticates as nobody | Pass the token explicitly: `GITHUB_TOKEN=$(gh auth token) uv run python -m verify_action_build ...`, or run outside the sandbox |
+| `Error: docker is required but not found in PATH` while Docker Desktop is running | Docker Desktop installs its CLI under `~/.docker/bin`, which may be outside `PATH` or a sandbox-denied read path | Prepend the CLI shipped in the app bundle: `PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"` (macOS) |
+
+Confirm the keyring case before chasing it — `bash -c 'gh auth status'`
+failing while a direct `gh auth status` succeeds is the tell.
+
 ## Workflow
 
 ### 1. Read the PR
@@ -281,3 +295,4 @@ future runs can cite a precedent instead of re-deriving the analysis.
 | #944 / #960 | `JetBrains/qodana-action@v2026.1.3` (node24 action) ships `gradle/wrapper/gradle-wrapper.jar`; the in-tree binary check scans the whole repo and false-flagged it, but that jar is Gradle build tooling — never executed on a consumer's runner — and is checksum-verifiable in its own right (`gradle/wrapper-validation-action`) | E | Fix in PR #951 (path-suffix exemption for the canonical `gradle/wrapper/gradle-wrapper.jar`); also nudged upstream to drop the committed jar via JetBrains/qodana-action#605 |
 | #1123 | `JetBrains/qodana-action@v2026.2.0` — `JS build verification ✗` whose entire content was 4 files **only in the rebuild** (`lib/{annotations,main,output,utils}.js`). Two-stage build: `tsc --build` (`outDir: ./lib`) → `esbuild lib/main.js --bundle --outfile=dist/index.js`. `main: scan/dist/index.js` makes the Dockerfile's `cut -d'/' -f1` resolve OUT_DIR to the whole `scan/` sub-project, so stage-one output — gitignored upstream via `**/lib`, never committed — lands in the compared tree. **#960 hit this too and was merged over it; only the gradle-jar half got fixed in #951.** Also burns a pointless approved-lock-file retry rebuild | E | Fixed by treating only-in-rebuilt files as informational (not published → never runs on a consumer's runner → not a supply-chain vector), keeping only-in-original a hard failure and guarding the no-published-JS case. Action itself clean: dist bundle maps 1:1 to the TS source diff, `common/cli.json` checksums bumped in lockstep |
 | #1013 | `jdx/mise-action@5228313` (v3.6.3, node20) — clean all-pass: dist matches rebuild, LICENSE + lockfile present, and its `curl \| tar` fetch of the mise binary is **not** flagged (verifier reports "no binary downloads detected" — it's the tool pulling its own tarball from its official pinned release). Checksum verification is opt-in only (`sha256` input, from mise-action#185), off by default | clean (soft D note) | Approved. Gentle hardening issue mise-action#547: verify by default via a **signature against a pinned key** (mise's `minisign.pub`, key `64113EDF160FDEC2`, stable since Dec 2024), not a same-source `SHASUMS256.txt` — a checksum fetched from the same release as the binary is integrity, not authenticity, and can't cover the `mise.jdx.dev` CDN path. **Outcome: upstream accepted and fixed it same-day in mise-action#548 (signed-checksum verification); #547 closed completed** |
+| #1133 / #1134 | `pypa/gh-action-pypi-publish` v1.13.0→v1.14.2 (composite) and `hadolint/hadolint-action` v3.3.0→v3.4.0 (docker) — both clean all-pass, each with the single warning `Dockerfile FROM <image> is tag-pinned, not digest-pinned`. In both cases the **already-approved prior version carries the identical shape**, so the warning is a standing property of the action, not something the bump introduced. pypi-publish's `oidc-exchange.py` looks alarming at +83/-15 but is ~90% type annotations; the substantive edits are hardening (`os.getenv()`→`os.environ[]`, explicit `IdentityError` when `detect_credential()` returns `None`, `format_map(locals())`→explicit kwargs), with no new endpoints and no change to the token-exchange flow | clean (soft D note) | Approved and merged. **Rule of thumb: for a tag-pinned-base-image warning, diff against the approved version before treating it as a finding — carried-over warnings are not regressions.** Worth tracking as a general hardening theme (digest-pinning base images) rather than blocking individual bumps |
