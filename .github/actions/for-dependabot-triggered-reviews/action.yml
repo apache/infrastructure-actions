@@ -197,7 +197,7 @@ runs:
       if: false
     - uses: matlab-actions/run-tests@83e368e0b18d9c0c7d510fd911d546e16b73bbdb  # v3.2.1
       if: false
-    - uses: matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f  # v3.0.1
+    - uses: matlab-actions/setup-matlab@2323adb8243827ea460b0def4c413545aaec46a9  # v3.0.2
       if: false
     - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29  # v2.2.1
       if: false
