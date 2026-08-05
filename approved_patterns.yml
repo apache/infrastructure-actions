@@ -125,7 +125,6 @@
 - commit-check/commit-check-action@bbb6580f01838e475563514f115ec7ef41c9ddc7
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
-- coursier/cache-action@90c37294538be80a558fd665531fcdc2b467b475
 - coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d
 - coursier/setup-action@*
 - coursier/setup-action@fd1707a76b027efdfb66ca79318b4d29b72e5a02
@@ -262,6 +261,7 @@
 - manusa/actions-setup-minikube@b65276017fdec6f1e6498129fb740e34e260dc55
 - matlab-actions/run-tests@4c375221b861dd3f7ea9b31704a3cf45d35073f1
 - matlab-actions/run-tests@ae0e80cb44fdec28d35d0831d8acf38ee4fdf91a
+- matlab-actions/run-tests@83e368e0b18d9c0c7d510fd911d546e16b73bbdb
 - matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f
 - maxim-lobanov/setup-xcode@*
 - medyagh/setup-minikube@*
