@@ -768,6 +768,9 @@ matlab-actions/run-tests:
 matlab-actions/setup-matlab:
   a0180c939fb1a28de13f44f7b778b912384ced1f:
     tag: v3.0.1
+    expires_at: 2026-10-28
+  2323adb8243827ea460b0def4c413545aaec46a9:
+    tag: v3.0.2
 maxim-lobanov/setup-xcode:
   '*':
     keep: true
