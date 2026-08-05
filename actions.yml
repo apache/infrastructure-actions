@@ -39,6 +39,9 @@
     expires_at: 2026-10-19
   eb2efd0703da22a93c467f2d1ffbb6826c11e19c:
     tag: v4.1.1
+    expires_at: 2026-10-28
+  e544b780808654ba8ceba5fb2fe2897103d92ff4:
+    tag: v5.0.0
 actions-cool/check-user-permission:
   c21884f3dda18dafc2f8b402fe807ccc9ec1aa5e:
     tag: v2.4.0
