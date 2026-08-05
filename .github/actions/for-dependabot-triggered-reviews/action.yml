@@ -149,7 +149,7 @@ runs:
       if: false
     - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92  # v6.2.0
       if: false
-    - uses: gradle/actions/wrapper-validation@3f131e8634966bd73d06cc69884922b02e6faf92  # v6.2.0
+    - uses: gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb  # v6.3.0
       if: false
     - uses: gradle/develocity-actions/maven-publish-build-scan@0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642  # v2.2
       if: false
