@@ -612,9 +612,6 @@ hadolint/hadolint-action:
   2a66e89f53d0771bb131a7fa31f3136336094aa6:
     tag: v3.4.0
 hashicorp/setup-terraform:
-  5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85:
-    tag: v4.0.0
-    expires_at: 2026-08-06
   dfe3c3f87815947d99a8997f908cb6525fc44e9e:
     tag: v4.0.1
 helm/chart-releaser-action:

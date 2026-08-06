@@ -213,7 +213,6 @@
 - gradle/develocity-actions/setup-maven@0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642
 - hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5
 - hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6
-- hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85
 - hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
 - helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f
 - helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f
