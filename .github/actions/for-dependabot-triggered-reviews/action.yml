@@ -99,7 +99,7 @@ runs:
       if: false
     - uses: damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
       if: false
-    - uses: dart-lang/setup-dart@65eb853c7ba17dde3be364c3d2858773e7144260  # v1.7.2
+    - uses: dart-lang/setup-dart@7654d458321ee25acccccfdb86cd48bd95768ff1  # v1.8.0
       if: false
     - uses: DavidAnson/markdownlint-cli2-action@6bf21b07787794f89a243495939cd651942aeabe  # v24.1.0
       if: false
