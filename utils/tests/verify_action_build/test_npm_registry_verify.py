@@ -30,6 +30,8 @@ from verify_action_build.npm_registry_verify import (
     _git_blob_sha1,
     _integrity_matches,
     _tarball_files,
+    normalize_package_json,
+    strip_npm_install_metadata,
     verify_vendored_node_modules,
 )
 
@@ -91,6 +93,18 @@ def _run(tree, lockfile_bytes, tarballs=None, truncated=False):
         return verify_vendored_node_modules("org", "repo", "deadbeef")
 
 
+def _run_with_files(tree, files, tarballs=None):
+    """Like :func:`_run`, but serves committed file bytes per path.
+
+    Needed once a check fetches a committed file (not just the lockfile).
+    """
+    tarballs = tarballs or {PKG_URL: PKG_TGZ}
+    with mock.patch.object(nrv, "_fetch_tree_with_sha", return_value=(tree, False)), \
+         mock.patch.object(nrv, "_fetch_lockfile", side_effect=lambda o, r, c, p: files.get(p)), \
+         mock.patch.object(nrv, "_download_tarball", side_effect=lambda url: tarballs.get(url)):
+        return verify_vendored_node_modules("org", "repo", "deadbeef")
+
+
 class TestHelpers:
     def test_git_blob_sha1_known_value(self):
         # git hash-object of an empty blob is well-known.
@@ -110,6 +124,63 @@ class TestHelpers:
         out = _tarball_files(PKG_TGZ)
         assert out == PKG_FILES
 
+    def test_strip_npm_install_metadata_drops_underscore_keys(self):
+        # npm's install bookkeeping is _-prefixed by convention; the exact
+        # set has varied across npm versions, so match the prefix.
+        assert strip_npm_install_metadata({
+            "name": "tunnel", "version": "0.0.6",
+            "_args": [["tunnel@0.0.6", "."]], "_location": "/tunnel",
+            "_resolved": "https://registry.npmjs.org/tunnel/-/tunnel-0.0.6.tgz",
+        }) == {"name": "tunnel", "version": "0.0.6"}
+        # Nothing else is touched.
+        assert strip_npm_install_metadata({"name": "x"}) == {"name": "x"}
+
+    def test_normalize_package_json_shorthand_fields(self):
+        # Exact shapes from tunnel@0.0.6 as vendored by
+        # reactivecircus/android-emulator-runner@a421e438 vs the published
+        # tarball.  npm's normalize-package-data expands author/bugs and
+        # prefixes repository.url with "git+" at install time.
+        published = {
+            "name": "tunnel",
+            "version": "0.0.6",
+            "author": "Koichi Kobayashi <koichik@improvement.jp>",
+            "bugs": "https://github.com/koichik/node-tunnel/issues",
+            "repository": {
+                "type": "git",
+                "url": "https://github.com/koichik/node-tunnel.git",
+            },
+        }
+        installed = {
+            "name": "tunnel",
+            "version": "0.0.6",
+            "author": {"name": "Koichi Kobayashi", "email": "koichik@improvement.jp"},
+            "bugs": {"url": "https://github.com/koichik/node-tunnel/issues"},
+            "repository": {
+                "type": "git",
+                "url": "git+https://github.com/koichik/node-tunnel.git",
+            },
+            "_location": "/tunnel",
+        }
+        assert normalize_package_json(installed) == normalize_package_json(published)
+
+    def test_normalize_package_json_leaves_runtime_fields_strict(self):
+        # Fields that decide what actually runs are compared as-is.
+        base = {"name": "foo", "version": "1.0.0"}
+        assert normalize_package_json({**base, "main": "./index.js"}) != \
+            normalize_package_json({**base, "main": "./evil.js"})
+        assert normalize_package_json({**base, "scripts": {"postinstall": "x"}}) != \
+            normalize_package_json(base)
+        assert normalize_package_json({**base, "dependencies": {"a": "1"}}) != \
+            normalize_package_json({**base, "dependencies": {"a": "2"}})
+
+    def test_normalize_person_handles_name_only_and_url(self):
+        assert normalize_package_json({"author": "Jane Doe"})["author"] == {"name": "Jane Doe"}
+        assert normalize_package_json(
+            {"author": "Jane Doe <j@example.com> (https://example.com)"}
+        )["author"] == {
+            "name": "Jane Doe", "email": "j@example.com", "url": "https://example.com",
+        }
+
 
 class TestVerify:
     def test_no_vendored_lockfile_returns_none(self):
@@ -122,6 +193,46 @@ class TestVerify:
         assert result.ok is True
         assert result.verified == ["foo"]
         assert not result.mismatched and not result.extra and not result.errors
+
+    def test_package_json_install_metadata_is_not_a_mismatch(self):
+        # reactivecircus/android-emulator-runner@a421e438 vendors a
+        # node_modules installed with npm v6-era tooling, so every
+        # package.json carries _args/_location/... that the registry tarball
+        # never had.  Byte comparison alone reported the package modified.
+        installed = json.dumps({
+            "name": "foo", "version": "1.0.0",
+            "_args": [["foo@1.0.0", "."]],
+            "_location": "/foo",
+            "_resolved": PKG_URL,
+            "_integrity": _integrity(PKG_TGZ),
+        }).encode()
+        tree = _tree_for(PKG_FILES)
+        tree["node_modules/foo/package.json"] = _git_blob_sha1(installed)
+
+        result = _run_with_files(tree, {
+            "node_modules/.package-lock.json": _lock(),
+            "node_modules/foo/package.json": installed,
+        })
+        assert result.ok is True
+        assert result.verified == ["foo"]
+        assert not result.mismatched
+
+    def test_package_json_real_change_still_mismatches(self):
+        # Precision guard: normalising _-prefixed keys must not hide an edit
+        # to a field that changes what actually runs.
+        tampered = json.dumps({
+            "name": "foo", "version": "1.0.0", "main": "./evil.js",
+            "_resolved": PKG_URL,
+        }).encode()
+        tree = _tree_for(PKG_FILES)
+        tree["node_modules/foo/package.json"] = _git_blob_sha1(tampered)
+
+        result = _run_with_files(tree, {
+            "node_modules/.package-lock.json": _lock(),
+            "node_modules/foo/package.json": tampered,
+        })
+        assert result.ok is False
+        assert "node_modules/foo/package.json" in result.mismatched
 
     def test_content_mismatch_fails(self):
         tree = _tree_for(PKG_FILES)

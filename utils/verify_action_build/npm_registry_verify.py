@@ -49,6 +49,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import tarfile
 
 import requests
@@ -93,6 +94,90 @@ class NpmRegistryResult:
             and not self.extra
             and not self.errors
         )
+
+
+def strip_npm_install_metadata(obj: dict) -> dict:
+    """Drop npm's install-time metadata keys from a parsed ``package.json``.
+
+    npm writes bookkeeping into each installed package's ``package.json``
+    that is absent from the registry tarball and from a modern ``npm ci``
+    rebuild: ``_args``, ``_from``, ``_id``, ``_inBundle``, ``_integrity``,
+    ``_location``, ``_phantomChildren``, ``_requested``, ``_requiredBy``,
+    ``_resolved``, ``_shasum``, ``_spec``, ``_where``.  The exact set has
+    varied across npm versions, so match the reserved ``_`` prefix rather
+    than enumerating — an enumeration missed ``_args`` and ``_location``
+    and false-flagged reactivecircus/android-emulator-runner, whose
+    vendored tree was installed with npm v6-era tooling.
+
+    Only ``_``-prefixed keys are dropped; npm ignores unknown fields at
+    runtime, so this cannot mask a behavioural difference.
+    """
+    return {k: v for k, v in obj.items() if not k.startswith("_")}
+
+
+# "Name <email> (url)", npm's shorthand for a person object.
+_PERSON_RE = re.compile(
+    r"^\s*(?P<name>[^<(]*?)\s*"
+    r"(?:<(?P<email>[^>]*)>)?\s*"
+    r"(?:\((?P<url>[^)]*)\))?\s*$"
+)
+
+
+def _normalize_person(value: object) -> object:
+    """Expand npm's person shorthand string into its object form."""
+    if not isinstance(value, str):
+        return value
+    match = _PERSON_RE.match(value)
+    if not match:
+        return value
+    out = {k: v for k, v in match.groupdict().items() if v}
+    return out or value
+
+
+def _normalize_repository(value: object) -> object:
+    """Canonicalise a ``repository`` field.
+
+    npm records the URL with a ``git+`` scheme prefix that the published
+    manifest often omits.
+    """
+    if isinstance(value, str):
+        value = {"url": value}
+    if isinstance(value, dict) and isinstance(value.get("url"), str):
+        value = dict(value)
+        url = value["url"]
+        if url.startswith("git+"):
+            value["url"] = url[len("git+"):]
+    return value
+
+
+def normalize_package_json(obj: dict) -> dict:
+    """Normalise a ``package.json`` for comparison across install states.
+
+    On install, npm runs the published manifest through
+    ``normalize-package-data``, which rewrites shorthand forms in place:
+    ``author``/``contributors``/``maintainers`` strings become person
+    objects, ``bugs`` becomes ``{"url": ...}``, and ``repository.url``
+    gains a ``git+`` prefix.  A vendored ``node_modules`` therefore holds
+    the *normalised* manifest while the registry tarball and a fresh
+    rebuild hold the *published* one — a difference in representation, not
+    in what the package does.
+
+    Combined with :func:`strip_npm_install_metadata`.  Fields this does
+    not recognise are left untouched and still compared strictly, so an
+    edit to ``main``, ``bin``, ``scripts`` or a dependency still fails.
+    """
+    out = strip_npm_install_metadata(obj)
+    for key in ("author",):
+        if key in out:
+            out[key] = _normalize_person(out[key])
+    for key in ("contributors", "maintainers"):
+        if isinstance(out.get(key), list):
+            out[key] = [_normalize_person(p) for p in out[key]]
+    if "bugs" in out and isinstance(out["bugs"], str):
+        out["bugs"] = {"url": out["bugs"]}
+    if "repository" in out:
+        out["repository"] = _normalize_repository(out["repository"])
+    return out
 
 
 def _git_blob_sha1(data: bytes) -> str:
@@ -191,6 +276,27 @@ def _tarball_files(data: bytes) -> dict[str, bytes]:
                 continue
             files[rel] = extracted.read()
     return files
+
+
+def _package_json_equivalent(
+    org: str, repo: str, commit_hash: str, path: str, published: bytes,
+) -> bool:
+    """Return True if the committed ``package.json`` at ``path`` differs
+    from the registry tarball's copy only by npm install metadata.
+
+    Fetched lazily — only once a byte comparison has already failed.
+    """
+    raw = _fetch_lockfile(org, repo, commit_hash, path)
+    if raw is None:
+        return False
+    try:
+        committed_json = json.loads(raw)
+        published_json = json.loads(published)
+    except ValueError:
+        return False
+    if not isinstance(committed_json, dict) or not isinstance(published_json, dict):
+        return False
+    return normalize_package_json(committed_json) == normalize_package_json(published_json)
 
 
 def _is_noisy(rel_path: str) -> bool:
@@ -302,6 +408,10 @@ def verify_vendored_node_modules(
             if committed_sha is None:
                 continue  # tarball ships a file the repo omits — benign
             if committed_sha != _git_blob_sha1(content):
+                if rel.split("/")[-1] == "package.json" and _package_json_equivalent(
+                    org, repo, commit_hash, prefix + committed_path, content,
+                ):
+                    continue  # differs only by npm's install-time metadata
                 result.mismatched.append(committed_path)
                 pkg_ok = False
         if pkg_ok:
@@ -323,7 +433,9 @@ def verify_vendored_node_modules(
 
 def _render(result: NpmRegistryResult, org: str, repo: str, commit_hash: str) -> None:
     """Print a per-category summary of the registry check."""
-    blob = f"https://github.com/{org}/{repo}/tree/{commit_hash}/node_modules"
+    # Paths in ``mismatched`` / ``extra`` already start with ``node_modules/``,
+    # so the base stops at the commit tree root.
+    blob = f"https://github.com/{org}/{repo}/tree/{commit_hash}"
     if result.verified:
         console.print(
             f"  [green]✓[/green] {len(result.verified)} package(s) match "
@@ -339,7 +451,12 @@ def _render(result: NpmRegistryResult, org: str, repo: str, commit_hash: str) ->
             + (" …" if len(result.skipped) > 8 else "")
         )
     for path in result.mismatched:
-        console.print(f"  [red]✗[/red] {link(path, f'{blob}')} — content differs from registry tarball")
+        # link() takes (url, text) — naming the offending file matters more
+        # than linking the tree root, which told a reviewer nothing.
+        console.print(
+            f"  [red]✗[/red] {link(f'{blob}/{path}', path)}"
+            f" — content differs from registry tarball"
+        )
     for path in result.extra:
         console.print(f"  [red]✗[/red] {path} — present in repo but not in the verified package tarball")
     for err in result.errors:
