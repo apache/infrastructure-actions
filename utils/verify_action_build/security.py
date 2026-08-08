@@ -961,7 +961,6 @@ def analyze_action_metadata(
                 console.print(f"    [dim]{line.strip()[:100]}[/dim]")
                 warnings.append(f"action.yml line {i}: {desc}")
 
-    in_run_block = False
     dangerous_shell_patterns = [
         (r"curl\s+.*\|\s*(ba)?sh", "pipe-to-shell (curl | sh) — high risk"),
         (r"wget\s+.*\|\s*(ba)?sh", "pipe-to-shell (wget | sh) — high risk"),
@@ -972,24 +971,47 @@ def analyze_action_metadata(
     ]
 
     shell_findings: list[tuple[int, str, str]] = []
+
+    def scan_shell_line(line_num: int, raw: str, snippet: str) -> None:
+        for pattern, desc in dangerous_shell_patterns:
+            if desc is None:
+                continue
+            if re.search(pattern, raw):
+                shell_findings.append((line_num, desc, snippet[:100]))
+
+    in_run_block = False
+    run_key_indent = 0
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
-        if re.match(r"run:\s*\|", stripped) or re.match(r"run:\s+\S", stripped):
-            in_run_block = True
+        # Blank lines are part of a block scalar, so they never close one.
+        if not stripped:
             continue
-        if in_run_block:
-            if stripped and not line[0].isspace():
-                in_run_block = False
-            elif stripped and re.match(r"\s+\w+:", line) and not line.startswith("        "):
-                if not stripped.startswith("#") and not stripped.startswith("-"):
-                    in_run_block = False
+        indent = len(line) - len(line.lstrip())
 
-        if in_run_block or (re.match(r"\s+run:\s+", line)):
-            for pattern, desc in dangerous_shell_patterns:
-                if desc is None:
-                    continue
-                if re.search(pattern, line):
-                    shell_findings.append((i, desc, stripped[:100]))
+        # `run: |` (or `>`) opens a block scalar whose body must be indented
+        # deeper than the `run:` key itself.
+        if re.match(r"(?:-\s+)?run:\s*[|>][-+\d]*\s*$", stripped):
+            in_run_block = True
+            run_key_indent = indent
+            continue
+
+        # `run: some-command` is self-contained: scan the command on this
+        # line, but do not treat what follows as shell body.
+        if re.match(r"(?:-\s+)?run:\s+\S", stripped):
+            in_run_block = False
+            scan_shell_line(i, line, stripped)
+            continue
+
+        # Content at or left of the `run:` key closes the block scalar. This
+        # is what keeps sibling keys out of the shell body -- notably `env:`,
+        # where binding an input to an environment variable is the
+        # recommended way to keep it out of the script text. Scanning those
+        # lines reports the mitigation as if it were the injection.
+        if in_run_block and indent <= run_key_indent:
+            in_run_block = False
+
+        if in_run_block:
+            scan_shell_line(i, line, stripped)
 
     if shell_findings:
         seen: set[str] = set()

