@@ -324,9 +324,6 @@ codelytv/pr-size-labeler:
   '*':
     keep: true
 commit-check/commit-check-action:
-  7c158d4541309c5952de3343151750882b036d10:
-    tag: v2.6.0
-    expires_at: 2026-08-08
   2239d8980732e84a380552fdd71e1d49e149baf3:
     tag: v2.6.1
     expires_at: 2026-08-16
@@ -648,9 +645,6 @@ italia/publiccode-parser-action:
   21086c73ec0563e14c6748787efa1b34b025ad8c:
     tag: v1.5.1
 j178/prek-action:
-  6ad80277337ad479fe43bd70701c3f7f8aa74db3:
-    tag: v2.0.3
-    expires_at: 2026-08-08
   bdca6f102f98e2b4c7029491a53dfd366469e33d:
     tag: v2.0.4
     expires_at: 2026-09-23
@@ -994,9 +988,6 @@ sbt/setup-sbt:
   bfea3c5f48abd221b04a6df4798aa5eb8b6a2baf:
     tag: v1.5.6
 scalacenter/sbt-dependency-submission:
-  f43202114d7522a4b233e052f82c2eea8d658134:
-    tag: v3.2.1
-    expires_at: 2026-08-08
   1cc96a7038ea2b014c200c1dae3a0cc92293b91d:
     tag: v3.2.2
     expires_at: 2026-08-20
