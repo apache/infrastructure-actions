@@ -486,9 +486,15 @@ dorny/test-reporter:
   a43b3a5f7366b97d083190328d2c652e1a8b6aa2:
     tag: v3.0.0
 dtolnay/rust-toolchain:
+  # Deliberately carries no `tag:` annotation. Upstream publishes `stable` as a
+  # rolling branch that is force-pushed on each toolchain release, so a SHA
+  # annotated with it stops being an ancestor of that branch and makes
+  # check_action_tags hard-fail every PR in this repo, not just ones touching
+  # this entry. The commit itself is immutable and still valid to pin; moving
+  # to whatever `stable` points at now is a version bump and needs its own
+  # review rather than being smuggled in as a CI fix.
   4cda84d5c5c54efe2404f9d843567869ab1699d4:
     keep: true
-    tag: stable
 easimon/maximize-build-space:
   '*':
     keep: true
