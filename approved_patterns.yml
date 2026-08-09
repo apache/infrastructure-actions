@@ -240,6 +240,7 @@
 - JetBrains/qodana-action@b588768b6e7e6da579e518bc584f79de0d243692
 - jidicula/clang-format-action@*
 - Jimver/cuda-toolkit@3d45d157f327c09c04b50ee6ccdea2d9d017ec76
+- Jimver/cuda-toolkit@b8bf9c6c28f8a92fbb04dcfcaee872e60c57462d
 - jlumbroso/free-disk-space@*
 - jrouly/scalafmt-native-action@*
 - jrouly/scalafmt-native-action@a9c8e1032a02004c425d53ef8ce420fe2179eba7
