@@ -387,6 +387,9 @@ DavidAnson/markdownlint-cli2-action:
     expires_at: 2026-10-11
   6bf21b07787794f89a243495939cd651942aeabe:
     tag: v24.1.0
+    expires_at: 2026-11-01
+  21c1be1b93ad9ed58fa840aacc3f279cde2a72ff:
+    tag: v24.2.0
 dawidd6/action-download-artifact:
   '*':
     keep: true
@@ -573,6 +576,9 @@ gradle/actions/dependency-submission:
     expires_at: 2026-09-05
   3f131e8634966bd73d06cc69884922b02e6faf92:
     tag: v6.2.0
+    expires_at: 2026-11-01
+  9c971963bec38e04b3d30dcc455b5382be2fdbfb:
+    tag: v6.3.0
 gradle/actions/setup-gradle:
   0723195856401067f7a2779048b490ace7a47d7c:
     tag: v5.0.2

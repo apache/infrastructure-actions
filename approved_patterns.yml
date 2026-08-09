@@ -139,6 +139,7 @@
 - DavidAnson/markdownlint-cli2-action@ded1f9488f68a970bc66ea5619e13e9b52e601cd
 - DavidAnson/markdownlint-cli2-action@8de2aa07cae85fd17c0b35642db70cf5495f1d25
 - DavidAnson/markdownlint-cli2-action@6bf21b07787794f89a243495939cd651942aeabe
+- DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff
 - dawidd6/action-download-artifact@*
 - dawidd6/action-send-mail@42942bc2f8fba4e611b459a018967a6a7c78c68c
 - dawidd6/action-send-mail@94de994a9f6fffee200243214e17002e2920bb59
@@ -201,6 +202,7 @@
 - gradle/actions/dependency-submission@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e
 - gradle/actions/dependency-submission@5e2ebd065dc2488b7a6ad670704656cbbe1e8f60
 - gradle/actions/dependency-submission@3f131e8634966bd73d06cc69884922b02e6faf92
+- gradle/actions/dependency-submission@9c971963bec38e04b3d30dcc455b5382be2fdbfb
 - gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
 - gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e
 - gradle/actions/setup-gradle@5e2ebd065dc2488b7a6ad670704656cbbe1e8f60
@@ -379,7 +381,6 @@
 - vapier/coverity-scan-action@2068473c7bdf8c2fb984a6a40ae76ee7facd7a85
 - vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
 - vishalsinha21/dynamic-checklist@*
-- zizmorcore/zizmor-action@b1d7e1fb5de872772f31590499237e7cce841e8e
 - zizmorcore/zizmor-action@5f14fd08f7cf1cb1609c1e344975f152c7ee938d
 - zizmorcore/zizmor-action@192e21d79ab29983730a13d1382995c2307fbcaa
 - zizmorcore/zizmor-action@6599ee8b7a49aef6a770f63d261d214911a7ce02
