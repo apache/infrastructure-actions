@@ -378,6 +378,9 @@ damccorm/tag-ur-it:
 dart-lang/setup-dart:
   65eb853c7ba17dde3be364c3d2858773e7144260:
     tag: v1.7.2
+    expires_at: 2026-11-01
+  7654d458321ee25acccccfdb86cd48bd95768ff1:
+    tag: v1.8.0
 DavidAnson/markdownlint-cli2-action:
   ded1f9488f68a970bc66ea5619e13e9b52e601cd:
     tag: v23.2.0
@@ -951,6 +954,9 @@ runs-on/action:
     expires_at: 2026-09-24
   4e5f72399b6b17f2e79c511c1b38a315a64d22dc:
     tag: v2.2.0
+    expires_at: 2026-11-01
+  46910bf61b41721b0579f237e186afb35477007a:
+    tag: v2.3.0
 rust-lang/crates-io-auth-action:
   bbd81622f20ce9e2dd9622e3218b975523e45bbe:
     tag: v1.0.4
