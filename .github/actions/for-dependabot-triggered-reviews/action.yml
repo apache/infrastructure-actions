@@ -91,7 +91,7 @@ runs:
       if: false
     - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d  # v8.1.1
       if: false
-    - uses: coursier/setup-action@63a23764316528a1b627103472030d5a16fc6133  # v3.0.1
+    - uses: coursier/setup-action@9b7939bf01fd1185ce2babe16135168361bf2c62  # v3.0.2
       if: false
     - uses: cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8  # v2.15.1
       if: false
