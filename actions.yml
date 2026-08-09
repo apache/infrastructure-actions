@@ -488,6 +488,9 @@ dorny/paths-filter:
     expires_at: 2026-09-27
   7b450fff21473bca461d4b92ce414b9d0420d706:
     tag: v4.0.2
+    expires_at: 2026-11-01
+  ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d:
+    tag: v4.0.3
 dorny/test-reporter:
   a43b3a5f7366b97d083190328d2c652e1a8b6aa2:
     tag: v3.0.0
@@ -891,6 +894,9 @@ pypa/cibuildwheel:
     expires_at: 2026-10-19
   4726cd35bb13f7bde50cf2761f2499ac7b3aa32c:
     tag: v4.1.1
+    expires_at: 2026-11-01
+  1828c10ab37f080699c7b81cea34097c684a7074:
+    tag: v4.2.0
 pypa/gh-action-pip-audit:
   1220774d901786e6f652ae159f7b6bc8fea6d266:
     tag: v1.1.0
