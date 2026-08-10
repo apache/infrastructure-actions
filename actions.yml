@@ -933,9 +933,6 @@ r-lib/actions/*:
 reactivecircus/android-emulator-runner:
   a421e43855164a8197daf9d8d40fe71c6996bb0d:
     tag: v2.38.0
-  # Transitional: apache/fory still uses the floating v2 tag, see apache/fory#3927.
-  v2:
-    expires_at: 2026-09-09
 readthedocs/actions:
   '*':
     keep: true
