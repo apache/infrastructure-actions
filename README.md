@@ -23,6 +23,7 @@ This repository hosts GitHub Actions developed by the ASF community and approved
 - [Checking the Action Usage in an ASF Project](#checking-the-action-usage-in-an-asf-project)
 - [Submitting an Action](#submitting-an-action)
 - [Available GitHub Actions](#available-github-actions)
+- [Versioning and Pinning Actions](#versioning-and-pinning-actions)
 - [Organization-wide GitHub Actions Allow List](#management-of-organization-wide-github-actions-allow-list)
   - [Pipeline Overview](#pipeline-overview)
   - [Adding a New Action](#adding-a-new-action-to-the-allow-list)
@@ -55,6 +56,9 @@ jobs:
 
 When calling the `check-project-actions` workflow from a `push` or `pull_request` event, it should work
 automatically against the "right" reference. See the sample workflow linked above for more details.
+
+To pin to an immutable, Dependabot-trackable version instead of `@main`, see
+[Versioning and Pinning Actions](#versioning-and-pinning-actions).
 
 ## Submitting an Action
 
@@ -92,6 +96,37 @@ correctness of the action.
   - [ASF Infrastructure Pelican Action](/pelican/README.md): Generate and publish project websites with GitHub Actions
   - [Stash Action](/stash/README.md): Manage large build caches
   - [ASF Allowlist Check](/allowlist-check/README.md): Verify workflow action refs are on the ASF allowlist
+
+## Versioning and Pinning Actions
+
+The actions in this repo are a *monorepo of actions*, and each one is released
+under its own **path-prefixed tag** so you can pin a specific version and let
+Dependabot propose bumps. The tag prefix is the action's leaf directory name,
+which you repeat after the `@`:
+
+| Action                | Pin it like this                                                              |
+| --------------------- | ----------------------------------------------------------------------------- |
+| `allowlist-check`     | `apache/infrastructure-actions/allowlist-check@<sha>  # allowlist-check/v1.2.3`|
+| `pelican`             | `apache/infrastructure-actions/pelican@<sha>          # pelican/v1.2.3`        |
+| `stash/save`          | `apache/infrastructure-actions/stash/save@<sha>       # save/v1.2.3`           |
+| `stash/restore`       | `apache/infrastructure-actions/stash/restore@<sha>    # restore/v1.2.3`        |
+
+Pinning to a commit SHA with the version in a trailing comment is the
+recommended, [Zizmor](https://zizmor.sh/)-friendly form: the SHA is immutable,
+and Dependabot's `github_actions` ecosystem recognises the `# <prefix>/vX.Y.Z`
+comment and opens a PR (updating both the SHA and the comment) when a newer
+tag for that prefix is published. Support for this monorepo leaf-prefix scheme
+was added to Dependabot in
+[dependabot/dependabot-core#11286](https://github.com/dependabot/dependabot-core/pull/11286),
+contributed specifically for this repository.
+
+A release is the tag pair (`<prefix>/vX.Y.Z` plus the moving `<prefix>/vN`) and
+nothing more — this repo publishes no GitHub Release objects, because
+Dependabot resolves versions from the tags themselves.
+
+Tracking `@main` (as in the quick-start above) also works and always gives you
+the latest code, but it drifts from any pinned SHA and Zizmor will flag the
+unpinned ref. See [RELEASING.md](RELEASING.md) for how releases are cut.
 
 ## Management of Organization-wide GitHub Actions Allow List
 
@@ -221,6 +256,8 @@ A clean result confirms that the compiled JS was built from the declared source.
 
 Non-minified compiled JS (e.g. Deno `deno task bundle` output, Dart `dart compile js` readable output) is handled differently: a clean rebuild for these tends to produce toolchain-version noise (esbuild/ncc/webpack boilerplate differences) rather than actionable diffs. The script keeps these files in place during the pre-rebuild deletion step and instead diffs them against the previously approved version of the action, so reviewers see real source changes rather than rebuild artifacts. The detection threshold mirrors the comparison heuristic — fewer than 10 lines or an average line length above 500 chars is treated as minified.
 
+Files that appear **only in the rebuild** are reported as informational rather than as a failure. The action does not publish them, so they never reach a consumer's runner and cannot be a supply-chain vector. In practice they are intermediate build output from a multi-stage build that upstream deliberately does not commit — for example `JetBrains/qodana-action` declares `main: scan/dist/index.js`, so the output directory resolves to the whole `scan/` sub-project and the rebuild's gitignored `scan/lib/*.js` (stage one of its `tsc` → `esbuild` build) lands inside the compared tree. The inverse remains a hard failure: JS present in the published tree but *absent* from the rebuild is unaccounted-for shipped code, as is a published tree with no compiled JS at all when the rebuild produced some — there is then nothing to reconcile the rebuild against.
+
 #### Security Review Checklist
 
 When reviewing an action (new or updated), watch for these potential issues in the source diff between the approved and new versions:
@@ -318,19 +355,23 @@ This repository uses a [Dependabot cooldown period](https://docs.github.com/en/c
 If you need to add a specific version of an already approved action (especially an older one):
 
 1. **Fork** this repository
-2. **Add** a new version entry to an existing action in `actions.yml` with the following format:
+2. **Add** a new version entry to an existing action in `actions.yml`. Choose its metadata based on
+   why the version is needed.
+
+For the newest version:
 
 ```yaml
 existing/action:
   '<exact-commit-sha>':
-    keep: true
     tag: vX.Y.Z
 ```
 
-if this is the newest version of the action (make sure to remove the `keep: true` from the
-previously newest version and add `expires_at: <date>` to it, if you want to set an expiration date for it),
+The current version must have neither `keep` nor `expires_at`, so that it is included in the
+composite action watched by Dependabot. Each action must have at most one such version. When adding
+a new current version manually, add `expires_at: <date>` to the previous current version to give
+projects time to migrate.
 
-or
+For an older version that is needed temporarily:
 
 ```yaml
 existing/action:
@@ -339,7 +380,20 @@ existing/action:
     tag: vX.Y.Z
 ```
 
-If you add older version of the action and want to set an expiration date for it.
+Use `keep: true` only as an exceptional alternative when an older version must remain available
+indefinitely:
+
+```yaml
+existing/action:
+  '<exact-commit-sha>':
+    # Explain why this version must remain available indefinitely.
+    keep: true
+    tag: vX.Y.Z
+```
+
+A reference with `keep: true` is retained indefinitely and is not watched for updates by
+Dependabot. To keep the action updated, it must also have a separate current version with neither
+`keep` nor `expires_at`. Never set both `keep` and `expires_at` on the same reference.
 
 
 3. **Create a PR** against the `main` branch

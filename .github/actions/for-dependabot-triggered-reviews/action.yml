@@ -37,11 +37,11 @@ name: Gateway Action
 runs:
   using: "composite"
   steps:
-    - uses: 1Password/load-secrets-action@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556  # v4.0.1
+    - uses: 1Password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4  # v5.0.0
       if: false  # zizmor: ignore[unpinned-tools] generated sentinel step is never executed
       with:
         version: "2.30.0"
-    - uses: 1Password/load-secrets-action/configure@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556  # v4.0.1
+    - uses: 1Password/load-secrets-action/configure@e544b780808654ba8ceba5fb2fe2897103d92ff4  # v5.0.0
       if: false
       with:
         version: "2.30.0"
@@ -75,23 +75,23 @@ runs:
       if: false
     - uses: burnett01/rsync-deployments@4d419d1dc46d4a8a2b6ceab2f951f0f93b2da8f5  # 9.0.0
       if: false
-    - uses: carabiner-dev/actions/ampel/verify@2a4b2cd115ede14629b03ef7e77586d3269d4c72  # v1.2.3
+    - uses: carabiner-dev/actions/ampel/verify@36a39ef667efe7112df8b1a534a4e37f35fad6fd  # v1.2.6
       if: false
-    - uses: carabiner-dev/actions/install/ampel@2a4b2cd115ede14629b03ef7e77586d3269d4c72  # v1.2.3
+    - uses: carabiner-dev/actions/install/ampel@36a39ef667efe7112df8b1a534a4e37f35fad6fd  # v1.2.6
       if: false
-    - uses: carabiner-dev/actions/install/ampel-bootstrap@be6b4fa42fa3a8432416475d74218b9aa51ea527
+    - uses: carabiner-dev/actions/install/ampel-bootstrap@4c23ca5801511c2f0e9dd8c8dd011cab26a46be4
       if: false
-    - uses: carabiner-dev/actions/install/bnd@2a4b2cd115ede14629b03ef7e77586d3269d4c72  # v1.2.3
+    - uses: carabiner-dev/actions/install/bnd@36a39ef667efe7112df8b1a534a4e37f35fad6fd  # v1.2.6
       if: false
-    - uses: carabiner-dev/actions/install/download-and-verify@be6b4fa42fa3a8432416475d74218b9aa51ea527
+    - uses: carabiner-dev/actions/install/download-and-verify@4c23ca5801511c2f0e9dd8c8dd011cab26a46be4
       if: false
     - uses: carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3  # v1.0.10
       if: false
-    - uses: commit-check/commit-check-action@bbb6580f01838e475563514f115ec7ef41c9ddc7  # v2.11.1
+    - uses: commit-check/commit-check-action@d109324148a73dc758891d1d85924c912dbfd38b  # v2.12.0
       if: false
     - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d  # v8.1.1
       if: false
-    - uses: coursier/setup-action@fd1707a76b027efdfb66ca79318b4d29b72e5a02  # v3.0.0
+    - uses: coursier/setup-action@9b7939bf01fd1185ce2babe16135168361bf2c62  # v3.0.2
       if: false
     - uses: cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8  # v2.15.1
       if: false
@@ -99,9 +99,9 @@ runs:
       if: false
     - uses: damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
       if: false
-    - uses: dart-lang/setup-dart@65eb853c7ba17dde3be364c3d2858773e7144260  # v1.7.2
+    - uses: dart-lang/setup-dart@7654d458321ee25acccccfdb86cd48bd95768ff1  # v1.8.0
       if: false
-    - uses: DavidAnson/markdownlint-cli2-action@6bf21b07787794f89a243495939cd651942aeabe  # v24.1.0
+    - uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff  # v24.2.0
       if: false
     - uses: dawidd6/action-send-mail@94de994a9f6fffee200243214e17002e2920bb59  # v18
       if: false
@@ -111,7 +111,7 @@ runs:
       if: false
     - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7.3.0
       if: false
-    - uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7  # v4.5.1
+    - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4.6.0
       if: false
     - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302  # v6.2.0
       if: false
@@ -123,7 +123,7 @@ runs:
       if: false
     - uses: docker://pandoc/core@sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93  # 3.7.0.2
       if: false
-    - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706  # v4.0.2
+    - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d  # v4.0.3
       if: false
     - uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2  # v3.0.0
       if: false
@@ -145,17 +145,17 @@ runs:
       if: false
     - uses: graalvm/setup-graalvm@0def53c0fd8534bc13416c9469f5be45265824fd  # v1.6.3
       if: false
-    - uses: gradle/actions/dependency-submission@3f131e8634966bd73d06cc69884922b02e6faf92  # v6.2.0
+    - uses: gradle/actions/dependency-submission@9c971963bec38e04b3d30dcc455b5382be2fdbfb  # v6.3.0
       if: false
-    - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92  # v6.2.0
+    - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb  # v6.3.0
       if: false
-    - uses: gradle/actions/wrapper-validation@3f131e8634966bd73d06cc69884922b02e6faf92  # v6.2.0
+    - uses: gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb  # v6.3.0
       if: false
     - uses: gradle/develocity-actions/maven-publish-build-scan@0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642  # v2.2
       if: false
     - uses: gradle/develocity-actions/setup-maven@0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642  # v2.2
       if: false
-    - uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5  # v3.3.0
+    - uses: hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6  # v3.4.0
       if: false
     - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e  # v4.0.1
       if: false
@@ -169,15 +169,15 @@ runs:
       if: false
     - uses: italia/publiccode-parser-action@21086c73ec0563e14c6748787efa1b34b025ad8c  # v1.5.1
       if: false
-    - uses: j178/prek-action@5337cb91e0fa35a7ff31b9ca345126d8bbbcdf16  # v2.0.6
+    - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece  # v3.0.0
       if: false
     - uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f  # v4.8.0
       if: false
     - uses: jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5  # v2
       if: false
-    - uses: JetBrains/qodana-action@4861e015da555e86a72b862892aba6c2b93e6891  # v2026.1.3
+    - uses: JetBrains/qodana-action@b588768b6e7e6da579e518bc584f79de0d243692  # v2026.2.0
       if: false
-    - uses: Jimver/cuda-toolkit@3d45d157f327c09c04b50ee6ccdea2d9d017ec76  # v0.2.35
+    - uses: Jimver/cuda-toolkit@b8bf9c6c28f8a92fbb04dcfcaee872e60c57462d  # v0.2.36
       if: false
     - uses: jrouly/scalafmt-native-action@a9c8e1032a02004c425d53ef8ce420fe2179eba7  # v5
       if: false
@@ -185,7 +185,7 @@ runs:
       if: false
     - uses: jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d  # v1.2
       if: false
-    - uses: Kesin11/actions-timeline@7bf79990b7c09f5dfb570ac30b814ca597bd538e  # v3.1.1
+    - uses: Kesin11/actions-timeline@57fc93f20c6da7fbc14063c6d24a2a5627c799ad  # v3.2.0
       if: false
     - uses: leafo/gh-actions-luarocks@35d062def313a7699a0d513e996bcf4352f05389  # v6.1.0
       if: false
@@ -195,13 +195,13 @@ runs:
       if: false
     - uses: manusa/actions-setup-minikube@b65276017fdec6f1e6498129fb740e34e260dc55  # v2.18.0
       if: false
-    - uses: matlab-actions/run-tests@ae0e80cb44fdec28d35d0831d8acf38ee4fdf91a  # v3.2.0
+    - uses: matlab-actions/run-tests@83e368e0b18d9c0c7d510fd911d546e16b73bbdb  # v3.2.1
       if: false
-    - uses: matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f  # v3.0.1
+    - uses: matlab-actions/setup-matlab@2323adb8243827ea460b0def4c413545aaec46a9  # v3.0.2
       if: false
     - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29  # v2.2.1
       if: false
-    - uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696  # v0.0.10
+    - uses: mozilla-actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba  # v0.0.11
       if: false
     - uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd  # v1.21.0
       if: false
@@ -221,9 +221,11 @@ runs:
       if: false
     - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd  # v3.0.1
       if: false
-    - uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55  # v4.1.0
+    - uses: pypa/cibuildwheel@1828c10ab37f080699c7b81cea34097c684a7074  # v4.2.0
       if: false
     - uses: pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266  # v1.1.0
+      if: false
+    - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
       if: false
     - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d  # v2.38.0
       if: false
@@ -231,11 +233,11 @@ runs:
       if: false
     - uses: rubygems/release-gem@052cc82692552de3ef2b81fd670e41d13cba8092  # v1.4.0
       if: false
-    - uses: runs-on/action@4e5f72399b6b17f2e79c511c1b38a315a64d22dc  # v2.2.0
+    - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a  # v2.3.0
       if: false
     - uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18  # v1.0.5
       if: false
-    - uses: sbt/setup-sbt@6444f4c8111de4b9059c3975def104b03cfaa5f0  # v1.5.2
+    - uses: sbt/setup-sbt@bfea3c5f48abd221b04a6df4798aa5eb8b6a2baf  # v1.5.6
       if: false
     - uses: scalacenter/sbt-dependency-submission@d84eef4c09e633bcf5f113bcad7fd5e9af1baee9  # v3.2.3
       if: false
@@ -247,7 +249,7 @@ runs:
       if: false
     - uses: SonarSource/sonarqube-scan-action/install-build-wrapper@22918119ff8e1ca75a623e15c8296b6ea4fbe28f  # v8.2.1
       if: false
-    - uses: tcort/github-action-markdown-link-check@e7c7a18363c842693fadde5d41a3bd3573a7a225  # v1.1.2
+    - uses: tcort/github-action-markdown-link-check@e047c5b37f24ab722bbef1a27b6fab7f96bc4068  # v1.1.3
       if: false
     - uses: terraform-linters/setup-tflint@6e1e0642c0289bd619021bf6b34e3c08ed1e005a  # v6.3.0
       if: false
@@ -259,7 +261,7 @@ runs:
       if: false
     - uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310  # v1
       if: false
-    - uses: zizmorcore/zizmor-action@6fc4b006235f201fdab3722e17240ab420d580e5  # v0.6.1
+    - uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054  # v0.6.2
       if: false
     - run: echo Success!
       shell: bash

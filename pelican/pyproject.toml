@@ -47,7 +47,7 @@ classifiers = [
     "Topic :: Text Processing :: Markup",
 ]
 dependencies = [
-    "markdown>=3.10.2,<4.0",
+    "markdown>=3.10.3,<4.0",
     "pelican-sitemap>=1.2.2,<2.0",
     "beautifulsoup4>=4.15.0,<5.0",
     "ezt>=1.1,<2.0",
@@ -68,14 +68,14 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pelican[markdown]>=4.11,<4.12",
-    "ruff>=0.15.21",
+    "ruff>=0.16.1",
     "pytest>=9.1.1",
-    "mypy>=2.2.0",
+    "mypy>=2.3.0",
     "pylint>=4.0.6",
     "types-PyYAML>=6.0",
-    "types-requests>=2.33.0.20260518",
+    "types-requests>=2.33.0.20260712",
     "types-beautifulsoup4>=4.12.0.20250516",
-    "types-markdown>=3.10.2.20260518",
+    "types-markdown>=3.10.2.20260712",
 ]
 
 [project.urls]

@@ -27,12 +27,24 @@
     expires_at: 2026-09-14
   3a12b0ab99d9cd590a3e9b5a90ea017210ed9556:
     tag: v4.0.1
+    expires_at: 2026-10-19
+  eb2efd0703da22a93c467f2d1ffbb6826c11e19c:
+    tag: v4.1.1
+    expires_at: 2026-10-30
+  e544b780808654ba8ceba5fb2fe2897103d92ff4:
+    tag: v5.0.0
 1Password/load-secrets-action/configure:
   92467eb28f72e8255933372f1e0707c567ce2259:
     tag: v4.0.0
     expires_at: 2026-09-14
   3a12b0ab99d9cd590a3e9b5a90ea017210ed9556:
     tag: v4.0.1
+    expires_at: 2026-10-19
+  eb2efd0703da22a93c467f2d1ffbb6826c11e19c:
+    tag: v4.1.1
+    expires_at: 2026-10-28
+  e544b780808654ba8ceba5fb2fe2897103d92ff4:
+    tag: v5.0.0
 actions-cool/check-user-permission:
   c21884f3dda18dafc2f8b402fe807ccc9ec1aa5e:
     tag: v2.4.0
@@ -89,9 +101,6 @@ awalsh128/cache-apt-pkgs-action:
   '*':
     keep: true
 aws-actions/configure-aws-credentials:
-  ec61189d14ec14c8efccab744f656cffd0e33f37:
-    tag: v6.1.0
-    expires_at: 2026-07-30
   d979d5b3a71173a29b74b5b88418bfda9437d885:
     tag: v6.1.1
     expires_at: 2026-08-20
@@ -167,6 +176,9 @@ carabiner-dev/actions/ampel/verify:
     expires_at: 2026-10-11
   2a4b2cd115ede14629b03ef7e77586d3269d4c72:
     tag: v1.2.3
+    expires_at: 2026-10-20
+  36a39ef667efe7112df8b1a534a4e37f35fad6fd:
+    tag: v1.2.6
 carabiner-dev/actions/install/ampel:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -184,6 +196,14 @@ carabiner-dev/actions/install/ampel:
     expires_at: 2026-10-11
   2a4b2cd115ede14629b03ef7e77586d3269d4c72:
     tag: v1.2.3
+    expires_at: 2026-10-20
+  36a39ef667efe7112df8b1a534a4e37f35fad6fd:
+    tag: v1.2.6
+  # transitive: ampel/verify @ v1.2.6 (36a39ef6) pins its internal action refs
+  # to this untagged commit. Verified carabiner release-bot commit, ancestor of
+  # 36a39ef6.
+  2fec8bd8e1dcfdea26080648070b4827f1fa0584:
+    expires_at: 2026-10-21
 carabiner-dev/actions/install/ampel-bootstrap:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -209,7 +229,8 @@ carabiner-dev/actions/install/ampel-bootstrap:
   94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
     tag: v1.2.1
     expires_at: 2026-10-05
-  be6b4fa42fa3a8432416475d74218b9aa51ea527: {}
+  be6b4fa42fa3a8432416475d74218b9aa51ea527:
+    expires_at: 2026-10-19
   # transitive: referenced by carabiner-dev/actions v1.2.3 internal refs.
   # Verified carabiner release-bot commits.
   174f1c83779af3d3d7e451b7ead7ba824d0d2aa9:
@@ -217,6 +238,15 @@ carabiner-dev/actions/install/ampel-bootstrap:
     expires_at: 2026-10-19
   619a474b2178d06ccf274349397cd67a7802a4fe:
     expires_at: 2026-10-19
+  60563b5460a9e4ae9921c0da551b4ddd6059ff45:
+    expires_at: 2026-10-20
+  4c23ca5801511c2f0e9dd8c8dd011cab26a46be4: {}
+  # transitive: install/download-and-verify @ 4c23ca58 pins this ref, and
+  # @ 2fec8bd8 in turn pins 16009dca. Verified carabiner release-bot commits.
+  2fec8bd8e1dcfdea26080648070b4827f1fa0584:
+    expires_at: 2026-10-21
+  16009dca48ac369882d4333f1d15d7cd3a4ded31:
+    expires_at: 2026-10-21
 carabiner-dev/actions/install/bnd:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -234,6 +264,9 @@ carabiner-dev/actions/install/bnd:
     expires_at: 2026-10-11
   2a4b2cd115ede14629b03ef7e77586d3269d4c72:
     tag: v1.2.3
+    expires_at: 2026-10-20
+  36a39ef667efe7112df8b1a534a4e37f35fad6fd:
+    tag: v1.2.6
 carabiner-dev/actions/install/download-and-verify:
   2a11d59a135c5e291f305f249a92ad7903e3ee0f:
     # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
@@ -260,7 +293,18 @@ carabiner-dev/actions/install/download-and-verify:
     expires_at: 2026-10-11
   619a474b2178d06ccf274349397cd67a7802a4fe:
     expires_at: 2026-10-11
-  be6b4fa42fa3a8432416475d74218b9aa51ea527: {}
+  be6b4fa42fa3a8432416475d74218b9aa51ea527:
+    expires_at: 2026-10-19
+  60563b5460a9e4ae9921c0da551b4ddd6059ff45:
+    expires_at: 2026-10-20
+  4c23ca5801511c2f0e9dd8c8dd011cab26a46be4: {}
+  # transitive: install/{ampel,bnd} @ v1.2.6 (36a39ef6) pin this ref, and
+  # install/ampel @ 2fec8bd8 in turn pins 16009dca. Verified carabiner
+  # release-bot commits.
+  2fec8bd8e1dcfdea26080648070b4827f1fa0584:
+    expires_at: 2026-10-21
+  16009dca48ac369882d4333f1d15d7cd3a4ded31:
+    expires_at: 2026-10-21
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
@@ -280,9 +324,6 @@ codelytv/pr-size-labeler:
   '*':
     keep: true
 commit-check/commit-check-action:
-  7c158d4541309c5952de3343151750882b036d10:
-    tag: v2.6.0
-    expires_at: 2026-08-08
   2239d8980732e84a380552fdd71e1d49e149baf3:
     tag: v2.6.1
     expires_at: 2026-08-16
@@ -303,6 +344,9 @@ commit-check/commit-check-action:
     expires_at: 2026-10-02
   bbb6580f01838e475563514f115ec7ef41c9ddc7:
     tag: v2.11.1
+    expires_at: 2026-10-28
+  d109324148a73dc758891d1d85924c912dbfd38b:
+    tag: v2.12.0
 conda-incubator/setup-miniconda:
   '*':
     keep: true
@@ -310,9 +354,6 @@ container-tools/kind-action:
   '*':
     keep: true
 coursier/cache-action:
-  90c37294538be80a558fd665531fcdc2b467b475:
-    tag: v8.1.0
-    expires_at: 2026-08-05
   95e5b1029b6b86e7bac033ee44a0697d8a527d2d:
     tag: v8.1.1
 coursier/setup-action:
@@ -320,6 +361,12 @@ coursier/setup-action:
     keep: true
   fd1707a76b027efdfb66ca79318b4d29b72e5a02:
     tag: v3.0.0
+    expires_at: 2026-10-30
+  63a23764316528a1b627103472030d5a16fc6133:
+    tag: v3.0.1
+    expires_at: 2026-11-01
+  9b7939bf01fd1185ce2babe16135168361bf2c62:
+    tag: v3.0.2
 cpp-linter/cpp-linter-action:
   0f6d1b8d7e38b584cbee606eb23d850c217d54f8:
     tag: v2.15.1
@@ -334,10 +381,10 @@ damccorm/tag-ur-it:
 dart-lang/setup-dart:
   65eb853c7ba17dde3be364c3d2858773e7144260:
     tag: v1.7.2
+    expires_at: 2026-11-01
+  7654d458321ee25acccccfdb86cd48bd95768ff1:
+    tag: v1.8.0
 DavidAnson/markdownlint-cli2-action:
-  ce4853d43830c74c1753b39f3cf40f71c2031eb9:
-    tag: v23.0.0
-    expires_at: 2026-07-29
   ded1f9488f68a970bc66ea5619e13e9b52e601cd:
     tag: v23.2.0
     expires_at: 2026-09-27
@@ -346,6 +393,9 @@ DavidAnson/markdownlint-cli2-action:
     expires_at: 2026-10-11
   6bf21b07787794f89a243495939cd651942aeabe:
     tag: v24.1.0
+    expires_at: 2026-11-01
+  21c1be1b93ad9ed58fa840aacc3f279cde2a72ff:
+    tag: v24.2.0
 dawidd6/action-download-artifact:
   '*':
     keep: true
@@ -362,9 +412,6 @@ dlang-community/setup-dlang:
   '*':
     keep: true
 docker/bake-action:
-  aefd381cbaa93c62a1e8b02194ae420cc36269d2:
-    tag: v4.7.0
-    expires_at: 2026-07-30
   a66e1c87e2eca0503c343edf1d208c716d54b8a8:
     tag: v7.1.0
     expires_at: 2026-08-16
@@ -377,9 +424,6 @@ docker/build-push-action:
   bcafcacb16a39f128d818304e6c9c0c18556b85f:
     tag: v7.1.0
     expires_at: 2026-08-16
-  ca052bb54ab0790a636c9b5f226502c73d547a25:
-    tag: v5.4.0
-    expires_at: 2026-07-28
   f9f3042f7e2789586610d6e8b85c8f03e5195baf:
     tag: v7.2.0
     expires_at: 2026-09-24
@@ -403,6 +447,12 @@ docker/login-action:
     expires_at: 2026-10-16
   abd2ef45e78c5afb21d64d4ca52ee8550d9572c7:
     tag: v4.5.1
+    expires_at: 2026-10-20
+  371161bbe7024a29a25c5e19bfcbc0804fe9ad2c:
+    tag: v4.5.2
+    expires_at: 2026-10-22
+  dbcb813823bdd20940b903addbd779551569679f:
+    tag: v4.6.0
 docker/metadata-action:
   030e881283bb7a6894de51c315a6bfe6a94e05cf:
     tag: v6.0.0
@@ -425,9 +475,6 @@ docker/setup-qemu-action:
   ce360397dd3f832beb865e1373c09c0e9f86d70a:
     tag: v4.0.0
     expires_at: 2026-08-19
-  c7c53464625b32c7a7e944ae62b3e17d2b600130:
-    tag: v3.7.0
-    expires_at: 2026-07-28
   06116385d9baf250c9f4dcb4858b16962ea869c3:
     tag: v4.1.0
     expires_at: 2026-09-24
@@ -444,6 +491,9 @@ dorny/paths-filter:
     expires_at: 2026-09-27
   7b450fff21473bca461d4b92ce414b9d0420d706:
     tag: v4.0.2
+    expires_at: 2026-11-01
+  ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d:
+    tag: v4.0.3
 dorny/test-reporter:
   a43b3a5f7366b97d083190328d2c652e1a8b6aa2:
     tag: v3.0.0
@@ -464,9 +514,6 @@ eps1lon/actions-label-merge-conflict:
   '*':
     keep: true
 erisu/apache-rat-action:
-  46fb01ce7d8f76bdcd7ab10e7af46e1ea95ca01c:
-    tag: v2.0.0
-    expires_at: 2026-08-01
   30c94d10ed21e6f6fd5590dc5c158f58cae7a0dd:
     tag: v3.0.0
 erisu/license-checker-action:
@@ -509,9 +556,6 @@ gr2m/twitter-together:
   '*':
     keep: true
 graalvm/setup-graalvm:
-  60c26726de13f8b90771df4bc1641a52a3159994:
-    tag: v1.5.2
-    expires_at: 2026-08-01
   bef4b0e916c7dd079bf60fb95d49139f67e32c5f:
     tag: v1.5.3
     expires_at: 2026-08-28
@@ -541,6 +585,9 @@ gradle/actions/dependency-submission:
     expires_at: 2026-09-05
   3f131e8634966bd73d06cc69884922b02e6faf92:
     tag: v6.2.0
+    expires_at: 2026-11-01
+  9c971963bec38e04b3d30dcc455b5382be2fdbfb:
+    tag: v6.3.0
 gradle/actions/setup-gradle:
   0723195856401067f7a2779048b490ace7a47d7c:
     tag: v5.0.2
@@ -555,6 +602,9 @@ gradle/actions/setup-gradle:
     expires_at: 2026-09-05
   3f131e8634966bd73d06cc69884922b02e6faf92:
     tag: v6.2.0
+    expires_at: 2026-10-30
+  9c971963bec38e04b3d30dcc455b5382be2fdbfb:
+    tag: v6.3.0
 gradle/actions/wrapper-validation:
   50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
     tag: v6.1.0
@@ -564,6 +614,9 @@ gradle/actions/wrapper-validation:
     expires_at: 2026-09-05
   3f131e8634966bd73d06cc69884922b02e6faf92:
     tag: v6.2.0
+    expires_at: 2026-10-30
+  9c971963bec38e04b3d30dcc455b5382be2fdbfb:
+    tag: v6.3.0
 gradle/develocity-actions/maven-publish-build-scan:
   974e8dbcbda40db6828fc35f349c80a7c0e71529:
     tag: v2.1
@@ -579,10 +632,10 @@ gradle/develocity-actions/setup-maven:
 hadolint/hadolint-action:
   2332a7b74a6de0dda2e2221d575162eba76ba5e5:
     tag: v3.3.0
+    expires_at: 2026-10-25
+  2a66e89f53d0771bb131a7fa31f3136336094aa6:
+    tag: v3.4.0
 hashicorp/setup-terraform:
-  5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85:
-    tag: v4.0.0
-    expires_at: 2026-08-06
   dfe3c3f87815947d99a8997f908cb6525fc44e9e:
     tag: v4.0.1
 helm/chart-releaser-action:
@@ -607,12 +660,6 @@ italia/publiccode-parser-action:
   21086c73ec0563e14c6748787efa1b34b025ad8c:
     tag: v1.5.1
 j178/prek-action:
-  cbc2f23eb5539cf20d82d1aabd0d0ecbcc56f4e3:
-    tag: v2.0.2
-    expires_at: 2026-07-27
-  6ad80277337ad479fe43bd70701c3f7f8aa74db3:
-    tag: v2.0.3
-    expires_at: 2026-08-08
   bdca6f102f98e2b4c7029491a53dfd366469e33d:
     tag: v2.0.4
     expires_at: 2026-09-23
@@ -621,6 +668,9 @@ j178/prek-action:
     expires_at: 2026-10-11
   5337cb91e0fa35a7ff31b9ca345126d8bbbcdf16:
     tag: v2.0.6
+    expires_at: 2026-10-22
+  4e14d07f9231acabce116ccfca13b13dd9755ece:
+    tag: v3.0.0
 JamesIves/github-pages-deploy-action:
   d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
     tag: v4.8.0
@@ -636,12 +686,18 @@ JetBrains/qodana-action:
     expires_at: 2026-09-25
   4861e015da555e86a72b862892aba6c2b93e6891:
     tag: v2026.1.3
+    expires_at: 2026-10-22
+  b588768b6e7e6da579e518bc584f79de0d243692:
+    tag: v2026.2.0
 jidicula/clang-format-action:
   '*':
     keep: true
 Jimver/cuda-toolkit:
   3d45d157f327c09c04b50ee6ccdea2d9d017ec76:
     tag: v0.2.35
+    expires_at: 2026-11-01
+  b8bf9c6c28f8a92fbb04dcfcaee872e60c57462d:
+    tag: v0.2.36
 jlumbroso/free-disk-space:
   '*':
     keep: true
@@ -689,6 +745,9 @@ Kesin11/actions-timeline:
     expires_at: 2026-09-24
   7bf79990b7c09f5dfb570ac30b814ca597bd538e:
     tag: v3.1.1
+    expires_at: 2026-10-28
+  57fc93f20c6da7fbc14063c6d24a2a5627c799ad:
+    tag: v3.2.0
 kiegroup/github-action-build-chain:
   '*':
     keep: true
@@ -724,9 +783,15 @@ matlab-actions/run-tests:
     expires_at: 2026-08-21
   ae0e80cb44fdec28d35d0831d8acf38ee4fdf91a:
     tag: v3.2.0
+    expires_at: 2026-10-28
+  83e368e0b18d9c0c7d510fd911d546e16b73bbdb:
+    tag: v3.2.1
 matlab-actions/setup-matlab:
   a0180c939fb1a28de13f44f7b778b912384ced1f:
     tag: v3.0.1
+    expires_at: 2026-10-28
+  2323adb8243827ea460b0def4c413545aaec46a9:
+    tag: v3.0.2
 maxim-lobanov/setup-xcode:
   '*':
     keep: true
@@ -742,6 +807,9 @@ mlugg/setup-zig:
 mozilla-actions/sccache-action:
   9e7fa8a12102821edf02ca5dbea1acd0f89a2696:
     tag: v0.0.10
+    expires_at: 2026-10-22
+  fc920bf0ec8de6ee65d409111f7ec508035751ba:
+    tag: v0.0.11
 msys2/setup-msys2:
   '*':
     keep: true
@@ -829,13 +897,21 @@ pypa/cibuildwheel:
     expires_at: 2026-09-05
   294735312765b09d24a2fbec22660ce817587d55:
     tag: v4.1.0
+    expires_at: 2026-10-19
+  4726cd35bb13f7bde50cf2761f2499ac7b3aa32c:
+    tag: v4.1.1
+    expires_at: 2026-11-01
+  1828c10ab37f080699c7b81cea34097c684a7074:
+    tag: v4.2.0
 pypa/gh-action-pip-audit:
   1220774d901786e6f652ae159f7b6bc8fea6d266:
     tag: v1.1.0
 pypa/gh-action-pypi-publish:
   ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e:
-    keep: true
     tag: v1.13.0
+    expires_at: 2026-10-25
+  dc37677b2e1c63e2034f94d8a5b11f265b73ba33:
+    tag: v1.14.2
 pyTooling/Actions:
   '*':
     keep: true
@@ -879,9 +955,6 @@ ruby/setup-ruby:
   '*':
     keep: true
 rubygems/configure-rubygems-credentials:
-  bc6dd217f8a4f919d6835fcfefd470ef821f5c44:
-    tag: v1.0.0
-    expires_at: 2026-07-27
   762a4b77c3300434bb57c7ce80b20e36231927aa:
     tag: v2.0.0
     expires_at: 2026-09-05
@@ -897,14 +970,14 @@ rubygems/release-gem:
   052cc82692552de3ef2b81fd670e41d13cba8092:
     tag: v1.4.0
 runs-on/action:
-  742bf56072eb4845a0f94b3394673e4903c90ff0:
-    tag: v2.1.0
-    expires_at: 2026-08-01
   d141ef83eb66d096ce8afc767e09115a65c63b60:
     tag: v2.1.2
     expires_at: 2026-09-24
   4e5f72399b6b17f2e79c511c1b38a315a64d22dc:
     tag: v2.2.0
+    expires_at: 2026-11-01
+  46910bf61b41721b0579f237e186afb35477007a:
+    tag: v2.3.0
 rust-lang/crates-io-auth-action:
   bbd81622f20ce9e2dd9622e3218b975523e45bbe:
     tag: v1.0.4
@@ -915,9 +988,6 @@ rustsec/*:
   '*':
     keep: true
 sbt/setup-sbt:
-  508b753e53cb6095967669e0911487d2b9bc9f41:
-    tag: v1.1.22
-    expires_at: 2026-07-27
   93e926cbdb4a428e41b4ef754124ec82925ffdc2:
     tag: v1.1.23
     expires_at: 2026-08-12
@@ -941,24 +1011,16 @@ sbt/setup-sbt:
     expires_at: 2026-10-12
   6444f4c8111de4b9059c3975def104b03cfaa5f0:
     tag: v1.5.2
-scacap/action-surefire-report:
-  # GH API requests from GH hosted runners fail with 403 and the following error message:
-  # 'Although you appear to have the correct authorization credentials, the `ScaCap` organization has an IP allow list enabled, and your IP address is not permitted to access this resource.'
-  '*':
-    expires_at: 2026-08-01
-    ignore_gh_api_errors: true
-  fa13579fdd93ed8fc7e717a25eceedcfcbc39dda:
-    tag: v1.10.0
-    expires_at: 2026-07-31
-    ignore_gh_api_errors: true
-  3dacff26879cd2a7f2160d101254032a3707fe6f:
-    expires_at: 2026-08-01
-    tag: v1.12.0
-    ignore_gh_api_errors: true
+    expires_at: 2026-10-19
+  f6db8ab474efba716fc7f04441ab33714e4825af:
+    tag: v1.5.4
+    expires_at: 2026-10-20
+  d059c39de700f4cc5cb64f9f56577315e44a984e:
+    tag: v1.5.5
+    expires_at: 2026-10-22
+  bfea3c5f48abd221b04a6df4798aa5eb8b6a2baf:
+    tag: v1.5.6
 scalacenter/sbt-dependency-submission:
-  f43202114d7522a4b233e052f82c2eea8d658134:
-    tag: v3.2.1
-    expires_at: 2026-08-08
   1cc96a7038ea2b014c200c1dae3a0cc92293b91d:
     tag: v3.2.2
     expires_at: 2026-08-20
@@ -1044,6 +1106,9 @@ taiki-e/install-action:
 tcort/github-action-markdown-link-check:
   e7c7a18363c842693fadde5d41a3bd3573a7a225:
     tag: v1.1.2
+    expires_at: 2026-10-20
+  e047c5b37f24ab722bbef1a27b6fab7f96bc4068:
+    tag: v1.1.3
 terraform-linters/setup-tflint:
   b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93:
     tag: v6.2.2
@@ -1078,9 +1143,6 @@ vishalsinha21/dynamic-checklist:
   '*':
     keep: true
 zizmorcore/zizmor-action:
-  b1d7e1fb5de872772f31590499237e7cce841e8e:
-    tag: v0.5.3
-    expires_at: 2026-08-09
   5f14fd08f7cf1cb1609c1e344975f152c7ee938d:
     tag: v0.5.6
     expires_at: 2026-09-14
@@ -1092,3 +1154,6 @@ zizmorcore/zizmor-action:
     expires_at: 2026-10-24
   6fc4b006235f201fdab3722e17240ab420d580e5:
     tag: v0.6.1
+    expires_at: 2026-10-27
+  3dc1ecc9bcb9e94e9b2c709687979e1298497054:
+    tag: v0.6.2
