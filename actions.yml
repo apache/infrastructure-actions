@@ -931,8 +931,8 @@ r-lib/actions/*:
   '*':
     keep: true
 reactivecircus/android-emulator-runner:
-  '*':
-    keep: true
+  a421e43855164a8197daf9d8d40fe71c6996bb0d:
+    tag: v2.38.0
 readthedocs/actions:
   '*':
     keep: true

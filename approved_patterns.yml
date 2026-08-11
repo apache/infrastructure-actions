@@ -320,7 +320,7 @@
 - quarto-dev/quarto-actions@*
 - quarto-dev/quarto-actions/*@*
 - r-lib/actions/*@*
-- reactivecircus/android-emulator-runner@*
+- reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
 - readthedocs/actions@*
 - readthedocs/actions/preview@*
 - release-drafter/release-drafter@*
