@@ -1555,6 +1555,26 @@ class TestLooksLikeInTreeBinary:
         assert _looks_like_in_tree_binary("dist/gradle-wrapper.jar") is True
         assert _looks_like_in_tree_binary("Library.jar") is True
 
+    def test_actions_tool_cache_7zdec_exempt(self):
+        # 7zdec.exe ships inside the first-party @actions/tool-cache npm
+        # package (it backs tc.extractZip on Windows), so every action that
+        # vendors node_modules carries it verbatim from the published
+        # tarball.  reactivecircus/android-emulator-runner was false-flagged
+        # for it.
+        assert _looks_like_in_tree_binary(
+            "node_modules/@actions/tool-cache/scripts/externals/7zdec.exe"
+        ) is False
+        # Exempt under a nested action sub-path too.
+        assert _looks_like_in_tree_binary(
+            "subdir/node_modules/@actions/tool-cache/scripts/externals/7zdec.exe"
+        ) is False
+        # Precision: the same name dropped anywhere else is still caught —
+        # the suffix match needs the canonical package path.
+        assert _looks_like_in_tree_binary("dist/7zdec.exe") is True
+        assert _looks_like_in_tree_binary(
+            "node_modules/evil-pkg/scripts/externals/7zdec.exe"
+        ) is True
+
     def test_matlab_platform_dir_naming(self):
         # MATLAB's launcher convention: dist/bin/<platform>/run-matlab-command
         # where <platform> is MATLAB's own arch identifier and the file has

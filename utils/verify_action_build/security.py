@@ -1811,6 +1811,16 @@ _IN_TREE_BINARY_EXEMPT_PATH_SUFFIXES = (
     # gradle/wrapper-validation-action).  Seen on JetBrains/qodana-action,
     # a node24 action that never shells out to Gradle at runtime.
     "gradle/wrapper/gradle-wrapper.jar",
+    # 7-Zip's standalone decoder, bundled inside the first-party
+    # @actions/tool-cache npm package (it backs ``tc.extractZip`` on
+    # Windows).  It is not the action's own code: any action that vendors
+    # its node_modules ships it verbatim from the published tarball, and
+    # the Vendored npm Registry Check verifies that package's bytes against
+    # the lockfile integrity hash.  Seen on reactivecircus/android-emulator-
+    # runner.  The general fix — crediting any binary under a node_modules
+    # package the registry check already verified — needs the two checks
+    # reordered, so this keeps the narrow, reviewable form used above.
+    "node_modules/@actions/tool-cache/scripts/externals/7zdec.exe",
 )
 
 
