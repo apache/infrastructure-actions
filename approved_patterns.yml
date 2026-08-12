@@ -125,6 +125,7 @@
 - commit-check/commit-check-action@a9ee0cfa8e2b0399715e016e1dd4624e08427281
 - commit-check/commit-check-action@bbb6580f01838e475563514f115ec7ef41c9ddc7
 - commit-check/commit-check-action@d109324148a73dc758891d1d85924c912dbfd38b
+- commit-check/commit-check-action@562a184b2b8e583e757b17eb385bc48370f44547
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d
@@ -386,6 +387,7 @@
 - untitaker/hyperlink@9375bc4063712ad490d5eb3d54df0b6aade15e54
 - uraimo/run-on-arch-action@f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9
 - vapier/coverity-scan-action@2068473c7bdf8c2fb984a6a40ae76ee7facd7a85
+- vapier/coverity-scan-action@1b6fd4eaba6651aa354c9ea7f48caa1710b4e12e
 - vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
 - vishalsinha21/dynamic-checklist@*
 - zizmorcore/zizmor-action@5f14fd08f7cf1cb1609c1e344975f152c7ee938d

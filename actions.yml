@@ -347,6 +347,9 @@ commit-check/commit-check-action:
     expires_at: 2026-10-28
   d109324148a73dc758891d1d85924c912dbfd38b:
     tag: v2.12.0
+    expires_at: 2026-11-04
+  562a184b2b8e583e757b17eb385bc48370f44547:
+    tag: v2.13.1
 conda-incubator/setup-miniconda:
   '*':
     keep: true
@@ -1136,6 +1139,9 @@ uraimo/run-on-arch-action:
 vapier/coverity-scan-action:
   2068473c7bdf8c2fb984a6a40ae76ee7facd7a85:
     tag: v1.8.0
+    expires_at: 2026-11-04
+  1b6fd4eaba6651aa354c9ea7f48caa1710b4e12e:
+    tag: v1.9.0
 vimtor/action-zip:
   5f1c4aa587ea41db1110df6a99981dbe19cee310:
     tag: v1
