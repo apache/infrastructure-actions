@@ -257,7 +257,7 @@ runs:
       if: false
     - uses: uraimo/run-on-arch-action@f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9  # v3.1.0
       if: false
-    - uses: vapier/coverity-scan-action@2068473c7bdf8c2fb984a6a40ae76ee7facd7a85  # v1.8.0
+    - uses: vapier/coverity-scan-action@1b6fd4eaba6651aa354c9ea7f48caa1710b4e12e  # v1.9.0
       if: false
     - uses: vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310  # v1
       if: false
