@@ -261,20 +261,33 @@ def _download_tarball(url: str) -> bytes | None:
 def _tarball_files(data: bytes) -> dict[str, bytes]:
     """Extract a ``.tgz`` into ``{relative_path: bytes}``.
 
-    npm tarballs root everything under ``package/``; that prefix is
-    stripped so paths line up with ``node_modules/<pkg>/<rel>``.
+    npm tarballs root everything under a single top-level directory; that
+    prefix is stripped so paths line up with ``node_modules/<pkg>/<rel>``.
+    The directory is ``package/`` by convention, but DefinitelyTyped
+    publishes ``@types/*`` under the bare package name instead
+    (``estree/index.d.ts``, ``json-schema/LICENSE``), so the root is
+    detected rather than assumed — hardcoding ``package/`` left every file
+    of every vendored ``@types`` package unaccounted for, and the caller
+    reports unaccounted files as injected code.
+
+    A tarball whose files do not all share one root is left untouched.
     """
     files: dict[str, bytes] = {}
     with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as tf:
-        for member in tf.getmembers():
-            if not member.isfile():
-                continue
-            name = member.name
-            rel = name[len("package/"):] if name.startswith("package/") else name
+        # Some publishers emit "./package/..." member names.
+        members = [
+            (m.name[2:] if m.name.startswith("./") else m.name, m)
+            for m in tf.getmembers()
+            if m.isfile()
+        ]
+        roots = {name.split("/", 1)[0] for name, _ in members if "/" in name}
+        nested = all("/" in name for name, _ in members)
+        strip = f"{next(iter(roots))}/" if nested and len(roots) == 1 else ""
+        for name, member in members:
             extracted = tf.extractfile(member)
             if extracted is None:
                 continue
-            files[rel] = extracted.read()
+            files[name[len(strip):] if strip else name] = extracted.read()
     return files
 
 
