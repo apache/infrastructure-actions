@@ -985,9 +985,6 @@ rustsec/*:
   '*':
     keep: true
 sbt/setup-sbt:
-  93e926cbdb4a428e41b4ef754124ec82925ffdc2:
-    tag: v1.1.23
-    expires_at: 2026-08-12
   2e222825582620cc38d2a54e674f3c01b7c14f5d:
     tag: v1.1.24
     expires_at: 2026-08-19
