@@ -180,10 +180,6 @@ carabiner-dev/actions/ampel/verify:
   36a39ef667efe7112df8b1a534a4e37f35fad6fd:
     tag: v1.2.6
 carabiner-dev/actions/install/ampel:
-  2a11d59a135c5e291f305f249a92ad7903e3ee0f:
-    # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
-    tag: v1.1.7
-    expires_at: 2026-08-16
   e0e3b8149dafed833431095bc148d50e7eade4e8:
     tag: v1.2.0
     expires_at: 2026-08-28
@@ -205,23 +201,12 @@ carabiner-dev/actions/install/ampel:
   2fec8bd8e1dcfdea26080648070b4827f1fa0584:
     expires_at: 2026-10-21
 carabiner-dev/actions/install/ampel-bootstrap:
-  2a11d59a135c5e291f305f249a92ad7903e3ee0f:
-    # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
-    tag: v1.1.7
-    expires_at: 2026-08-16
-  # level-3 transitive: called by install/download-and-verify; commit is untagged
-  # (per upstream: "bootstrap rotated to ampel v1.2.1")
-  0a075bb75a68646d05f99c85cbbf2be40dd8e442:
-    expires_at: 2026-08-16
   9db1a064ca5691ef6f5d983031739ca287de0968:
     expires_at: 2026-08-28
   b60791af41423360b892a1a3cee90cd4e131f381:
     expires_at: 2026-09-18
   # transitive dep pulled by ampel/verify @ v1.2.0 (e0e3b814); allowlisted
   # but not dependabot-tracked (b60791af above stays the live ref).
-  e0e3b8149dafed833431095bc148d50e7eade4e8:
-    tag: v1.2.0
-    expires_at: 2026-08-16
   f882fa9eb795141737eecac4ffb056df5ad14954:
     expires_at: 2026-10-11
   # transitive dep pulled by install/download-and-verify @ v1.2.1 (f882fa9e);
@@ -248,10 +233,6 @@ carabiner-dev/actions/install/ampel-bootstrap:
   16009dca48ac369882d4333f1d15d7cd3a4ded31:
     expires_at: 2026-10-21
 carabiner-dev/actions/install/bnd:
-  2a11d59a135c5e291f305f249a92ad7903e3ee0f:
-    # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
-    tag: v1.1.7
-    expires_at: 2026-08-16
   e0e3b8149dafed833431095bc148d50e7eade4e8:
     tag: v1.2.0
     expires_at: 2026-08-28
@@ -268,22 +249,12 @@ carabiner-dev/actions/install/bnd:
   36a39ef667efe7112df8b1a534a4e37f35fad6fd:
     tag: v1.2.6
 carabiner-dev/actions/install/download-and-verify:
-  2a11d59a135c5e291f305f249a92ad7903e3ee0f:
-    # transitive dep of carabiner-dev/actions/ampel/verify @ v1.2.0
-    tag: v1.1.7
-    expires_at: 2026-08-16
-  # level-2 transitive: called by install/{ampel,bnd} @ v1.1.7; commit is untagged
-  6022a065d6420de5d86333ecfb2b25c57f84b699:
-    expires_at: 2026-08-16
   9db1a064ca5691ef6f5d983031739ca287de0968:
     expires_at: 2026-08-28
   b60791af41423360b892a1a3cee90cd4e131f381:
     expires_at: 2026-09-18
   # transitive dep pulled by ampel/verify @ v1.2.0 (e0e3b814); allowlisted
   # but not dependabot-tracked (b60791af above stays the live ref).
-  e0e3b8149dafed833431095bc148d50e7eade4e8:
-    tag: v1.2.0
-    expires_at: 2026-08-16
   f882fa9eb795141737eecac4ffb056df5ad14954:
     expires_at: 2026-10-11
   # transitive: referenced by carabiner-dev/actions v1.2.3 internal refs.
@@ -324,9 +295,6 @@ codelytv/pr-size-labeler:
   '*':
     keep: true
 commit-check/commit-check-action:
-  2239d8980732e84a380552fdd71e1d49e149baf3:
-    tag: v2.6.1
-    expires_at: 2026-08-16
   f237ed0085f49444ab5c85bdfa5cdcd490fc09c5:
     tag: v2.7.0
     expires_at: 2026-09-05
@@ -415,27 +383,18 @@ dlang-community/setup-dlang:
   '*':
     keep: true
 docker/bake-action:
-  a66e1c87e2eca0503c343edf1d208c716d54b8a8:
-    tag: v7.1.0
-    expires_at: 2026-08-16
   6614cfa25eff9a0b2b2697efb0b6159e7680d584:
     tag: v7.2.0
     expires_at: 2026-09-24
   d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b:
     tag: v7.3.0
 docker/build-push-action:
-  bcafcacb16a39f128d818304e6c9c0c18556b85f:
-    tag: v7.1.0
-    expires_at: 2026-08-16
   f9f3042f7e2789586610d6e8b85c8f03e5195baf:
     tag: v7.2.0
     expires_at: 2026-09-24
   53b7df96c91f9c12dcc8a07bcb9ccacbed38856a:
     tag: v7.3.0
 docker/login-action:
-  4907a6ddec9925e35a0a9e82d7399ccc52663121:
-    tag: v4.1.0
-    expires_at: 2026-08-16
   650006c6eb7dba73a995cc03b0b2d7f5ca915bee:
     tag: v4.2.0
     expires_at: 2026-09-24
@@ -457,18 +416,12 @@ docker/login-action:
   dbcb813823bdd20940b903addbd779551569679f:
     tag: v4.6.0
 docker/metadata-action:
-  030e881283bb7a6894de51c315a6bfe6a94e05cf:
-    tag: v6.0.0
-    expires_at: 2026-08-16
   80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9:
     tag: v6.1.0
     expires_at: 2026-09-24
   dc802804100637a589fabce1cb79ff13a1411302:
     tag: v6.2.0
 docker/setup-buildx-action:
-  4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd:
-    tag: v4.0.0
-    expires_at: 2026-08-16
   d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5:
     tag: v4.1.0
     expires_at: 2026-09-24
@@ -541,9 +494,6 @@ golangci/*:
   '*':
     keep: true
 golangci/golangci-lint-action:
-  1e7e51e771db61008b38414a730f564565cf7c20:
-    tag: v9.2.0
-    expires_at: 2026-08-16
   82606bf257cbaff209d206a39f5134f0cfbfd2ee:
     tag: v9.2.1
     expires_at: 2026-09-23
@@ -784,9 +734,6 @@ lycheeverse/lychee-action:
 manusa/actions-setup-minikube:
   '*':
     keep: true
-  96202dee4ae1c2f46a62fe197273aaf22b83f42d:
-    tag: v2.16.1
-    expires_at: 2026-08-16
   b65276017fdec6f1e6498129fb740e34e260dc55:
     tag: v2.18.0
 matlab-actions/run-tests:
@@ -850,9 +797,6 @@ olafurpg/setup-scala:
   '*':
     keep: true
 opentofu/setup-opentofu:
-  fc711fa910b93cba0f3fbecaafc9f42fd0c411cb:
-    tag: v2.0.0
-    expires_at: 2026-08-16
   847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4:
     tag: v2.0.1
     expires_at: 2026-09-24
@@ -1068,9 +1012,6 @@ softprops/action-gh-release:
   '*':
     keep: true
 SonarSource/sonarqube-scan-action:
-  59db25f34e16620e48ab4bb9e4a5dce155cb5432:
-    tag: v8.0.0
-    expires_at: 2026-08-16
   7006c4492b2e0ee0f816d36501671557c97f5995:
     tag: v8.1.0
     expires_at: 2026-09-03
@@ -1080,9 +1021,6 @@ SonarSource/sonarqube-scan-action:
   22918119ff8e1ca75a623e15c8296b6ea4fbe28f:
     tag: v8.2.1
 SonarSource/sonarqube-scan-action/install-build-wrapper:
-  59db25f34e16620e48ab4bb9e4a5dce155cb5432:
-    tag: v8.0.0
-    expires_at: 2026-08-16
   7006c4492b2e0ee0f816d36501671557c97f5995:
     tag: v8.1.0
     expires_at: 2026-09-03
