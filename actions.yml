@@ -268,7 +268,8 @@ carabiner-dev/actions/install/download-and-verify:
     expires_at: 2026-10-19
   60563b5460a9e4ae9921c0da551b4ddd6059ff45:
     expires_at: 2026-10-20
-  4c23ca5801511c2f0e9dd8c8dd011cab26a46be4: {}
+  4c23ca5801511c2f0e9dd8c8dd011cab26a46be4:
+    expires_at: 2026-11-09
   # transitive: install/{ampel,bnd} @ v1.2.6 (36a39ef6) pin this ref, and
   # install/ampel @ 2fec8bd8 in turn pins 16009dca. Verified carabiner
   # release-bot commits.
@@ -276,6 +277,7 @@ carabiner-dev/actions/install/download-and-verify:
     expires_at: 2026-10-21
   16009dca48ac369882d4333f1d15d7cd3a4ded31:
     expires_at: 2026-10-21
+  ade14d87ee05bd60ec9028e3f5f430ee571ac8df: {}
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
@@ -318,6 +320,9 @@ commit-check/commit-check-action:
     expires_at: 2026-11-04
   562a184b2b8e583e757b17eb385bc48370f44547:
     tag: v2.13.1
+    expires_at: 2026-11-09
+  f803083a5bf0867b60d77189bc3810fce2f0e314:
+    tag: v2.15.0
 conda-incubator/setup-miniconda:
   '*':
     keep: true
@@ -621,6 +626,9 @@ ilammy/setup-nasm:
 italia/publiccode-parser-action:
   21086c73ec0563e14c6748787efa1b34b025ad8c:
     tag: v1.5.1
+    expires_at: 2026-11-09
+  0deab88c3f094aa12c5826e52ac2c4f176446821:
+    tag: v1.6.0
 j178/prek-action:
   bdca6f102f98e2b4c7029491a53dfd366469e33d:
     tag: v2.0.4

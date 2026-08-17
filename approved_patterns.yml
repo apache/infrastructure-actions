@@ -103,6 +103,7 @@
 - carabiner-dev/actions/install/download-and-verify@4c23ca5801511c2f0e9dd8c8dd011cab26a46be4
 - carabiner-dev/actions/install/download-and-verify@2fec8bd8e1dcfdea26080648070b4827f1fa0584
 - carabiner-dev/actions/install/download-and-verify@16009dca48ac369882d4333f1d15d7cd3a4ded31
+- carabiner-dev/actions/install/download-and-verify@ade14d87ee05bd60ec9028e3f5f430ee571ac8df
 - carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3
 - carlosperate/arm-none-eabi-gcc-action@*
 - chromaui/action@*
@@ -117,6 +118,7 @@
 - commit-check/commit-check-action@bbb6580f01838e475563514f115ec7ef41c9ddc7
 - commit-check/commit-check-action@d109324148a73dc758891d1d85924c912dbfd38b
 - commit-check/commit-check-action@562a184b2b8e583e757b17eb385bc48370f44547
+- commit-check/commit-check-action@f803083a5bf0867b60d77189bc3810fce2f0e314
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d
@@ -216,6 +218,7 @@
 - ilammy/msvc-dev-cmd@*
 - ilammy/setup-nasm@72793074d3c8cdda771dba85f6deafe00623038b
 - italia/publiccode-parser-action@21086c73ec0563e14c6748787efa1b34b025ad8c
+- italia/publiccode-parser-action@0deab88c3f094aa12c5826e52ac2c4f176446821
 - j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d
 - j178/prek-action@e98a699c41eb69ab013a45817a0406469a748f8d
 - j178/prek-action@5337cb91e0fa35a7ff31b9ca345126d8bbbcdf16
