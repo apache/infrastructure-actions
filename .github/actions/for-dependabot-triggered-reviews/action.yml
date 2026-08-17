@@ -79,7 +79,7 @@ runs:
       if: false
     - uses: carabiner-dev/actions/install/ampel@36a39ef667efe7112df8b1a534a4e37f35fad6fd  # v1.2.6
       if: false
-    - uses: carabiner-dev/actions/install/ampel-bootstrap@4c23ca5801511c2f0e9dd8c8dd011cab26a46be4
+    - uses: carabiner-dev/actions/install/ampel-bootstrap@ade14d87ee05bd60ec9028e3f5f430ee571ac8df
       if: false
     - uses: carabiner-dev/actions/install/bnd@36a39ef667efe7112df8b1a534a4e37f35fad6fd  # v1.2.6
       if: false
