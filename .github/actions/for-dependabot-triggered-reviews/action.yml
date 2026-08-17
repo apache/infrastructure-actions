@@ -167,7 +167,7 @@ runs:
       if: false
     - uses: ilammy/setup-nasm@72793074d3c8cdda771dba85f6deafe00623038b  # v1.5.2
       if: false
-    - uses: italia/publiccode-parser-action@21086c73ec0563e14c6748787efa1b34b025ad8c  # v1.5.1
+    - uses: italia/publiccode-parser-action@0deab88c3f094aa12c5826e52ac2c4f176446821  # v1.6.0
       if: false
     - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece  # v3.0.0
       if: false
