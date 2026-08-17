@@ -1096,6 +1096,9 @@ vapier/coverity-scan-action:
     expires_at: 2026-11-04
   1b6fd4eaba6651aa354c9ea7f48caa1710b4e12e:
     tag: v1.9.0
+    expires_at: 2026-11-09
+  8fe7b0af23cbbd4eced5f63dcd2384640eaa5d49:
+    tag: v1.10.0
 vimtor/action-zip:
   5f1c4aa587ea41db1110df6a99981dbe19cee310:
     tag: v1
