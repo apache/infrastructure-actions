@@ -320,6 +320,7 @@
 - rubygems/release-gem@6317d8d1f7e28c24d28f6eff169ea854948bd9f7
 - rubygems/release-gem@f0d7faff26625599a847d40d9fa28ace24c2aacc
 - rubygems/release-gem@052cc82692552de3ef2b81fd670e41d13cba8092
+- rubygems/release-gem@7f9650160c1a4e7989fdc9855807bdbd421d8b6b
 - runs-on/action@d141ef83eb66d096ce8afc767e09115a65c63b60
 - runs-on/action@4e5f72399b6b17f2e79c511c1b38a315a64d22dc
 - runs-on/action@46910bf61b41721b0579f237e186afb35477007a
