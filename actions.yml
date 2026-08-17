@@ -225,13 +225,15 @@ carabiner-dev/actions/install/ampel-bootstrap:
     expires_at: 2026-10-19
   60563b5460a9e4ae9921c0da551b4ddd6059ff45:
     expires_at: 2026-10-20
-  4c23ca5801511c2f0e9dd8c8dd011cab26a46be4: {}
+  4c23ca5801511c2f0e9dd8c8dd011cab26a46be4:
+    expires_at: 2026-11-09
   # transitive: install/download-and-verify @ 4c23ca58 pins this ref, and
   # @ 2fec8bd8 in turn pins 16009dca. Verified carabiner release-bot commits.
   2fec8bd8e1dcfdea26080648070b4827f1fa0584:
     expires_at: 2026-10-21
   16009dca48ac369882d4333f1d15d7cd3a4ded31:
     expires_at: 2026-10-21
+  ade14d87ee05bd60ec9028e3f5f430ee571ac8df: {}
 carabiner-dev/actions/install/bnd:
   e0e3b8149dafed833431095bc148d50e7eade4e8:
     tag: v1.2.0
