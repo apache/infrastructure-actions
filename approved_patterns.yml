@@ -158,7 +158,6 @@
 - docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302
 - docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
 - docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
-- docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a
 - docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3
 - docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8
 - docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
@@ -328,7 +327,6 @@
 - rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe
 - rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18
 - rustsec/*@*
-- sbt/setup-sbt@2e222825582620cc38d2a54e674f3c01b7c14f5d
 - sbt/setup-sbt@4ed7b7ec4bfa2074fe48554c09e341267397247c
 - sbt/setup-sbt@af116cce31c00823d3903ce687f9cda3a4f19f1b
 - sbt/setup-sbt@3afe9cf056c5d139bfc46579af1192d77a2f0821

@@ -438,9 +438,6 @@ docker/setup-buildx-action:
   bb05f3f5519dd87d3ba754cc423b652a5edd6d2c:
     tag: v4.2.0
 docker/setup-qemu-action:
-  ce360397dd3f832beb865e1373c09c0e9f86d70a:
-    tag: v4.0.0
-    expires_at: 2026-08-19
   06116385d9baf250c9f4dcb4858b16962ea869c3:
     tag: v4.1.0
     expires_at: 2026-09-24
@@ -954,9 +951,6 @@ rustsec/*:
   '*':
     keep: true
 sbt/setup-sbt:
-  2e222825582620cc38d2a54e674f3c01b7c14f5d:
-    tag: v1.1.24
-    expires_at: 2026-08-19
   4ed7b7ec4bfa2074fe48554c09e341267397247c:
     tag: v1.2.0
     expires_at: 2026-08-21
