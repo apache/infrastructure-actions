@@ -36,12 +36,17 @@ from verify_action_build.npm_registry_verify import (
 )
 
 
-def _make_tgz(files: dict[str, bytes]) -> bytes:
-    """Build an npm-style ``.tgz`` (everything under ``package/``)."""
+def _make_tgz(files: dict[str, bytes], root: str = "package") -> bytes:
+    """Build an npm-style ``.tgz``.
+
+    ``root`` is ``package`` by convention; DefinitelyTyped publishes under
+    the bare package name instead, so it is parameterised.  Pass ``""`` to
+    emit member names verbatim.
+    """
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as tf:
         for rel, content in files.items():
-            info = tarfile.TarInfo(name=f"package/{rel}")
+            info = tarfile.TarInfo(name=f"{root}/{rel}" if root else rel)
             info.size = len(content)
             tf.addfile(info, io.BytesIO(content))
     return buf.getvalue()
@@ -59,6 +64,41 @@ PKG_FILES = {
 }
 PKG_TGZ = _make_tgz(PKG_FILES)
 PKG_URL = "https://registry.npmjs.org/foo/-/foo-1.0.0.tgz"
+
+# DefinitelyTyped roots its tarballs at the bare package name rather than
+# ``package/`` — this is the real @types/estree@1.0.9 member layout.
+TYPES_FILES = {
+    "LICENSE": b"MIT License\n",
+    "README.md": b"# Installation\n",
+    "flow.d.ts": b"// flow types\n",
+    "index.d.ts": b"export interface Node {}\n",
+    "package.json": b'{"name":"@types/estree","version":"1.0.9"}\n',
+}
+TYPES_TGZ = _make_tgz(TYPES_FILES, root="estree")
+TYPES_URL = "https://registry.npmjs.org/@types/estree/-/estree-1.0.9.tgz"
+
+
+def _types_tree(extra: dict[str, str] | None = None) -> dict[str, str]:
+    tree = {"node_modules/.package-lock.json": "abc123"}
+    for rel, content in TYPES_FILES.items():
+        tree[f"node_modules/@types/estree/{rel}"] = _git_blob_sha1(content)
+    if extra:
+        tree.update(extra)
+    return tree
+
+
+def _types_lock() -> bytes:
+    return json.dumps({
+        "lockfileVersion": 3,
+        "packages": {
+            "": {"name": "root"},
+            "node_modules/@types/estree": {
+                "version": "1.0.9",
+                "resolved": TYPES_URL,
+                "integrity": _integrity(TYPES_TGZ),
+            },
+        },
+    }).encode()
 
 
 def _tree_for(files: dict[str, bytes], extra: dict[str, str] | None = None) -> dict[str, str]:
@@ -123,6 +163,24 @@ class TestHelpers:
     def test_tarball_files_strips_package_prefix(self):
         out = _tarball_files(PKG_TGZ)
         assert out == PKG_FILES
+
+    def test_tarball_files_strips_definitelytyped_bare_name_root(self):
+        # @types/* tarballs root at the bare package name; assuming
+        # "package/" left every path prefixed with the root, so none of
+        # them matched node_modules/@types/<pkg>/<rel>.
+        assert _tarball_files(TYPES_TGZ) == TYPES_FILES
+
+    def test_tarball_files_strips_dot_slash_prefixed_root(self):
+        assert _tarball_files(_make_tgz(PKG_FILES, root="./package")) == PKG_FILES
+
+    def test_tarball_files_leaves_multi_root_tarball_untouched(self):
+        # No single shared root → nothing is safe to strip.
+        files = {"a/one.js": b"1\n", "b/two.js": b"2\n"}
+        assert _tarball_files(_make_tgz(files, root="")) == files
+
+    def test_tarball_files_leaves_root_level_files_untouched(self):
+        files = {"one.js": b"1\n"}
+        assert _tarball_files(_make_tgz(files, root="")) == files
 
     def test_strip_npm_install_metadata_drops_underscore_keys(self):
         # npm's install bookkeeping is _-prefixed by convention; the exact
@@ -253,6 +311,25 @@ class TestVerify:
         result = _run(tree, _lock())
         assert result.ok is False
         assert "node_modules/foo/sneaky.js" in result.extra
+
+    def test_definitelytyped_package_verifies_clean(self):
+        # apache/infrastructure-actions#1171: github-pages-deploy-action v4.9.0
+        # migrated yarn → npm, which added node_modules/.package-lock.json and
+        # so switched this check on for the first time.  Every file of every
+        # vendored @types package was then reported as injected code, even
+        # though each tarball had already passed integrity verification.
+        result = _run(_types_tree(), _types_lock(), tarballs={TYPES_URL: TYPES_TGZ})
+        assert result.ok is True
+        assert result.verified == ["@types/estree"]
+        assert not result.extra and not result.mismatched and not result.errors
+
+    def test_injected_file_in_definitelytyped_package_still_flagged(self):
+        # Precision guard: detecting the root must not stop real extra files
+        # inside a bare-name-rooted package from being caught.
+        tree = _types_tree(extra={"node_modules/@types/estree/evil.js": "deadbeef00"})
+        result = _run(tree, _types_lock(), tarballs={TYPES_URL: TYPES_TGZ})
+        assert result.ok is False
+        assert "node_modules/@types/estree/evil.js" in result.extra
 
     def test_noisy_bin_files_not_flagged_as_extra(self):
         tree = _tree_for(PKG_FILES, extra={"node_modules/.bin/foo": "shimsha00"})
