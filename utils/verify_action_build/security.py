@@ -680,7 +680,10 @@ def analyze_lock_files(
 
     # (ecosystem, manifest, [acceptable lock files in priority order])
     ecosystems: list[tuple[str, str, list[str]]] = [
-        ("node",   "package.json",   ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lock", "bun.lockb"]),
+        # aube (jdx/aube) writes aube-lock.yaml in pnpm's lockfileVersion 9
+        # format — same resolved-version + sha512-integrity guarantees the
+        # other node lock files give, under a different filename.
+        ("node",   "package.json",   ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lock", "bun.lockb", "aube-lock.yaml"]),
         ("python", "pyproject.toml", ["uv.lock", "poetry.lock", "pdm.lock", "requirements.txt"]),
         ("python", "Pipfile",        ["Pipfile.lock"]),
         ("deno",   "deno.json",      ["deno.lock"]),
@@ -917,7 +920,7 @@ def analyze_dependency_pinning(
         except (json.JSONDecodeError, KeyError):
             pass
 
-    lock_files = ["package-lock.json", "yarn.lock", "pnpm-lock.yaml"]
+    lock_files = ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "aube-lock.yaml"]
     if sub_path:
         lock_files = [f"{sub_path}/{lf}" for lf in lock_files] + lock_files
     for lf_path in lock_files:

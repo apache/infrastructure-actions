@@ -55,7 +55,7 @@ def diff_approved_vs_new(
     excluded_dirs = {"dist", "node_modules", ".git", ".github", "__tests__", "__mocks__"}
     lock_files = {
         "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb",
-        "shrinkwrap.json", "npm-shrinkwrap.json",
+        "aube-lock.yaml", "shrinkwrap.json", "npm-shrinkwrap.json",
     }
     source_extensions = {".js", ".ts", ".mjs", ".cjs", ".mts", ".cts", ".json", ".yml", ".yaml"}
 
