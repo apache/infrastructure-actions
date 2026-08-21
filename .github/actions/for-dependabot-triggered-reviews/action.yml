@@ -37,7 +37,7 @@ name: Gateway Action
 runs:
   using: "composite"
   steps:
-    - uses: 1Password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4  # v5.0.0
+    - uses: 1Password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2  # v5.0.1
       if: false  # zizmor: ignore[unpinned-tools] generated sentinel step is never executed
       with:
         version: "2.30.0"
