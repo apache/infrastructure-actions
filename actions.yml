@@ -104,9 +104,6 @@ awalsh128/cache-apt-pkgs-action:
   '*':
     keep: true
 aws-actions/configure-aws-credentials:
-  acca2b1b2070338fb9fd1ca27ecee81d687e58e5:
-    tag: v6.1.2
-    expires_at: 2026-08-21
   99214aa6889fcddfa57764031d71add364327e59:
     tag: v6.1.3
     expires_at: 2026-08-28
@@ -744,9 +741,6 @@ manusa/actions-setup-minikube:
   b65276017fdec6f1e6498129fb740e34e260dc55:
     tag: v2.18.0
 matlab-actions/run-tests:
-  4c375221b861dd3f7ea9b31704a3cf45d35073f1:
-    tag: v3.1.2
-    expires_at: 2026-08-21
   ae0e80cb44fdec28d35d0831d8acf38ee4fdf91a:
     tag: v3.2.0
     expires_at: 2026-10-28
@@ -948,9 +942,6 @@ rustsec/*:
   '*':
     keep: true
 sbt/setup-sbt:
-  4ed7b7ec4bfa2074fe48554c09e341267397247c:
-    tag: v1.2.0
-    expires_at: 2026-08-21
   af116cce31c00823d3903ce687f9cda3a4f19f1b:
     tag: v1.2.1
     expires_at: 2026-09-13
