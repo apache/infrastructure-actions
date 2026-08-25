@@ -230,7 +230,9 @@ carabiner-dev/actions/install/ampel-bootstrap:
     expires_at: 2026-10-21
   16009dca48ac369882d4333f1d15d7cd3a4ded31:
     expires_at: 2026-10-21
-  ade14d87ee05bd60ec9028e3f5f430ee571ac8df: {}
+  ade14d87ee05bd60ec9028e3f5f430ee571ac8df:
+    expires_at: 2026-11-17
+  833eed5876a6db1dbfd60289611ee40fc12f4fe2: {}
 carabiner-dev/actions/install/bnd:
   e0e3b8149dafed833431095bc148d50e7eade4e8:
     tag: v1.2.0
