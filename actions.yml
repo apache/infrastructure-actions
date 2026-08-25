@@ -195,8 +195,11 @@ carabiner-dev/actions/install/ampel:
   # transitive: ampel/verify @ v1.2.6 (36a39ef6) pins its internal action refs
   # to this untagged commit. Verified carabiner release-bot commit, ancestor of
   # 36a39ef6.
+    expires_at: 2026-11-17
   2fec8bd8e1dcfdea26080648070b4827f1fa0584:
     expires_at: 2026-10-21
+  32587e82f960d49b36101e8c45d1956e511965d3:
+    tag: v1.2.9
 carabiner-dev/actions/install/ampel-bootstrap:
   9db1a064ca5691ef6f5d983031739ca287de0968:
     expires_at: 2026-08-28
