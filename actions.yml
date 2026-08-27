@@ -45,6 +45,9 @@
     expires_at: 2026-10-28
   e544b780808654ba8ceba5fb2fe2897103d92ff4:
     tag: v5.0.0
+    expires_at: 2026-11-19
+  70062d7a876d3eb6334754fa26efd2fbd90c32f2:
+    tag: v5.0.1
 actions-cool/check-user-permission:
   c21884f3dda18dafc2f8b402fe807ccc9ec1aa5e:
     tag: v2.4.0
@@ -444,6 +447,9 @@ docker/setup-buildx-action:
     expires_at: 2026-09-24
   bb05f3f5519dd87d3ba754cc423b652a5edd6d2c:
     tag: v4.2.0
+    expires_at: 2026-11-19
+  37fe631027851001ddb9b187196cc803df7f5f0e:
+    tag: v4.3.0
 docker/setup-qemu-action:
   06116385d9baf250c9f4dcb4858b16962ea869c3:
     tag: v4.1.0
@@ -611,6 +617,9 @@ hadolint/hadolint-action:
     expires_at: 2026-10-25
   2a66e89f53d0771bb131a7fa31f3136336094aa6:
     tag: v3.4.0
+    expires_at: 2026-11-19
+  06be81baf89a55ffd0e24b8f04a4185738dd3387:
+    tag: v3.5.0
 hashicorp/setup-terraform:
   dfe3c3f87815947d99a8997f908cb6525fc44e9e:
     tag: v4.0.1

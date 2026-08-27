@@ -27,6 +27,7 @@
 - 1Password/load-secrets-action/configure@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556
 - 1Password/load-secrets-action/configure@eb2efd0703da22a93c467f2d1ffbb6826c11e19c
 - 1Password/load-secrets-action/configure@e544b780808654ba8ceba5fb2fe2897103d92ff4
+- 1Password/load-secrets-action/configure@70062d7a876d3eb6334754fa26efd2fbd90c32f2
 - actions-cool/check-user-permission@c21884f3dda18dafc2f8b402fe807ccc9ec1aa5e
 - addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185
 - AdoptOpenJDK/install-jdk@*
@@ -161,6 +162,7 @@
 - docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302
 - docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
 - docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
+- docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e
 - docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3
 - docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8
 - docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
@@ -214,6 +216,7 @@
 - gradle/develocity-actions/setup-maven@0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642
 - hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5
 - hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6
+- hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387
 - hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
 - helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f
 - helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f
