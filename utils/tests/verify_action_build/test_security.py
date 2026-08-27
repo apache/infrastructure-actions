@@ -102,6 +102,11 @@ class TestAnalyzeScripts:
             return files.get(path)
         return fetch
 
+    def _mock_tree(self, paths=()):
+        return mock.patch(
+            "verify_action_build.security._list_repo_files", return_value=list(paths)
+        )
+
     def test_detects_eval(self):
         action_yml = """\
 name: Test
@@ -113,9 +118,10 @@ runs:
         files = {
             "script.py": 'eval("malicious code")\n',
         }
-        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
-            with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch_file(files)):
-                warnings = analyze_scripts("org", "repo", "a" * 40)
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml), \
+                self._mock_tree(), \
+                mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch_file(files)):
+            warnings = analyze_scripts("org", "repo", "a" * 40)
         # Script analysis finds suspicious patterns (eval is in findings)
         # Warnings list may be empty since script analysis only logs to console
         # but doesn't add to warnings for all patterns
@@ -128,10 +134,75 @@ runs:
   using: node20
   main: dist/index.js
 """
-        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
-            with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
-                warnings = analyze_scripts("org", "repo", "a" * 40)
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml), \
+                self._mock_tree(), \
+                mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
+            warnings = analyze_scripts("org", "repo", "a" * 40)
         assert warnings == []
+
+    def test_scans_shell_script_only_reachable_from_js_entrypoint(self):
+        # uraimo/run-on-arch-action: action.yml names only the JS entrypoint,
+        # which then exec()s src/run-on-arch.sh.  Nothing in action.yml or a
+        # Dockerfile mentions the script, so it has to come from the tree.
+        action_yml = """\
+name: Run on architecture
+runs:
+  using: node24
+  main: 'src/run-on-arch.js'
+"""
+        files = {"src/run-on-arch.sh": "#!/bin/bash\ndocker run --rm ubuntu\n"}
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml), \
+                self._mock_tree(["src/run-on-arch.js", "src/run-on-arch.sh", "README.md"]), \
+                mock.patch(
+                    "verify_action_build.security.fetch_file_from_github",
+                    side_effect=self._mock_fetch_file(files),
+                ) as fetch:
+            analyze_scripts("org", "repo", "a" * 40)
+        fetched = {call.args[3] for call in fetch.call_args_list}
+        assert "src/run-on-arch.sh" in fetched
+
+    def test_tree_discovery_skips_vendored_and_test_dirs(self):
+        action_yml = """\
+name: Test
+runs:
+  using: node24
+  main: 'dist/index.js'
+"""
+        tree = [
+            "node_modules/foo/install.sh",
+            "__tests__/fixture.sh",
+            "docs/example.sh",
+            "src/entry.sh",
+        ]
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml), \
+                self._mock_tree(tree), \
+                mock.patch(
+                    "verify_action_build.security.fetch_file_from_github",
+                    side_effect=self._mock_fetch_file({"src/entry.sh": "echo hi\n"}),
+                ) as fetch:
+            analyze_scripts("org", "repo", "a" * 40)
+        fetched = {call.args[3] for call in fetch.call_args_list}
+        assert "src/entry.sh" in fetched
+        assert not any(p.startswith(("node_modules/", "__tests__/", "docs/")) for p in fetched)
+
+    def test_tree_discovery_respects_sub_path(self):
+        action_yml = """\
+name: Test
+runs:
+  using: node24
+  main: 'index.js'
+"""
+        tree = ["other/setup.sh", "sub/action/src/setup.sh"]
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml), \
+                self._mock_tree(tree), \
+                mock.patch(
+                    "verify_action_build.security.fetch_file_from_github",
+                    side_effect=self._mock_fetch_file({"sub/action/src/setup.sh": "echo hi\n"}),
+                ) as fetch:
+            analyze_scripts("org", "repo", "a" * 40, sub_path="sub/action")
+        fetched = {call.args[3] for call in fetch.call_args_list}
+        assert "sub/action/src/setup.sh" in fetched
+        assert "other/setup.sh" not in fetched
 
 
 class TestAnalyzeActionMetadata:
