@@ -50,6 +50,7 @@ from .security import (
     analyze_nested_actions,
     analyze_repo_metadata,
     analyze_scripts,
+    find_rebuild_reproduced_binaries,
 )
 
 SECURITY_CHECKLIST_URL = "https://github.com/apache/infrastructure-actions#security-review-checklist"
@@ -328,18 +329,26 @@ def verify_single_action(
         # that the JS-rebuild check cannot reconcile with source — the
         # launcher matches, the binary doesn't.  See runs-on/action@v2.1.x
         # for the canonical case.
+        # Binaries a bundler copied into the output directory are deleted
+        # before the rebuild, so any that come back byte-identical are build
+        # output from the lockfile-pinned dependency tree and need no
+        # upstream release provenance of their own.
+        rebuild_reproduced_binaries = find_rebuild_reproduced_binaries(
+            original_dir, rebuilt_dir, out_dir_name,
+        )
         in_tree_binary_errors = analyze_in_tree_binaries(
             org, repo, commit_hash, sub_path,
+            reproduced_by_rebuild=rebuild_reproduced_binaries,
         )
         if in_tree_binary_errors:
             checks_performed.append((
                 "In-tree binary check", "fail",
-                "unverified binaries in repo (no SLSA attestation / SHA256SUMS)",
+                "unverified binaries in repo (no rebuild match / SLSA attestation / SHA256SUMS)",
             ))
         else:
             checks_performed.append((
                 "In-tree binary check", "pass",
-                "no in-tree binaries (or all verified via attestation / SHA256SUMS)",
+                "no in-tree binaries (or all verified via rebuild / attestation / SHA256SUMS)",
             ))
 
         # Vendored npm dependency check: when an action commits its
