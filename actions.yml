@@ -83,9 +83,6 @@ arduino/setup-protoc:
   '*':
     keep: true
 astral-sh/setup-uv:
-  08807647e7069bb48b6ef5acd8ec9567f424441b:
-    tag: v8.1.0
-    expires_at: 2026-08-28
   fac544c07dec837d0ccb6301d7b5580bf5edae39:
     tag: v8.2.0
     expires_at: 2026-09-27
@@ -107,9 +104,6 @@ awalsh128/cache-apt-pkgs-action:
   '*':
     keep: true
 aws-actions/configure-aws-credentials:
-  99214aa6889fcddfa57764031d71add364327e59:
-    tag: v6.1.3
-    expires_at: 2026-08-28
   e7f100cf4c008499ea8adda475de1042d6975c7b:
     tag: v6.2.0
     expires_at: 2026-09-20
@@ -168,9 +162,6 @@ burrunan/gradle-cache-action:
   '*':
     keep: true
 carabiner-dev/actions/ampel/verify:
-  e0e3b8149dafed833431095bc148d50e7eade4e8:
-    tag: v1.2.0
-    expires_at: 2026-08-28
   94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
     tag: v1.2.1
     expires_at: 2026-10-11
@@ -183,9 +174,6 @@ carabiner-dev/actions/ampel/verify:
   32587e82f960d49b36101e8c45d1956e511965d3:
     tag: v1.2.9
 carabiner-dev/actions/install/ampel:
-  e0e3b8149dafed833431095bc148d50e7eade4e8:
-    tag: v1.2.0
-    expires_at: 2026-08-28
   94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
     tag: v1.2.1
   # transitive: v1.2.3 (2a4b2cd1) pins its internal action refs to this
@@ -207,8 +195,6 @@ carabiner-dev/actions/install/ampel:
   32587e82f960d49b36101e8c45d1956e511965d3:
     tag: v1.2.9
 carabiner-dev/actions/install/ampel-bootstrap:
-  9db1a064ca5691ef6f5d983031739ca287de0968:
-    expires_at: 2026-08-28
   b60791af41423360b892a1a3cee90cd4e131f381:
     expires_at: 2026-09-18
   # transitive dep pulled by ampel/verify @ v1.2.0 (e0e3b814); allowlisted
@@ -243,9 +229,6 @@ carabiner-dev/actions/install/ampel-bootstrap:
     expires_at: 2026-11-17
   833eed5876a6db1dbfd60289611ee40fc12f4fe2: {}
 carabiner-dev/actions/install/bnd:
-  e0e3b8149dafed833431095bc148d50e7eade4e8:
-    tag: v1.2.0
-    expires_at: 2026-08-28
   94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
     tag: v1.2.1
   # transitive: v1.2.3 (2a4b2cd1) pins its internal action refs to this
@@ -262,8 +245,6 @@ carabiner-dev/actions/install/bnd:
   32587e82f960d49b36101e8c45d1956e511965d3:
     tag: v1.2.9
 carabiner-dev/actions/install/download-and-verify:
-  9db1a064ca5691ef6f5d983031739ca287de0968:
-    expires_at: 2026-08-28
   b60791af41423360b892a1a3cee90cd4e131f381:
     expires_at: 2026-09-18
   # transitive dep pulled by ampel/verify @ v1.2.0 (e0e3b814); allowlisted
@@ -535,9 +516,6 @@ gr2m/twitter-together:
   '*':
     keep: true
 graalvm/setup-graalvm:
-  bef4b0e916c7dd079bf60fb95d49139f67e32c5f:
-    tag: v1.5.3
-    expires_at: 2026-08-28
   329c42c5f4c343bceb505f0b28cc8499bc2bf174:
     tag: v1.5.4
     expires_at: 2026-09-13
@@ -1026,9 +1004,6 @@ slsa-framework/source-actions:
     expires_at: 2026-12-31
     tag: v0.1.0
 snok/install-poetry:
-  76e04a911780d5b312d89783f7b1cd627778900a:
-    tag: v1
-    expires_at: 2026-08-28
   a783c322200f0519c7926aa6faa857c4e23e9263:
     tag: v1
 softprops/action-gh-release:
