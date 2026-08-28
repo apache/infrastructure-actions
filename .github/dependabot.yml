@@ -19,6 +19,11 @@
 
 version: 2
 updates:
+  # Deliberately ungrouped: every bump here is an allow-list change that gets
+  # its own security review and its own `verify` run, and is approved or held
+  # on its own merits. Grouping would tie an action that fails verification to
+  # unrelated ones that passed, so a single bad actor would block the batch.
+  # Do not add a `groups:` key to this ecosystem.
   - package-ecosystem: "github-actions" # zizmor: ignore[dependabot-cooldown] see #683 and #712
     commit-message:
       prefix: "action-allowlist-review"
@@ -64,3 +69,24 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
+    groups:
+      # Lint/test tooling from the PEP 735 `dev` group. These never ship in
+      # the published action, so reviewing them one PR per tool buys nothing
+      # — five separate PRs landed on 2026-08-28 (#1208-#1212) for ruff,
+      # mypy and types-pyyaml across two directories. Dependabot opens one
+      # PR per directory per group, so this collapses those to two.
+      dev-tooling:
+        dependency-type: "development"
+        patterns:
+          - "*"
+      # Runtime dependencies are grouped only for patch and minor bumps.
+      # A major bump of something the action actually ships stays outside
+      # every group and so gets its own PR, which is where it belongs: it
+      # can break consumers and deserves to be reviewed and released alone.
+      runtime-minor-patch:
+        dependency-type: "production"
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"

@@ -30,6 +30,7 @@ This repository hosts GitHub Actions developed by the ASF community and approved
   - [Reviewing](#reviewing)
   - [Updating Version of Already Approved Action](#updating-version-of-already-approved-action)
     - [Automated Verification in CI](#automated-verification-in-ci)
+    - [Dependabot Update Grouping](#dependabot-update-grouping)
     - [Dependabot Cooldown Period](#dependabot-cooldown-period)
   - [Manual Version Addition](#manual-addition-of-specific-versions)
   - [Automatic Expiration of Old Versions](#automatic-expiration-of-old-versions)
@@ -332,6 +333,23 @@ Additional flags:
 
 > [!NOTE]
 > **Prerequisites:** `docker` and `uv`. When using the default mode (without `--no-gh`), `gh` (GitHub CLI, authenticated via `gh auth login`) is also required. The build runs in a `node:20-slim` container so no local Node.js installation is needed.
+
+#### Dependabot Update Grouping
+
+`.github/dependabot.yml` groups updates so that related bumps arrive as one PR:
+
+| Ecosystem | Group | What it collects |
+|---|---|---|
+| `github-actions` (`/.github/workflows`, …) | `codeql-action` | `github/codeql-action*` — init/autobuild/analyze must run the same version, so a split PR fails the Analyze jobs |
+| `uv` (`/`, `/pelican/`, `/stash/`) | `dev-tooling` | everything in the PEP 735 `dev` group (ruff, mypy, pytest, pylint, `types-*`) — lint/test tooling that never ships in the published action |
+| `uv` | `runtime-minor-patch` | patch and minor bumps of runtime dependencies |
+
+Dependabot opens one PR per directory per group, so `/pelican` and `/stash` each get a single dev-tooling PR rather than one per tool.
+
+Two things stay deliberately ungrouped:
+
+- **Major bumps of runtime dependencies** match no group, so each gets its own PR. A major version of something the action ships can break consumers and deserves to be reviewed and released on its own.
+- **The allow-list ecosystem** (`/.github/actions/for-dependabot-triggered-reviews`). Every bump there is an allow-list change with its own security review and its own `verify` run, approved or held on its own merits. Grouping would tie an action that fails verification to unrelated ones that passed, so a single bad actor would block the whole batch.
 
 #### Dependabot Cooldown Period
 
