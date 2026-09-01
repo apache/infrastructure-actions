@@ -177,7 +177,7 @@ RUN OUT_DIR=$(cat /out-dir.txt); \
 ARG APPROVED_HASH=""
 RUN if [ -n "$APPROVED_HASH" ]; then \
       echo "approved-hash: $APPROVED_HASH" >> /build-info.log; \
-      for f in package.json package-lock.json yarn.lock pnpm-lock.yaml; do \
+      for f in package.json package-lock.json yarn.lock pnpm-lock.yaml aube-lock.yaml; do \
         if [ -f "$f" ]; then \
           if git show "$APPROVED_HASH:$f" > "/tmp/approved-$f" 2>/dev/null; then \
             cp "/tmp/approved-$f" "$f"; \
@@ -215,6 +215,12 @@ RUN if [ "$(cat /has-node-modules.txt)" = "true" ]; then \
         corepack prepare --activate 2>/dev/null; \
         pnpm install --prod 2>/dev/null || pnpm install 2>/dev/null || true; \
         echo "node_modules-reinstall: pnpm --prod (in $BUILD_DIR)" >> /build-info.log; \
+      elif [ -f aube-lock.yaml ]; then \
+        cp aube-lock.yaml pnpm-lock.yaml; \
+        corepack prepare --activate 2>/dev/null; \
+        pnpm install --no-frozen-lockfile --prod 2>/dev/null || pnpm install --no-frozen-lockfile 2>/dev/null || true; \
+        rm -f pnpm-lock.yaml; \
+        echo "node_modules-reinstall: pnpm --prod via aube-lock.yaml (in $BUILD_DIR)" >> /build-info.log; \
       else \
         npm ci --production 2>/dev/null || npm install --production 2>/dev/null || true; \
         echo "node_modules-reinstall: npm --production (in $BUILD_DIR)" >> /build-info.log; \
@@ -236,6 +242,12 @@ RUN BUILD_DIR=$(cat /build-dir.txt); \
       corepack prepare --activate 2>/dev/null; \
       pnpm install 2>/dev/null || true; \
       echo "pkg-manager: pnpm (in $BUILD_DIR)" >> /build-info.log; \
+    elif [ -f aube-lock.yaml ]; then \
+      cp aube-lock.yaml pnpm-lock.yaml; \
+      corepack prepare --activate 2>/dev/null; \
+      pnpm install --no-frozen-lockfile 2>/dev/null || true; \
+      rm -f pnpm-lock.yaml; \
+      echo "pkg-manager: pnpm via aube-lock.yaml (in $BUILD_DIR)" >> /build-info.log; \
     else \
       npm ci 2>/dev/null || npm install 2>/dev/null || true; \
       echo "pkg-manager: npm (in $BUILD_DIR)" >> /build-info.log; \

@@ -678,6 +678,17 @@ class TestAnalyzeLockFiles:
         }
         assert self._run(files) == []
 
+    def test_node_package_json_with_aube_lock_passes(self):
+        # apache/infrastructure-actions#1167: jdx/mise-action v4.2.4 moved its
+        # build to aube (jdx/aube), which writes aube-lock.yaml in pnpm's
+        # lockfileVersion 9 format — resolved versions plus sha512 integrity
+        # for every transitive dep, so the pinning guarantee is unchanged.
+        files = {
+            "package.json": '{"name":"x","dependencies":{"a":"1.0.0"}}',
+            "aube-lock.yaml": "lockfileVersion: '9.0'\n",
+        }
+        assert self._run(files) == []
+
     def test_node_package_json_without_lock_fails(self):
         # ``dependencies`` are declared, so the lock-file requirement applies.
         errors = self._run({
