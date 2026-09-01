@@ -569,6 +569,10 @@ def analyze_scripts(
                         if clean:
                             script_files.add(clean)
 
+    # Scripts nothing references from action.yml or a Dockerfile still ship
+    # with the action and still run when the entrypoint shells out to them.
+    script_files.update(_discover_shell_script_files(org, repo, commit_hash, sub_path))
+
     if not script_files:
         return warnings
 
@@ -1258,6 +1262,7 @@ _JS_VERIFICATION_PATTERNS = [
 ]
 
 _JS_SOURCE_EXTENSIONS = (".ts", ".js", ".mjs", ".cjs")
+_SHELL_SCRIPT_EXTENSIONS = (".sh", ".bash", ".ps1")
 _JS_SCAN_DIR_PREFIXES = ("src/", "lib/", "source/", "sources/", "scripts/")
 _JS_EXCLUDE_DIR_PREFIXES = (
     "dist/", "build/", "out/", "node_modules/", "coverage/",
@@ -1381,6 +1386,39 @@ def _discover_js_source_files(
         if content is not None:
             files.append((rel, content))
     return files
+
+
+def _discover_shell_script_files(
+    org: str, repo: str, commit_hash: str, sub_path: str,
+) -> list[str]:
+    """Return repo paths of committed shell/interpreter scripts worth scanning.
+
+    ``analyze_scripts`` otherwise only learns about a script when action.yml or
+    a Dockerfile names it.  A node action's entrypoint is free to shell out to
+    a script that neither file mentions -- uraimo/run-on-arch-action declares
+    ``main: src/run-on-arch.js``, which then ``exec()``s ``src/run-on-arch.sh``
+    -- so the script that actually invokes docker went unscanned.  Discover
+    them from the tree instead, using the same directory filters as the JS
+    discovery so vendored and test material stays out.
+    """
+    paths: list[str] = []
+    all_paths = _list_repo_files(org, repo, commit_hash)
+    if not all_paths:
+        return paths
+
+    prefix = f"{sub_path.rstrip('/')}/" if sub_path else ""
+    for path in all_paths:
+        if prefix and not path.startswith(prefix):
+            continue
+        rel = path[len(prefix):] if prefix else path
+        if not rel.endswith(_SHELL_SCRIPT_EXTENSIONS):
+            continue
+        if any(rel.startswith(d) for d in _JS_EXCLUDE_DIR_PREFIXES):
+            continue
+        if "/" in rel and not any(rel.startswith(d) for d in _JS_SCAN_DIR_PREFIXES):
+            continue
+        paths.append(rel)
+    return paths
 
 
 def _find_binary_downloads(content: str) -> list[tuple[int, str]]:

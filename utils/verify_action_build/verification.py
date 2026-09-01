@@ -558,6 +558,20 @@ def verify_single_action(
                 js_status, js_detail = "fail", "DIFFERENCES DETECTED"
             checks_performed.append(("JS build verification", js_status, js_detail))
 
+            # Script analysis used to run only for composite/docker actions, so
+            # a node action's shell payload was never looked at — even though
+            # its entrypoint is free to shell out to a committed script that
+            # neither action.yml nor a Dockerfile names.  Findings here are
+            # informational: they are not added to non_js_warnings, so the
+            # pass/fail verdict for a JS action is unchanged.
+            js_script_warnings = analyze_scripts(org, repo, commit_hash, sub_path)
+            checks_performed.append((
+                "Script analysis",
+                "warn" if js_script_warnings else "pass",
+                f"{len(js_script_warnings)} warning(s)" if js_script_warnings
+                else "no suspicious patterns",
+            ))
+
         # Check for previously approved versions and offer to diff
         # (reuse the list fetched earlier for the approved_hash build arg)
         if approved:

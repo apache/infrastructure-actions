@@ -27,6 +27,30 @@ from .console import console, run, ask_confirm, UserQuit
 from .diff_display import show_colored_diff
 from .diff_js import beautify_js
 
+# Extensions compared between the approved and the new version.  Generated
+# output (dist/, node_modules/) and test fixtures are filtered out separately,
+# so this set only has to answer "is this a file the action can execute on a
+# runner".  That is wider than the language the entrypoint is written in: a
+# node action is free to shell out to a committed .sh (uraimo/run-on-arch-action
+# names only src/run-on-arch.js in action.yml and then exec()s
+# src/run-on-arch.sh), and a docker action's Dockerfile is itself part of what
+# runs.  Anything left out here is a change the reviewer never sees.
+SOURCE_EXTENSIONS = {
+    ".js", ".ts", ".mjs", ".cjs", ".mts", ".cts", ".json", ".yml", ".yaml",
+    ".sh", ".bash", ".ps1", ".py", ".rb", ".pl",
+}
+
+# Runtime files carrying no extension of their own.  Dockerfiles are commonly
+# suffixed per target (Dockerfile.aarch64.trixie), so match on the prefix.
+SOURCE_FILENAME_PREFIXES = ("Dockerfile",)
+
+
+def is_source_file(rel: Path) -> bool:
+    """Whether *rel* is compared by the approved-vs-new source diff."""
+    if rel.suffix in SOURCE_EXTENSIONS:
+        return True
+    return rel.name.startswith(SOURCE_FILENAME_PREFIXES)
+
 
 def diff_approved_vs_new(
     org: str, repo: str, approved_hash: str, new_hash: str, work_dir: Path,
@@ -57,7 +81,6 @@ def diff_approved_vs_new(
         "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb",
         "aube-lock.yaml", "shrinkwrap.json", "npm-shrinkwrap.json",
     }
-    source_extensions = {".js", ".ts", ".mjs", ".cjs", ".mts", ".cts", ".json", ".yml", ".yaml"}
 
     with console.status("[bold blue]Fetching source from both versions...[/bold blue]"):
         clone_dir = work_dir / "repo-clone"
@@ -85,7 +108,7 @@ def diff_approved_vs_new(
                 if matched and rel not in include_dist_files:
                     skipped_dirs.update(matched)
                     continue
-                if rel.suffix in source_extensions:
+                if is_source_file(rel):
                     dest = out_dir / rel
                     dest.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(f, dest)
