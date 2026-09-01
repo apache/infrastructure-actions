@@ -23,6 +23,7 @@ from verify_action_build.security import (
     analyze_binary_downloads_recursive,
     analyze_dockerfile,
     analyze_in_tree_binaries,
+    find_rebuild_reproduced_binaries,
     analyze_lock_files,
     analyze_scripts,
     analyze_action_metadata,
@@ -1682,6 +1683,124 @@ class TestLooksLikeInTreeBinary:
         # The signal is parent-directory == platform, not filename.
         assert not _looks_like_in_tree_binary("glnxa64")
         assert not _looks_like_in_tree_binary("docs/glnxa64.md")
+
+
+class TestFindRebuildReproducedBinaries:
+    """1Password/load-secrets-action ships dist/core_bg.wasm, which ncc copies
+    out of the lockfile-pinned @1password/sdk-core package.  It has no GitHub
+    release provenance of its own and never will, so the in-tree check's
+    attestation/SHA256SUMS cascade rejected it.  The rebuild deletes it and
+    puts it back, which is the guarantee that actually applies."""
+
+    def _tree(self, root, files):
+        for rel, data in files.items():
+            path = root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+
+    def test_identical_binary_is_credited(self, tmp_path):
+        original, rebuilt = tmp_path / "orig", tmp_path / "new"
+        self._tree(original, {"core_bg.wasm": b"\x00asm\x01wasm-bytes"})
+        self._tree(rebuilt, {"core_bg.wasm": b"\x00asm\x01wasm-bytes"})
+        assert find_rebuild_reproduced_binaries(original, rebuilt, "dist") == {
+            "dist/core_bg.wasm"
+        }
+
+    def test_differing_binary_is_not_credited(self, tmp_path):
+        original, rebuilt = tmp_path / "orig", tmp_path / "new"
+        self._tree(original, {"core_bg.wasm": b"\x00asm\x01committed"})
+        self._tree(rebuilt, {"core_bg.wasm": b"\x00asm\x01rebuilt"})
+        assert find_rebuild_reproduced_binaries(original, rebuilt, "dist") == set()
+
+    def test_binary_missing_from_rebuild_is_not_credited(self, tmp_path):
+        # The deletion step removed it and the build never put it back — that
+        # is shipped code the rebuild cannot account for.
+        original, rebuilt = tmp_path / "orig", tmp_path / "new"
+        self._tree(original, {"core_bg.wasm": b"\x00asm\x01bytes"})
+        rebuilt.mkdir(parents=True)
+        assert find_rebuild_reproduced_binaries(original, rebuilt, "dist") == set()
+
+    def test_nested_path_and_out_dir_prefix(self, tmp_path):
+        original, rebuilt = tmp_path / "orig", tmp_path / "new"
+        self._tree(original, {"vendor/native.node": b"native"})
+        self._tree(rebuilt, {"vendor/native.node": b"native"})
+        assert find_rebuild_reproduced_binaries(original, rebuilt, "lib") == {
+            "lib/vendor/native.node"
+        }
+
+    def test_non_binary_files_ignored(self, tmp_path):
+        original, rebuilt = tmp_path / "orig", tmp_path / "new"
+        self._tree(original, {"index.js": b"console.log(1)"})
+        self._tree(rebuilt, {"index.js": b"console.log(1)"})
+        assert find_rebuild_reproduced_binaries(original, rebuilt, "dist") == set()
+
+    def test_missing_directories(self, tmp_path):
+        assert find_rebuild_reproduced_binaries(
+            tmp_path / "nope", tmp_path / "also-nope", "dist"
+        ) == set()
+
+
+class TestInTreeBinaryRebuildCredit:
+    def _patch_tree(self, paths):
+        return mock.patch(
+            "verify_action_build.security._list_repo_files", return_value=list(paths)
+        )
+
+    def test_reproduced_binary_passes_without_release_provenance(self):
+        # No attestation, no SHA256SUMS — the old cascade's only outcome was a
+        # hard error.  The rebuild credit has to short-circuit before either
+        # network path is consulted.
+        with self._patch_tree(["dist/index.js", "dist/core_bg.wasm"]), \
+                mock.patch("verify_action_build.security._resolve_tag_for_commit") as tag, \
+                mock.patch("verify_action_build.security._fetch_blob_bytes") as blob:
+            errors = analyze_in_tree_binaries(
+                "org", "repo", "a" * 40,
+                reproduced_by_rebuild={"dist/core_bg.wasm"},
+            )
+        assert errors == []
+        tag.assert_not_called()
+        blob.assert_not_called()
+
+    def test_unreproduced_binary_still_fails(self):
+        with self._patch_tree(["dist/core_bg.wasm"]), \
+                mock.patch(
+                    "verify_action_build.security._resolve_tag_for_commit",
+                    return_value=None,
+                ), \
+                mock.patch(
+                    "verify_action_build.security._fetch_blob_bytes",
+                    return_value=b"opaque",
+                ), \
+                mock.patch(
+                    "verify_action_build.security._verify_via_gh_attestation",
+                    return_value=False,
+                ):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert len(errors) == 1
+        assert "core_bg.wasm" in errors[0]
+
+    def test_credit_does_not_leak_to_other_binaries(self):
+        # A committed launcher binary next to a reproduced asset must still be
+        # rejected on its own merits.
+        with self._patch_tree(["dist/core_bg.wasm", "bin/main-linux-amd64"]), \
+                mock.patch(
+                    "verify_action_build.security._resolve_tag_for_commit",
+                    return_value=None,
+                ), \
+                mock.patch(
+                    "verify_action_build.security._fetch_blob_bytes",
+                    return_value=b"opaque",
+                ), \
+                mock.patch(
+                    "verify_action_build.security._verify_via_gh_attestation",
+                    return_value=False,
+                ):
+            errors = analyze_in_tree_binaries(
+                "org", "repo", "a" * 40,
+                reproduced_by_rebuild={"dist/core_bg.wasm"},
+            )
+        assert len(errors) == 1
+        assert "main-linux-amd64" in errors[0]
 
 
 class TestParseSha256sums:

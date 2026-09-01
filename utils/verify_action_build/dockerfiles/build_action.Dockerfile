@@ -169,6 +169,25 @@ RUN OUT_DIR=$(cat /out-dir.txt); \
       echo "no $OUT_DIR/ directory" > /deleted-js.log; \
     fi
 
+# Bundlers copy dependency assets into the output directory alongside the JS
+# they emit — @vercel/ncc does this for the .wasm that backs a Rust-built SDK,
+# for instance.  Those land in the tree as pre-compiled binaries with no
+# GitHub-release provenance of their own, so the in-tree binary check has
+# nothing to verify them against.  Delete them here for the same reason the
+# minified JS is deleted: if the rebuild puts an identical file back, it is
+# build output reproduced from the lockfile-pinned dependencies rather than
+# opaque committed code, and the in-tree check can credit it on that basis.
+RUN OUT_DIR=$(cat /out-dir.txt); \
+    : > /deleted-binaries.log; \
+    if [ -d "$OUT_DIR" ]; then \
+      find "$OUT_DIR" \( -name '*.wasm' -o -name '*.node' -o -name '*.so' \
+        -o -name '*.dll' -o -name '*.dylib' -o -name '*.exe' \) -type f \
+        | while IFS= read -r f; do \
+          echo "$f" >> /deleted-binaries.log; \
+          rm -f "$f"; \
+        done; \
+    fi
+
 # If an approved (previous) commit hash is provided, restore the dev-dependency
 # lock files from that commit so the rebuild uses the same toolchain (e.g. same
 # rollup/ncc/webpack version) that produced the original dist/.
