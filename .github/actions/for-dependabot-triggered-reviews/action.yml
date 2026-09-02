@@ -83,7 +83,7 @@ runs:
       if: false
     - uses: carabiner-dev/actions/install/bnd@32587e82f960d49b36101e8c45d1956e511965d3  # v1.2.9
       if: false
-    - uses: carabiner-dev/actions/install/download-and-verify@833eed5876a6db1dbfd60289611ee40fc12f4fe2
+    - uses: carabiner-dev/actions/install/download-and-verify@3fd22ad1abdd61a2337535c255a04eab3d4b23f1
       if: false
     - uses: carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3  # v1.0.10
       if: false
