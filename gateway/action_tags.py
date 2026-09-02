@@ -60,6 +60,13 @@ class ActionTagsCheckResult(object):
     def has_warnings(self) -> bool:
         return len(self.warnings) > 0
 
+    def markdown(self) -> str:
+        return ("# Result summary\n\n"
+            + "## Failures\n\n* ❌ "
+            + "\n* ❌ ".join(self.failures)
+            + "\n\n## Warnings\n\n* ⚡ "
+            + "\n* ⚡ ".join(self.warnings))
+
     def __str__(self):
         return (
             ''.join([f"FAILURE: {failure}\n" for failure in self.failures])

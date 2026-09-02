@@ -53,6 +53,10 @@ def run_main():
 
     result = verify_actions(actions_yaml)
     if result.has_failures():
+        print(os.environ.get('GITHUB_STEP_SUMMARY'))
+        if 'GITHUB_STEP_SUMMARY' in os.environ:
+            with open(os.environ['GITHUB_STEP_SUMMARY'], mode='w') as f:
+                f.write(result.markdown())
         raise Exception(f"Verify actions result summary:\n{result}")
 
 
