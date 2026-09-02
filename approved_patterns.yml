@@ -343,7 +343,7 @@
 - slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c
 - slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc
 - slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d
-- slsa-framework/source-actions@dea965cdca5e0cb422bf7b2653c9d15f678ad01c
+- slsa-framework/actions@dea965cdca5e0cb422bf7b2653c9d15f678ad01c
 - snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263
 - softprops/action-gh-release@*
 - SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995
