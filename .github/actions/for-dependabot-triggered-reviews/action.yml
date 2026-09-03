@@ -255,7 +255,7 @@ runs:
       if: false
     - uses: untitaker/hyperlink@9375bc4063712ad490d5eb3d54df0b6aade15e54  # 0.3.2
       if: false
-    - uses: uraimo/run-on-arch-action@f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9  # v3.1.0
+    - uses: uraimo/run-on-arch-action@460cb8e6d9f726a588fc9b5e681c8a6cab09ae41  # v3.2.0
       if: false
     - uses: vapier/coverity-scan-action@8fe7b0af23cbbd4eced5f63dcd2384640eaa5d49  # v1.10.0
       if: false
