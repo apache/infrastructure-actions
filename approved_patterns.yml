@@ -285,7 +285,7 @@
 - peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9
 - peter-evans/create-pull-request@*
 - phoenix-actions/test-reporting@7317eea6e13c47348dd0bb318669485157c518d6
-- pnpm/action-setup@*
+- pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
 - posit-dev/setup-air@cf390573ff4fe0f198f35df3a642b1409328d859
 - potiuk/cancel-workflow-runs@*
 - pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
@@ -371,3 +371,4 @@
 - zizmorcore/zizmor-action@6599ee8b7a49aef6a770f63d261d214911a7ce02
 - zizmorcore/zizmor-action@6fc4b006235f201fdab3722e17240ab420d580e5
 - zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054
+- zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99
