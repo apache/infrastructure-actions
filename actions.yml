@@ -825,8 +825,8 @@ phoenix-actions/test-reporting:
   7317eea6e13c47348dd0bb318669485157c518d6:
     tag: v16
 pnpm/action-setup:
-  '*':
-    keep: true
+  0977fd99725f1db4007ccb2928dbb4e90d06cc86:
+    tag: v6.0.10
 posit-dev/setup-air:
   cf390573ff4fe0f198f35df3a642b1409328d859:
     tag: v1.0.1
