@@ -537,9 +537,6 @@ graalvm/setup-graalvm:
   5298d94fb55a4f185c602eeac5de1b553882abe2:
     tag: v1.6.4
 gradle/actions/dependency-submission:
-  50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
-    tag: v6.1.0
-    expires_at: 2026-09-03
   5e2ebd065dc2488b7a6ad670704656cbbe1e8f60:
     tag: v6.1.1
     expires_at: 2026-09-05
@@ -554,9 +551,6 @@ gradle/actions/setup-gradle:
     # Projects have deliberately chosen to not use v6 of the setup-gradle action due to licensing model changes.
     # See https://github.com/apache/infrastructure-actions/pull/953
     keep: true
-  50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
-    tag: v6.1.0
-    expires_at: 2026-09-03
   5e2ebd065dc2488b7a6ad670704656cbbe1e8f60:
     tag: v6.1.1
     expires_at: 2026-09-05
@@ -566,9 +560,6 @@ gradle/actions/setup-gradle:
   9c971963bec38e04b3d30dcc455b5382be2fdbfb:
     tag: v6.3.0
 gradle/actions/wrapper-validation:
-  50e97c2cd7a37755bbfafc9c5b7cafaece252f6e:
-    tag: v6.1.0
-    expires_at: 2026-09-03
   5e2ebd065dc2488b7a6ad670704656cbbe1e8f60:
     tag: v6.1.1
     expires_at: 2026-09-05
@@ -849,9 +840,6 @@ PyO3/maturin-action:
   '*':
     keep: true
 pypa/cibuildwheel:
-  8d2b08b68458a16aeb24b64e68a09ab1c8e82084:
-    tag: v3.4.1
-    expires_at: 2026-09-03
   f03ac7617d6cff873ccf24cc0d567ef5ba5a9e6d:
     tag: v4.0.0
     expires_at: 2026-09-05
@@ -1010,18 +998,12 @@ softprops/action-gh-release:
   '*':
     keep: true
 SonarSource/sonarqube-scan-action:
-  7006c4492b2e0ee0f816d36501671557c97f5995:
-    tag: v8.1.0
-    expires_at: 2026-09-03
   713881670b6b3676cda39549040e2d88c70d582e:
     tag: v8.2.0
     expires_at: 2026-10-08
   22918119ff8e1ca75a623e15c8296b6ea4fbe28f:
     tag: v8.2.1
 SonarSource/sonarqube-scan-action/install-build-wrapper:
-  7006c4492b2e0ee0f816d36501671557c97f5995:
-    tag: v8.1.0
-    expires_at: 2026-09-03
   713881670b6b3676cda39549040e2d88c70d582e:
     tag: v8.2.0
     expires_at: 2026-10-08
