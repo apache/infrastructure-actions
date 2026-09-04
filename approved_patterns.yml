@@ -260,6 +260,7 @@
 - matlab-actions/run-tests@ae0e80cb44fdec28d35d0831d8acf38ee4fdf91a
 - matlab-actions/run-tests@83e368e0b18d9c0c7d510fd911d546e16b73bbdb
 - matlab-actions/run-tests@71e231e8d51ae670c0bed0c756d832d648aab5d9
+- matlab-actions/run-tests@214a16e600ef2c705a4b2dd6c0794dc6957682a9
 - matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f
 - matlab-actions/setup-matlab@2323adb8243827ea460b0def4c413545aaec46a9
 - maxim-lobanov/setup-xcode@*
