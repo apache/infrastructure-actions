@@ -143,7 +143,7 @@ runs:
       if: false
     - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94  # v7.2.3
       if: false
-    - uses: graalvm/setup-graalvm@5298d94fb55a4f185c602eeac5de1b553882abe2  # v1.6.4
+    - uses: graalvm/setup-graalvm@f60d4ea89f14098520aea588431217bbd9551570  # v1.6.5
       if: false
     - uses: gradle/actions/dependency-submission@9c971963bec38e04b3d30dcc455b5382be2fdbfb  # v6.3.0
       if: false
