@@ -747,9 +747,6 @@ matlab-actions/run-tests:
   83e368e0b18d9c0c7d510fd911d546e16b73bbdb:
     tag: v3.2.1
     expires_at: 2026-11-09
-  # Previously published as v3.3.0 upstream, but upstream force-updated the v3.3.0 tag to 214a16e on 2026-09-03.
-  71e231e8d51ae670c0bed0c756d832d648aab5d9:
-    expires_at: 2026-11-27
   214a16e600ef2c705a4b2dd6c0794dc6957682a9:
     tag: v3.3.0
 matlab-actions/setup-matlab:
