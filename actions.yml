@@ -295,9 +295,6 @@ codelytv/pr-size-labeler:
   '*':
     keep: true
 commit-check/commit-check-action:
-  f237ed0085f49444ab5c85bdfa5cdcd490fc09c5:
-    tag: v2.7.0
-    expires_at: 2026-09-05
   c7245f6139b55db23f92266c2f0ff8429c64de80:
     tag: v2.8.0
     expires_at: 2026-09-13
@@ -539,9 +536,6 @@ graalvm/setup-graalvm:
   5298d94fb55a4f185c602eeac5de1b553882abe2:
     tag: v1.6.4
 gradle/actions/dependency-submission:
-  5e2ebd065dc2488b7a6ad670704656cbbe1e8f60:
-    tag: v6.1.1
-    expires_at: 2026-09-05
   3f131e8634966bd73d06cc69884922b02e6faf92:
     tag: v6.2.0
     expires_at: 2026-11-01
@@ -553,18 +547,12 @@ gradle/actions/setup-gradle:
     # Projects have deliberately chosen to not use v6 of the setup-gradle action due to licensing model changes.
     # See https://github.com/apache/infrastructure-actions/pull/953
     keep: true
-  5e2ebd065dc2488b7a6ad670704656cbbe1e8f60:
-    tag: v6.1.1
-    expires_at: 2026-09-05
   3f131e8634966bd73d06cc69884922b02e6faf92:
     tag: v6.2.0
     expires_at: 2026-10-30
   9c971963bec38e04b3d30dcc455b5382be2fdbfb:
     tag: v6.3.0
 gradle/actions/wrapper-validation:
-  5e2ebd065dc2488b7a6ad670704656cbbe1e8f60:
-    tag: v6.1.1
-    expires_at: 2026-09-05
   3f131e8634966bd73d06cc69884922b02e6faf92:
     tag: v6.2.0
     expires_at: 2026-10-30
@@ -842,9 +830,6 @@ PyO3/maturin-action:
   '*':
     keep: true
 pypa/cibuildwheel:
-  f03ac7617d6cff873ccf24cc0d567ef5ba5a9e6d:
-    tag: v4.0.0
-    expires_at: 2026-09-05
   294735312765b09d24a2fbec22660ce817587d55:
     tag: v4.1.0
     expires_at: 2026-10-19
@@ -896,15 +881,9 @@ ruby/setup-ruby:
   '*':
     keep: true
 rubygems/configure-rubygems-credentials:
-  762a4b77c3300434bb57c7ce80b20e36231927aa:
-    tag: v2.0.0
-    expires_at: 2026-09-05
   dc5a8d8553e6ee01fc26761a49e99e733d17954a:
     tag: v2.1.0
 rubygems/release-gem:
-  6317d8d1f7e28c24d28f6eff169ea854948bd9f7:
-    tag: v1.2.0
-    expires_at: 2026-09-05
   f0d7faff26625599a847d40d9fa28ace24c2aacc:
     tag: v1.3.0
     expires_at: 2026-09-14
