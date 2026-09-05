@@ -55,7 +55,7 @@ runs:
       if: false
     - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610  # v0.24.0
       if: false
-    - uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2  # v7.4.0
+    - uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439  # v7.4.2
       if: false
     - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
       if: false
