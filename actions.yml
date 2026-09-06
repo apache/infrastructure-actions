@@ -275,7 +275,9 @@ carabiner-dev/actions/install/download-and-verify:
     expires_at: 2026-10-21
   ade14d87ee05bd60ec9028e3f5f430ee571ac8df:
     expires_at: 2026-11-17
-  833eed5876a6db1dbfd60289611ee40fc12f4fe2: {}
+  833eed5876a6db1dbfd60289611ee40fc12f4fe2:
+    expires_at: 2026-11-29
+  3fd22ad1abdd61a2337535c255a04eab3d4b23f1: {}
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
