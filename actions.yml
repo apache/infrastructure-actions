@@ -736,6 +736,9 @@ matlab-actions/setup-matlab:
     expires_at: 2026-10-28
   2323adb8243827ea460b0def4c413545aaec46a9:
     tag: v3.0.2
+    expires_at: 2026-11-29
+  f9e43010f1ae678f7cfa0542fe2a4f60f7d1ad8d:
+    tag: v3.1.0
 maxim-lobanov/setup-xcode:
   '*':
     keep: true
