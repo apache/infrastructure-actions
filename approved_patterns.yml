@@ -23,6 +23,7 @@
 - 1Password/load-secrets-action@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556
 - 1Password/load-secrets-action@eb2efd0703da22a93c467f2d1ffbb6826c11e19c
 - 1Password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4
+- 1Password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2
 - 1Password/load-secrets-action/configure@92467eb28f72e8255933372f1e0707c567ce2259
 - 1Password/load-secrets-action/configure@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556
 - 1Password/load-secrets-action/configure@eb2efd0703da22a93c467f2d1ffbb6826c11e19c
@@ -38,6 +39,7 @@
 - ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c
 - anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
 - anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2
+- anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439
 - arduino/setup-protoc@*
 - astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
 - astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3
@@ -50,6 +52,7 @@
 - aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b
 - aws-actions/configure-aws-credentials@517a711dbcd0e402f90c77e7e2f81e849156e31d
 - aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c
+- aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
 - azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
 - azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2
 - azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
@@ -64,6 +67,7 @@
 - bufbuild/buf-setup-action@*
 - burnett01/rsync-deployments@66257cad6bfeb2171d3b6bfa6c9a22279dd9c3a1
 - burnett01/rsync-deployments@4d419d1dc46d4a8a2b6ceab2f951f0f93b2da8f5
+- burnett01/rsync-deployments@155b6d6c1219ab2224c20c58d423a3f1b850395f
 - burrunan/gradle-cache-action@*
 - carabiner-dev/actions/ampel/verify@94f29392187fe5082d1195a7d4cae3a7ddf09d9c
 - carabiner-dev/actions/ampel/verify@2a4b2cd115ede14629b03ef7e77586d3269d4c72
@@ -132,6 +136,7 @@
 - damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
 - dart-lang/setup-dart@65eb853c7ba17dde3be364c3d2858773e7144260
 - dart-lang/setup-dart@7654d458321ee25acccccfdb86cd48bd95768ff1
+- dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
 - DavidAnson/markdownlint-cli2-action@ded1f9488f68a970bc66ea5619e13e9b52e601cd
 - DavidAnson/markdownlint-cli2-action@8de2aa07cae85fd17c0b35642db70cf5495f1d25
 - DavidAnson/markdownlint-cli2-action@6bf21b07787794f89a243495939cd651942aeabe
@@ -159,6 +164,7 @@
 - docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e
 - docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3
 - docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8
+- docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a
 - docker://jekyll/jekyll@sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625
 - docker://pandoc/core@sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93
 - dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d
@@ -168,6 +174,7 @@
 - dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
 - easimon/maximize-build-space@*
 - editorconfig-checker/action-editorconfig-checker@840e866d93b8e032123c23bac69dece044d4d84c
+- editorconfig-checker/action-editorconfig-checker@51f63319f592f97930c73d9c46184d20bd206393
 - EnricoMi/publish-unit-test-result-action@*
 - eps1lon/actions-label-merge-conflict@*
 - erisu/apache-rat-action@30c94d10ed21e6f6fd5590dc5c158f58cae7a0dd
@@ -190,6 +197,7 @@
 - graalvm/setup-graalvm@186d0493a2df5eb62df5ecc498883d18fd58c303
 - graalvm/setup-graalvm@0def53c0fd8534bc13416c9469f5be45265824fd
 - graalvm/setup-graalvm@5298d94fb55a4f185c602eeac5de1b553882abe2
+- graalvm/setup-graalvm@0426e2e191540e8514dff98dc52a5f5146a2a276
 - gradle/actions/dependency-submission@3f131e8634966bd73d06cc69884922b02e6faf92
 - gradle/actions/dependency-submission@9c971963bec38e04b3d30dcc455b5382be2fdbfb
 - gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
@@ -199,8 +207,10 @@
 - gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb
 - gradle/develocity-actions/maven-publish-build-scan@974e8dbcbda40db6828fc35f349c80a7c0e71529
 - gradle/develocity-actions/maven-publish-build-scan@0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642
+- gradle/develocity-actions/maven-publish-build-scan@4b276bd81fb55e2fcbae724c48699de57e2156eb
 - gradle/develocity-actions/setup-maven@974e8dbcbda40db6828fc35f349c80a7c0e71529
 - gradle/develocity-actions/setup-maven@0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642
+- gradle/develocity-actions/setup-maven@4b276bd81fb55e2fcbae724c48699de57e2156eb
 - hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5
 - hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6
 - hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387
@@ -208,6 +218,7 @@
 - helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f
 - helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f
 - helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc
+- helm/kind-action@06c1ae10762d3b9c1644e7fe69596ae519e015a2
 - houseabsolute/actions-rust-cross@*
 - ilammy/msvc-dev-cmd@*
 - ilammy/setup-nasm@72793074d3c8cdda771dba85f6deafe00623038b
@@ -218,11 +229,14 @@
 - j178/prek-action@5337cb91e0fa35a7ff31b9ca345126d8bbbcdf16
 - j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece
 - JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f
+- JamesIves/github-pages-deploy-action@fa24774553152dd7873cd16ebd8d959b010c5445
 - jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5
 - jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db
+- jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654
 - JetBrains/qodana-action@d7b5ec2fbec32197ef447c450e00589ed5f34fd5
 - JetBrains/qodana-action@4861e015da555e86a72b862892aba6c2b93e6891
 - JetBrains/qodana-action@b588768b6e7e6da579e518bc584f79de0d243692
+- JetBrains/qodana-action@10be11607eb323a180e2b76b26c9c5cdceac3e77
 - jidicula/clang-format-action@*
 - Jimver/cuda-toolkit@3d45d157f327c09c04b50ee6ccdea2d9d017ec76
 - Jimver/cuda-toolkit@b8bf9c6c28f8a92fbb04dcfcaee872e60c57462d
@@ -237,6 +251,7 @@
 - juliaregistries/tagbot@*
 - JustinBeckwith/linkinator-action@7b6b0bc671f6264e1a8daa4488a5bd91ce61dcd4
 - JustinBeckwith/linkinator-action@36a0bfbfecd5e237e8f8531537a693616c505faf
+- JustinBeckwith/linkinator-action@12f7a61a56e5e75d659f0dfd6357e2d852ede281
 - jwgmeligmeyling/checkstyle-github-action@*
 - jwgmeligmeyling/pmd-github-action@322e346bd76a0757c4d54ff9209e245965aa066d
 - jwgmeligmeyling/spotbugs-github-action@*
@@ -277,6 +292,7 @@
 - opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4
 - oracle-actions/setup-java@*
 - orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5
+- orhun/git-cliff-action@3d96a18cc4ec17e9dc69ddcc424ccafaf1f78ce2
 - ossf/scorecard-action@*
 - peaceiris/actions-gh-pages@*
 - peaceiris/actions-hugo@*
@@ -313,6 +329,7 @@
 - runs-on/action@d141ef83eb66d096ce8afc767e09115a65c63b60
 - runs-on/action@4e5f72399b6b17f2e79c511c1b38a315a64d22dc
 - runs-on/action@46910bf61b41721b0579f237e186afb35477007a
+- runs-on/action@efac073ea2507ec18797de3a81704201ade11d9d
 - rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe
 - rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18
 - rustsec/*@*
@@ -351,12 +368,14 @@
 - tcort/github-action-markdown-link-check@e047c5b37f24ab722bbef1a27b6fab7f96bc4068
 - terraform-linters/setup-tflint@b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93
 - terraform-linters/setup-tflint@6e1e0642c0289bd619021bf6b34e3c08ed1e005a
+- terraform-linters/setup-tflint@1cf010d3c7aef302051ccdb68c14c5dc2efa34ef
 - test-summary/action@*
 - testlens-app/setup-testlens@*
 - TobKed/label-when-approved-action@*
 - untitaker/hyperlink@fb5bb9c5011a3d143a54b4b30aedc30ec5bc0f89
 - untitaker/hyperlink@9375bc4063712ad490d5eb3d54df0b6aade15e54
 - uraimo/run-on-arch-action@f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9
+- uraimo/run-on-arch-action@460cb8e6d9f726a588fc9b5e681c8a6cab09ae41
 - vapier/coverity-scan-action@2068473c7bdf8c2fb984a6a40ae76ee7facd7a85
 - vapier/coverity-scan-action@1b6fd4eaba6651aa354c9ea7f48caa1710b4e12e
 - vapier/coverity-scan-action@8fe7b0af23cbbd4eced5f63dcd2384640eaa5d49
