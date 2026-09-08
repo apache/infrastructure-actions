@@ -92,6 +92,7 @@
 - carabiner-dev/actions/install/ampel-bootstrap@ade14d87ee05bd60ec9028e3f5f430ee571ac8df
 - carabiner-dev/actions/install/ampel-bootstrap@833eed5876a6db1dbfd60289611ee40fc12f4fe2
 - carabiner-dev/actions/install/ampel-bootstrap@3fd22ad1abdd61a2337535c255a04eab3d4b23f1
+- carabiner-dev/actions/install/ampel-bootstrap@7e009ddcb93ec994a0d078e8ceabc590c65f5e2f
 - carabiner-dev/actions/install/bnd@94f29392187fe5082d1195a7d4cae3a7ddf09d9c
 - carabiner-dev/actions/install/bnd@619a474b2178d06ccf274349397cd67a7802a4fe
 - carabiner-dev/actions/install/bnd@2a4b2cd115ede14629b03ef7e77586d3269d4c72
@@ -109,6 +110,7 @@
 - carabiner-dev/actions/install/download-and-verify@ade14d87ee05bd60ec9028e3f5f430ee571ac8df
 - carabiner-dev/actions/install/download-and-verify@833eed5876a6db1dbfd60289611ee40fc12f4fe2
 - carabiner-dev/actions/install/download-and-verify@3fd22ad1abdd61a2337535c255a04eab3d4b23f1
+- carabiner-dev/actions/install/download-and-verify@7e009ddcb93ec994a0d078e8ceabc590c65f5e2f
 - carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3
 - carlosperate/arm-none-eabi-gcc-action@*
 - chromaui/action@*
@@ -233,6 +235,7 @@
 - jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5
 - jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db
 - jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654
+- jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c
 - JetBrains/qodana-action@d7b5ec2fbec32197ef447c450e00589ed5f34fd5
 - JetBrains/qodana-action@4861e015da555e86a72b862892aba6c2b93e6891
 - JetBrains/qodana-action@b588768b6e7e6da579e518bc584f79de0d243692
@@ -301,6 +304,7 @@
 - peter-evans/create-pull-request@*
 - phoenix-actions/test-reporting@7317eea6e13c47348dd0bb318669485157c518d6
 - pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
+- pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
 - posit-dev/setup-air@cf390573ff4fe0f198f35df3a642b1409328d859
 - potiuk/cancel-workflow-runs@*
 - pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
@@ -308,6 +312,7 @@
 - pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55
 - pypa/cibuildwheel@4726cd35bb13f7bde50cf2761f2499ac7b3aa32c
 - pypa/cibuildwheel@1828c10ab37f080699c7b81cea34097c684a7074
+- pypa/cibuildwheel@e090b81e30c4d855ea63bf4b6e59204c09a101ae
 - pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266
 - pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e
 - pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33

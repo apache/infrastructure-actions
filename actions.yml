@@ -241,7 +241,9 @@ carabiner-dev/actions/install/ampel-bootstrap:
     expires_at: 2026-11-17
   833eed5876a6db1dbfd60289611ee40fc12f4fe2:
     expires_at: 2026-11-26
-  3fd22ad1abdd61a2337535c255a04eab3d4b23f1: {}
+  3fd22ad1abdd61a2337535c255a04eab3d4b23f1:
+    expires_at: 2026-12-01
+  7e009ddcb93ec994a0d078e8ceabc590c65f5e2f: {}
 carabiner-dev/actions/install/bnd:
   94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
     tag: v1.2.1
@@ -289,7 +291,9 @@ carabiner-dev/actions/install/download-and-verify:
     expires_at: 2026-11-17
   833eed5876a6db1dbfd60289611ee40fc12f4fe2:
     expires_at: 2026-11-29
-  3fd22ad1abdd61a2337535c255a04eab3d4b23f1: {}
+  3fd22ad1abdd61a2337535c255a04eab3d4b23f1:
+    expires_at: 2026-12-01
+  7e009ddcb93ec994a0d078e8ceabc590c65f5e2f: {}
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
@@ -667,6 +671,9 @@ jdx/mise-action:
     keep: true
   7e36c90d9ab29c415a2384db3006f3ec8a8cc654:
     tag: v4.2.4
+    expires_at: 2026-12-01
+  c2a87611a18de5b3828c5652fe268e992400cb5c:
+    tag: v4.3.0
 JetBrains/qodana-action:
   d7b5ec2fbec32197ef447c450e00589ed5f34fd5:
     tag: v2026.1.0
@@ -869,6 +876,9 @@ phoenix-actions/test-reporting:
 pnpm/action-setup:
   0977fd99725f1db4007ccb2928dbb4e90d06cc86:
     tag: v6.0.10
+    expires_at: 2026-12-01
+  ea17c68df8912ef543352723c149a84f56e3d413:
+    tag: v6.1.0
 posit-dev/setup-air:
   cf390573ff4fe0f198f35df3a642b1409328d859:
     tag: v1.0.1
@@ -890,6 +900,9 @@ pypa/cibuildwheel:
     expires_at: 2026-11-01
   1828c10ab37f080699c7b81cea34097c684a7074:
     tag: v4.2.0
+    expires_at: 2026-12-01
+  e090b81e30c4d855ea63bf4b6e59204c09a101ae:
+    tag: v4.2.1
 pypa/gh-action-pip-audit:
   1220774d901786e6f652ae159f7b6bc8fea6d266:
     tag: v1.1.0
