@@ -239,6 +239,7 @@ class TestCollectActionRefs(unittest.TestCase):
                 steps:
                   - uses: ./local-action
                   - uses: actions/checkout@v4
+                  - uses: $/local-self-repo-action
             """,
         )
         scan_glob = os.path.join(self.tmpdir, ".github/**/*.yml")
