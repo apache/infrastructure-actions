@@ -49,9 +49,10 @@ TRUSTED_OWNERS = {"actions", "github", "apache"}
 DEFAULT_GITHUB_YAML_GLOB = ".github/**/*.yml"
 
 # Prefixes that indicate local or non-GitHub refs (not subject to allowlist)
-# ./  — local composite actions within the same repo
-# docker:// — container actions pulled directly from a registry
-SKIPPED_PREFIXES = ("./", "docker://")
+# ./         — local composite actions within the same repo
+# docker://  — container actions pulled directly from a registry
+# $/         - local composite actions self-repository syntax, similar to ./ but recommended by GitHub
+SKIPPED_PREFIXES = ("./", "docker://", "$/")
 
 # YAML key that references a GitHub Action
 USES_KEY = "uses"
