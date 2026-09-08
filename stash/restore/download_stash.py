@@ -19,16 +19,23 @@ Required env vars:
   STASH_DIR        - destination directory
   REPO             - owner/name of the repository
   RETRY_COUNT      - max download attempts (retries on gh exit code 1)
+  RETRY_DELAY      - base seconds for the backoff between attempts
   FAIL_ON_DOWNLOAD - "true" to exit 1 on download failure, else "false"
   CLEAN            - "true" to remove STASH_DIR before downloading
   GITHUB_OUTPUT    - file to write the `download` output to
 """
 
 import os
+import random
 import shutil
 import subprocess
 import sys
+import time
 from collections.abc import Callable, Mapping
+
+# Upper bound for a single backoff sleep, so a large RETRY_COUNT cannot
+# stall a job for minutes on end.
+MAX_RETRY_DELAY = 60.0
 
 
 def run_gh_download(run_id: str, name: str, dest: str, repo: str) -> int:
@@ -44,22 +51,37 @@ def run_gh_download(run_id: str, name: str, dest: str, repo: str) -> int:
     ).returncode
 
 
+def compute_backoff(attempt: int, base_delay: float, rand: Callable[[], float]) -> float:
+    """Return the number of seconds to wait after a failed ``attempt``.
+
+    Exponential growth with full jitter: the artifact backend resets
+    connections when many jobs of the same matrix pull the same large
+    stash at once, so retries that fire back-to-back all land inside the
+    same congestion window. Randomising the whole interval spreads the
+    retrying jobs out instead of re-synchronising them.
+    """
+    return rand() * min(MAX_RETRY_DELAY, base_delay * 2 ** (attempt - 1))
+
+
 def download_stash(
     env: Mapping[str, str],
     run_download: Callable[[str, str, str, str], int] = run_gh_download,
+    sleep: Callable[[float], None] = time.sleep,
+    rand: Callable[[], float] = random.random,
 ) -> int:
     """Run the clean/retry/fail-on-download logic.
 
     Returns the desired process exit code (0 for success or tolerated
     failure, 1 when the download failed and ``FAIL_ON_DOWNLOAD`` is
-    ``"true"``). The ``run_download`` hook exists so tests can stub out
-    the real ``gh`` call.
+    ``"true"``). The ``run_download``, ``sleep`` and ``rand`` hooks exist
+    so tests can stub out the real ``gh`` call and the backoff wait.
     """
     stash_run_id = env["STASH_RUN_ID"]
     stash_name = env["STASH_NAME"]
     stash_dir = env["STASH_DIR"]
     repo = env["REPO"]
     retry_count = int(env.get("RETRY_COUNT", "1"))
+    retry_delay = float(env.get("RETRY_DELAY", "0"))
     fail_on_download = env.get("FAIL_ON_DOWNLOAD", "false").lower() == "true"
     clean = env.get("CLEAN", "false").lower() == "true"
     github_output = env["GITHUB_OUTPUT"]
@@ -85,6 +107,11 @@ def download_stash(
             f"::warning ::gh run download failed with exit code 1 on "
             f"attempt {attempt}."
         )
+        if attempt < retry_count:
+            delay = compute_backoff(attempt, retry_delay, rand)
+            if delay > 0:
+                print(f"Waiting {delay:.1f}s before the next attempt...", flush=True)
+                sleep(delay)
 
     with open(github_output, "a", encoding="utf-8") as f:
         f.write(f"download={download}\n")
