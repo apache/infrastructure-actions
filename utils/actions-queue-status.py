@@ -39,7 +39,9 @@ Two phases, both GraphQL:
    tree directly, so a repo counts as using Actions only when it really has workflow
    files on its default branch.
 2. Status — batch the surviving repos into aliased queries (one request covers many
-   repos) and count check runs, which map one-to-one onto workflow jobs.
+   repos) and count check runs, which map one-to-one onto workflow jobs. A repo with
+   more open PRs than the sample size cannot be covered that way, so those — and only
+   those — are re-counted exactly over REST.
 
 Usage:
     uv run utils/actions-queue-status.py
@@ -66,6 +68,13 @@ from rich.table import Table
 console = Console(stderr=True)
 
 GITHUB_GRAPHQL_URL = "https://api.github.com/graphql"
+GITHUB_REST_URL = "https://api.github.com"
+
+# Run states that still hold — or are still waiting for — a runner. "waiting" and
+# "action_required" are approval gates rather than capacity waits, and are counted
+# separately so the two are not confused.
+ACTIVE_RUN_STATES = {"queued", "in_progress", "waiting", "pending", "requested", "action_required"}
+APPROVAL_RUN_STATES = {"waiting", "action_required", "requested", "pending"}
 
 # GitHub answers a query it considers too expensive with a bare 502 rather than a typed
 # error, and enforces the points budget per minute as well as per hour — so a burst
@@ -85,6 +94,7 @@ query($org: String!, $after: String) {
         isArchived
         isDisabled
         defaultBranchRef { name }
+        pullRequests(states: OPEN) { totalCount }
         workflows: object(expression: "HEAD:.github/workflows") {
           ... on Tree { entries { name } }
         }
@@ -100,11 +110,13 @@ fragment CI on Repository {
   nameWithOwner
   defaultBranchRef { target { ... on Commit { ...Suites } } }
   pullRequests(states: OPEN, first: %(prs)d, orderBy: {field: UPDATED_AT, direction: DESC}) {
+    totalCount
     nodes { commits(last: 1) { nodes { commit { ...Suites } } } }
   }
 }
 fragment Suites on Commit {
   checkSuites(first: %(suites)d) {
+    totalCount
     nodes {
       status
       workflowRun { workflow { name } }
@@ -115,7 +127,15 @@ fragment Suites on Commit {
 }
 """
 
-CSV_HEADER = ["repo", "queued_jobs", "running_jobs", "suites_queued", "suites_in_progress", "workflows"]
+CSV_HEADER = [
+    "repo",
+    "queued_jobs",
+    "running_jobs",
+    "open_prs",
+    "runs_awaiting_approval",
+    "source",
+    "workflows",
+]
 
 
 class BudgetExhausted(RuntimeError):
@@ -201,6 +221,33 @@ class GraphQLClient:
             time.sleep(4 ** (attempt + 1))
         return {"__error__": error}
 
+    def rest(self, path: str, attempts: int = 3) -> dict | None:
+        """GET a REST endpoint, retrying transient failures. None when it cannot be read."""
+        for attempt in range(attempts):
+            if self.use_requests:
+                response = requests.get(
+                    f"{GITHUB_REST_URL}/{path}",
+                    headers={"Authorization": f"bearer {self.token}", "Accept": "application/json"},
+                    timeout=60,
+                )
+                if response.status_code == 200:
+                    return response.json()
+                error = f"HTTP {response.status_code}"
+            else:
+                result = subprocess.run(
+                    ["gh", "api", "--method", "GET", path], capture_output=True, text=True, check=False
+                )
+                if result.returncode == 0:
+                    try:
+                        return json.loads(result.stdout)
+                    except json.JSONDecodeError:
+                        return None
+                error = (result.stderr or "")[:150]
+            if not any(marker in error for marker in RETRYABLE):
+                return None
+            time.sleep(5 * (attempt + 1))
+        return None
+
     def check_budget(self) -> None:
         """Stop the sweep before it drains the caller's hourly GraphQL allowance."""
         remaining = self.remaining
@@ -227,9 +274,26 @@ def has_workflows(node: dict) -> bool:
     return any(entry["name"].endswith((".yml", ".yaml")) for entry in tree.get("entries", []))
 
 
+def report_pr_distribution(open_pr_counts: list[int]) -> None:
+    """Show how many repos each candidate --prs value would cover outright.
+
+    The knee of this curve is what --prs should be set to: below it, GraphQL cannot cover
+    the repo and REST re-counts it anyway; above it, the sweep pays node cost for PRs that
+    almost no repository has.
+    """
+    if not open_pr_counts:
+        return
+    total = len(open_pr_counts)
+    console.print("[cyan]Open-PR distribution (repos GraphQL could cover outright):[/]")
+    for threshold in (1, 3, 5, 10, 25, 50):
+        covered = sum(1 for count in open_pr_counts if count <= threshold)
+        console.print(f"[dim]  --prs {threshold:>3}: {covered:>5} / {total} repos ({covered / total:.0%})[/]")
+
+
 def discover_repos(client: GraphQLClient, org: str, include_archived: bool) -> list[str]:
     """Return every non-archived repo in the org that defines workflow files."""
     repos: list[str] = []
+    open_pr_counts: list[int] = []
     scanned = 0
     cursor = None
     while True:
@@ -252,6 +316,7 @@ def discover_repos(client: GraphQLClient, org: str, include_archived: bool) -> l
                 continue
             if has_workflows(node):
                 repos.append(node["name"])
+                open_pr_counts.append((node.get("pullRequests") or {}).get("totalCount", 0))
         console.print(
             f"[dim]  scanned {scanned} repos, {len(repos)} with workflows "
             f"(points left {client.remaining})[/]"
@@ -260,6 +325,7 @@ def discover_repos(client: GraphQLClient, org: str, include_archived: bool) -> l
             break
         cursor = page["pageInfo"]["endCursor"]
     console.print(f"[cyan]Discovery: {scanned} repos scanned, {len(repos)} use GitHub Actions[/]")
+    report_pr_distribution(open_pr_counts)
     return repos
 
 
@@ -290,9 +356,12 @@ def collect_commits(repo_node: dict) -> list[dict]:
 def summarize_repo(repo_node: dict) -> dict:
     """Reduce one repo's check suites to queued/running job counts."""
     queued = running = suites_queued = suites_running = 0
+    max_suites_on_a_commit = 0
     workflows: dict[str, int] = {}
     for commit in collect_commits(repo_node):
-        for suite in (commit.get("checkSuites") or {}).get("nodes", []):
+        suite_page = commit.get("checkSuites") or {}
+        max_suites_on_a_commit = max(max_suites_on_a_commit, suite_page.get("totalCount", 0))
+        for suite in suite_page.get("nodes", []):
             suite_queued = suite["queued"]["totalCount"]
             suite_running = suite["running"]["totalCount"]
             queued += suite_queued
@@ -311,6 +380,9 @@ def summarize_repo(repo_node: dict) -> dict:
         "running_jobs": running,
         "suites_queued": suites_queued,
         "suites_in_progress": suites_running,
+        "open_prs": (repo_node.get("pullRequests") or {}).get("totalCount", 0),
+        "max_suites_on_a_commit": max_suites_on_a_commit,
+        "source": "graphql",
         "workflows": workflows,
     }
 
@@ -336,6 +408,46 @@ def run_batch(client: GraphQLClient, org: str, names: list[str], prs: int, suite
     ]
 
 
+def recount_over_rest(client: GraphQLClient, org: str, row: dict) -> dict:
+    """Re-count one repo exactly over REST, for repos the PR window cannot cover.
+
+    GraphQL caps `pullRequests(first:)` at 100 and the sweep samples far fewer, so a repo
+    with more open PRs than the sample size is necessarily under-counted. REST has no
+    org-wide equivalent, but per repo it is exact: list the runs that are still active and
+    count their jobs.
+    """
+    name = row["repo"].split("/", 1)[1]
+    runs = client.rest(f"repos/{org}/{name}/actions/runs?per_page=100")
+    if not runs:
+        return row  # Keep the GraphQL sample rather than reporting a repo as idle.
+    active = [run for run in runs.get("workflow_runs", []) if run.get("status") in ACTIVE_RUN_STATES]
+    queued = running = awaiting_approval = 0
+    workflows: dict[str, int] = {}
+    for run in active:
+        if run["status"] in APPROVAL_RUN_STATES:
+            awaiting_approval += 1
+        jobs = client.rest(f"repos/{org}/{name}/actions/runs/{run['id']}/jobs?per_page=100&filter=latest")
+        if not jobs:
+            continue
+        for job in jobs.get("jobs", []):
+            if job["status"] not in {"queued", "in_progress"}:
+                continue
+            if job["status"] == "in_progress":
+                running += 1
+            else:
+                queued += 1
+            name_of_run = run.get("name") or "?"
+            workflows[name_of_run] = workflows.get(name_of_run, 0) + 1
+    return {
+        **row,
+        "queued_jobs": queued,
+        "running_jobs": running,
+        "runs_awaiting_approval": awaiting_approval,
+        "source": "rest",
+        "workflows": workflows,
+    }
+
+
 def csv_path(base: str, ordering: str) -> str:
     """Derive the per-ordering CSV filename from the --csv argument."""
     stem, dot, extension = base.rpartition(".")
@@ -349,8 +461,9 @@ def csv_row(row: dict) -> list:
         row["repo"],
         row["queued_jobs"],
         row["running_jobs"],
-        row["suites_queued"],
-        row["suites_in_progress"],
+        row.get("open_prs", 0),
+        row.get("runs_awaiting_approval", ""),
+        row.get("source", "graphql"),
         workflows,
     ]
 
@@ -363,7 +476,15 @@ def write_csv(path: str, rows: list[dict], totals: dict) -> None:
         for row in rows:
             writer.writerow(csv_row(row))
         writer.writerow(
-            ["TOTAL", totals["queued_jobs"], totals["running_jobs"], "", "", f"repos={totals['repos_active']}"]
+            [
+                "TOTAL",
+                totals["queued_jobs"],
+                totals["running_jobs"],
+                "",
+                "",
+                "",
+                f"repos={totals['repos_active']}",
+            ]
         )
     console.print(f"[green]Wrote {path}[/]")
 
@@ -374,6 +495,7 @@ def render_table(title: str, rows: list[dict], top: int) -> None:
     table.add_column("Repository")
     table.add_column("Queued", justify="right")
     table.add_column("Running", justify="right")
+    table.add_column("Source")
     table.add_column("Workflows")
     for row in rows[:top]:
         workflows = ", ".join(sorted(row["workflows"])) or "-"
@@ -381,7 +503,8 @@ def render_table(title: str, rows: list[dict], top: int) -> None:
             row["repo"],
             str(row["queued_jobs"]),
             str(row["running_jobs"]),
-            workflows[:60],
+            row.get("source", "graphql"),
+            workflows[:50],
         )
     console.print(table)
 
@@ -390,14 +513,21 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Report repos with GitHub Actions jobs queued or running right now.",
         epilog=(
-            "Caveats: --prs samples the most recently updated open PRs rather than every "
-            "one, so a very busy repo is under-counted; and GraphQL exposes no runner "
-            "identity, so a job held by a concurrency group looks like one waiting for "
-            "capacity. Use the REST runner endpoints (admin:org) for true runner state."
+            "Repos the GraphQL sample cannot cover — more open PRs than --prs, or more "
+            "check suites on a commit than --suites — are re-counted exactly over REST, so "
+            "the totals are not a sample. Remaining caveat: neither API attributes a job to a "
+            "runner, so a job held by a concurrency group cannot be told apart from one "
+            "waiting for capacity — runs blocked on approval are reported separately in "
+            "runs_awaiting_approval. Use the REST runner endpoints (admin:org) for true "
+            "runner state."
         ),
     )
     parser.add_argument("--org", default="apache", help="organisation to sweep (default: apache)")
     parser.add_argument("--batch-size", type=int, default=20, help="repos per GraphQL query")
+    # GraphQL's node cost climbs sharply with this: measured over the ~1250 apache repos
+    # with workflows, a sweep costs ~250 points at 3, ~2700 at 5 and ~21000 at 10, against
+    # a 5000/hour budget. Raising it only buys coverage of quiet repos, and those cost one
+    # cheap REST call each — so the low value is both cheaper and no less accurate.
     parser.add_argument("--prs", type=int, default=3, help="open PRs sampled per repo")
     parser.add_argument("--suites", type=int, default=5, help="check suites read per commit")
     # Three is about the most this survives: GitHub enforces a per-minute points cap as
@@ -411,6 +541,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--json", action="store_true", help="print JSON instead of tables")
     parser.add_argument("--github-token", help="GitHub token (default: GH_TOKEN / GITHUB_TOKEN)")
     parser.add_argument("--no-gh", action="store_true", help="use requests instead of the gh CLI")
+    parser.add_argument(
+        "--no-rest-fallback",
+        action="store_true",
+        help="skip the exact REST re-count for repos the GraphQL sample could not cover",
+    )
     return parser.parse_args()
 
 
@@ -449,6 +584,28 @@ def main() -> int:
                 break
             if done % 10 == 0:
                 console.print(f"[dim]  {done}/{len(batches)} batches (points left {client.remaining})[/]")
+
+    # The GraphQL pass covered a repo exhaustively only if *both* of its sampling limits
+    # held: no more open PRs than --prs, and no commit carrying more check suites than
+    # --suites. Checking only the first is not enough — a repo with a single open PR can
+    # still have a dozen suites on its head commit, and reading five of them under-counts
+    # it badly. Everything else is re-counted over REST, which is exact per repo.
+    incomplete = [
+        row
+        for row in results
+        if row.get("open_prs", 0) > args.prs or row.get("max_suites_on_a_commit", 0) > args.suites
+    ]
+    if incomplete and not args.no_rest_fallback:
+        console.print(
+            f"[cyan]Re-counting {len(incomplete)} repos over REST (more than {args.prs} open PRs "
+            f"or more than {args.suites} check suites on a commit, so the GraphQL sample is "
+            f"partial)[/]"
+        )
+        exact_by_repo = {}
+        with ThreadPoolExecutor(max_workers=args.workers) as pool:
+            for row in pool.map(lambda item: recount_over_rest(client, args.org, item), incomplete):
+                exact_by_repo[row["repo"]] = row
+        results = [exact_by_repo.get(row["repo"], row) for row in results]
 
     active = [row for row in results if row["queued_jobs"] or row["running_jobs"]]
     by_running = sorted(active, key=lambda row: (-row["running_jobs"], -row["queued_jobs"], row["repo"]))

@@ -613,6 +613,7 @@ total. `--json` prints the same data as JSON.
 | `--json` | Print JSON instead of tables. |
 | `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN`. |
 | `--no-gh` | Use Python `requests` instead of the `gh` CLI. Requires a token. |
+| `--no-rest-fallback` | Skip the exact REST re-count for repos with more open PRs than `--prs`. |
 
 #### How Discovery Works
 
@@ -630,8 +631,18 @@ A repository counts as using Actions only when that tree exists and holds at lea
 
 #### Rate Limits
 
-A full sweep of the `apache` organisation is not free: GraphQL charges by node count, so the
-per-query cost grows with `--batch-size`, `--prs` and `--suites` together. Three safeguards keep a
+A full sweep of the `apache` organisation is not free: GraphQL charges by node count, and the cost
+climbs sharply with `--prs`. Measured over the ~1,250 `apache` repositories that use Actions, a
+sweep costs roughly 250 points at `--prs 3`, 2,700 at `--prs 5` and 21,000 at `--prs 10`, against
+a budget of 5,000 points per hour.
+
+Raising `--prs` is a worse trade than it looks. It buys coverage of *quiet* repositories -- the
+open-PR distribution is long-tailed, so `--prs 3` already covers 46% of them outright and `--prs 5`
+only reaches 57% -- and every repository it fails to cover costs about one cheap REST call instead.
+The two budgets are separate pools of 5,000, and a full REST pass uses only ~2,100-2,800 calls, so
+GraphQL points are the scarce resource, not REST calls. Keeping the cheap pass genuinely cheap is
+therefore also what keeps the sweep accurate. Each run prints the open-PR distribution during
+discovery, so the trade-off can be re-checked against the organisation as it is today. Three safeguards keep a
 sweep inside the caller's hourly allowance:
 
 - every query asks for `rateLimit { cost remaining resetAt }`, and the sweep stops with a warning
@@ -644,12 +655,37 @@ Note that the REST `/rate_limit` endpoint is **not** a reliable pre-flight check
 a full GraphQL budget (`5000/5000, used=0`) while the API is actively rejecting queries with
 `RATE_LIMIT`. The `rateLimit` block returned inside each query is the trustworthy signal.
 
+#### Why Some Repositories Are Counted Over REST
+
+GraphQL caps `pullRequests(first:)` at 100, and a sweep samples far fewer than that, so a
+repository with more open PRs than `--prs` is necessarily under-counted — `apache/airflow` reported
+0 running jobs from a 3-PR sample while REST found 176 in the same repository.
+
+So the sweep uses each API where it is strongest. Every repo's query also returns the two
+`totalCount`s that reveal whether the sample was complete: `pullRequests(states: OPEN)` and
+`checkSuites` per commit. A repository's GraphQL numbers stand only when **both** limits held --
+no more open PRs than `--prs`, and no commit carrying more check suites than `--suites`. Checking
+only the PR count is not enough: `apache/skywalking-java` has a single open PR but thirteen active
+runs on its head commit, and reading five of them reported 32 queued jobs where the true figure was
+203. Everything else is re-counted over REST, which has no org-wide endpoint but is exact per
+repository: list the runs that are still active, then count their jobs. In practice that is a small minority of repositories, so the sweep keeps
+GraphQL's batching for the bulk of the org and pays REST's per-repo cost only where it buys
+accuracy. The `source` column records which API produced each row, and `--no-rest-fallback` turns
+the second pass off.
+
 #### Known Limits
 
-- `--prs` samples the most recently updated open PRs rather than all of them, so a repository with
-  hundreds of open PRs is under-counted. Raise `--prs` when focusing on one project; a full count
-  needs REST.
-- GraphQL exposes no runner identity — no labels, no runner name, no self-hosted versus
-  GitHub-hosted split. A job held back by a `concurrency` group is indistinguishable from one
-  waiting for capacity. For true runner state, Infra can use
-  `GET /orgs/apache/actions/runners` (`admin:org`), whose objects carry `status` and `busy`.
+- Neither API attributes a job to a runner -- no labels, no runner name, no self-hosted versus
+  GitHub-hosted split -- so a job held back by a `concurrency` group cannot be told apart from one
+  waiting for capacity. Runs blocked on maintainer approval are reported separately in the
+  `runs_awaiting_approval` column, since those are not capacity waits either. For true runner
+  state, Infra can use `GET /orgs/apache/actions/runners` (`admin:org`), whose objects carry
+  `status` and `busy`.
+- GraphQL reaches workflow runs through check suites, which hang off commits, so the cheap pass
+  sees only the default branch head and open PR heads. A run started by a push to another branch,
+  by a tag, or by a schedule on a non-default branch is invisible to it, and no `totalCount`
+  reveals that. Such a repository is only counted if something else routes it to REST. In a paired
+  run against a full REST sweep the residual difference was 8 repositories out of ~160, all small,
+  and indistinguishable from ordinary churn over the twenty minutes separating the two passes.
+- The snapshot is a moment, not an average. A busy organisation moves enough in twenty minutes to
+  change totals by a third, so compare runs taken close together or not at all.
