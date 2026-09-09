@@ -35,6 +35,7 @@ This repository hosts GitHub Actions developed by the ASF community and approved
   - [Automatic Expiration of Old Versions](#automatic-expiration-of-old-versions)
   - [Removing a Version](#removing-a-version-manually)
 - [Auditing Repositories for Actions Security Tooling](#auditing-repositories-for-actions-security-tooling)
+- [Snapshotting Queued and Running Actions Jobs](#snapshotting-queued-and-running-actions-jobs)
 
 ## Checking the Action Usage in an ASF Project
 
@@ -550,3 +551,105 @@ When not in `--dry-run` mode, the script prompts for confirmation before creatin
 #### Idempotency
 
 The script is safe to re-run. Before creating a PR for a repository, it checks whether a PR with the branch name `asf-actions-security-audit` already exists — open, closed, or merged — and skips the repo if so.
+
+## Snapshotting Queued and Running Actions Jobs
+
+When the ASF runners feel slow, the first question is always "who is using them right now, and
+who is waiting?" The `actions-queue-status.py` script answers that across the whole organisation
+without needing org-admin rights.
+
+### Why This Matters
+
+The obvious endpoint — `GET /orgs/apache/actions/runners`, which reports each runner's `status`
+and `busy` flag — requires `admin:org`, so only Infra can call it. Everyone else debugging a slow
+queue is left guessing. Check-run state, on the other hand, is readable by anyone who can read the
+repository, and a check run maps one-to-one onto a workflow job. That is enough to see which
+repositories are consuming capacity and which are stuck behind it.
+
+There is no org-wide REST endpoint for queued jobs at all — the only alternatives are polling every
+repository one at a time or running a `workflow_job` webhook listener. This script batches the
+question into a handful of GraphQL requests instead.
+
+### Prerequisites
+
+- **Python 3.11+** and [**uv**](https://docs.astral.sh/uv/) (dependencies are declared inline via PEP 723)
+- **`gh`** (GitHub CLI, authenticated via `gh auth login`) — or pass `--github-token` with a token
+  that can read the org's repositories and use `--no-gh`
+
+### Usage
+
+```bash
+# Whole org: discover every repo with workflows, then snapshot job state
+uv run utils/actions-queue-status.py
+
+# Save the discovered repo list so later runs can skip discovery
+uv run utils/actions-queue-status.py --save-repos /tmp/asf-repos.txt
+uv run utils/actions-queue-status.py --repos-file /tmp/asf-repos.txt --top 40
+
+# Write both orderings to CSV: <path>-by-running.csv and <path>-by-queued.csv
+uv run utils/actions-queue-status.py --csv /tmp/asf-ci.csv
+
+# A single project, sampling more of its open PRs
+uv run utils/actions-queue-status.py --repos-file <(echo airflow) --prs 25
+```
+
+Output is two tables — repositories sorted by running jobs, and by queued jobs — plus a one-line
+total. `--json` prints the same data as JSON.
+
+#### Options
+
+| Flag | Description |
+|------|-------------|
+| `--org ORG` | Organisation to sweep (default: `apache`). |
+| `--batch-size N` | Repositories per GraphQL query (default: 20). |
+| `--prs N` | Open PRs sampled per repository, most recently updated first (default: 3). |
+| `--suites N` | Check suites read per commit (default: 5). |
+| `--workers N` | Batched queries in flight (default: 3). |
+| `--top N` | Rows shown per table (default: 25). |
+| `--include-archived` | Include archived repositories. |
+| `--repos-file PATH` | Skip discovery and read repository names from a file. |
+| `--save-repos PATH` | Write the discovered repository list to a file. |
+| `--csv PATH` | Write both orderings as CSV alongside `PATH`. |
+| `--json` | Print JSON instead of tables. |
+| `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN`. |
+| `--no-gh` | Use Python `requests` instead of the `gh` CLI. Requires a token. |
+
+#### How Discovery Works
+
+Rather than guessing from `pushedAt` or probing each repository over REST, the discovery query
+reads the workflows directory straight out of the git tree:
+
+```graphql
+workflows: object(expression: "HEAD:.github/workflows") {
+  ... on Tree { entries { name } }
+}
+```
+
+A repository counts as using Actions only when that tree exists and holds at least one `.yml` or
+`.yaml` entry. Archived, disabled and empty repositories are skipped.
+
+#### Rate Limits
+
+A full sweep of the `apache` organisation is not free: GraphQL charges by node count, so the
+per-query cost grows with `--batch-size`, `--prs` and `--suites` together. Three safeguards keep a
+sweep inside the caller's hourly allowance:
+
+- every query asks for `rateLimit { cost remaining resetAt }`, and the sweep stops with a warning
+  once fewer than 200 points remain, reporting partial counts rather than dying;
+- transient failures (502, and rate-limit rejections) are retried with 4s/16s/64s backoff, because
+  GitHub enforces a per-minute points cap as well as the hourly one;
+- `--workers` defaults to 3 — higher concurrency reliably trips that per-minute cap mid-sweep.
+
+Note that the REST `/rate_limit` endpoint is **not** a reliable pre-flight check here: it can report
+a full GraphQL budget (`5000/5000, used=0`) while the API is actively rejecting queries with
+`RATE_LIMIT`. The `rateLimit` block returned inside each query is the trustworthy signal.
+
+#### Known Limits
+
+- `--prs` samples the most recently updated open PRs rather than all of them, so a repository with
+  hundreds of open PRs is under-counted. Raise `--prs` when focusing on one project; a full count
+  needs REST.
+- GraphQL exposes no runner identity — no labels, no runner name, no self-hosted versus
+  GitHub-hosted split. A job held back by a `concurrency` group is indistinguishable from one
+  waiting for capacity. For true runner state, Infra can use
+  `GET /orgs/apache/actions/runners` (`admin:org`), whose objects carry `status` and `busy`.
