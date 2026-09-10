@@ -614,6 +614,51 @@ total. `--json` prints the same data as JSON.
 | `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN`. |
 | `--no-gh` | Use Python `requests` instead of the `gh` CLI. Requires a token. |
 | `--no-rest-fallback` | Skip the exact REST re-count for repos with more open PRs than `--prs`. |
+| `-v`, `--verbose` | Add per-batch, per-retry and per-repo diagnostics to the progress output. |
+| `-q`, `--quiet` | Suppress progress and diagnostics; print only the result. Overrides `--verbose`. |
+| `--no-color` | Disable colour and progress bars. `NO_COLOR` in the environment does the same. |
+
+#### Progress and Diagnostics
+
+A full sweep takes minutes, so it reports what it is doing while it does it. Everything below goes
+to **stderr** — stdout carries only the `--json` payload, so piping stays safe.
+
+Each phase is announced with a banner and closed with its elapsed time and the GraphQL points it
+spent, and while it runs it draws a live progress bar:
+
+```text
+▸ Phase 2/3  Status  62 queries of up to 20 repos
+  Status ━━━━━━━━━━━━━╺━━━━━━━━━  38/62  61% 4102 pts 0:01:12 eta 0:00:45
+```
+
+The points figure is colour-coded — green above 2,000, yellow down to the 200-point floor, red
+below it — so an approaching budget stop is visible before it happens.
+
+Bars are drawn only on a terminal. When output is piped or redirected, the same progress degrades
+to one line per step (every page during discovery, every tenth batch afterwards), which keeps log
+files readable and greppable:
+
+```text
+  Status 10/62  4102 pts
+```
+
+The run ends with a `Run diagnostics` table — queries issued, retries, batches split, repositories
+skipped, REST requests, points spent and wall time — so a slow or partial sweep can be explained
+after the fact rather than guessed at. Counters that represent failures stay dim while they are
+zero and turn yellow or red when they are not.
+
+`--verbose` adds the detail behind those counters: each discovery page and its cursor, every retry
+with its backoff and the error that caused it, each batch split, and — for every repository
+re-counted over REST — the exact counts next to what the GraphQL sample had reported:
+
+```text
+    query attempt 1/4 failed, retrying in 4s: 502 Bad Gateway
+    batch of 20 failed, splitting in two: 502 Bad Gateway
+    airflow: 10 active runs → 37 running, 0 queued (GraphQL sampled 13 running, 0 queued)
+```
+
+`--quiet` goes the other way and prints only the result tables; `--no-color` (or `NO_COLOR` in the
+environment) drops both colour and bars.
 
 #### How Discovery Works
 
