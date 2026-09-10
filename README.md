@@ -593,6 +593,9 @@ uv run utils/actions-queue-status.py --csv /tmp/asf-ci.csv
 
 # A single project, sampling more of its open PRs
 uv run utils/actions-queue-status.py --repos-file <(echo airflow) --prs 25
+
+# Group the rows by PMC instead of by repository
+uv run utils/actions-queue-status.py --by-pmc
 ```
 
 Output is two tables — repositories sorted by running jobs, and by queued jobs — plus a one-line
@@ -612,6 +615,7 @@ JSON, with the same figures under `totals`, and each CSV ends with a matching `T
 | `--suites N` | Check suites read per commit (default: 5). |
 | `--workers N` | Batched queries in flight (default: 3). |
 | `--top N` | Rows shown per table (default: 25). |
+| `--by-pmc` | Group rows by PMC — the repository name's prefix before the first hyphen. |
 | `--include-archived` | Include archived repositories. |
 | `--repos-file PATH` | Skip discovery and read repository names from a file; `#` comment lines are ignored. |
 | `--save-repos PATH` | Write the discovered repository list to a file, sorted and with a header. |
@@ -684,6 +688,36 @@ Pages are read 50 repositories at a time. Each node costs a git-tree lookup and 
 and at 100 the query times out server-side often enough to end a sweep — two consecutive full runs
 died on `HTTP 502`, after 200 and 300 repositories, with every retry exhausted. The same paging at
 50 walked the whole organisation without a single retry.
+
+#### Grouping by PMC
+
+`--by-pmc` changes the unit of the report from repository to PMC. Both orderings, the `TOTAL`
+footer, `--top`, `--csv` and `--json` work exactly as before; only the rows change:
+
+```text
+Sorted by RUNNING jobs
+┏━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ PMC     ┃ Queued ┃ Running ┃ Repos ┃ Repositories                   ┃
+┡━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ airflow │     13 │     133 │     2 │ airflow, airflow-client-python │
+│ spark   │      1 │      83 │     1 │ spark                          │
+├─────────┼────────┼─────────┼───────┼────────────────────────────────┤
+│ TOTAL   │     14 │     216 │     3 │ 2 PMCs                         │
+└─────────┴────────┴─────────┴───────┴────────────────────────────────┘
+```
+
+A repository's PMC is the text before the first hyphen in its name, and the whole name when there
+is no hyphen — so `spark`, `spark-connect-go` and `spark-docker` group under `spark`. That is the
+same rule [`--pmc` uses in `actions-audit.py`](#how-pmc-filtering-works), so the two scripts agree
+on what a PMC covers.
+
+It is a naming convention, not authoritative ownership, and it is not checked against the
+committee list: an `incubator-` repository groups under `incubator` rather than under the
+podling's eventual PMC. For per-repository detail, drop the flag.
+
+The `Source` column is spent on the repository count instead, since which API counted a row is a
+per-repository fact that a PMC of several repositories can only blur. The CSV keeps it, reading
+`mixed` where a PMC's repositories were counted different ways.
 
 #### The Stored Repository List
 

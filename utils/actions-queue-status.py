@@ -165,6 +165,17 @@ CSV_HEADER = [
     "workflows",
 ]
 
+PMC_CSV_HEADER = [
+    "pmc",
+    "queued_jobs",
+    "running_jobs",
+    "repos",
+    "open_prs",
+    "runs_awaiting_approval",
+    "source",
+    "repositories",
+]
+
 
 class Tracker:
     """Progress handle for one phase of the sweep.
@@ -747,6 +758,48 @@ def recount_over_rest(client: GraphQLClient, reporter: Reporter, org: str, row: 
     }
 
 
+def pmc_of(repo: str) -> str:
+    """Return the PMC a repository name belongs to: the text before the first hyphen.
+
+    The same rule actions-audit.py's --pmc filter uses, so the two scripts agree on what
+    `spark` covers. It is a naming convention rather than authoritative ownership -- an
+    `incubator-` repo groups under `incubator`, not under the podling's eventual PMC --
+    but every ASF repo is named this way, and it needs no network call to apply.
+    """
+    return repo.split("/")[-1].split("-", 1)[0]
+
+
+def group_by_pmc(rows: list[dict]) -> list[dict]:
+    """Aggregate per-repo summaries into one row per PMC."""
+    groups: dict[str, dict] = {}
+    for row in rows:
+        name = row["repo"].split("/")[-1]
+        group = groups.setdefault(
+            pmc_of(name),
+            {
+                "pmc": pmc_of(name),
+                "queued_jobs": 0,
+                "running_jobs": 0,
+                "open_prs": 0,
+                "runs_awaiting_approval": 0,
+                "repos": [],
+                "sources": set(),
+            },
+        )
+        group["queued_jobs"] += row["queued_jobs"]
+        group["running_jobs"] += row["running_jobs"]
+        group["open_prs"] += row.get("open_prs", 0) or 0
+        group["runs_awaiting_approval"] += row.get("runs_awaiting_approval", 0) or 0
+        group["repos"].append(name)
+        group["sources"].add(row.get("source", "graphql"))
+    for group in groups.values():
+        group["repos"].sort()
+        # A PMC counted partly each way is neither: say so rather than pick a winner.
+        group["source"] = group["sources"].pop() if len(group["sources"]) == 1 else "mixed"
+        del group["sources"]
+    return list(groups.values())
+
+
 def csv_path(base: str, ordering: str) -> str:
     """Derive the per-ordering CSV filename from the --csv argument."""
     stem, dot, extension = base.rpartition(".")
@@ -764,6 +817,20 @@ def csv_row(row: dict) -> list:
         row.get("runs_awaiting_approval", ""),
         row.get("source", "graphql"),
         workflows,
+    ]
+
+
+def pmc_csv_row(row: dict) -> list:
+    """Flatten one PMC summary into CSV cells."""
+    return [
+        row["pmc"],
+        row["queued_jobs"],
+        row["running_jobs"],
+        len(row["repos"]),
+        row["open_prs"],
+        row["runs_awaiting_approval"],
+        row["source"],
+        "; ".join(row["repos"]),
     ]
 
 
@@ -815,38 +882,51 @@ def write_repos_file(path: str, org: str, repos: list[str]) -> None:
         handle.write("\n".join(sorted(repos)) + "\n")
 
 
-def write_csv(reporter: Reporter, path: str, rows: list[dict], totals: dict) -> None:
+def write_csv(reporter: Reporter, path: str, rows: list[dict], totals: dict, by_pmc: bool = False) -> None:
     """Write one ordering of the snapshot as CSV."""
     with open(path, "w", newline="") as handle:
         writer = csv.writer(handle)
-        writer.writerow(CSV_HEADER)
+        writer.writerow(PMC_CSV_HEADER if by_pmc else CSV_HEADER)
         for row in rows:
-            writer.writerow(csv_row(row))
-        writer.writerow(
-            [
-                "TOTAL",
-                totals["queued_jobs"],
-                totals["running_jobs"],
-                "",
-                "",
-                "",
-                f"repos={totals['repos_active']}",
-            ]
-        )
+            writer.writerow(pmc_csv_row(row) if by_pmc else csv_row(row))
+        total_row = ["TOTAL", totals["queued_jobs"], totals["running_jobs"]]
+        if by_pmc:
+            total_row += [totals["repos_active"], "", "", "", f"pmcs={totals['pmcs_active']}"]
+        else:
+            total_row += ["", "", "", f"repos={totals['repos_active']}"]
+        writer.writerow(total_row)
     reporter.success(f"Wrote {path} ({len(rows)} rows)")
 
 
-def render_table(reporter: Reporter, title: str, rows: list[dict], top: int, totals: dict) -> None:
+def render_table(
+    reporter: Reporter, title: str, rows: list[dict], top: int, totals: dict, by_pmc: bool = False
+) -> None:
     """Print one ordering of the snapshot as a rich table."""
     table = Table(title=title, title_justify="left", title_style="bold")
-    table.add_column("Repository", style="bold")
+    table.add_column("PMC" if by_pmc else "Repository", style="bold")
     table.add_column("Queued", justify="right", style="yellow")
     table.add_column("Running", justify="right", style="green")
-    # The source column says how the row was counted: an exact REST re-count reads
-    # differently from a GraphQL sample, so it is worth colouring the two apart.
-    table.add_column("Source")
-    table.add_column("Workflows", style="dim")
+    if by_pmc:
+        # Which API counted a row is a per-repo fact that a PMC of several repos can only
+        # blur, so the grouped table spends the column on the repo count instead. The CSV
+        # still carries it, as "mixed" where the repos disagree.
+        table.add_column("Repos", justify="right")
+        table.add_column("Repositories", style="dim")
+    else:
+        # The source column says how the row was counted: an exact REST re-count reads
+        # differently from a GraphQL sample, so it is worth colouring the two apart.
+        table.add_column("Source")
+        table.add_column("Workflows", style="dim")
     for row in rows[:top]:
+        if by_pmc:
+            table.add_row(
+                row["pmc"],
+                str(row["queued_jobs"]),
+                str(row["running_jobs"]),
+                str(len(row["repos"])),
+                escape(", ".join(row["repos"])[:50]),
+            )
+            continue
         workflows = ", ".join(sorted(row["workflows"])) or "-"
         source = row.get("source", "graphql")
         table.add_row(
@@ -869,15 +949,19 @@ def render_table(reporter: Reporter, title: str, rows: list[dict], top: int, tot
             "",
             "",
         )
+    active = totals["pmcs_active"] if by_pmc else totals["repos_active"]
+    unit = "PMC" if by_pmc else "repo"
     table.add_row(
         "[bold]TOTAL[/]",
         f"[bold]{totals['queued_jobs']}[/]",
         f"[bold]{totals['running_jobs']}[/]",
-        "",
-        f"[dim]{totals['repos_active']} repo{'' if totals['repos_active'] == 1 else 's'}[/]",
+        f"[bold]{totals['repos_active']}[/]" if by_pmc else "",
+        f"[dim]{active} {unit}{'' if active == 1 else 's'}[/]",
     )
     if len(rows) > top:
-        table.caption = f"showing top {top} of {len(rows)} active repos — raise --top for more"
+        table.caption = (
+            f"showing top {top} of {len(rows)} active {unit}s — raise --top for more"
+        )
         table.caption_justify = "left"
     reporter.console.print(table)
 
@@ -907,6 +991,11 @@ def parse_args() -> argparse.Namespace:
     # well as the hourly one, and six workers tripped it partway through an org sweep.
     parser.add_argument("--workers", type=int, default=3, help="batched queries in flight")
     parser.add_argument("--top", type=int, default=25, help="rows shown per table")
+    parser.add_argument(
+        "--by-pmc",
+        action="store_true",
+        help="group rows by PMC: the repo name's prefix before the first hyphen",
+    )
     parser.add_argument("--include-archived", action="store_true", help="include archived repos")
     parser.add_argument("--repos-file", help="skip discovery; newline-separated repo names")
     parser.add_argument("--save-repos", help="write the discovered repo list here")
@@ -1030,12 +1119,20 @@ def main() -> int:
         reporter.log("  No REST re-count needed — the GraphQL sample covered every repo", "green")
 
     active = [row for row in results if row["queued_jobs"] or row["running_jobs"]]
-    by_running = sorted(active, key=lambda row: (-row["running_jobs"], -row["queued_jobs"], row["repo"]))
-    by_queued = sorted(active, key=lambda row: (-row["queued_jobs"], -row["running_jobs"], row["repo"]))
+    grouped = group_by_pmc(active)
+    if args.by_pmc:
+        key = "pmc"
+        rows = grouped
+    else:
+        key = "repo"
+        rows = active
+    by_running = sorted(rows, key=lambda row: (-row["running_jobs"], -row["queued_jobs"], row[key]))
+    by_queued = sorted(rows, key=lambda row: (-row["queued_jobs"], -row["running_jobs"], row[key]))
     totals = {
         "org": args.org,
         "repos_with_actions": len(results),
         "repos_active": len(active),
+        "pmcs_active": len(grouped),
         "queued_jobs": sum(row["queued_jobs"] for row in results),
         "running_jobs": sum(row["running_jobs"] for row in results),
         "truncated": truncated,
@@ -1050,17 +1147,18 @@ def main() -> int:
     console.print(
         f"\n[bold]{args.org}[/]: [green]{totals['running_jobs']}[/] jobs running, "
         f"[yellow]{totals['queued_jobs']}[/] queued across {totals['repos_active']} of "
-        f"{totals['repos_with_actions']} repos with Actions",
+        f"{totals['repos_with_actions']} repos with Actions"
+        + (f" in {totals['pmcs_active']} PMCs" if args.by_pmc else ""),
         highlight=False,
     )
     if truncated:
         console.print("[bold yellow]Counts are partial: the run stopped on the points budget.[/]")
-    render_table(reporter, "Sorted by RUNNING jobs", by_running, args.top, totals)
-    render_table(reporter, "Sorted by QUEUED jobs", by_queued, args.top, totals)
+    render_table(reporter, "Sorted by RUNNING jobs", by_running, args.top, totals, args.by_pmc)
+    render_table(reporter, "Sorted by QUEUED jobs", by_queued, args.top, totals, args.by_pmc)
 
     if args.csv:
-        write_csv(reporter, csv_path(args.csv, "by-running"), by_running, totals)
-        write_csv(reporter, csv_path(args.csv, "by-queued"), by_queued, totals)
+        write_csv(reporter, csv_path(args.csv, "by-running"), by_running, totals, args.by_pmc)
+        write_csv(reporter, csv_path(args.csv, "by-queued"), by_queued, totals, args.by_pmc)
     return 0
 
 
