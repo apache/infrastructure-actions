@@ -615,7 +615,7 @@ JSON, with the same figures under `totals`, and each CSV ends with a matching `T
 | `--suites N` | Check suites read per commit (default: 5). |
 | `--workers N` | Batched queries in flight (default: 3). |
 | `--top N` | Rows shown per table (default: 25). |
-| `--by-pmc` | Group rows by PMC — the repository name's prefix before the first hyphen. |
+| `--by-pmc` | Group rows by PMC — the repository name's prefix before the first hyphen. The `Repos` column reads active / total. |
 | `--include-archived` | Include archived repositories. |
 | `--repos-file PATH` | Skip discovery and read repository names from a file; `#` comment lines are ignored. |
 | `--save-repos PATH` | Write the discovered repository list to a file, sorted and with a header. |
@@ -696,15 +696,22 @@ footer, `--top`, `--csv` and `--json` work exactly as before; only the rows chan
 
 ```text
 Sorted by RUNNING jobs
-┏━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ PMC     ┃ Queued ┃ Running ┃ Repos ┃ Repositories                   ┃
-┡━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ airflow │     13 │     133 │     2 │ airflow, airflow-client-python │
-│ spark   │      1 │      83 │     1 │ spark                          │
-├─────────┼────────┼─────────┼───────┼────────────────────────────────┤
-│ TOTAL   │     14 │     216 │     3 │ 2 PMCs                         │
-└─────────┴────────┴─────────┴───────┴────────────────────────────────┘
+┏━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ PMC        ┃ Queued ┃ Running ┃     Repos ┃ Repositories                   ┃
+┡━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ airflow    │     13 │     133 │    2 / 10 │ airflow, airflow-client-python │
+│ fineract   │      0 │      96 │     1 / 8 │ fineract                       │
+│ datafusion │     21 │      49 │    2 / 12 │ datafusion, datafusion-comet   │
+├────────────┼────────┼─────────┼───────────┼────────────────────────────────┤
+│ TOTAL      │    330 │     881 │ 60 / 1258 │ 49 PMCs                        │
+└────────────┴────────┴─────────┴───────────┴────────────────────────────────┘
 ```
+
+The `Repos` column reads *active / total*: how many of the PMC's repositories have jobs right
+now, out of every repository of theirs the sweep covered. Four busy repositories mean something
+different for a PMC of four than for a PMC of forty-seven, and the denominator is what says
+which one you are looking at. It counts the repositories the sweep actually ran over, so a
+`--repos-file` run measures against that file rather than the whole organisation.
 
 A repository's PMC is the text before the first hyphen in its name, and the whole name when there
 is no hyphen — so `spark`, `spark-connect-go` and `spark-docker` group under `spark`. That is the

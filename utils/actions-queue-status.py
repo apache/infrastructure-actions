@@ -170,6 +170,7 @@ PMC_CSV_HEADER = [
     "queued_jobs",
     "running_jobs",
     "repos",
+    "repos_total",
     "open_prs",
     "runs_awaiting_approval",
     "source",
@@ -769,8 +770,15 @@ def pmc_of(repo: str) -> str:
     return repo.split("/")[-1].split("-", 1)[0]
 
 
-def group_by_pmc(rows: list[dict]) -> list[dict]:
-    """Aggregate per-repo summaries into one row per PMC."""
+def group_by_pmc(rows: list[dict], population: list[str] | None = None) -> list[dict]:
+    """Aggregate per-repo summaries into one row per PMC.
+
+    `population` is every repo the sweep covered, active or not. It is what makes the
+    active count mean something: four busy repos is a different picture for a PMC of
+    four than for a PMC of forty-seven. Without it a PMC's total is just its active
+    repos, which is what a caller with no wider list can honestly say.
+    """
+    totals: dict[str, int] = collections.Counter(pmc_of(name) for name in population or [])
     groups: dict[str, dict] = {}
     for row in rows:
         name = row["repo"].split("/")[-1]
@@ -794,6 +802,10 @@ def group_by_pmc(rows: list[dict]) -> list[dict]:
         group["sources"].add(row.get("source", "graphql"))
     for group in groups.values():
         group["repos"].sort()
+        # A repo with jobs is by definition part of its PMC's estate, so the count can
+        # never be smaller than what was found active -- even if the population somehow
+        # did not list it.
+        group["repos_total"] = max(totals.get(group["pmc"], 0), len(group["repos"]))
         # A PMC counted partly each way is neither: say so rather than pick a winner.
         group["source"] = group["sources"].pop() if len(group["sources"]) == 1 else "mixed"
         del group["sources"]
@@ -827,6 +839,7 @@ def pmc_csv_row(row: dict) -> list:
         row["queued_jobs"],
         row["running_jobs"],
         len(row["repos"]),
+        row["repos_total"],
         row["open_prs"],
         row["runs_awaiting_approval"],
         row["source"],
@@ -891,7 +904,14 @@ def write_csv(reporter: Reporter, path: str, rows: list[dict], totals: dict, by_
             writer.writerow(pmc_csv_row(row) if by_pmc else csv_row(row))
         total_row = ["TOTAL", totals["queued_jobs"], totals["running_jobs"]]
         if by_pmc:
-            total_row += [totals["repos_active"], "", "", "", f"pmcs={totals['pmcs_active']}"]
+            total_row += [
+                totals["repos_active"],
+                totals["repos_with_actions"],
+                "",
+                "",
+                "",
+                f"pmcs={totals['pmcs_active']}",
+            ]
         else:
             total_row += ["", "", "", f"repos={totals['repos_active']}"]
         writer.writerow(total_row)
@@ -923,7 +943,7 @@ def render_table(
                 row["pmc"],
                 str(row["queued_jobs"]),
                 str(row["running_jobs"]),
-                str(len(row["repos"])),
+                f"{len(row['repos'])} / {row['repos_total']}",
                 escape(", ".join(row["repos"])[:50]),
             )
             continue
@@ -955,7 +975,7 @@ def render_table(
         "[bold]TOTAL[/]",
         f"[bold]{totals['queued_jobs']}[/]",
         f"[bold]{totals['running_jobs']}[/]",
-        f"[bold]{totals['repos_active']}[/]" if by_pmc else "",
+        f"[bold]{totals['repos_active']} / {totals['repos_with_actions']}[/]" if by_pmc else "",
         f"[dim]{active} {unit}{'' if active == 1 else 's'}[/]",
     )
     if len(rows) > top:
@@ -1119,7 +1139,7 @@ def main() -> int:
         reporter.log("  No REST re-count needed — the GraphQL sample covered every repo", "green")
 
     active = [row for row in results if row["queued_jobs"] or row["running_jobs"]]
-    grouped = group_by_pmc(active)
+    grouped = group_by_pmc(active, repos)
     if args.by_pmc:
         key = "pmc"
         rows = grouped
