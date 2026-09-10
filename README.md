@@ -582,9 +582,11 @@ question into a handful of GraphQL requests instead.
 # Whole org: discover every repo with workflows, then snapshot job state
 uv run utils/actions-queue-status.py
 
-# Save the discovered repo list so later runs can skip discovery
-uv run utils/actions-queue-status.py --save-repos /tmp/asf-repos.txt
-uv run utils/actions-queue-status.py --repos-file /tmp/asf-repos.txt --top 40
+# Skip discovery by reading the repo list stored in this repository
+uv run utils/actions-queue-status.py --repos-file utils/apache-actions-repos.txt --top 40
+
+# Refresh that stored list (see "The Stored Repository List" below)
+uv run utils/actions-queue-status.py --save-repos utils/apache-actions-repos.txt
 
 # Write both orderings to CSV: <path>-by-running.csv and <path>-by-queued.csv
 uv run utils/actions-queue-status.py --csv /tmp/asf-ci.csv
@@ -611,8 +613,8 @@ JSON, with the same figures under `totals`, and each CSV ends with a matching `T
 | `--workers N` | Batched queries in flight (default: 3). |
 | `--top N` | Rows shown per table (default: 25). |
 | `--include-archived` | Include archived repositories. |
-| `--repos-file PATH` | Skip discovery and read repository names from a file. |
-| `--save-repos PATH` | Write the discovered repository list to a file. |
+| `--repos-file PATH` | Skip discovery and read repository names from a file; `#` comment lines are ignored. |
+| `--save-repos PATH` | Write the discovered repository list to a file, sorted and with a header. |
 | `--csv PATH` | Write both orderings as CSV alongside `PATH`. |
 | `--json` | Print JSON instead of tables. |
 | `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN`. |
@@ -677,6 +679,42 @@ workflows: object(expression: "HEAD:.github/workflows") {
 
 A repository counts as using Actions only when that tree exists and holds at least one `.yml` or
 `.yaml` entry. Archived, disabled and empty repositories are skipped.
+
+Pages are read 50 repositories at a time. Each node costs a git-tree lookup and an open-PR count,
+and at 100 the query times out server-side often enough to end a sweep — two consecutive full runs
+died on `HTTP 502`, after 200 and 300 repositories, with every retry exhausted. The same paging at
+50 walked the whole organisation without a single retry.
+
+#### The Stored Repository List
+
+Discovery is the slowest phase of a sweep — it walks every repository in the organisation before a
+single job is counted — and its result changes slowly. So the current list is stored in this
+repository at [`utils/apache-actions-repos.txt`](utils/apache-actions-repos.txt), and passing it
+back skips discovery entirely:
+
+```bash
+uv run utils/actions-queue-status.py --repos-file utils/apache-actions-repos.txt
+```
+
+The file is one repository name per line, sorted, with `#` comment lines that `--repos-file`
+ignores. Its header records how many repositories it holds and when they were discovered. Sorting
+is what keeps it reviewable: discovery returns repositories in push order, which reshuffles on
+every run, so an unsorted file would diff as a thousand moved lines instead of the handful that
+actually joined or left.
+
+**It must be refreshed periodically.** A stored list only ages in one direction — repositories are
+created, archived, and adopt Actions after the list was written — and a stale list fails silently,
+because the sweep reports totals across the repositories it was given without any way to know which
+ones are missing. Regenerate it with `--save-repos`, pointed at the file itself:
+
+```bash
+uv run utils/actions-queue-status.py --save-repos utils/apache-actions-repos.txt
+```
+
+That runs a full sweep and rewrites the file, header and all, so the refresh and the snapshot come
+from the same pass. Commit the result; the diff shows exactly which repositories joined and left.
+When accuracy matters more than speed — a report on organisation-wide capacity, rather than a look
+at what is queued right now — run the sweep without `--repos-file` and let it discover afresh.
 
 #### Rate Limits
 
