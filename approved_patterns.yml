@@ -38,6 +38,7 @@
 - amannn/action-semantic-pull-request@*
 - ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c
 - anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
+- anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26
 - anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2
 - anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439
 - arduino/setup-protoc@*

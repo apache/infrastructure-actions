@@ -79,6 +79,9 @@ ana06/get-changed-files:
 anchore/sbom-action:
   e22c389904149dbc22b58101806040fa8d37a610:
     tag: v0.24.0
+    expires_at: 2026-12-03
+  3ad7283483fc7af8ff2b4ea19663c2d5ca935e26:
+    tag: v0.24.2
 anchore/scan-action:
   e1165082ffb1fe366ebaf02d8526e7c4989ea9d2:
     tag: v7.4.0
