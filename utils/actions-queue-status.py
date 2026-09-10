@@ -782,7 +782,7 @@ def write_csv(reporter: Reporter, path: str, rows: list[dict], totals: dict) -> 
     reporter.success(f"Wrote {path} ({len(rows)} rows)")
 
 
-def render_table(reporter: Reporter, title: str, rows: list[dict], top: int) -> None:
+def render_table(reporter: Reporter, title: str, rows: list[dict], top: int, totals: dict) -> None:
     """Print one ordering of the snapshot as a rich table."""
     table = Table(title=title, title_justify="left", title_style="bold")
     table.add_column("Repository", style="bold")
@@ -802,6 +802,26 @@ def render_table(reporter: Reporter, title: str, rows: list[dict], top: int) -> 
             f"[cyan]{source}[/]" if source == "rest" else f"[dim]{source}[/]",
             escape(workflows[:50]),
         )
+    # The org-wide total is printed once above the tables, which has scrolled away by the
+    # time a long table has been read — so each table closes with it. When the table is
+    # truncated the visible rows are subtotalled too, since what --top leaves out is the
+    # question the total otherwise raises.
+    table.add_section()
+    if len(rows) > top:
+        table.add_row(
+            f"[dim]shown (top {top})[/]",
+            f"[dim]{sum(row['queued_jobs'] for row in rows[:top])}[/]",
+            f"[dim]{sum(row['running_jobs'] for row in rows[:top])}[/]",
+            "",
+            "",
+        )
+    table.add_row(
+        "[bold]TOTAL[/]",
+        f"[bold]{totals['queued_jobs']}[/]",
+        f"[bold]{totals['running_jobs']}[/]",
+        "",
+        f"[dim]{totals['repos_active']} repo{'' if totals['repos_active'] == 1 else 's'}[/]",
+    )
     if len(rows) > top:
         table.caption = f"showing top {top} of {len(rows)} active repos — raise --top for more"
         table.caption_justify = "left"
@@ -980,8 +1000,8 @@ def main() -> int:
     )
     if truncated:
         console.print("[bold yellow]Counts are partial: the run stopped on the points budget.[/]")
-    render_table(reporter, "Sorted by RUNNING jobs", by_running, args.top)
-    render_table(reporter, "Sorted by QUEUED jobs", by_queued, args.top)
+    render_table(reporter, "Sorted by RUNNING jobs", by_running, args.top, totals)
+    render_table(reporter, "Sorted by QUEUED jobs", by_queued, args.top, totals)
 
     if args.csv:
         write_csv(reporter, csv_path(args.csv, "by-running"), by_running, totals)

@@ -594,7 +594,11 @@ uv run utils/actions-queue-status.py --repos-file <(echo airflow) --prs 25
 ```
 
 Output is two tables — repositories sorted by running jobs, and by queued jobs — plus a one-line
-total. `--json` prints the same data as JSON.
+total. Each table closes with a `TOTAL` row carrying the org-wide queued and running counts and
+the number of active repositories; when `--top` truncates the table, a dim `shown (top N)` row
+above it subtotals the visible rows, so what the table leaves out is visible from the table
+itself rather than only from the summary line printed above it. `--json` prints the same data as
+JSON, with the same figures under `totals`, and each CSV ends with a matching `TOTAL` row.
 
 #### Options
 
