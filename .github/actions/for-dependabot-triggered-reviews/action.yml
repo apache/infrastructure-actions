@@ -103,7 +103,7 @@ runs:
       if: false
     - uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff  # v24.2.0
       if: false
-    - uses: dawidd6/action-send-mail@94de994a9f6fffee200243214e17002e2920bb59  # v18
+    - uses: dawidd6/action-send-mail@ca8dbb4d4f91ca7f75e7f2feea5339e76ce70c90  # v20
       if: false
     - uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98  # v3.1.0
       if: false
