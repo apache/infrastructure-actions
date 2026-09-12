@@ -347,6 +347,9 @@ commit-check/commit-check-action:
     expires_at: 2026-11-09
   f803083a5bf0867b60d77189bc3810fce2f0e314:
     tag: v2.15.0
+    expires_at: 2026-12-05
+  fd3d923eab0876650f261d2a75572e8161a9a58e:
+    tag: v2.16.0
 conda-incubator/setup-miniconda:
   '*':
     keep: true

@@ -130,6 +130,7 @@
 - commit-check/commit-check-action@d109324148a73dc758891d1d85924c912dbfd38b
 - commit-check/commit-check-action@562a184b2b8e583e757b17eb385bc48370f44547
 - commit-check/commit-check-action@f803083a5bf0867b60d77189bc3810fce2f0e314
+- commit-check/commit-check-action@fd3d923eab0876650f261d2a75572e8161a9a58e
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d
