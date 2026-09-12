@@ -1872,6 +1872,34 @@ _IN_TREE_BINARY_EXEMPT_PATH_SUFFIXES = (
     "node_modules/@actions/tool-cache/scripts/externals/7zdec.exe",
 )
 
+# Directory segments that mark a test tree, and the fixture / sample-data
+# subtrees inside one.  A binary under BOTH (or under a ``testdata``
+# segment, Go's convention for the same thing) is test *input*: the
+# action's entrypoint never reaches it, so it never runs on a consumer's
+# runner and is not a supply-chain vector.  Same reasoning already
+# applied to only-in-rebuild output (cf. the #1123 precedent).
+#
+# Requiring both a test segment and a fixture segment keeps this narrow.
+# A top-level ``fixtures/`` tree, or a genuine helper binary sitting at
+# ``tests/bin/tool``, still gets flagged.
+_TEST_DIR_SEGMENTS = frozenset({"test", "tests", "spec", "specs", "__tests__"})
+_FIXTURE_DIR_SEGMENTS = frozenset({"fixture", "fixtures", "__fixtures__"})
+_TESTDATA_DIR_SEGMENTS = frozenset({"testdata", "test-data"})
+
+
+def _is_test_fixture_binary(path: str) -> bool:
+    """Return True if ``path`` sits inside a test-fixture tree.
+
+    Only the *directory* segments are considered, so a file merely named
+    like a fixture does not qualify.
+    """
+    segments = set(path.lower().split("/")[:-1])
+    if segments & _TESTDATA_DIR_SEGMENTS:
+        return True
+    return bool(segments & _TEST_DIR_SEGMENTS) and bool(
+        segments & _FIXTURE_DIR_SEGMENTS
+    )
+
 
 def _looks_like_in_tree_binary(path: str) -> bool:
     """Return True if ``path`` (a repo-relative blob path) looks like a
@@ -1886,6 +1914,8 @@ def _looks_like_in_tree_binary(path: str) -> bool:
     if name in _IN_TREE_BINARY_EXEMPT_NAMES:
         return False
     if path.lower().endswith(_IN_TREE_BINARY_EXEMPT_PATH_SUFFIXES):
+        return False
+    if _is_test_fixture_binary(path):
         return False
     lower = name.lower()
     if lower.endswith(_IN_TREE_BINARY_EXTENSIONS):
