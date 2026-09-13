@@ -23,6 +23,7 @@
 # dependencies = [
 #     "requests>=2.31",
 #     "rich>=13.0",
+#     "rich-argparse>=1.6",
 # ]
 # ///
 
@@ -64,6 +65,7 @@ from concurrent.futures import ThreadPoolExecutor
 import requests
 from rich.console import Console
 from rich.table import Table
+from rich_argparse import RichHelpFormatter
 
 console = Console(stderr=True)
 
@@ -156,7 +158,9 @@ class GraphQLClient:
         self._lock = threading.Lock()
         self._remaining: int | None = None
         if use_requests and not token:
-            raise SystemExit("--no-gh requires --github-token, GH_TOKEN or GITHUB_TOKEN")
+            raise SystemExit(
+                "--no-gh requires --github-token, GH_TOKEN, GITHUB_TOKEN or an authenticated gh CLI"
+            )
         if not use_requests and not shutil.which("gh"):
             raise SystemExit("gh CLI not found — install it, or use --no-gh with a token")
 
@@ -255,15 +259,31 @@ class GraphQLClient:
             raise BudgetExhausted(f"stopping with {remaining} GraphQL points left")
 
 
+def gh_auth_token() -> str | None:
+    """Return the token the `gh` CLI is logged in with, or None if it cannot supply one.
+
+    Lets the script work out of the box for anyone already running `gh auth login`, without
+    minting a second PAT just to set GH_TOKEN.
+    """
+    gh = shutil.which("gh")
+    if not gh:
+        return None
+    try:
+        result = subprocess.run([gh, "auth", "token"], capture_output=True, text=True, check=True)
+    except (subprocess.CalledProcessError, OSError):
+        return None
+    return result.stdout.strip() or None
+
+
 def resolve_token(args: argparse.Namespace) -> str | None:
-    """Resolve the token: --github-token, then GH_TOKEN, then GITHUB_TOKEN."""
+    """Resolve the token: --github-token, then GH_TOKEN / GITHUB_TOKEN, then `gh auth token`."""
     if args.github_token:
         return args.github_token
     for name in ("GH_TOKEN", "GITHUB_TOKEN"):
         value = os.environ.get(name)
         if value:
             return value
-    return None
+    return gh_auth_token()
 
 
 def has_workflows(node: dict) -> bool:
@@ -511,6 +531,7 @@ def render_table(title: str, rows: list[dict], top: int) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
+        formatter_class=RichHelpFormatter,
         description="Report repos with GitHub Actions jobs queued or running right now.",
         epilog=(
             "Repos the GraphQL sample cannot cover — more open PRs than --prs, or more "
@@ -539,7 +560,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save-repos", help="write the discovered repo list here")
     parser.add_argument("--csv", metavar="PATH", help="write both orderings as CSV next to PATH")
     parser.add_argument("--json", action="store_true", help="print JSON instead of tables")
-    parser.add_argument("--github-token", help="GitHub token (default: GH_TOKEN / GITHUB_TOKEN)")
+    parser.add_argument(
+        "--github-token",
+        help="GitHub token (default: GH_TOKEN / GITHUB_TOKEN, then `gh auth token`)",
+    )
     parser.add_argument("--no-gh", action="store_true", help="use requests instead of the gh CLI")
     parser.add_argument(
         "--no-rest-fallback",

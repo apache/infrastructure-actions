@@ -22,6 +22,7 @@
 # dependencies = [
 #     "requests>=2.31",
 #     "rich>=13.0",
+#     "rich-argparse>=1.6",
 #     "pyyaml>=6.0",
 # ]
 # ///
@@ -55,6 +56,7 @@ import yaml
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
+from rich_argparse import RichHelpFormatter
 
 console = Console(stderr=True)
 
@@ -270,6 +272,22 @@ class AuditResult:
         if self.missing_allowlist:
             items.append("allowlist-check")
         return items
+
+
+def gh_auth_token() -> str | None:
+    """Return the token the `gh` CLI is logged in with, or None if it cannot supply one.
+
+    Lets the script work out of the box for anyone already running `gh auth login`, without
+    minting a second PAT just to set GH_TOKEN.
+    """
+    gh = shutil.which("gh")
+    if not gh:
+        return None
+    try:
+        result = subprocess.run([gh, "auth", "token"], capture_output=True, text=True, check=True)
+    except (subprocess.CalledProcessError, OSError):
+        return None
+    return result.stdout.strip() or None
 
 
 class GitHubClient:
@@ -1031,6 +1049,7 @@ def create_pr(gh: GitHubClient, owner: str, result: AuditResult) -> str | None:
 
 def main():
     parser = argparse.ArgumentParser(
+        formatter_class=RichHelpFormatter,
         description="Audit Apache GitHub repos for proper Actions security configurations.",
     )
     parser.add_argument(
@@ -1051,7 +1070,8 @@ def main():
     )
     parser.add_argument(
         "--github-token", default=os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN"),
-        help="GitHub token (default: GH_TOKEN or GITHUB_TOKEN env var).",
+        help="GitHub token (default: GH_TOKEN or GITHUB_TOKEN env var; with --no-gh, "
+             "`gh auth token` is used as a last resort).",
     )
     parser.add_argument(
         "--no-gh", action="store_true",
@@ -1062,6 +1082,19 @@ def main():
         help="Print GraphQL queries and other debug information.",
     )
     args = parser.parse_args()
+
+    # --no-gh drops the gh CLI for plain requests, which needs a token of its own. Anyone
+    # already logged in with gh has one, so borrow it rather than demanding a second PAT.
+    # Scoped to that mode on purpose: GitHubClient switches to requests as soon as a token
+    # is set, so filling one in unconditionally would take the gh CLI out of the default path.
+    if args.no_gh and not args.github_token:
+        args.github_token = gh_auth_token()
+        if not args.github_token:
+            console.print(
+                "[red]Error: --no-gh needs a token. Pass --github-token, set GH_TOKEN / "
+                "GITHUB_TOKEN, or run `gh auth login`.[/]"
+            )
+            sys.exit(1)
 
     # Validate prerequisites
     if not args.no_gh and not args.github_token and not shutil.which("gh"):

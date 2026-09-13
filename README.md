@@ -307,7 +307,17 @@ export GITHUB_TOKEN=ghp_...
 uv run utils/verify-action-build.py --no-gh --check-dependabot-prs
 ```
 
+If neither is set and `gh` happens to be installed and logged in, the token is taken from
+`gh auth token` as a last resort — so `--no-gh` only needs an explicit token when there is no
+authenticated `gh` to borrow one from.
+
 The `--no-gh` mode supports all the same features as the default `gh`-based mode.
+
+> Even in the default `gh`-based mode, some checks (lockfile discovery, in-tree binary lookups) call
+> `api.github.com` directly and read `GITHUB_TOKEN` from the environment. Unauthenticated those calls
+> share a 60-requests/hour budget, which a single run can exhaust — so when `GITHUB_TOKEN` is unset,
+> `verify-action-build` fills it in from `--github-token` or `gh auth token` for the duration of the
+> run. Nothing to configure: just stay logged in with `gh auth login`.
 
 #### Automated Verification in CI
 
@@ -471,7 +481,7 @@ The audit script checks each repository for four security configurations and can
 ### Prerequisites
 
 - **Python 3.11+** and [**uv**](https://docs.astral.sh/uv/) **>= 0.9.17** (dependencies are managed inline via PEP 723). Make sure your uv is up to date — depending on how you installed it, run `uv self update`, `pip install --upgrade uv`, `pipx upgrade uv`, or `brew upgrade uv`
-- **`gh`** (GitHub CLI, authenticated via `gh auth login`) — or provide a `--github-token` with `repo` scope and use `--no-gh`
+- **`gh`** (GitHub CLI, authenticated via `gh auth login`) — or provide a `--github-token` with `repo` scope and use `--no-gh`. With `--no-gh` and no token given, an authenticated `gh` is still used once to mint one via `gh auth token`
 - **`zizmor`** ([install instructions](https://docs.zizmor.dev/installation/)) — required for PR creation mode; not needed for `--dry-run`. If missing, zizmor pre-checks are skipped with a warning
 
 ### Usage
@@ -507,8 +517,8 @@ uv run utils/actions-audit.py --pmc spark --max-num 10
 | `--dry-run` | Report findings without creating PRs or branches. |
 | `--max-num N` | Maximum number of repositories to check (0 = unlimited, default). |
 | `--batch-size N` | Number of repos to fetch per GraphQL request (default: 50, max: 100). |
-| `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN` environment variable. |
-| `--no-gh` | Use Python `requests` instead of the `gh` CLI for all API calls. Requires `--github-token` or a token env var. |
+| `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN` environment variable. With `--no-gh`, falls back to `gh auth token` when neither is set. |
+| `--no-gh` | Use Python `requests` instead of the `gh` CLI for all API calls. Needs a token — from `--github-token`, a token env var, or an authenticated `gh`. |
 
 #### How PMC Filtering Works
 
@@ -574,7 +584,8 @@ question into a handful of GraphQL requests instead.
 
 - **Python 3.11+** and [**uv**](https://docs.astral.sh/uv/) (dependencies are declared inline via PEP 723)
 - **`gh`** (GitHub CLI, authenticated via `gh auth login`) — or pass `--github-token` with a token
-  that can read the org's repositories and use `--no-gh`
+  that can read the org's repositories and use `--no-gh`. An authenticated `gh` also supplies the
+  token for `--no-gh` automatically, via `gh auth token`
 
 ### Usage
 
@@ -611,8 +622,8 @@ total. `--json` prints the same data as JSON.
 | `--save-repos PATH` | Write the discovered repository list to a file. |
 | `--csv PATH` | Write both orderings as CSV alongside `PATH`. |
 | `--json` | Print JSON instead of tables. |
-| `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN`. |
-| `--no-gh` | Use Python `requests` instead of the `gh` CLI. Requires a token. |
+| `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN`, then `gh auth token`. |
+| `--no-gh` | Use Python `requests` instead of the `gh` CLI. Requires a token — an authenticated `gh` supplies one automatically. |
 | `--no-rest-fallback` | Skip the exact REST re-count for repos with more open PRs than `--prs`. |
 
 #### How Discovery Works

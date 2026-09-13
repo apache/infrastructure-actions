@@ -18,6 +18,14 @@
 # under the License.
 #
 
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "pyyaml>=6.0",
+#     "rich-argparse>=1.6",
+# ]
+# ///
+
 """
 audit-actions-cache.py
 
@@ -29,25 +37,25 @@ Recursively resolves composite actions and flags:
 
 Usage:
   # Audit local workflow files
-  python audit-actions-cache.py --workflow .github/workflows/publish.yml
+  uv run audit-actions-cache.py --workflow .github/workflows/publish.yml
 
   # Audit all workflows in a local repo
-  python audit-actions-cache.py --repo-path /path/to/repo
+  uv run audit-actions-cache.py --repo-path /path/to/repo
 
-  # Audit a remote repo (requires GITHUB_TOKEN)
-  python audit-actions-cache.py --remote owner/repo
-  python audit-actions-cache.py --remote owner/repo@v2.3.0
+  # Audit a remote repo (needs a token: GITHUB_TOKEN, or an authenticated `gh`)
+  uv run audit-actions-cache.py --remote owner/repo
+  uv run audit-actions-cache.py --remote owner/repo@v2.3.0
 
   # Audit multiple repos from a YAML file
-  python audit-actions-cache.py --remotes-file repos.yml
+  uv run audit-actions-cache.py --remotes-file repos.yml
 
   # Audit specific action refs directly (@* resolves to latest release)
-  python audit-actions-cache.py --action owner/repo@sha --action owner/repo@*
+  uv run audit-actions-cache.py --action owner/repo@sha --action owner/repo@*
 
   # Generate HTML report
-  python audit-actions-cache.py --remotes-file repos.yml --html report.html
+  uv run audit-actions-cache.py --remotes-file repos.yml --html report.html
 
-  # Set GitHub token via env
+  # Set GitHub token via env (falls back to `gh auth token` when unset)
   export GITHUB_TOKEN=ghp_...
 
 repos.yml format:
@@ -62,6 +70,8 @@ import sys
 import re
 import json
 import argparse
+import shutil
+import subprocess
 import textwrap
 import datetime
 from pathlib import Path
@@ -73,6 +83,12 @@ try:
     import yaml
 except ImportError:
     print("Error: PyYAML is required. Run: pip install pyyaml")
+    sys.exit(1)
+
+try:
+    from rich_argparse import RawDescriptionRichHelpFormatter
+except ImportError:
+    print("Error: rich-argparse is required. Run: pip install rich-argparse")
     sys.exit(1)
 
 # ── ANSI colours ─────────────────────────────────────────────────────────────
@@ -109,6 +125,18 @@ EXPLICIT_DISABLE: dict[str, list[tuple[str, str]]] = {
 }
 
 # ── GitHub API helpers ────────────────────────────────────────────────────────
+
+def gh_auth_token() -> Optional[str]:
+    """Return the token the `gh` CLI is logged in with, or None if it cannot supply one."""
+    gh = shutil.which("gh")
+    if not gh:
+        return None
+    try:
+        result = subprocess.run([gh, "auth", "token"], capture_output=True, text=True, check=True)
+    except (subprocess.CalledProcessError, OSError):
+        return None
+    return result.stdout.strip() or None
+
 
 def github_token() -> Optional[str]:
     return os.environ.get("GITHUB_TOKEN")
@@ -958,17 +986,25 @@ def collect_workflows(repo_path: Path) -> list[Path]:
 
 
 def main() -> None:
+    # Borrow the gh CLI's token when the caller has not set one, so anyone already logged
+    # in with `gh auth login` can audit remote repos without minting a second PAT. Priming
+    # the environment here keeps github_token() a plain env read on every API call.
+    if not os.environ.get("GITHUB_TOKEN"):
+        borrowed = gh_auth_token()
+        if borrowed:
+            os.environ["GITHUB_TOKEN"] = borrowed
+
     parser = argparse.ArgumentParser(
         description="Audit GitHub Actions workflows for unsafe cache configuration.",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+        formatter_class=RawDescriptionRichHelpFormatter,
         epilog=textwrap.dedent("""\
             Examples:
-              python audit-actions-cache.py --workflow .github/workflows/publish.yml
-              python audit-actions-cache.py --repo-path /path/to/local/repo
-              GITHUB_TOKEN=ghp_... python audit-actions-cache.py --remote owner/repo@v2.23.0
-              GITHUB_TOKEN=ghp_... python audit-actions-cache.py --remotes-file repos.yml
-              GITHUB_TOKEN=ghp_... python audit-actions-cache.py --remotes-file repos.yml --html report.html
-              GITHUB_TOKEN=ghp_... python audit-actions-cache.py \\
+              uv run audit-actions-cache.py --workflow .github/workflows/publish.yml
+              uv run audit-actions-cache.py --repo-path /path/to/local/repo
+              GITHUB_TOKEN=ghp_... uv run audit-actions-cache.py --remote owner/repo@v2.23.0
+              GITHUB_TOKEN=ghp_... uv run audit-actions-cache.py --remotes-file repos.yml
+              GITHUB_TOKEN=ghp_... uv run audit-actions-cache.py --remotes-file repos.yml --html report.html
+              GITHUB_TOKEN=ghp_... uv run audit-actions-cache.py \\
                   --action untitaker/hyperlink@fb5bb9c5011a3d143a54b4b30aedc30ec5bc0f89 \\
                   --action testlens-app/setup-testlens@*
 
@@ -983,7 +1019,7 @@ def main() -> None:
     parser.add_argument("--repo-path",  help="Path to a local repo root")
     parser.add_argument("--remote",
                         help="GitHub repo slug: owner/repo or owner/repo@ref "
-                             "-- requires GITHUB_TOKEN")
+                             "-- needs GITHUB_TOKEN or an authenticated gh CLI")
     parser.add_argument(
         "--remotes-file", metavar="FILE", dest="remotes_file",
         help="YAML file listing repo slugs to audit (owner/repo or owner/repo@ref). "
@@ -1021,7 +1057,7 @@ def main() -> None:
 
     elif args.remote or args.remotes_file:
         if not github_token():
-            print(f"{RED}GITHUB_TOKEN is required for --remote / --remotes-file{RESET}")
+            print(f"{RED}A GitHub token is required for --remote / --remotes-file -- set GITHUB_TOKEN or run `gh auth login`{RESET}")
             sys.exit(1)
 
         import tempfile
@@ -1057,7 +1093,7 @@ def main() -> None:
 
     elif args.actions:
         if not github_token():
-            print(f"{RED}GITHUB_TOKEN is required for --action{RESET}")
+            print(f"{RED}A GitHub token is required for --action -- set GITHUB_TOKEN or run `gh auth login`{RESET}")
             sys.exit(1)
 
         import tempfile
