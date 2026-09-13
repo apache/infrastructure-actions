@@ -324,9 +324,6 @@ codelytv/pr-size-labeler:
   '*':
     keep: true
 commit-check/commit-check-action:
-  c7245f6139b55db23f92266c2f0ff8429c64de80:
-    tag: v2.8.0
-    expires_at: 2026-09-13
   60e903b3fb06f5e64580b959f58d5b9406a3e002:
     tag: v2.9.0
     expires_at: 2026-09-17
@@ -556,9 +553,6 @@ gr2m/twitter-together:
   '*':
     keep: true
 graalvm/setup-graalvm:
-  329c42c5f4c343bceb505f0b28cc8499bc2bf174:
-    tag: v1.5.4
-    expires_at: 2026-09-13
   6f3fa030c4b8f77c1f554a860f593a654538fa38:
     tag: v1.5.6
     expires_at: 2026-09-27
@@ -603,18 +597,12 @@ gradle/actions/wrapper-validation:
   9c971963bec38e04b3d30dcc455b5382be2fdbfb:
     tag: v6.3.0
 gradle/develocity-actions/maven-publish-build-scan:
-  974e8dbcbda40db6828fc35f349c80a7c0e71529:
-    tag: v2.1
-    expires_at: 2026-09-13
   0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642:
     tag: v2.2
     expires_at: 2026-11-30
   4b276bd81fb55e2fcbae724c48699de57e2156eb:
     tag: v2.3
 gradle/develocity-actions/setup-maven:
-  974e8dbcbda40db6828fc35f349c80a7c0e71529:
-    tag: v2.1
-    expires_at: 2026-09-13
   0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642:
     tag: v2.2
     expires_at: 2026-11-30
@@ -984,18 +972,12 @@ runs-on/action:
   efac073ea2507ec18797de3a81704201ade11d9d:
     tag: v2.3.1
 rust-lang/crates-io-auth-action:
-  bbd81622f20ce9e2dd9622e3218b975523e45bbe:
-    tag: v1.0.4
-    expires_at: 2026-09-13
   c6f97d42243bad5fab37ca0427f495c86d5b1a18:
     tag: v1.0.5
 rustsec/*:
   '*':
     keep: true
 sbt/setup-sbt:
-  af116cce31c00823d3903ce687f9cda3a4f19f1b:
-    tag: v1.2.1
-    expires_at: 2026-09-13
   3afe9cf056c5d139bfc46579af1192d77a2f0821:
     tag: v1.4.0
     expires_at: 2026-09-24
