@@ -607,6 +607,11 @@ uv run utils/actions-queue-status.py --repos-file <(echo airflow) --prs 25
 Output is two tables — repositories sorted by running jobs, and by queued jobs — plus a one-line
 total. `--json` prints the same data as JSON.
 
+Each of the three long phases — discovering the org's repositories, sweeping their status, and the
+REST re-count — shows a progress bar with the repositories done so far and the GraphQL points left.
+The bars are written to stderr and disappear when the phase ends, so `--json` output and the tables
+stay clean when stdout is piped or redirected.
+
 #### Options
 
 | Flag | Description |

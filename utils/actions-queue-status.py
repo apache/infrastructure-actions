@@ -64,7 +64,15 @@ from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from rich.console import Console
-from rich.table import Table
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
+from rich.table import Column, Table
 from rich_argparse import RichHelpFormatter
 
 console = Console(stderr=True)
@@ -90,6 +98,7 @@ REPO_PAGE_QUERY = """
 query($org: String!, $after: String) {
   organization(login: $org) {
     repositories(first: 100, after: $after, orderBy: {field: PUSHED_AT, direction: DESC}) {
+      totalCount
       pageInfo { hasNextPage endCursor }
       nodes {
         name
@@ -310,40 +319,69 @@ def report_pr_distribution(open_pr_counts: list[int]) -> None:
         console.print(f"[dim]  --prs {threshold:>3}: {covered:>5} / {total} repos ({covered / total:.0%})[/]")
 
 
+def progress_bar() -> Progress:
+    """Build the progress display used for the long paging loops.
+
+    Rendered on stderr like every other status message, so `--json` on stdout stays a
+    clean document, and transient so the bar leaves no residue behind the summary line.
+    """
+    return Progress(
+        SpinnerColumn(),
+        TextColumn("[cyan]{task.description}"),
+        BarColumn(bar_width=20),
+        MofNCompleteColumn(),
+        TimeElapsedColumn(),
+        TextColumn(
+            "[dim]{task.fields[note]}[/]",
+            # Last, and capped to whatever width is left over, so a cramped terminal
+            # ellipsizes the running commentary instead of squeezing the counts.
+            table_column=Column(no_wrap=True, overflow="ellipsis", max_width=max(10, console.width - 56)),
+        ),
+        console=console,
+        transient=True,
+    )
+
+
 def discover_repos(client: GraphQLClient, org: str, include_archived: bool) -> list[str]:
     """Return every non-archived repo in the org that defines workflow files."""
     repos: list[str] = []
     open_pr_counts: list[int] = []
     scanned = 0
     cursor = None
-    while True:
-        variables = {"org": org}
-        if cursor:
-            variables["after"] = cursor
-        payload = client.query(REPO_PAGE_QUERY, variables)
-        if "__error__" in payload:
-            # Partial discovery silently under-reports the org, which is worse than no
-            # answer at all — fail loudly and say how far the paging got.
-            raise SystemExit(
-                f"discovery failed after {scanned} repos (cursor {cursor}): {payload['__error__']}"
+    with progress_bar() as progress:
+        # The org's repo count only arrives with the first page, so the bar starts out
+        # indeterminate and gets its total on the first update.
+        task = progress.add_task("Discovering repos", total=None, note="")
+        while True:
+            variables = {"org": org}
+            if cursor:
+                variables["after"] = cursor
+            payload = client.query(REPO_PAGE_QUERY, variables)
+            if "__error__" in payload:
+                # Partial discovery silently under-reports the org, which is worse than no
+                # answer at all — fail loudly and say how far the paging got.
+                raise SystemExit(
+                    f"discovery failed after {scanned} repos (cursor {cursor}): {payload['__error__']}"
+                )
+            page = payload["data"]["organization"]["repositories"]
+            for node in page["nodes"]:
+                scanned += 1
+                if node["isDisabled"] or (node["isArchived"] and not include_archived):
+                    continue
+                if not node.get("defaultBranchRef"):
+                    continue
+                if has_workflows(node):
+                    repos.append(node["name"])
+                    open_pr_counts.append((node.get("pullRequests") or {}).get("totalCount", 0))
+            progress.update(
+                task,
+                completed=scanned,
+                total=page["totalCount"],
+                note=f"{len(repos)} with workflows, points left {client.remaining}",
             )
-        page = payload["data"]["organization"]["repositories"]
-        for node in page["nodes"]:
-            scanned += 1
-            if node["isDisabled"] or (node["isArchived"] and not include_archived):
-                continue
-            if not node.get("defaultBranchRef"):
-                continue
-            if has_workflows(node):
-                repos.append(node["name"])
-                open_pr_counts.append((node.get("pullRequests") or {}).get("totalCount", 0))
-        console.print(
-            f"[dim]  scanned {scanned} repos, {len(repos)} with workflows "
-            f"(points left {client.remaining})[/]"
-        )
-        if not page["pageInfo"]["hasNextPage"]:
-            break
-        cursor = page["pageInfo"]["endCursor"]
+            if not page["pageInfo"]["hasNextPage"]:
+                break
+            cursor = page["pageInfo"]["endCursor"]
     console.print(f"[cyan]Discovery: {scanned} repos scanned, {len(repos)} use GitHub Actions[/]")
     report_pr_distribution(open_pr_counts)
     return repos
@@ -593,7 +631,9 @@ def main() -> int:
 
     results: list[dict] = []
     truncated = False
-    with ThreadPoolExecutor(max_workers=args.workers) as pool:
+    sweep = progress_bar()
+    with ThreadPoolExecutor(max_workers=args.workers) as pool, sweep as progress:
+        task = progress.add_task("Reading repo status", total=len(batches), note="")
         futures = [
             pool.submit(run_batch, client, args.org, batch, args.prs, args.suites) for batch in batches
         ]
@@ -606,8 +646,11 @@ def main() -> int:
                     pending.cancel()
                 console.print(f"[yellow]{exhausted} — reporting {done - 1} completed batches[/]")
                 break
-            if done % 10 == 0:
-                console.print(f"[dim]  {done}/{len(batches)} batches (points left {client.remaining})[/]")
+            progress.update(
+                task,
+                completed=done,
+                note=f"{len(results)} repos, points left {client.remaining}",
+            )
 
     # The GraphQL pass covered a repo exhaustively only if *both* of its sampling limits
     # held: no more open PRs than --prs, and no commit carrying more check suites than
@@ -626,9 +669,12 @@ def main() -> int:
             f"partial)[/]"
         )
         exact_by_repo = {}
-        with ThreadPoolExecutor(max_workers=args.workers) as pool:
+        recount = progress_bar()
+        with ThreadPoolExecutor(max_workers=args.workers) as pool, recount as progress:
+            task = progress.add_task("Re-counting over REST", total=len(incomplete), note="")
             for row in pool.map(lambda item: recount_over_rest(client, args.org, item), incomplete):
                 exact_by_repo[row["repo"]] = row
+                progress.update(task, completed=len(exact_by_repo), note=row["repo"].split("/", 1)[1])
         results = [exact_by_repo.get(row["repo"], row) for row in results]
 
     active = [row for row in results if row["queued_jobs"] or row["running_jobs"]]
