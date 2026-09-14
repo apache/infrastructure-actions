@@ -180,6 +180,9 @@ carabiner-dev/actions/ampel/verify:
   36a39ef667efe7112df8b1a534a4e37f35fad6fd:
     tag: v1.2.6
     expires_at: 2026-11-17
+  d6d91c5c88723021a8798392cb9780c89ff6fdad:
+    tag: v1.2.7
+    expires_at: 2026-12-01
   32587e82f960d49b36101e8c45d1956e511965d3:
     tag: v1.2.9
 carabiner-dev/actions/install/ampel:
@@ -201,6 +204,9 @@ carabiner-dev/actions/install/ampel:
     expires_at: 2026-11-17
   2fec8bd8e1dcfdea26080648070b4827f1fa0584:
     expires_at: 2026-10-21
+  d6d91c5c88723021a8798392cb9780c89ff6fdad:
+    tag: v1.2.7
+    expires_at: 2026-12-01
   32587e82f960d49b36101e8c45d1956e511965d3:
     tag: v1.2.9
 carabiner-dev/actions/install/ampel-bootstrap:
@@ -244,6 +250,9 @@ carabiner-dev/actions/install/ampel-bootstrap:
     expires_at: 2026-12-02
   3a78164ce274684c2651607612ead1bc00cbe4b4:
     expires_at: 2026-12-05
+  d6d91c5c88723021a8798392cb9780c89ff6fdad:
+    tag: v1.2.7
+    expires_at: 2026-12-01
   b7c2f0562b2dd69f0d9db12c2eff7cc6bac653d0: {}
 carabiner-dev/actions/install/bnd:
   94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
@@ -298,6 +307,9 @@ carabiner-dev/actions/install/download-and-verify:
     expires_at: 2026-12-02
   3a78164ce274684c2651607612ead1bc00cbe4b4:
     expires_at: 2026-12-05
+  d6d91c5c88723021a8798392cb9780c89ff6fdad:
+    tag: v1.2.7
+    expires_at: 2026-12-01
   b7c2f0562b2dd69f0d9db12c2eff7cc6bac653d0: {}
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
