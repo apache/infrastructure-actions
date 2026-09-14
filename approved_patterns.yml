@@ -19,12 +19,10 @@
 # This file was generated from actions.yml by gateway/gateway.py.
 # It will be regenerated and committed as part of various workflows.
 # DO NOT UPDATE MANUALLY. Update /actions.yml instead.
-- 1Password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259
 - 1Password/load-secrets-action@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556
 - 1Password/load-secrets-action@eb2efd0703da22a93c467f2d1ffbb6826c11e19c
 - 1Password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4
 - 1Password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2
-- 1Password/load-secrets-action/configure@92467eb28f72e8255933372f1e0707c567ce2259
 - 1Password/load-secrets-action/configure@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556
 - 1Password/load-secrets-action/configure@eb2efd0703da22a93c467f2d1ffbb6826c11e19c
 - 1Password/load-secrets-action/configure@e544b780808654ba8ceba5fb2fe2897103d92ff4
@@ -289,7 +287,6 @@
 - ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd
 - nick-fields/retry@*
 - NuGet/login@8d196754b4036150537f80ac539e15c2f1028841
-- nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654
 - nwtgck/actions-netlify@d22a32a27c918fe470bbc562e984f80ec48c2668
 - ocaml/setup-ocaml@*
 - olafurpg/setup-scala@*
@@ -330,7 +327,6 @@
 - release-drafter/release-drafter@*
 - ruby/setup-ruby@*
 - rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a
-- rubygems/release-gem@f0d7faff26625599a847d40d9fa28ace24c2aacc
 - rubygems/release-gem@052cc82692552de3ef2b81fd670e41d13cba8092
 - rubygems/release-gem@7f9650160c1a4e7989fdc9855807bdbd421d8b6b
 - runs-on/action@d141ef83eb66d096ce8afc767e09115a65c63b60
@@ -387,7 +383,6 @@
 - vapier/coverity-scan-action@8fe7b0af23cbbd4eced5f63dcd2384640eaa5d49
 - vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
 - vishalsinha21/dynamic-checklist@*
-- zizmorcore/zizmor-action@5f14fd08f7cf1cb1609c1e344975f152c7ee938d
 - zizmorcore/zizmor-action@192e21d79ab29983730a13d1382995c2307fbcaa
 - zizmorcore/zizmor-action@6599ee8b7a49aef6a770f63d261d214911a7ce02
 - zizmorcore/zizmor-action@6fc4b006235f201fdab3722e17240ab420d580e5

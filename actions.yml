@@ -22,9 +22,6 @@
 # update expiry dates for previous versions.
 # Versions that are known to be problematic should be removed explicitly manually.
 1Password/load-secrets-action:
-  92467eb28f72e8255933372f1e0707c567ce2259:
-    tag: v4.0.0
-    expires_at: 2026-09-14
   3a12b0ab99d9cd590a3e9b5a90ea017210ed9556:
     tag: v4.0.1
     expires_at: 2026-10-19
@@ -37,9 +34,6 @@
   70062d7a876d3eb6334754fa26efd2fbd90c32f2:
     tag: v5.0.1
 1Password/load-secrets-action/configure:
-  92467eb28f72e8255933372f1e0707c567ce2259:
-    tag: v4.0.0
-    expires_at: 2026-09-14
   3a12b0ab99d9cd590a3e9b5a90ea017210ed9556:
     tag: v4.0.1
     expires_at: 2026-10-19
@@ -828,9 +822,6 @@ NuGet/login:
   8d196754b4036150537f80ac539e15c2f1028841:
     tag: v1.2.0
 nwtgck/actions-netlify:
-  4cbaf4c08f1a7bfa537d6113472ef4424e4eb654:
-    tag: v3.0.0
-    expires_at: 2026-09-14
   d22a32a27c918fe470bbc562e984f80ec48c2668:
     tag: v4.0.0
 ocaml/setup-ocaml:
@@ -951,9 +942,6 @@ rubygems/configure-rubygems-credentials:
   dc5a8d8553e6ee01fc26761a49e99e733d17954a:
     tag: v2.1.0
 rubygems/release-gem:
-  f0d7faff26625599a847d40d9fa28ace24c2aacc:
-    tag: v1.3.0
-    expires_at: 2026-09-14
   052cc82692552de3ef2b81fd670e41d13cba8092:
     tag: v1.4.0
     expires_at: 2026-11-09
@@ -1124,9 +1112,6 @@ vishalsinha21/dynamic-checklist:
   '*':
     keep: true
 zizmorcore/zizmor-action:
-  5f14fd08f7cf1cb1609c1e344975f152c7ee938d:
-    tag: v0.5.6
-    expires_at: 2026-09-14
   192e21d79ab29983730a13d1382995c2307fbcaa:
     tag: v0.5.7
     expires_at: 2026-10-09
