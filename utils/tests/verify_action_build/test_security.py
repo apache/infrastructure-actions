@@ -1658,6 +1658,33 @@ class TestLooksLikeInTreeBinary:
             "node_modules/evil-pkg/scripts/externals/7zdec.exe"
         ) is True
 
+    def test_test_fixture_binaries_exempt(self):
+        # Binaries under a test-fixture tree are test *input*, never
+        # reached by the action's entrypoint, so they never run on a
+        # consumer's runner.  anchore/sbom-action@v0.24.2 was
+        # false-flagged for this sample app used in SBOM coverage tests.
+        assert _looks_like_in_tree_binary(
+            "tests/fixtures/image-debian-match-coverage/java/"
+            "example-java-app-maven-0.1.0.jar"
+        ) is False
+        # Other conventional spellings of the same thing.
+        for path in (
+            "test/fixtures/sample.jar",
+            "spec/fixtures/nested/deep/lib.so",
+            "__tests__/__fixtures__/app.exe",
+            "testdata/binary.dll",
+            "src/testdata/golden/tool",
+        ):
+            assert _looks_like_in_tree_binary(path) is False, path
+        # Precision: a test tree alone is not enough — a helper binary
+        # that really is executed still gets flagged.
+        assert _looks_like_in_tree_binary("tests/bin/helper.exe") is True
+        # ...and so is a fixtures tree outside any test directory, which
+        # is a shape real actions use for shipped sample data.
+        assert _looks_like_in_tree_binary("fixtures/payload.jar") is True
+        # The segments must be directories, not the filename itself.
+        assert _looks_like_in_tree_binary("dist/test-fixtures.jar") is True
+
     def test_matlab_platform_dir_naming(self):
         # MATLAB's launcher convention: dist/bin/<platform>/run-matlab-command
         # where <platform> is MATLAB's own arch identifier and the file has
