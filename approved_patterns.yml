@@ -46,6 +46,7 @@
 - astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
 - astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
 - astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+- astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4
 - awalsh128/cache-apt-pkgs-action@*
 - aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b
 - aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b
