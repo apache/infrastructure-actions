@@ -264,6 +264,9 @@ carabiner-dev/actions/install/bnd:
     expires_at: 2026-11-17
   32587e82f960d49b36101e8c45d1956e511965d3:
     tag: v1.2.9
+    expires_at: 2026-12-09
+  d41fe10fe88deaf493ce026007da73738b9f570c:
+    tag: v1.3.0
 carabiner-dev/actions/install/download-and-verify:
   b60791af41423360b892a1a3cee90cd4e131f381:
     expires_at: 2026-09-18
