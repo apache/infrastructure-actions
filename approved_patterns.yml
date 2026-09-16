@@ -99,6 +99,7 @@
 - carabiner-dev/actions/install/ampel-bootstrap@3a78164ce274684c2651607612ead1bc00cbe4b4
 - carabiner-dev/actions/install/ampel-bootstrap@b7c2f0562b2dd69f0d9db12c2eff7cc6bac653d0
 - carabiner-dev/actions/install/ampel-bootstrap@1de052702eb39872464f14270b996785a039a48a
+- carabiner-dev/actions/install/ampel-bootstrap@d41fe10fe88deaf493ce026007da73738b9f570c
 - carabiner-dev/actions/install/bnd@94f29392187fe5082d1195a7d4cae3a7ddf09d9c
 - carabiner-dev/actions/install/bnd@619a474b2178d06ccf274349397cd67a7802a4fe
 - carabiner-dev/actions/install/bnd@2a4b2cd115ede14629b03ef7e77586d3269d4c72
@@ -121,6 +122,7 @@
 - carabiner-dev/actions/install/download-and-verify@3a78164ce274684c2651607612ead1bc00cbe4b4
 - carabiner-dev/actions/install/download-and-verify@b7c2f0562b2dd69f0d9db12c2eff7cc6bac653d0
 - carabiner-dev/actions/install/download-and-verify@1de052702eb39872464f14270b996785a039a48a
+- carabiner-dev/actions/install/download-and-verify@d41fe10fe88deaf493ce026007da73738b9f570c
 - carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3
 - carlosperate/arm-none-eabi-gcc-action@*
 - chromaui/action@*
