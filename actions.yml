@@ -451,6 +451,9 @@ docker/build-push-action:
     expires_at: 2026-09-24
   53b7df96c91f9c12dcc8a07bcb9ccacbed38856a:
     tag: v7.3.0
+    expires_at: 2026-12-09
+  c3c9e263c25d99ce0380d002d59b67737d91b0dc:
+    tag: v7.4.0
 docker/login-action:
   650006c6eb7dba73a995cc03b0b2d7f5ca915bee:
     tag: v4.2.0

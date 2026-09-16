@@ -166,6 +166,7 @@
 - docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f
 - docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf
 - docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
+- docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
 - docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
 - docker/login-action@c99871dec2022cc055c062a10cc1a1310835ceb4
 - docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0
