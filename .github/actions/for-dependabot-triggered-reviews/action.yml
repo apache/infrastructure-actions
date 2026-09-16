@@ -79,11 +79,11 @@ runs:
       if: false
     - uses: carabiner-dev/actions/install/ampel@d41fe10fe88deaf493ce026007da73738b9f570c  # v1.3.0
       if: false
-    - uses: carabiner-dev/actions/install/ampel-bootstrap@1de052702eb39872464f14270b996785a039a48a
+    - uses: carabiner-dev/actions/install/ampel-bootstrap@d41fe10fe88deaf493ce026007da73738b9f570c  # v1.3.0
       if: false
     - uses: carabiner-dev/actions/install/bnd@d41fe10fe88deaf493ce026007da73738b9f570c  # v1.3.0
       if: false
-    - uses: carabiner-dev/actions/install/download-and-verify@1de052702eb39872464f14270b996785a039a48a
+    - uses: carabiner-dev/actions/install/download-and-verify@d41fe10fe88deaf493ce026007da73738b9f570c  # v1.3.0
       if: false
     - uses: carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3  # v1.0.10
       if: false
