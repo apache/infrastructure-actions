@@ -418,6 +418,9 @@ dawidd6/action-send-mail:
     expires_at: 2026-09-19
   94de994a9f6fffee200243214e17002e2920bb59:
     tag: v18
+    expires_at: 2026-12-09
+  67ce3558d613188179559c61d3565140cf389968:
+    tag: v22
 dependabot/fetch-metadata:
   25dd0e34f4fe68f24cc83900b1fe3fe149efef98:
     tag: v3.1.0
@@ -481,6 +484,9 @@ docker/setup-qemu-action:
     expires_at: 2026-11-30
   1f40c72289eff860ee54a304f1438e3cff362e0a:
     tag: v4.3.0
+    expires_at: 2026-12-09
+  99012661954931238ded8c8b007157a8430204e1:
+    tag: v4.4.0
 docker://jekyll/jekyll:
   sha256:400b8d1569f118bca8a3a09a25f32803b00a55d1ea241feaf5f904d66ca9c625:
 docker://pandoc/core:
