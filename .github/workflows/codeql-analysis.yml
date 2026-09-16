@@ -18,34 +18,43 @@
 #
 #
 ---
+# Static analysis of the Python sources and the GitHub Actions workflows.
+# Results are uploaded to the "Security" tab of the repository.
 name: "CodeQL"
 
 on:  # yamllint disable-line rule:truthy
   pull_request:
-    branches: ['main']
+    branches:
+      - "main"
   push:
-    branches: [main]
+    branches:
+      - "main"
   schedule:
-    - cron: '0 2 * * *'
+    # Off the top of the hour to avoid the load peak on GitHub's runners.
+    - cron: '23 2 * * *'
 
-permissions:
-  contents: read
+# Permissions are set on each job individually.
+permissions: {}
+
 concurrency:
   group: codeql-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # Only PR runs are superseded by a newer push.
+  # Push and scheduled runs must complete to keep the Security tab current.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   analyze:
     name: Analyze
-    runs-on: ["ubuntu-22.04"]
+    runs-on: ubuntu-slim
     strategy:
       fail-fast: false
       matrix:
-        language: ['python', 'actions']
+        language:
+          - "python"
+          - "actions"
     permissions:
-      actions: read
-      contents: read
-      pull-requests: read
+      # Required to upload the SARIF results.
+      # Read permissions are implicit on a public repository.
       security-events: write
     steps:
       - name: Checkout repository
@@ -57,9 +66,6 @@ jobs:
         uses: github/codeql-action/init@b96794f015dfd88f77b49b1c93e0fa7110f94c63  # v4.38.0
         with:
           languages: ${{ matrix.language }}
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@b96794f015dfd88f77b49b1c93e0fa7110f94c63  # v4.38.0
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@b96794f015dfd88f77b49b1c93e0fa7110f94c63  # v4.38.0
