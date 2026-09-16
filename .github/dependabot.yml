@@ -24,7 +24,7 @@ updates:
   # on its own merits. Grouping would tie an action that fails verification to
   # unrelated ones that passed, so a single bad actor would block the batch.
   # Do not add a `groups:` key to this ecosystem.
-  - package-ecosystem: "github-actions" # zizmor: ignore[dependabot-cooldown] see #683 and #712
+  - package-ecosystem: "github-actions"
     commit-message:
       prefix: "action-allowlist-review"
     directories:
@@ -33,6 +33,8 @@ updates:
       # 'daily' only runs on weekdays
       interval: "cron"
       cronjob: "15 13 * * *"
+    cooldown:
+      default-days: 0 # zizmor: ignore[dependabot-cooldown] see #683 and #712
     ignore:
       # post-2.16 versions depend on hustcer/setup-nu which
       # we're not comfortable trusting fully yet. See also
