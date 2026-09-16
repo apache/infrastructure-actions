@@ -23,6 +23,7 @@
 # dependencies = [
 #     "requests>=2.31",
 #     "rich>=13.0",
+#     "rich-argparse>=1.6",
 # ]
 # ///
 
@@ -37,7 +38,8 @@ Two phases, both GraphQL:
 
 1. Discovery — page through the org's repositories and read the `.github/workflows`
    tree directly, so a repo counts as using Actions only when it really has workflow
-   files on its default branch.
+   files on its default branch. It is skipped when the org's repo list is already
+   stored beside this script; --delete-cached-projects re-discovers and rewrites it.
 2. Status — batch the surviving repos into aliased queries (one request covers many
    repos) and count check runs, which map one-to-one onto workflow jobs. A repo with
    more open PRs than the sample size cannot be covered that way, so those — and only
@@ -45,8 +47,8 @@ Two phases, both GraphQL:
 
 Usage:
     uv run utils/actions-queue-status.py
+    uv run utils/actions-queue-status.py --delete-cached-projects
     uv run utils/actions-queue-status.py --csv /tmp/asf-ci.csv
-    uv run utils/actions-queue-status.py --save-repos /tmp/repos.txt
     uv run utils/actions-queue-status.py --repos-file /tmp/repos.txt --top 40
 """
 
@@ -54,16 +56,28 @@ import argparse
 import csv
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from datetime import date, datetime, timezone
+from pathlib import Path
 
 import requests
 from rich.console import Console
-from rich.table import Table
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
+from rich.table import Column, Table
+from rich_argparse import RichHelpFormatter
 
 console = Console(stderr=True)
 
@@ -84,10 +98,22 @@ RETRYABLE = ("502", "503", "504", "rate limit", "RATE_LIMIT", "secondary rate", 
 # Points held back so a sweep never leaves the caller's hourly budget at zero.
 BUDGET_FLOOR = 200
 
+# Repos per discovery page. Each node costs a tree lookup and an open-PR count, and at
+# 100 the query times out server-side often enough to end a sweep: two consecutive full
+# runs died on HTTP 502 — after 200 and 300 repos — with all four retries exhausted.
+# The same paging at 50 walked the whole org without a single retry.
+DISCOVERY_PAGE_SIZE = 50
+
+# How old a stored list may get before the load says so. A stale list fails silently —
+# the sweep reports totals across the repos it was handed, with nothing to show which
+# ones it never looked at — so the age is worth a line of its own.
+STALE_AFTER_DAYS = 30
+
 REPO_PAGE_QUERY = """
 query($org: String!, $after: String) {
   organization(login: $org) {
-    repositories(first: 100, after: $after, orderBy: {field: PUSHED_AT, direction: DESC}) {
+    repositories(first: %(page)d, after: $after, orderBy: {field: PUSHED_AT, direction: DESC}) {
+      totalCount
       pageInfo { hasNextPage endCursor }
       nodes {
         name
@@ -103,7 +129,7 @@ query($org: String!, $after: String) {
   }
   rateLimit { cost remaining resetAt }
 }
-"""
+""" % {"page": DISCOVERY_PAGE_SIZE}
 
 STATUS_FRAGMENTS = """
 fragment CI on Repository {
@@ -156,7 +182,9 @@ class GraphQLClient:
         self._lock = threading.Lock()
         self._remaining: int | None = None
         if use_requests and not token:
-            raise SystemExit("--no-gh requires --github-token, GH_TOKEN or GITHUB_TOKEN")
+            raise SystemExit(
+                "--no-gh requires --github-token, GH_TOKEN, GITHUB_TOKEN or an authenticated gh CLI"
+            )
         if not use_requests and not shutil.which("gh"):
             raise SystemExit("gh CLI not found — install it, or use --no-gh with a token")
 
@@ -255,15 +283,31 @@ class GraphQLClient:
             raise BudgetExhausted(f"stopping with {remaining} GraphQL points left")
 
 
+def gh_auth_token() -> str | None:
+    """Return the token the `gh` CLI is logged in with, or None if it cannot supply one.
+
+    Lets the script work out of the box for anyone already running `gh auth login`, without
+    minting a second PAT just to set GH_TOKEN.
+    """
+    gh = shutil.which("gh")
+    if not gh:
+        return None
+    try:
+        result = subprocess.run([gh, "auth", "token"], capture_output=True, text=True, check=True)
+    except (subprocess.CalledProcessError, OSError):
+        return None
+    return result.stdout.strip() or None
+
+
 def resolve_token(args: argparse.Namespace) -> str | None:
-    """Resolve the token: --github-token, then GH_TOKEN, then GITHUB_TOKEN."""
+    """Resolve the token: --github-token, then GH_TOKEN / GITHUB_TOKEN, then `gh auth token`."""
     if args.github_token:
         return args.github_token
     for name in ("GH_TOKEN", "GITHUB_TOKEN"):
         value = os.environ.get(name)
         if value:
             return value
-    return None
+    return gh_auth_token()
 
 
 def has_workflows(node: dict) -> bool:
@@ -290,40 +334,69 @@ def report_pr_distribution(open_pr_counts: list[int]) -> None:
         console.print(f"[dim]  --prs {threshold:>3}: {covered:>5} / {total} repos ({covered / total:.0%})[/]")
 
 
+def progress_bar() -> Progress:
+    """Build the progress display used for the long paging loops.
+
+    Rendered on stderr like every other status message, so `--json` on stdout stays a
+    clean document, and transient so the bar leaves no residue behind the summary line.
+    """
+    return Progress(
+        SpinnerColumn(),
+        TextColumn("[cyan]{task.description}"),
+        BarColumn(bar_width=20),
+        MofNCompleteColumn(),
+        TimeElapsedColumn(),
+        TextColumn(
+            "[dim]{task.fields[note]}[/]",
+            # Last, and capped to whatever width is left over, so a cramped terminal
+            # ellipsizes the running commentary instead of squeezing the counts.
+            table_column=Column(no_wrap=True, overflow="ellipsis", max_width=max(10, console.width - 56)),
+        ),
+        console=console,
+        transient=True,
+    )
+
+
 def discover_repos(client: GraphQLClient, org: str, include_archived: bool) -> list[str]:
     """Return every non-archived repo in the org that defines workflow files."""
     repos: list[str] = []
     open_pr_counts: list[int] = []
     scanned = 0
     cursor = None
-    while True:
-        variables = {"org": org}
-        if cursor:
-            variables["after"] = cursor
-        payload = client.query(REPO_PAGE_QUERY, variables)
-        if "__error__" in payload:
-            # Partial discovery silently under-reports the org, which is worse than no
-            # answer at all — fail loudly and say how far the paging got.
-            raise SystemExit(
-                f"discovery failed after {scanned} repos (cursor {cursor}): {payload['__error__']}"
+    with progress_bar() as progress:
+        # The org's repo count only arrives with the first page, so the bar starts out
+        # indeterminate and gets its total on the first update.
+        task = progress.add_task("Discovering repos", total=None, note="")
+        while True:
+            variables = {"org": org}
+            if cursor:
+                variables["after"] = cursor
+            payload = client.query(REPO_PAGE_QUERY, variables)
+            if "__error__" in payload:
+                # Partial discovery silently under-reports the org, which is worse than no
+                # answer at all — fail loudly and say how far the paging got.
+                raise SystemExit(
+                    f"discovery failed after {scanned} repos (cursor {cursor}): {payload['__error__']}"
+                )
+            page = payload["data"]["organization"]["repositories"]
+            for node in page["nodes"]:
+                scanned += 1
+                if node["isDisabled"] or (node["isArchived"] and not include_archived):
+                    continue
+                if not node.get("defaultBranchRef"):
+                    continue
+                if has_workflows(node):
+                    repos.append(node["name"])
+                    open_pr_counts.append((node.get("pullRequests") or {}).get("totalCount", 0))
+            progress.update(
+                task,
+                completed=scanned,
+                total=page["totalCount"],
+                note=f"{len(repos)} with workflows, points left {client.remaining}",
             )
-        page = payload["data"]["organization"]["repositories"]
-        for node in page["nodes"]:
-            scanned += 1
-            if node["isDisabled"] or (node["isArchived"] and not include_archived):
-                continue
-            if not node.get("defaultBranchRef"):
-                continue
-            if has_workflows(node):
-                repos.append(node["name"])
-                open_pr_counts.append((node.get("pullRequests") or {}).get("totalCount", 0))
-        console.print(
-            f"[dim]  scanned {scanned} repos, {len(repos)} with workflows "
-            f"(points left {client.remaining})[/]"
-        )
-        if not page["pageInfo"]["hasNextPage"]:
-            break
-        cursor = page["pageInfo"]["endCursor"]
+            if not page["pageInfo"]["hasNextPage"]:
+                break
+            cursor = page["pageInfo"]["endCursor"]
     console.print(f"[cyan]Discovery: {scanned} repos scanned, {len(repos)} use GitHub Actions[/]")
     report_pr_distribution(open_pr_counts)
     return repos
@@ -468,6 +541,107 @@ def csv_row(row: dict) -> list:
     ]
 
 
+ASF_HEADER = """\
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+"""
+
+
+def default_repos_file(org: str) -> Path:
+    """Path of the repo list stored beside this script for an organisation.
+
+    Naming the file after the org is what keeps the default honest: a sweep of another
+    org finds no file of its own and discovers, rather than answering from apache's.
+    """
+    return Path(__file__).with_name(f"{org}-actions-repos.txt")
+
+
+def display_path(path: str | Path) -> str:
+    """Render a path the way the caller would type it: relative to the working directory."""
+    try:
+        return str(Path(path).relative_to(Path.cwd()))
+    except ValueError:
+        return str(path)
+
+
+def read_repos_file(path: str | Path) -> list[str]:
+    """Read a repo list, ignoring the '#' header that lets the file be committed."""
+    with open(path) as handle:
+        return [
+            line.strip() for line in handle if line.strip() and not line.lstrip().startswith("#")
+        ]
+
+
+def write_repos_file(path: str | Path, org: str, repos: list[str]) -> None:
+    """Write a discovered repo list, with the header that lets it be committed.
+
+    The list is worth keeping under version control — discovery is the slowest and
+    most rate-limit-hungry phase of a sweep — so the file carries the ASF header RAT
+    expects and records when it was generated, since it goes stale as repos appear,
+    are archived, or adopt Actions.
+
+    Names are sorted rather than left in discovery's push order, which reshuffles on
+    every run: a refresh should diff as the repos that joined and left, nothing else.
+    """
+    with open(path, "w") as handle:
+        handle.write(ASF_HEADER)
+        handle.write(
+            f"#\n"
+            f"# Repositories in the {org} organisation that define GitHub Actions workflows.\n"
+            f"# {len(repos)} repos, discovered {time.strftime('%Y-%m-%d', time.gmtime())} (UTC).\n"
+            f"#\n"
+            f"# Generated by:  uv run utils/actions-queue-status.py --delete-cached-projects\n"
+            f"# Read by default, and by --repos-file. Refresh it periodically — a stale list\n"
+            f"# silently omits repos that have since adopted Actions.\n"
+            f"#\n"
+        )
+        handle.write("\n".join(sorted(repos)) + "\n")
+
+
+def repos_file_age_days(path: Path) -> int | None:
+    """Days since the list was discovered, per its header, or None if it records no date."""
+    with open(path) as handle:
+        for line in handle:
+            if not line.lstrip().startswith("#"):
+                return None
+            found = re.search(r"discovered (\d{4}-\d{2}-\d{2})", line)
+            if found:
+                return (datetime.now(timezone.utc).date() - date.fromisoformat(found.group(1))).days
+    return None
+
+
+def stored_repos_file(args: argparse.Namespace) -> Path | None:
+    """Return the stored repo list this run should read, or None to discover afresh."""
+    path = default_repos_file(args.org)
+    if not path.exists():
+        return None
+    if args.delete_cached_projects:
+        console.print(f"[yellow]Rediscovering {args.org} and rewriting {path.name}[/]")
+        return None
+    if args.include_archived:
+        # The stored list was discovered without archived repos, so it cannot answer
+        # --include-archived — discovering is the only way to honour the flag.
+        console.print(f"[yellow]{path.name} holds no archived repos — discovering afresh[/]")
+        return None
+    return path
+
+
 def write_csv(path: str, rows: list[dict], totals: dict) -> None:
     """Write one ordering of the snapshot as CSV."""
     with open(path, "w", newline="") as handle:
@@ -511,6 +685,7 @@ def render_table(title: str, rows: list[dict], top: int) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
+        formatter_class=RichHelpFormatter,
         description="Report repos with GitHub Actions jobs queued or running right now.",
         epilog=(
             "Repos the GraphQL sample cannot cover — more open PRs than --prs, or more "
@@ -535,41 +710,79 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--workers", type=int, default=3, help="batched queries in flight")
     parser.add_argument("--top", type=int, default=25, help="rows shown per table")
     parser.add_argument("--include-archived", action="store_true", help="include archived repos")
-    parser.add_argument("--repos-file", help="skip discovery; newline-separated repo names")
+    parser.add_argument(
+        "--repos-file",
+        help="skip discovery; newline-separated repo names, '#' lines ignored",
+    )
     parser.add_argument("--save-repos", help="write the discovered repo list here")
+    parser.add_argument(
+        "--delete-cached-projects",
+        action="store_true",
+        help="ignore the stored repo list, discover afresh, and rewrite it",
+    )
     parser.add_argument("--csv", metavar="PATH", help="write both orderings as CSV next to PATH")
     parser.add_argument("--json", action="store_true", help="print JSON instead of tables")
-    parser.add_argument("--github-token", help="GitHub token (default: GH_TOKEN / GITHUB_TOKEN)")
+    parser.add_argument(
+        "--github-token",
+        help="GitHub token (default: GH_TOKEN / GITHUB_TOKEN, then `gh auth token`)",
+    )
     parser.add_argument("--no-gh", action="store_true", help="use requests instead of the gh CLI")
     parser.add_argument(
         "--no-rest-fallback",
         action="store_true",
         help="skip the exact REST re-count for repos the GraphQL sample could not cover",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    # Both of these would let --delete-cached-projects claim a refresh it did not do, or
+    # do one that leaves the stored list describing something other than what it says.
+    if args.delete_cached_projects and args.repos_file:
+        parser.error("--delete-cached-projects contradicts --repos-file: nothing would be rewritten")
+    if args.delete_cached_projects and args.include_archived:
+        parser.error(
+            "--delete-cached-projects contradicts --include-archived: the stored list holds "
+            "no archived repos, and the default sweep reads it as if none exist"
+        )
+    return args
 
 
 def main() -> int:
     args = parse_args()
     client = GraphQLClient(token=resolve_token(args), use_requests=args.no_gh)
 
-    if args.repos_file:
-        with open(args.repos_file) as handle:
-            repos = [line.strip() for line in handle if line.strip()]
-        console.print(f"[cyan]Loaded {len(repos)} repos from {args.repos_file}[/]")
+    stored = None if args.repos_file else stored_repos_file(args)
+    if args.repos_file or stored:
+        source = args.repos_file or stored
+        repos = read_repos_file(source)
+        console.print(f"[cyan]Loaded {len(repos)} repos from {display_path(source)}[/]")
+        age = repos_file_age_days(Path(source))
+        if age is not None and age > STALE_AFTER_DAYS:
+            console.print(
+                f"[yellow]That list was discovered {age} days ago — repos that have adopted "
+                f"Actions since are missing from this sweep. Refresh it with "
+                f"--delete-cached-projects.[/]"
+            )
+        elif age is not None:
+            console.print(f"[dim]Discovered {age} days ago — --delete-cached-projects refreshes it.[/]")
     else:
         repos = discover_repos(client, args.org, args.include_archived)
+        if args.delete_cached_projects:
+            # Rewritten only once discovery has succeeded: a sweep that dies partway
+            # through should cost the caller time, not the list they already had.
+            stored_path = default_repos_file(args.org)
+            write_repos_file(stored_path, args.org, repos)
+            console.print(f"[green]Wrote {display_path(stored_path)} ({len(repos)} repos)[/]")
         if args.save_repos:
-            with open(args.save_repos, "w") as handle:
-                handle.write("\n".join(repos) + "\n")
-            console.print(f"[green]Wrote {args.save_repos}[/]")
+            write_repos_file(args.save_repos, args.org, repos)
+            console.print(f"[green]Wrote {args.save_repos} ({len(repos)} repos)[/]")
 
     batches = [repos[index : index + args.batch_size] for index in range(0, len(repos), args.batch_size)]
     console.print(f"[cyan]Status: {len(batches)} queries of up to {args.batch_size} repos[/]")
 
     results: list[dict] = []
     truncated = False
-    with ThreadPoolExecutor(max_workers=args.workers) as pool:
+    sweep = progress_bar()
+    with ThreadPoolExecutor(max_workers=args.workers) as pool, sweep as progress:
+        task = progress.add_task("Reading repo status", total=len(batches), note="")
         futures = [
             pool.submit(run_batch, client, args.org, batch, args.prs, args.suites) for batch in batches
         ]
@@ -582,8 +795,11 @@ def main() -> int:
                     pending.cancel()
                 console.print(f"[yellow]{exhausted} — reporting {done - 1} completed batches[/]")
                 break
-            if done % 10 == 0:
-                console.print(f"[dim]  {done}/{len(batches)} batches (points left {client.remaining})[/]")
+            progress.update(
+                task,
+                completed=done,
+                note=f"{len(results)} repos, points left {client.remaining}",
+            )
 
     # The GraphQL pass covered a repo exhaustively only if *both* of its sampling limits
     # held: no more open PRs than --prs, and no commit carrying more check suites than
@@ -602,9 +818,12 @@ def main() -> int:
             f"partial)[/]"
         )
         exact_by_repo = {}
-        with ThreadPoolExecutor(max_workers=args.workers) as pool:
+        recount = progress_bar()
+        with ThreadPoolExecutor(max_workers=args.workers) as pool, recount as progress:
+            task = progress.add_task("Re-counting over REST", total=len(incomplete), note="")
             for row in pool.map(lambda item: recount_over_rest(client, args.org, item), incomplete):
                 exact_by_repo[row["repo"]] = row
+                progress.update(task, completed=len(exact_by_repo), note=row["repo"].split("/", 1)[1])
         results = [exact_by_repo.get(row["repo"], row) for row in results]
 
     active = [row for row in results if row["queued_jobs"] or row["running_jobs"]]

@@ -16,9 +16,35 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+import subprocess
 from unittest import mock
 
-from verify_action_build.github_client import GitHubClient
+from verify_action_build.github_client import GitHubClient, gh_auth_token
+
+
+class TestGhAuthToken:
+    def test_returns_none_when_gh_not_installed(self):
+        with mock.patch("shutil.which", return_value=None):
+            assert gh_auth_token() is None
+
+    def test_returns_stripped_token(self):
+        completed = subprocess.CompletedProcess([], 0, stdout="ghp_test123\n", stderr="")
+        with mock.patch("shutil.which", return_value="/usr/bin/gh"):
+            with mock.patch("subprocess.run", return_value=completed):
+                assert gh_auth_token() == "ghp_test123"
+
+    def test_returns_none_when_gh_is_not_logged_in(self):
+        with mock.patch("shutil.which", return_value="/usr/bin/gh"):
+            with mock.patch(
+                "subprocess.run", side_effect=subprocess.CalledProcessError(1, "gh")
+            ):
+                assert gh_auth_token() is None
+
+    def test_returns_none_on_empty_output(self):
+        completed = subprocess.CompletedProcess([], 0, stdout="\n", stderr="")
+        with mock.patch("shutil.which", return_value="/usr/bin/gh"):
+            with mock.patch("subprocess.run", return_value=completed):
+                assert gh_auth_token() is None
 
 
 class TestGitHubClient:

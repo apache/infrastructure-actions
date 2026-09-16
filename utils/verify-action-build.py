@@ -22,6 +22,7 @@
 #     "jsbeautifier>=1.15",
 #     "requests>=2.31",
 #     "rich>=13.0",
+#     "rich-argparse>=1.6",
 # ]
 # ///
 """Thin wrapper so that ``uv run utils/verify-action-build.py`` keeps working."""

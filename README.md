@@ -308,7 +308,17 @@ export GITHUB_TOKEN=ghp_...
 uv run utils/verify-action-build.py --no-gh --check-dependabot-prs
 ```
 
+If neither is set and `gh` happens to be installed and logged in, the token is taken from
+`gh auth token` as a last resort — so `--no-gh` only needs an explicit token when there is no
+authenticated `gh` to borrow one from.
+
 The `--no-gh` mode supports all the same features as the default `gh`-based mode.
+
+> Even in the default `gh`-based mode, some checks (lockfile discovery, in-tree binary lookups) call
+> `api.github.com` directly and read `GITHUB_TOKEN` from the environment. Unauthenticated those calls
+> share a 60-requests/hour budget, which a single run can exhaust — so when `GITHUB_TOKEN` is unset,
+> `verify-action-build` fills it in from `--github-token` or `gh auth token` for the duration of the
+> run. Nothing to configure: just stay logged in with `gh auth login`.
 
 #### Automated Verification in CI
 
@@ -489,7 +499,7 @@ The audit script checks each repository for four security configurations and can
 ### Prerequisites
 
 - **Python 3.11+** and [**uv**](https://docs.astral.sh/uv/) **>= 0.9.17** (dependencies are managed inline via PEP 723). Make sure your uv is up to date — depending on how you installed it, run `uv self update`, `pip install --upgrade uv`, `pipx upgrade uv`, or `brew upgrade uv`
-- **`gh`** (GitHub CLI, authenticated via `gh auth login`) — or provide a `--github-token` with `repo` scope and use `--no-gh`
+- **`gh`** (GitHub CLI, authenticated via `gh auth login`) — or provide a `--github-token` with `repo` scope and use `--no-gh`. With `--no-gh` and no token given, an authenticated `gh` is still used once to mint one via `gh auth token`
 - **`zizmor`** ([install instructions](https://docs.zizmor.dev/installation/)) — required for PR creation mode; not needed for `--dry-run`. If missing, zizmor pre-checks are skipped with a warning
 
 ### Usage
@@ -525,8 +535,8 @@ uv run utils/actions-audit.py --pmc spark --max-num 10
 | `--dry-run` | Report findings without creating PRs or branches. |
 | `--max-num N` | Maximum number of repositories to check (0 = unlimited, default). |
 | `--batch-size N` | Number of repos to fetch per GraphQL request (default: 50, max: 100). |
-| `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN` environment variable. |
-| `--no-gh` | Use Python `requests` instead of the `gh` CLI for all API calls. Requires `--github-token` or a token env var. |
+| `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN` environment variable. With `--no-gh`, falls back to `gh auth token` when neither is set. |
+| `--no-gh` | Use Python `requests` instead of the `gh` CLI for all API calls. Needs a token — from `--github-token`, a token env var, or an authenticated `gh`. |
 
 #### How PMC Filtering Works
 
@@ -592,16 +602,19 @@ question into a handful of GraphQL requests instead.
 
 - **Python 3.11+** and [**uv**](https://docs.astral.sh/uv/) (dependencies are declared inline via PEP 723)
 - **`gh`** (GitHub CLI, authenticated via `gh auth login`) — or pass `--github-token` with a token
-  that can read the org's repositories and use `--no-gh`
+  that can read the org's repositories and use `--no-gh`. An authenticated `gh` also supplies the
+  token for `--no-gh` automatically, via `gh auth token`
 
 ### Usage
 
 ```bash
-# Whole org: discover every repo with workflows, then snapshot job state
+# Whole org: snapshot job state across the stored repository list
 uv run utils/actions-queue-status.py
 
-# Save the discovered repo list so later runs can skip discovery
-uv run utils/actions-queue-status.py --save-repos /tmp/asf-repos.txt
+# Discard the stored list, discover the org afresh, and rewrite it
+uv run utils/actions-queue-status.py --delete-cached-projects
+
+# Read the repository list from somewhere else instead
 uv run utils/actions-queue-status.py --repos-file /tmp/asf-repos.txt --top 40
 
 # Write both orderings to CSV: <path>-by-running.csv and <path>-by-queued.csv
@@ -614,6 +627,11 @@ uv run utils/actions-queue-status.py --repos-file <(echo airflow) --prs 25
 Output is two tables — repositories sorted by running jobs, and by queued jobs — plus a one-line
 total. `--json` prints the same data as JSON.
 
+Each of the three long phases — discovering the org's repositories, sweeping their status, and the
+REST re-count — shows a progress bar with the repositories done so far and the GraphQL points left.
+The bars are written to stderr and disappear when the phase ends, so `--json` output and the tables
+stay clean when stdout is piped or redirected.
+
 #### Options
 
 | Flag | Description |
@@ -625,12 +643,13 @@ total. `--json` prints the same data as JSON.
 | `--workers N` | Batched queries in flight (default: 3). |
 | `--top N` | Rows shown per table (default: 25). |
 | `--include-archived` | Include archived repositories. |
-| `--repos-file PATH` | Skip discovery and read repository names from a file. |
-| `--save-repos PATH` | Write the discovered repository list to a file. |
+| `--repos-file PATH` | Read repository names from this file instead of the stored list. `#` lines are ignored. |
+| `--save-repos PATH` | Write the discovered repository list to a file as well. |
+| `--delete-cached-projects` | Ignore the stored repository list, discover the organisation afresh, and rewrite the list with what it finds. |
 | `--csv PATH` | Write both orderings as CSV alongside `PATH`. |
 | `--json` | Print JSON instead of tables. |
-| `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN`. |
-| `--no-gh` | Use Python `requests` instead of the `gh` CLI. Requires a token. |
+| `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN`, then `gh auth token`. |
+| `--no-gh` | Use Python `requests` instead of the `gh` CLI. Requires a token — an authenticated `gh` supplies one automatically. |
 | `--no-rest-fallback` | Skip the exact REST re-count for repos with more open PRs than `--prs`. |
 
 #### How Discovery Works
@@ -646,6 +665,39 @@ workflows: object(expression: "HEAD:.github/workflows") {
 
 A repository counts as using Actions only when that tree exists and holds at least one `.yml` or
 `.yaml` entry. Archived, disabled and empty repositories are skipped.
+
+#### The Stored Repository List
+
+Discovery is the slowest and most rate-limit-hungry phase of a sweep — it walks every repository in
+the organisation before a single job is counted — and its result changes slowly. So the current
+answer is stored in this repository at
+[`utils/apache-actions-repos.txt`](utils/apache-actions-repos.txt) and **read by default**: a plain
+`uv run utils/actions-queue-status.py` skips discovery entirely and goes straight to the status
+sweep.
+
+The file is one repository name per line, sorted, with `#` comment lines the reader ignores. Its
+header records how many repositories it holds and when they were discovered, and that date is
+echoed on every run. Sorting is what keeps it reviewable: discovery returns repositories in push
+order, which reshuffles on every run, so an unsorted file would diff as a thousand moved lines
+instead of the handful that actually joined or left.
+
+The list is named after the organisation it describes, so `--org` other than `apache` finds no
+stored list of its own and discovers, rather than answering from apache's. `--include-archived`
+also falls through to discovery, because the stored list holds no archived repositories.
+
+**It must be refreshed periodically.** A stored list only ages in one direction — repositories are
+created, archived, and adopt Actions after it was written — and a stale list fails silently,
+because the sweep reports totals across the repositories it was given without any way to know which
+ones are missing. Past 30 days the run says so in yellow. Refresh it with:
+
+```bash
+uv run utils/actions-queue-status.py --delete-cached-projects
+```
+
+That runs a full sweep and rewrites the file, header and all, so the refresh and the snapshot come
+from the same pass. The list is only rewritten once discovery has succeeded — a sweep that dies
+partway through costs time, not the list you already had. Commit the result; the diff shows exactly
+which repositories joined and left.
 
 #### Rate Limits
 

@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+import os
 from unittest import mock
 
 import pytest
@@ -41,9 +42,51 @@ class TestMain:
         with mock.patch("sys.argv", ["verify-action-build", "--no-gh", "org/repo@" + "a" * 40]):
             with mock.patch("shutil.which", return_value="/usr/bin/docker"):
                 with mock.patch.dict("os.environ", {}, clear=True):
-                    with pytest.raises(SystemExit) as exc_info:
-                        main()
-                    assert exc_info.value.code == 1
+                    with mock.patch("verify_action_build.cli.gh_auth_token", return_value=None):
+                        with pytest.raises(SystemExit) as exc_info:
+                            main()
+                        assert exc_info.value.code == 1
+
+    def test_no_gh_borrows_token_from_gh_cli(self):
+        """With no token given, --no-gh should fall back to `gh auth token`."""
+        with mock.patch("sys.argv", ["verify-action-build", "--no-gh", "org/repo@" + "a" * 40]):
+            with mock.patch("shutil.which", return_value="/usr/bin/docker"):
+                with mock.patch.dict("os.environ", {}, clear=True):
+                    with mock.patch(
+                        "verify_action_build.cli.gh_auth_token", return_value="ghp_borrowed"
+                    ) as borrow:
+                        with mock.patch("verify_action_build.cli.GitHubClient") as gh_cls:
+                            with mock.patch(
+                                "verify_action_build.cli.verify_single_action", return_value=True
+                            ):
+                                with pytest.raises(SystemExit) as exc_info:
+                                    main()
+            assert exc_info.value.code == 0
+            assert gh_cls.call_args.kwargs["token"] == "ghp_borrowed"
+            # Primed for the raw api.github.com calls the checks make, and reused by the
+            # --no-gh branch — so the CLI is only shelled out to once.
+            assert borrow.call_count == 1
+
+    def test_env_token_primed_for_raw_api_calls(self):
+        """A borrowed token also lands in the environment the security checks read."""
+        seen = {}
+        with mock.patch("sys.argv", ["verify-action-build", "org/repo@" + "a" * 40]):
+            with mock.patch("shutil.which", return_value="/usr/bin/docker"):
+                with mock.patch.dict("os.environ", {}, clear=True):
+                    with mock.patch(
+                        "verify_action_build.cli.gh_auth_token", return_value="ghp_borrowed"
+                    ):
+                        with mock.patch("verify_action_build.cli.GitHubClient"):
+                            with mock.patch(
+                                "verify_action_build.cli.verify_single_action",
+                                side_effect=lambda *a, **k: seen.update(
+                                    token=os.environ.get("GITHUB_TOKEN")
+                                )
+                                or True,
+                            ):
+                                with pytest.raises(SystemExit):
+                                    main()
+                    assert seen["token"] == "ghp_borrowed"
 
     def test_from_pr_with_no_added_refs_passes(self):
         removal_only_diff = (

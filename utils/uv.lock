@@ -130,6 +130,7 @@ dependencies = [
     { name = "jsbeautifier" },
     { name = "requests" },
     { name = "rich" },
+    { name = "rich-argparse" },
 ]
 
 [package.metadata]
@@ -137,6 +138,7 @@ requires-dist = [
     { name = "jsbeautifier", specifier = ">=1.15" },
     { name = "requests", specifier = ">=2.31" },
     { name = "rich", specifier = ">=13.0" },
+    { name = "rich-argparse", specifier = ">=1.6" },
 ]
 
 [[package]]
@@ -208,6 +210,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/b3/c6/f3b320c27991c46f43ee9d856302c70dc2d0fb2dba4842ff739d5f46b393/rich-14.3.3.tar.gz", hash = "sha256:b8daa0b9e4eef54dd8cf7c86c03713f53241884e814f4e2f5fb342fe520f639b", size = 230582, upload-time = "2026-02-19T17:23:12.474Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/14/25/b208c5683343959b670dc001595f2f3737e051da617f66c31f7c4fa93abc/rich-14.3.3-py3-none-any.whl", hash = "sha256:793431c1f8619afa7d3b52b2cdec859562b950ea0d4b6b505397612db8d5362d", size = 310458, upload-time = "2026-02-19T17:23:13.732Z" },
+]
+
+[[package]]
+name = "rich-argparse"
+version = "1.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "rich" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6a/e5/1064c43203a357d668cd42435f7a15fe6af51512d85b2104fecb937aa861/rich_argparse-1.8.0.tar.gz", hash = "sha256:679df3d832fa94ad6e4bdb07ded088cd7ea2dddc58ae9b2b46346a40b06cbc0c", size = 38940, upload-time = "2026-05-01T15:18:43.604Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0b/35/1cceccc5fcb50fa2ed53e2aa278cd032f3902682a73e763fb1ac3be8e6fa/rich_argparse-1.8.0-py3-none-any.whl", hash = "sha256:d2a3ce7854654e2253c578763ab0a32f05016f23a55fadba7b9a91b6c0e92142", size = 25616, upload-time = "2026-05-01T15:18:42.395Z" },
 ]
 
 [[package]]
