@@ -442,6 +442,9 @@ docker/bake-action:
     expires_at: 2026-09-24
   d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b:
     tag: v7.3.0
+    expires_at: 2026-12-09
+  018cb6412ab401ebaa809aa5f85966b74628600f:
+    tag: v7.4.0
 docker/build-push-action:
   f9f3042f7e2789586610d6e8b85c8f03e5195baf:
     tag: v7.2.0
