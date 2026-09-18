@@ -312,6 +312,44 @@ class TestVerify:
         assert result.ok is False
         assert "node_modules/foo/sneaky.js" in result.extra
 
+    def test_crlf_tarball_normalised_by_git_is_not_a_mismatch(self):
+        # apache/infrastructure-actions#1283: github-action-benchmark vendors
+        # node-fetch's nested whatwg-url@5.0.0, whose 2016-era tarball ships
+        # lib/url-state-machine.js with CRLF.  git normalises to LF on commit,
+        # so the committed blob can never byte-match the tarball: the published
+        # file is 33573 bytes with 1297 CRs, the committed one 32276 with none.
+        # Byte comparison alone reported the package modified on every bump.
+        crlf = {
+            "index.js": b"module.exports = 1;\r\n",
+            "package.json": b'{"name":"foo","version":"1.0.0"}\r\n',
+        }
+        tgz = _make_tgz(crlf)
+        # The repo holds the LF-normalised form that git checked in.
+        tree = _tree_for({k: v.replace(b"\r\n", b"\n") for k, v in crlf.items()})
+
+        result = _run(tree, _lock(integrity=_integrity(tgz)), tarballs={PKG_URL: tgz})
+        assert result is not None
+        assert result.ok is True
+        assert result.verified == ["foo"]
+        assert not result.mismatched
+        assert "node_modules/foo/index.js" in result.crlf_normalized
+
+    def test_crlf_normalisation_does_not_hide_a_real_edit(self):
+        # Precision guard: matching after CRLF folding must not excuse a file
+        # whose actual content differs.
+        crlf = {
+            "index.js": b"module.exports = 1;\r\n",
+            "package.json": b'{"name":"foo","version":"1.0.0"}\r\n',
+        }
+        tgz = _make_tgz(crlf)
+        tree = _tree_for({k: v.replace(b"\r\n", b"\n") for k, v in crlf.items()})
+        tree["node_modules/foo/index.js"] = _git_blob_sha1(b"EVIL();\n")
+
+        result = _run(tree, _lock(integrity=_integrity(tgz)), tarballs={PKG_URL: tgz})
+        assert result.ok is False
+        assert "node_modules/foo/index.js" in result.mismatched
+        assert "foo" not in result.verified
+
     def test_definitelytyped_package_verifies_clean(self):
         # apache/infrastructure-actions#1171: github-pages-deploy-action v4.9.0
         # migrated yarn → npm, which added node_modules/.package-lock.json and

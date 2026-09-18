@@ -78,6 +78,7 @@ class NpmRegistryResult:
         self.skipped: list[str] = []
         self.foreign: list[str] = []
         self.mismatched: list[str] = []
+        self.crlf_normalized: list[str] = []
         self.extra: list[str] = []
         self.errors: list[str] = []
         self.truncated: bool = False
@@ -421,6 +422,13 @@ def verify_vendored_node_modules(
             if committed_sha is None:
                 continue  # tarball ships a file the repo omits — benign
             if committed_sha != _git_blob_sha1(content):
+                if committed_sha == _git_blob_sha1(content.replace(b"\r\n", b"\n")):
+                    # The tarball ships CRLF and git normalised it to LF on
+                    # commit, so the committed blob can never byte-match.
+                    # Hashing the folded bytes proves the committed file *is*
+                    # exactly the published content, line endings aside.
+                    result.crlf_normalized.append(committed_path)
+                    continue
                 if rel.split("/")[-1] == "package.json" and _package_json_equivalent(
                     org, repo, commit_hash, prefix + committed_path, content,
                 ):
@@ -462,6 +470,13 @@ def _render(result: NpmRegistryResult, org: str, repo: str, commit_hash: str) ->
             f"registry-verifiable (git/file/link dep or missing integrity): "
             f"{', '.join(result.skipped[:8])}"
             + (" …" if len(result.skipped) > 8 else "")
+        )
+    if result.crlf_normalized:
+        console.print(
+            f"  [green]✓[/green] {len(result.crlf_normalized)} file(s) match "
+            f"after folding the tarball's CRLF to LF (git normalises line "
+            f"endings on commit): {', '.join(result.crlf_normalized[:4])}"
+            + (" …" if len(result.crlf_normalized) > 4 else "")
         )
     for path in result.mismatched:
         # link() takes (url, text) — naming the offending file matters more
