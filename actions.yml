@@ -213,10 +213,6 @@ carabiner-dev/actions/install/ampel:
   d41fe10fe88deaf493ce026007da73738b9f570c:
     tag: v1.3.0
 carabiner-dev/actions/install/ampel-bootstrap:
-  b60791af41423360b892a1a3cee90cd4e131f381:
-    expires_at: 2026-09-18
-  # transitive dep pulled by ampel/verify @ v1.2.0 (e0e3b814); allowlisted
-  # but not dependabot-tracked (b60791af above stays the live ref).
   f882fa9eb795141737eecac4ffb056df5ad14954:
     expires_at: 2026-10-11
   # transitive dep pulled by install/download-and-verify @ v1.2.1 (f882fa9e);
@@ -279,10 +275,6 @@ carabiner-dev/actions/install/bnd:
   d41fe10fe88deaf493ce026007da73738b9f570c:
     tag: v1.3.0
 carabiner-dev/actions/install/download-and-verify:
-  b60791af41423360b892a1a3cee90cd4e131f381:
-    expires_at: 2026-09-18
-  # transitive dep pulled by ampel/verify @ v1.2.0 (e0e3b814); allowlisted
-  # but not dependabot-tracked (b60791af above stays the live ref).
   f882fa9eb795141737eecac4ffb056df5ad14954:
     expires_at: 2026-10-11
   # transitive: referenced by carabiner-dev/actions v1.2.3 internal refs.
