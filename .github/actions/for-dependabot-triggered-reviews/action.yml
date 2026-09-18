@@ -141,6 +141,10 @@ runs:
       if: false
     - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3.0.1
       if: false
+    - uses: google/clusterfuzzlite/actions/build_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1  # v1
+      if: false
+    - uses: google/clusterfuzzlite/actions/run_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1  # v1
+      if: false
     - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94  # v7.2.3
       if: false
     - uses: graalvm/setup-graalvm@0426e2e191540e8514dff98dc52a5f5146a2a276  # v1.6.6
