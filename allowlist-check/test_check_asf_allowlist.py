@@ -158,6 +158,39 @@ class TestIsAllowed(unittest.TestCase):
             is_allowed("golangci/some-other-action@v1", self.allowlist)
         )
 
+    def test_owner_casing_is_ignored(self):
+        # apache/infrastructure-actions#1304: GitHub resolves owner and repo
+        # identifiers case-insensitively, but fnmatch applies os.path.normcase,
+        # which is identity on POSIX. apache/sedona-spatialbench was rejected
+        # for writing the canonical "Swatinem" against a lower-cased entry.
+        allowlist = ["swatinem/rust-cache@*"]
+        self.assertTrue(is_allowed("Swatinem/rust-cache@v2", allowlist))
+        self.assertTrue(is_allowed("swatinem/rust-cache@v2", allowlist))
+
+    def test_owner_casing_is_ignored_in_the_entry(self):
+        # The same holds the other way round: a capitalised entry must accept
+        # the lower-cased form a consumer may have written.
+        allowlist = ["Swatinem/rust-cache@*"]
+        self.assertTrue(is_allowed("swatinem/rust-cache@v2", allowlist))
+
+    def test_trusted_owner_casing_is_ignored(self):
+        self.assertTrue(is_allowed("Actions/checkout@v4", self.allowlist))
+        self.assertTrue(is_allowed("GitHub/codeql-action/init@v3", self.allowlist))
+
+    def test_ref_casing_still_matters(self):
+        # Precision guard: only owner/repo folds. Tags and SHAs are
+        # case-sensitive on GitHub, so an exactly-pinned ref must not match
+        # a ref that differs only in case.
+        allowlist = ["owner/action@v1.0.0-RC1"]
+        self.assertTrue(is_allowed("owner/action@v1.0.0-RC1", allowlist))
+        self.assertFalse(is_allowed("owner/action@v1.0.0-rc1", allowlist))
+
+    def test_repo_casing_does_not_leak_across_repos(self):
+        # Precision guard: folding case must not make a different repo match.
+        allowlist = ["swatinem/rust-cache@*"]
+        self.assertFalse(is_allowed("Swatinem/rust-cache-evil@v2", allowlist))
+        self.assertFalse(is_allowed("evil/rust-cache@v2", allowlist))
+
     def test_not_allowed(self):
         self.assertFalse(
             is_allowed("evil-org/evil-action@v1", self.allowlist)
