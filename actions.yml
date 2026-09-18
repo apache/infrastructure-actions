@@ -566,6 +566,12 @@ google-github-actions/auth:
 google-github-actions/setup-gcloud:
   aa5489c8933f4cc7a4f7d45035b3b1440c9c10db:
     tag: v3.0.1
+google/clusterfuzzlite/actions/build_fuzzers:
+  884713a6c30a92e5e8544c39945cd7cb630abcd1:
+    tag: v1
+google/clusterfuzzlite/actions/run_fuzzers:
+  884713a6c30a92e5e8544c39945cd7cb630abcd1:
+    tag: v1
 goreleaser/goreleaser-action:
   5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89:
     tag: v7.2.2
