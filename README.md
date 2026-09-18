@@ -622,10 +622,17 @@ uv run utils/actions-queue-status.py --csv /tmp/asf-ci.csv
 
 # A single project, sampling more of its open PRs
 uv run utils/actions-queue-status.py --repos-file <(echo airflow) --prs 25
+
+# Group the rows by PMC instead of by repository
+uv run utils/actions-queue-status.py --by-pmc
 ```
 
 Output is two tables — repositories sorted by running jobs, and by queued jobs — plus a one-line
-total. `--json` prints the same data as JSON.
+total. Each table closes with a `TOTAL` row carrying the org-wide queued and running counts and
+the number of active repositories; when `--top` truncates the table, a dim `shown (top N)` row
+above it subtotals the visible rows, so what the table leaves out is visible from the table
+itself rather than only from the summary line printed above it. `--json` prints the same data as
+JSON, with the same figures under `totals`, and each CSV ends with a matching `TOTAL` row.
 
 Each of the three long phases — discovering the org's repositories, sweeping their status, and the
 REST re-count — shows a progress bar with the repositories done so far and the GraphQL points left.
@@ -642,6 +649,7 @@ stay clean when stdout is piped or redirected.
 | `--suites N` | Check suites read per commit (default: 5). |
 | `--workers N` | Batched queries in flight (default: 3). |
 | `--top N` | Rows shown per table (default: 25). |
+| `--by-pmc` | Group rows by PMC — the repository name's prefix before the first hyphen. The `Repos` column reads active / total. |
 | `--include-archived` | Include archived repositories. |
 | `--repos-file PATH` | Read repository names from this file instead of the stored list. `#` lines are ignored. |
 | `--save-repos PATH` | Write the discovered repository list to a file as well. |
@@ -651,6 +659,51 @@ stay clean when stdout is piped or redirected.
 | `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN`, then `gh auth token`. |
 | `--no-gh` | Use Python `requests` instead of the `gh` CLI. Requires a token — an authenticated `gh` supplies one automatically. |
 | `--no-rest-fallback` | Skip the exact REST re-count for repos with more open PRs than `--prs`. |
+| `-v`, `--verbose` | Add per-batch, per-retry and per-repo diagnostics to the progress output. |
+| `-q`, `--quiet` | Suppress progress and diagnostics; print only the result. Overrides `--verbose`. |
+| `--no-color` | Disable colour and progress bars. `NO_COLOR` in the environment does the same. |
+
+#### Progress and Diagnostics
+
+A full sweep takes minutes, so it reports what it is doing while it does it. Everything below goes
+to **stderr** — stdout carries only the `--json` payload, so piping stays safe.
+
+Each phase is announced with a banner and closed with its elapsed time and the GraphQL points it
+spent, and while it runs it draws a live progress bar:
+
+```text
+▸ Phase 2/3  Status  62 queries of up to 20 repos
+  Status ━━━━━━━━━━━━━╺━━━━━━━━━  38/62  61% 4102 pts 0:01:12 eta 0:00:45
+```
+
+The points figure is colour-coded — green above 2,000, yellow down to the 200-point floor, red
+below it — so an approaching budget stop is visible before it happens.
+
+Bars are drawn only on a terminal. When output is piped or redirected, the same progress degrades
+to one line per step (every page during discovery, every tenth batch afterwards), which keeps log
+files readable and greppable:
+
+```text
+  Status 10/62  4102 pts
+```
+
+The run ends with a `Run diagnostics` table — queries issued, retries, batches split, repositories
+skipped, REST requests, points spent and wall time — so a slow or partial sweep can be explained
+after the fact rather than guessed at. Counters that represent failures stay dim while they are
+zero and turn yellow or red when they are not.
+
+`--verbose` adds the detail behind those counters: each discovery page and its cursor, every retry
+with its backoff and the error that caused it, each batch split, and — for every repository
+re-counted over REST — the exact counts next to what the GraphQL sample had reported:
+
+```text
+    query attempt 1/4 failed, retrying in 4s: 502 Bad Gateway
+    batch of 20 failed, splitting in two: 502 Bad Gateway
+    airflow: 10 active runs → 37 running, 0 queued (GraphQL sampled 13 running, 0 queued)
+```
+
+`--quiet` goes the other way and prints only the result tables; `--no-color` (or `NO_COLOR` in the
+environment) drops both colour and bars.
 
 #### How Discovery Works
 
@@ -665,6 +718,48 @@ workflows: object(expression: "HEAD:.github/workflows") {
 
 A repository counts as using Actions only when that tree exists and holds at least one `.yml` or
 `.yaml` entry. Archived, disabled and empty repositories are skipped.
+
+Pages are read 50 repositories at a time. Each node costs a git-tree lookup and an open-PR count,
+and at 100 the query times out server-side often enough to end a sweep — two consecutive full runs
+died on `HTTP 502`, after 200 and 300 repositories, with every retry exhausted. The same paging at
+50 walked the whole organisation without a single retry.
+
+#### Grouping by PMC
+
+`--by-pmc` changes the unit of the report from repository to PMC. Both orderings, the `TOTAL`
+footer, `--top`, `--csv` and `--json` work exactly as before; only the rows change:
+
+```text
+Sorted by RUNNING jobs
+┏━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ PMC        ┃ Queued ┃ Running ┃     Repos ┃ Repositories                   ┃
+┡━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ airflow    │     13 │     133 │    2 / 10 │ airflow, airflow-client-python │
+│ fineract   │      0 │      96 │     1 / 8 │ fineract                       │
+│ datafusion │     21 │      49 │    2 / 12 │ datafusion, datafusion-comet   │
+├────────────┼────────┼─────────┼───────────┼────────────────────────────────┤
+│ TOTAL      │    330 │     881 │ 60 / 1258 │ 49 PMCs                        │
+└────────────┴────────┴─────────┴───────────┴────────────────────────────────┘
+```
+
+The `Repos` column reads *active / total*: how many of the PMC's repositories have jobs right
+now, out of every repository of theirs the sweep covered. Four busy repositories mean something
+different for a PMC of four than for a PMC of forty-seven, and the denominator is what says
+which one you are looking at. It counts the repositories the sweep actually ran over, so a
+`--repos-file` run measures against that file rather than the whole organisation.
+
+A repository's PMC is the text before the first hyphen in its name, and the whole name when there
+is no hyphen — so `spark`, `spark-connect-go` and `spark-docker` group under `spark`. That is the
+same rule [`--pmc` uses in `actions-audit.py`](#how-pmc-filtering-works), so the two scripts agree
+on what a PMC covers.
+
+It is a naming convention, not authoritative ownership, and it is not checked against the
+committee list: an `incubator-` repository groups under `incubator` rather than under the
+podling's eventual PMC. For per-repository detail, drop the flag.
+
+The `Source` column is spent on the repository count instead, since which API counted a row is a
+per-repository fact that a PMC of several repositories can only blur. The CSV keeps it, reading
+`mixed` where a PMC's repositories were counted different ways.
 
 #### The Stored Repository List
 
