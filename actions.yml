@@ -1077,7 +1077,7 @@ stCarolas/setup-maven:
 subosito/flutter-action:
   '*':
     keep: true
-swatinem/rust-cache:
+Swatinem/rust-cache:
   '*':
     keep: true
 swift-actions/setup-swift:
