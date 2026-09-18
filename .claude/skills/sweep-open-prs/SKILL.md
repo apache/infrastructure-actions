@@ -69,16 +69,32 @@ Checks, collapsed to only what is NOT green:
 gh pr list --repo apache/infrastructure-actions --limit 50 \
   --json number,statusCheckRollup \
   --jq '.[] | "\(.number)\t" + ([.statusCheckRollup[]
-       | select((.conclusion//.state) != "SUCCESS"
-             and (.conclusion//.state) != "NEUTRAL"
-             and (.conclusion//.state) != "SKIPPED")
-       | "\(.name//.context)=\(.conclusion//.state)"]
+       | . as $c
+       | (if ($c.status // "COMPLETED") != "COMPLETED" then $c.status
+          elif ($c.conclusion // "") != "" then $c.conclusion
+          elif ($c.state // "") != "" then $c.state
+          else "PENDING" end) as $s
+       | select($s != "SUCCESS" and $s != "NEUTRAL" and $s != "SKIPPED")
+       | "\($c.name // $c.context)=\($s)"]
        | if length==0 then "ALL GREEN" else join(" ") end)'
 ```
 
-`mergeStateStatus: UNKNOWN` means GitHub is still recomputing mergeability,
-usually right after another PR merged. It is not a verdict - re-query that PR
-before classifying it.
+**Read `status` before `conclusion`.** A `CheckRun` carries `conclusion: null`
+until its `status` reaches `COMPLETED`, and its `state` is always null - `state`
+belongs to the `StatusContext` shape instead. A query that reaches straight for
+`(.conclusion // .state)` therefore prints a bare `name=` for every check still
+running, which reads like a finding rather than "ask again in a minute". The
+query above reports `QUEUED` or `IN_PROGRESS` instead.
+
+Two states that are *not* verdicts, and must be re-queried rather than
+classified:
+
+- `mergeStateStatus: UNKNOWN` - GitHub is recomputing mergeability, usually
+  right after another PR merged. It also appears mid-merge-storm when several
+  PRs touch one file; the state settles back to `CLEAN` on its own.
+- A check reported `QUEUED` or `IN_PROGRESS` - not yet a result. Checks on a
+  fresh PR routinely take minutes, so a sweep run the moment a PR opens will
+  see them unfinished.
 
 ## Step 2: classify
 
@@ -164,6 +180,7 @@ Merging a PR they just approved in the same turn is the mid-flow exception.
 |---|---|
 | Reading `state=BLOCKED` as "broken" | Most of a healthy queue is `BLOCKED` pending one approval |
 | Classifying on a `mergeStateStatus: UNKNOWN` | Misses a PR that is actually ready; re-query first |
+| Reading an unfinished check as a failure | A running check has no conclusion yet; re-query rather than triaging it |
 | Offering to approve the maintainer's own PR | Impossible on GitHub; wastes a round-trip |
 | Treating a carried-over warning as a regression | Blocks a bump that is no worse than the approved version |
 | Filing upstream before searching the target repo | Duplicate issues; search existing issues, including the maintainer's own |
