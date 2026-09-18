@@ -137,11 +137,29 @@ def load_allowlist(allowlist_path: str) -> list[str]:
     return result if result else []
 
 
+def fold_ref_case(value: str) -> str:
+    """Lower-case the owner/repo half of an action ref or pattern.
+
+    GitHub resolves owner and repository identifiers case-insensitively, so
+    `Swatinem/rust-cache` and `swatinem/rust-cache` are the same action and
+    `uses:` accepts either. fnmatch applies os.path.normcase, which is the
+    identity on POSIX, so matching would otherwise reject a correctly-cased
+    ref against a lower-cased entry (see issue #1304).
+
+    The part after "@" keeps its case: tags and SHAs *are* case-sensitive, so
+    folding them would let an exactly-pinned entry match a ref it never
+    approved.
+    """
+    repo, separator, ref = value.partition("@")
+    return repo.lower() + separator + ref
+
+
 def is_allowed(action_ref: str, allowlist: list[str]) -> bool:
     """Check whether a single action ref is allowed.
 
     An action ref is allowed if its owner is in TRUSTED_OWNERS or it
-    matches any pattern in the allowlist via fnmatch.
+    matches any pattern in the allowlist via fnmatch. Owner and repository
+    are compared case-insensitively; the ref after "@" is not.
 
     Args:
         action_ref: The action reference string (e.g., "owner/action@ref")
@@ -151,9 +169,10 @@ def is_allowed(action_ref: str, allowlist: list[str]) -> bool:
         bool: True if the action ref is allowed
     """
     owner = action_ref.split("/")[0]
-    if owner in TRUSTED_OWNERS:
+    if owner.lower() in TRUSTED_OWNERS:
         return True
-    return any(fnmatch.fnmatch(action_ref, pattern) for pattern in allowlist)
+    folded_ref = fold_ref_case(action_ref)
+    return any(fnmatch.fnmatch(folded_ref, fold_ref_case(pattern)) for pattern in allowlist)
 
 
 def load_expiry_map(actions_path: str) -> dict[str, datetime.date]:
@@ -345,7 +364,7 @@ def main():
     for action_ref, filepaths in sorted(action_refs.items()):
         allowed = is_allowed(action_ref, allowlist)
         owner = action_ref.split("/")[0]
-        if owner in TRUSTED_OWNERS:
+        if owner.lower() in TRUSTED_OWNERS:
             reason = f"trusted owner ({owner})"
         elif allowed:
             reason = "matches allowlist"
