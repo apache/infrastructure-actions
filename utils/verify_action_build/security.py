@@ -1081,6 +1081,65 @@ _BINARY_EXTS = (
     ".jar", ".so", ".dylib", ".dll", ".bin",
 )
 
+# --- Variable-URL downloads -------------------------------------------------
+#
+# The common "resolve, then fetch" installer shape never puts a literal URL
+# on the download line:
+#
+#     LOCATION="$(curl -s "$RELEASE_URL" | jq -r '.assets[].browser_download_url' | grep "$TARGET$")"
+#     curl -sSfL --output "$TARGET" "$LOCATION"
+#     tar -xf "$TARGET" && mv tool ./bin/
+#
+# orhun/git-cliff-action's install.sh (apache/infrastructure-actions#1311)
+# is exactly this, and the literal-URL scan reported "no downloads" for it.
+# A download line whose URL is a shell variable counts when it is written
+# to a file (not piped or command-substituted as data) and the same file
+# then treats the result as a binary: extracts it, marks it executable,
+# moves it into a ``bin/`` dir, or prepends it to ``GITHUB_PATH``.
+
+# ``$URL`` / ``${URL}`` on the download line.
+_SHELL_VAR_REF = re.compile(r"\$\{?[A-Za-z_][A-Za-z0-9_]*\}?")
+
+# curl only writes to a file with an explicit output flag: ``-o``/``-O`` in
+# any short-flag cluster (``-fsSLo``), or the long forms.
+_CURL_TO_FILE = re.compile(
+    r"(?:^|\s)(?:-[a-zA-Z]*[oO][a-zA-Z]*|--output|--remote-name(?:-all)?)(?=\s|=|$)"
+)
+# wget writes to a file by default; only ``-O-`` / ``--output-document=-``
+# send the body to stdout.
+_WGET_TO_STDOUT = re.compile(
+    r"(?:^|\s)-[a-zA-Z]*O\s*-(?=\s|$)|--output-document(?:=|\s+)-(?=\s|$)"
+)
+# PowerShell writes to a file only with ``-OutFile``.
+_IWR_TO_FILE = re.compile(r"-OutFile\b", re.IGNORECASE)
+
+# File-level "the download is a binary" markers for shell scripts.
+_SHELL_BINARY_HANDLE_PATTERNS = [
+    re.compile(r"\btar\s+(?:-|x|--extract)"),
+    re.compile(r"\b(?:unzip|gunzip|unxz|bunzip2)\b"),
+    re.compile(r"\b7z\s+[xe]\b"),
+    re.compile(r"\bExpand-Archive\b", re.IGNORECASE),
+    re.compile(r"\bchmod\s+(?:[ugoa]*\+x|[0-7]*[1357][0-7]*)\b"),
+    re.compile(r"\binstall\s+-m\b"),
+    re.compile(r"\b(?:mv|cp)\b[^\n]*\bbin/"),
+    re.compile(r"\$\{?GITHUB_PATH\b"),
+]
+
+
+def _is_variable_url_download(stripped: str) -> bool:
+    """True when a download-command line fetches a shell-variable URL into a file."""
+    if not _SHELL_VAR_REF.search(stripped):
+        return False
+    lower = stripped.lower()
+    if re.search(r"\bcurl\b", lower):
+        return bool(_CURL_TO_FILE.search(stripped))
+    if re.search(r"\bwget\b", lower):
+        return not _WGET_TO_STDOUT.search(stripped)
+    if re.search(r"\b(?:iwr|invoke-webrequest)\b", lower):
+        return bool(_IWR_TO_FILE.search(stripped))
+    return False
+
+
 # Pipe-to-shell: curl/wget output piped straight into a shell interpreter.
 _PIPE_TO_SHELL = re.compile(
     r"\b(curl|wget|iwr|Invoke-WebRequest)\b[^\n]*\|\s*(ba|z|k|a)?sh\b",
@@ -1426,8 +1485,13 @@ def _find_binary_downloads(content: str) -> list[tuple[int, str]]:
 
     Returns a list of ``(line_num, snippet)`` tuples. Lines that are part of a
     package-manager invocation are skipped.
+
+    A download line needs either a literal URL that looks like a binary, or a
+    shell-variable URL written to a file in a script that goes on to extract
+    or install what it fetched (see :func:`_is_variable_url_download`).
     """
     findings: list[tuple[int, str]] = []
+    handles_binary = any(p.search(content) for p in _SHELL_BINARY_HANDLE_PATTERNS)
     for i, line in enumerate(content.splitlines(), 1):
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
@@ -1444,6 +1508,8 @@ def _find_binary_downloads(content: str) -> list[tuple[int, str]]:
 
         url_match = re.search(r"https?://\S+", stripped)
         if not url_match:
+            if handles_binary and _is_variable_url_download(stripped):
+                findings.append((i, stripped[:120]))
             continue
         url = url_match.group(0).rstrip(",;'\")}\\")
 
@@ -1758,7 +1824,12 @@ def analyze_repo_metadata(
     console.print()
     console.rule("[bold]Repository Metadata[/bold]")
 
-    for license_name in ("LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING"):
+    # LICENSE-APACHE / LICENSE-MIT is the Rust-ecosystem dual-license layout
+    # (orhun/git-cliff-action has no bare LICENSE at all).
+    for license_name in (
+        "LICENSE", "LICENSE.md", "LICENSE.txt", "LICENCE", "COPYING",
+        "LICENSE-APACHE", "LICENSE-MIT",
+    ):
         content = fetch_file_from_github(org, repo, commit_hash, license_name)
         if content is not None:
             first_lines = content[:500].lower()
