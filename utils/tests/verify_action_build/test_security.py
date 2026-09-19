@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+import re
 from unittest import mock
 
 from verify_action_build.security import (
@@ -828,7 +829,9 @@ class TestAnalyzeRepoMetadata:
             warnings = analyze_repo_metadata("orhun", "git-cliff-action", "a" * 40)
         assert not any("LICENSE" in w for w in warnings)
         captured = capsys.readouterr()
-        assert "LICENSE-APACHE (Apache 2.0)" in captured.out + captured.err
+        # CI forces colour, so strip ANSI escapes before matching the text.
+        plain = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", captured.out + captured.err)
+        assert "LICENSE-APACHE (Apache 2.0)" in plain
 
     def test_well_known_org(self):
         def fetch(org, repo, commit, path):
