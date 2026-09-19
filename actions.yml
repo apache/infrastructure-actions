@@ -791,6 +791,9 @@ leafo/gh-actions-luarocks:
 lhotari/sandboxed-trivy-action:
   f01374b6cc3bf7264ab238293e94f6db7ada6dd0:
     tag: v1.0.2
+loadingalias/cargo-rail-action:
+  e706767c343acb6a2ab1917f243b1616ae9eb05b:
+    tag: v10.0.0
 lycheeverse/lychee-action:
   8646ba30535128ac92d33dfc9133794bfdd9b411:
     tag: v2.8.0
