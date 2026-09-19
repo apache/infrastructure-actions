@@ -153,7 +153,6 @@
 - DavidAnson/markdownlint-cli2-action@6bf21b07787794f89a243495939cd651942aeabe
 - DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff
 - dawidd6/action-download-artifact@*
-- dawidd6/action-send-mail@42942bc2f8fba4e611b459a018967a6a7c78c68c
 - dawidd6/action-send-mail@94de994a9f6fffee200243214e17002e2920bb59
 - dawidd6/action-send-mail@67ce3558d613188179559c61d3565140cf389968
 - dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98

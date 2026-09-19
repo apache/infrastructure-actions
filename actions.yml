@@ -411,9 +411,6 @@ dawidd6/action-download-artifact:
   '*':
     keep: true
 dawidd6/action-send-mail:
-  42942bc2f8fba4e611b459a018967a6a7c78c68c:
-    tag: v17
-    expires_at: 2026-09-19
   94de994a9f6fffee200243214e17002e2920bb59:
     tag: v18
     expires_at: 2026-12-09
