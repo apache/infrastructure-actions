@@ -791,6 +791,9 @@ lhotari/sandboxed-trivy-action:
 loadingalias/cargo-rail-action:
   e706767c343acb6a2ab1917f243b1616ae9eb05b:
     tag: v10.0.0
+    expires_at: 2026-12-13
+  4a8df181e4f340a164190cf092c9f9239b20edab:
+    tag: v10.0.1
 lycheeverse/lychee-action:
   8646ba30535128ac92d33dfc9133794bfdd9b411:
     tag: v2.8.0
