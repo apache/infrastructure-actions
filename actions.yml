@@ -110,9 +110,6 @@ awalsh128/cache-apt-pkgs-action:
   '*':
     keep: true
 aws-actions/configure-aws-credentials:
-  e7f100cf4c008499ea8adda475de1042d6975c7b:
-    tag: v6.2.0
-    expires_at: 2026-09-20
   254c19bd240aabef8777f48595e9d2d7b972184b:
     tag: v6.2.1
     expires_at: 2026-09-30
