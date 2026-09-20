@@ -197,7 +197,7 @@ runs:
       if: false
     - uses: lhotari/sandboxed-trivy-action@f01374b6cc3bf7264ab238293e94f6db7ada6dd0  # v1.0.2
       if: false
-    - uses: loadingalias/cargo-rail-action@e706767c343acb6a2ab1917f243b1616ae9eb05b  # v10.0.0
+    - uses: loadingalias/cargo-rail-action@4a8df181e4f340a164190cf092c9f9239b20edab  # v10.0.1
       if: false
     - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8  # v2.9.0
       if: false
