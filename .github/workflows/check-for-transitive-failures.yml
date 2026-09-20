@@ -57,8 +57,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           # Wait this long after the most recent change to the composite
           # action before probing — gives the external org-level
-          # allowlist sync time to catch up. Tune up if we still see
-          # fail-then-pass cycles.
+          # allowlist sync time to catch up. Applies even when the
+          # MAX_HOURS safety net below would otherwise force a run. Tune
+          # up if we still see fail-then-pass cycles.
           GRACE_MINUTES: "30"
           # Always run at least this often regardless of changes, so we
           # still catch transitive deps that fall out of the allowlist
@@ -90,6 +91,19 @@ jobs:
           now_epoch=$(date +%s)
 
           decide() {
+            # The grace period comes first, ahead of every "we should run"
+            # reason below. If the composite changed a moment ago, the
+            # org-level sync has not caught up yet, so the probe would
+            # fail on the brand-new SHA and hide whatever transitive gap
+            # the canary is actually red for.
+            changed_at=$(git log -1 --format=%cI -- "$PROBED_FILE")
+            changed_epoch=$(date -d "$changed_at" +%s)
+            age_minutes=$(( (now_epoch - changed_epoch) / 60 ))
+            if [ "$age_minutes" -lt "$GRACE_MINUTES" ]; then
+              echo "$PROBED_FILE changed ${age_minutes}m ago; waiting for org sync (< ${GRACE_MINUTES}m)"
+              return 1
+            fi
+
             if [ -z "$last_success_sha" ]; then
               echo "no prior successful run"
               return 0
@@ -106,14 +120,6 @@ jobs:
 
             if git diff --quiet "$last_success_sha" HEAD -- "$PROBED_FILE"; then
               echo "$PROBED_FILE unchanged since $last_success_sha"
-              return 1
-            fi
-
-            changed_at=$(git log -1 --format=%cI -- "$PROBED_FILE")
-            changed_epoch=$(date -d "$changed_at" +%s)
-            age_minutes=$(( (now_epoch - changed_epoch) / 60 ))
-            if [ "$age_minutes" -lt "$GRACE_MINUTES" ]; then
-              echo "$PROBED_FILE changed ${age_minutes}m ago; waiting for org sync (< ${GRACE_MINUTES}m)"
               return 1
             fi
 
