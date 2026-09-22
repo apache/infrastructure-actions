@@ -576,6 +576,10 @@ google/clusterfuzzlite/actions/build_fuzzers:
 google/clusterfuzzlite/actions/run_fuzzers:
   884713a6c30a92e5e8544c39945cd7cb630abcd1:
     tag: v1
+google/oss-fuzz/infra/cifuzz/actions/build_fuzzers:
+  8f634126459ac994f47076ee3ba0be6b348d75e2:
+google/oss-fuzz/infra/cifuzz/actions/run_fuzzers:
+  8f634126459ac994f47076ee3ba0be6b348d75e2:
 goreleaser/goreleaser-action:
   f06c13b6b1a9625abc9e6e439d9c05a8f2190e94:
     tag: v7.2.3
