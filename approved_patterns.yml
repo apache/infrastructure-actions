@@ -199,7 +199,6 @@
 - erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124
 - geekyeggo/delete-artifact@*
 - golangci/*@*
-- golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee
 - golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a
 - google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
 - google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
@@ -240,7 +239,6 @@
 - ilammy/setup-nasm@72793074d3c8cdda771dba85f6deafe00623038b
 - italia/publiccode-parser-action@21086c73ec0563e14c6748787efa1b34b025ad8c
 - italia/publiccode-parser-action@0deab88c3f094aa12c5826e52ac2c4f176446821
-- j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d
 - j178/prek-action@e98a699c41eb69ab013a45817a0406469a748f8d
 - j178/prek-action@5337cb91e0fa35a7ff31b9ca345126d8bbbcdf16
 - j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece
@@ -387,7 +385,6 @@
 - taiki-e/install-action@*
 - tcort/github-action-markdown-link-check@e7c7a18363c842693fadde5d41a3bd3573a7a225
 - tcort/github-action-markdown-link-check@e047c5b37f24ab722bbef1a27b6fab7f96bc4068
-- terraform-linters/setup-tflint@b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93
 - terraform-linters/setup-tflint@6e1e0642c0289bd619021bf6b34e3c08ed1e005a
 - terraform-linters/setup-tflint@1cf010d3c7aef302051ccdb68c14c5dc2efa34ef
 - test-summary/action@*
