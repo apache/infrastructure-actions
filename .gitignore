@@ -16,6 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# Apache Magpie — personal, per-clone configuration
+/.apache-magpie-local/
+
 # IDE
 .idea/
 .vscode/
@@ -24,7 +27,8 @@
 
 # Claude Code — personal state stays out, shared skills under .claude/skills/
 # are committed so other contributors get them via `git clone`.
-.claude/settings.json
+# .claude/settings.json is committed: it carries only the Magpie plugin floor
+# derived from .apache-magpie.lock. Personal settings go in settings.local.json.
 .claude/settings.local.json
 .claude/worktrees/
 .claude/debug/
