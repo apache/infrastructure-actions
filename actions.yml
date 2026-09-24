@@ -430,27 +430,18 @@ dlang-community/setup-dlang:
   '*':
     keep: true
 docker/bake-action:
-  6614cfa25eff9a0b2b2697efb0b6159e7680d584:
-    tag: v7.2.0
-    expires_at: 2026-09-24
   d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b:
     tag: v7.3.0
     expires_at: 2026-12-09
   018cb6412ab401ebaa809aa5f85966b74628600f:
     tag: v7.4.0
 docker/build-push-action:
-  f9f3042f7e2789586610d6e8b85c8f03e5195baf:
-    tag: v7.2.0
-    expires_at: 2026-09-24
   53b7df96c91f9c12dcc8a07bcb9ccacbed38856a:
     tag: v7.3.0
     expires_at: 2026-12-09
   c3c9e263c25d99ce0380d002d59b67737d91b0dc:
     tag: v7.4.0
 docker/login-action:
-  650006c6eb7dba73a995cc03b0b2d7f5ca915bee:
-    tag: v4.2.0
-    expires_at: 2026-09-24
   c99871dec2022cc055c062a10cc1a1310835ceb4:
     tag: v4.3.0
     expires_at: 2026-09-27
@@ -469,15 +460,9 @@ docker/login-action:
   dbcb813823bdd20940b903addbd779551569679f:
     tag: v4.6.0
 docker/metadata-action:
-  80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9:
-    tag: v6.1.0
-    expires_at: 2026-09-24
   dc802804100637a589fabce1cb79ff13a1411302:
     tag: v6.2.0
 docker/setup-buildx-action:
-  d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5:
-    tag: v4.1.0
-    expires_at: 2026-09-24
   bb05f3f5519dd87d3ba754cc423b652a5edd6d2c:
     tag: v4.2.0
     expires_at: 2026-11-19
@@ -487,9 +472,6 @@ docker/setup-buildx-action:
   f87e5991a6d7451dcb8d9637bfbc97413f497069:
     tag: v4.4.1
 docker/setup-qemu-action:
-  06116385d9baf250c9f4dcb4858b16962ea869c3:
-    tag: v4.1.0
-    expires_at: 2026-09-24
   96fe6ef7f33517b61c61be40b68a1882f3264fb8:
     tag: v4.2.0
     expires_at: 2026-11-30
@@ -770,9 +752,6 @@ jwgmeligmeyling/spotbugs-github-action:
   '*':
     keep: true
 Kesin11/actions-timeline:
-  44c9c178ffb2fb1d9859614a3ffa79ccfb77565e:
-    tag: v3.1.0
-    expires_at: 2026-09-24
   7bf79990b7c09f5dfb570ac30b814ca597bd538e:
     tag: v3.1.1
     expires_at: 2026-10-28
@@ -871,9 +850,6 @@ olafurpg/setup-scala:
   '*':
     keep: true
 opentofu/setup-opentofu:
-  847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4:
-    tag: v2.0.1
-    expires_at: 2026-09-24
   a1320f892987e89d278cc92dc5adc984fb93aca4:
     tag: v2.0.2
 oracle-actions/setup-java:
@@ -991,9 +967,6 @@ rubygems/release-gem:
   7f9650160c1a4e7989fdc9855807bdbd421d8b6b:
     tag: v1.4.1
 runs-on/action:
-  d141ef83eb66d096ce8afc767e09115a65c63b60:
-    tag: v2.1.2
-    expires_at: 2026-09-24
   4e5f72399b6b17f2e79c511c1b38a315a64d22dc:
     tag: v2.2.0
     expires_at: 2026-11-01
@@ -1009,9 +982,6 @@ rustsec/*:
   '*':
     keep: true
 sbt/setup-sbt:
-  3afe9cf056c5d139bfc46579af1192d77a2f0821:
-    tag: v1.4.0
-    expires_at: 2026-09-24
   66fb4376e81982c7d92a4074170846fff88e2e30:
     tag: v1.5.0
     expires_at: 2026-10-08
