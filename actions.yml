@@ -1008,6 +1008,9 @@ sbt/setup-sbt:
     expires_at: 2026-12-16
   ce95da69b39609ea153bad087708da5f37366897:
     tag: v1.5.10
+    expires_at: 2026-12-18
+  6158cb0903b8ceeae04f830055f3155e1b6a5ad7:
+    tag: v1.5.11
 scalacenter/sbt-dependency-submission:
   d84eef4c09e633bcf5f113bcad7fd5e9af1baee9:
     tag: v3.2.3
