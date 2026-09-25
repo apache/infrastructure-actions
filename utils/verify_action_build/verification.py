@@ -45,6 +45,7 @@ from .security import (
     analyze_binary_downloads_recursive,
     analyze_dependency_pinning,
     analyze_dockerfile,
+    resolve_dockerfile_candidates,
     analyze_in_tree_binaries,
     analyze_lock_files,
     analyze_nested_actions,
@@ -426,7 +427,10 @@ def verify_single_action(
                 if docker_warnings:
                     checks_performed.append(("Dockerfile analysis", "warn", f"{len(docker_warnings)} warning(s)"))
                 else:
-                    df_exists = fetch_file_from_github(org, repo, commit_hash, "Dockerfile") is not None
+                    df_exists = any(
+                        fetch_file_from_github(org, repo, commit_hash, path) is not None
+                        for path in resolve_dockerfile_candidates(org, repo, commit_hash, sub_path)
+                    )
                     if df_exists:
                         checks_performed.append(("Dockerfile analysis", "pass", "no issues found"))
                     else:
