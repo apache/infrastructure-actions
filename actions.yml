@@ -338,6 +338,9 @@ codecov/codecov-action:
 codelytv/pr-size-labeler:
   '*':
     keep: true
+CodSpeedHQ/action:
+  373d6868929f444bc08d901fd0eb0ad52a8875ea:
+    tag: v5.2.1
 commit-check/commit-check-action:
   0e0ac2f48ed0d43062a4ab46bf74127e27aab58f:
     tag: v2.10.0
