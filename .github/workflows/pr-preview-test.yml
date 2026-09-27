@@ -1,0 +1,144 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+name: Test the PR preview actions
+on:
+  pull_request:
+    paths:
+      - "pr-preview/**"
+      - ".github/workflows/pr-preview-test.yml"
+  push:
+    # Branches only, so release tag pushes do not re-run it.
+    branches:
+      - main
+    paths:
+      - "pr-preview/**"
+      - ".github/workflows/pr-preview-test.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  node:
+    name: "publisher, overlay and Astro adapter"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: "22"
+
+      - name: Install the locked test dependencies
+        working-directory: pr-preview
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Unit tests
+        working-directory: pr-preview
+        run: npm test
+
+      - name: preview-annotate outputs the Astro plugin
+        id: astro
+        uses: ./pr-preview/preview-annotate
+        with:
+          generator: astro
+
+      - name: The plugin path resolves
+        env:
+          PLUGIN: ${{ steps.astro.outputs.babel-plugin }}
+        run: test -f "$PLUGIN"
+
+      - name: preview-annotate rejects an unknown generator
+        id: unknown
+        continue-on-error: true
+        uses: ./pr-preview/preview-annotate
+        with:
+          generator: gatsby
+
+      - name: It did not fail
+        if: steps.unknown.outcome != 'failure'
+        run: |
+          echo "::error::preview-annotate accepted an unknown generator"
+          exit 1
+
+  jekyll:
+    name: "Jekyll adapter, end to end"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: ruby:3.3@sha256:21e6a5125535e13999143c49b6471f68c92a74d8faad0a3541c51b11de0266ad
+    env:
+      # Install exactly what the lockfile names, checksums included.
+      BUNDLE_GEMFILE: pr-preview/adapters/jekyll/test/Gemfile
+      BUNDLE_FROZEN: "true"
+      FIXTURE: pr-preview/adapters/jekyll/test/fixture
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install the locked test dependencies
+        run: bundle install
+
+      - name: Plugin tests
+        run: bundle exec ruby pr-preview/adapters/jekyll/test/preview_src_test.rb
+
+      - name: Production build
+        run: bundle exec jekyll build -s "$FIXTURE" -d "$RUNNER_TEMP/production"
+
+      - name: preview-annotate installs the plugin
+        uses: ./pr-preview/preview-annotate
+        with:
+          generator: jekyll
+          source: pr-preview/adapters/jekyll/test/fixture
+          production-output: ${{ runner.temp }}/production
+
+      - name: Preview build is annotated with repository paths
+        run: |
+          bundle exec jekyll build -s "$FIXTURE" -d "$RUNNER_TEMP/preview"
+          grep -q 'data-preview-src="pr-preview/adapters/jekyll/test/fixture/index.md:7"' "$RUNNER_TEMP/preview/index.html"
+
+      - name: preview-annotate rejects an annotated production build
+        id: dirty
+        continue-on-error: true
+        uses: ./pr-preview/preview-annotate
+        with:
+          generator: none
+          production-output: ${{ runner.temp }}/preview
+
+      - name: It did not fail
+        if: steps.dirty.outcome != 'failure'
+        run: |
+          echo "::error::preview-annotate accepted an annotated production build"
+          exit 1
+
+      - name: preview-artifact packages the preview
+        if: github.event_name == 'pull_request'
+        uses: ./pr-preview/preview-artifact
+        with:
+          path: ${{ runner.temp }}/preview
+          retention-days: 1
+
+      - name: The metadata names this pull request
+        if: github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: grep -q "\"pr\":$PR_NUMBER," "$RUNNER_TEMP/preview/preview-meta.json"

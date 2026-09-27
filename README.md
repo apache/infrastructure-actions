@@ -98,6 +98,7 @@ correctness of the action.
   - [ASF Infrastructure Pelican Action](/pelican/README.md): Generate and publish project websites with GitHub Actions
   - [Stash Action](/stash/README.md): Manage large build caches
   - [ASF Allowlist Check](/allowlist-check/README.md): Verify workflow action refs are on the ASF allowlist
+  - [PR Previews](/pr-preview/README.md): Publish per-pull-request website previews on ASF staging, with a review overlay that links a marked region to its diff line
 
 ## Versioning and Pinning Actions
 
@@ -112,6 +113,9 @@ which you repeat after the `@`:
 | `pelican`             | `apache/infrastructure-actions/pelican@<sha>          # pelican/v1.2.3`        |
 | `stash/save`          | `apache/infrastructure-actions/stash/save@<sha>       # save/v1.2.3`           |
 | `stash/restore`       | `apache/infrastructure-actions/stash/restore@<sha>    # restore/v1.2.3`        |
+| `pr-preview/preview-annotate` | `apache/infrastructure-actions/pr-preview/preview-annotate@<sha> # preview-annotate/v1.0.0` |
+| `pr-preview/preview-artifact` | `apache/infrastructure-actions/pr-preview/preview-artifact@<sha> # preview-artifact/v1.0.0` |
+| `pr-preview/preview-publish`  | `apache/infrastructure-actions/pr-preview/preview-publish@<sha>  # preview-publish/v1.0.0`  |
 
 Pinning to a commit SHA with the version in a trailing comment is the
 recommended, [Zizmor](https://zizmor.sh/)-friendly form: the SHA is immutable,

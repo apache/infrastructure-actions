@@ -207,3 +207,12 @@ This product includes code from cache GitHub action in the `stash` directory.
 Copyright (c) 2018 GitHub, Inc. and contributors
 Homepage: https://github.com/actions/cache
 License: The MIT License (MIT): https://raw.githubusercontent.com/actions/cache/refs/heads/main/LICENSE
+
+--------------------------------------------------------------------------------
+
+This product bundles html2canvas-pro 2.4.3 in the `pr-preview/vendor/html2canvas-pro`
+directory.
+
+Copyright (c) 2024-present yorickshan and html2canvas-pro contributors
+Homepage: https://github.com/yorickshan/html2canvas-pro
+License: The MIT License (MIT): see pr-preview/vendor/html2canvas-pro/LICENSE

@@ -62,6 +62,25 @@ def test_save_only_change_bumps_only_save():
     assert _prefixes(ra.affected_actions(changed)) == ["save"]
 
 
+def test_pr_preview_adapter_change_releases_only_the_annotator():
+    changed = ["pr-preview/adapters/jekyll/preview_src.rb"]
+    assert _prefixes(ra.affected_actions(changed)) == ["preview-annotate"]
+
+
+def test_pr_preview_shared_code_releases_the_publisher():
+    for path in (
+        "pr-preview/lib/publish.mjs",
+        "pr-preview/overlay/review.js",
+        "pr-preview/vendor/html2canvas-pro/html2canvas-pro.min.js",
+    ):
+        assert _prefixes(ra.affected_actions([path])) == ["preview-publish"], path
+
+
+def test_pr_preview_docs_release_nothing():
+    changed = ["pr-preview/README.md", "pr-preview/package.json"]
+    assert ra.affected_actions(changed) == []
+
+
 def test_multiple_actions_changed_at_once():
     changed = ["pelican/entrypoint.sh", "allowlist-check/action.yml"]
     assert _prefixes(ra.affected_actions(changed)) == ["allowlist-check", "pelican"]

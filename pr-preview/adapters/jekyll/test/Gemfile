@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,54 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
+# Test dependencies for the Jekyll adapter; locked so CI installs exactly
+# these versions. The adapter itself needs only a Jekyll 4 site.
+source "https://rubygems.org"
 
-# Claude Code — personal state stays out, shared skills under .claude/skills/
-# are committed so other contributors get them via `git clone`.
-.claude/settings.json
-.claude/settings.local.json
-.claude/worktrees/
-.claude/debug/
-
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-*.egg
-dist/
-build/
-.eggs/
-*.whl
-
-# Virtual environments
-.venv/
-venv/
-env/
-
-# Testing / Coverage
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-
-# Environment variables
-.env
-.env.local
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Generated file, prevent accidental commits
-approved_patterns.yml
-/gateway/test_out_dummy.yml
-/tmp
-
-# RAT work dir
-utils/.rat/**
-
-node_modules/
+gem "jekyll", "4.4.1"
+gem "minitest", "~> 5.25"

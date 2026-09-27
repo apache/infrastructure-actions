@@ -72,12 +72,35 @@ class Action:
 
 # The actions this repo publishes.  ``stash/save`` and ``stash/restore`` both
 # import ``stash/shared/mung.py`` at runtime (PYTHONPATH -> ../shared), so a
-# change there releases both.
+# change there releases both.  The ``pr-preview/*`` actions run code from
+# sibling directories through ``github.action_path/..``: the annotator the
+# generator adapters, the publisher the library, the overlay it injects and
+# the vendored screenshot library.
 ACTIONS: tuple[Action, ...] = (
     Action("allowlist-check", "allowlist-check", ("allowlist-check/",)),
     Action("pelican", "pelican", ("pelican/",)),
     Action("save", "stash/save", ("stash/save/", "stash/shared/")),
     Action("restore", "stash/restore", ("stash/restore/", "stash/shared/")),
+    Action(
+        "preview-annotate",
+        "pr-preview/preview-annotate",
+        ("pr-preview/preview-annotate/", "pr-preview/adapters/"),
+    ),
+    Action(
+        "preview-artifact",
+        "pr-preview/preview-artifact",
+        ("pr-preview/preview-artifact/",),
+    ),
+    Action(
+        "preview-publish",
+        "pr-preview/preview-publish",
+        (
+            "pr-preview/preview-publish/",
+            "pr-preview/lib/",
+            "pr-preview/overlay/",
+            "pr-preview/vendor/",
+        ),
+    ),
 )
 
 VALID_BUMPS = ("major", "minor", "patch")

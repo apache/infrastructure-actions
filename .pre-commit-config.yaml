@@ -113,7 +113,8 @@ repos:
           (?x)
           ^(?:.*/)?AGENTS\.md$|
           ^(?:.*/)?CLAUDE\.md$|
-          ^stash/.*\.md$
+          ^stash/.*\.md$|
+          ^pr-preview/adapters/jekyll/test/fixture/
         args:
           - --comment-style
           - "<!--|  |-->"
