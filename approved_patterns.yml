@@ -126,6 +126,7 @@
 - cicirello/javadoc-cleanup@*
 - codecov/codecov-action@*
 - codelytv/pr-size-labeler@*
+- CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea
 - commit-check/commit-check-action@0e0ac2f48ed0d43062a4ab46bf74127e27aab58f
 - commit-check/commit-check-action@a9ee0cfa8e2b0399715e016e1dd4624e08427281
 - commit-check/commit-check-action@bbb6580f01838e475563514f115ec7ef41c9ddc7
