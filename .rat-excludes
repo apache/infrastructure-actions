@@ -14,3 +14,11 @@
 # limitations under the License.
 
 **/uv.lock
+# pr-preview: vendored MIT library (credited in LICENSE), JSON and lock files
+# that cannot carry a header, and a Jekyll fixture site whose line numbers the
+# adapter's tests assert.
+pr-preview/vendor/**
+pr-preview/package.json
+pr-preview/package-lock.json
+pr-preview/adapters/jekyll/test/Gemfile.lock
+pr-preview/adapters/jekyll/test/fixture/**

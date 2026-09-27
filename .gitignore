@@ -65,3 +65,5 @@ approved_patterns.yml
 
 # RAT work dir
 utils/.rat/**
+
+node_modules/

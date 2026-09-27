@@ -1,0 +1,14 @@
+---
+---
+<!doctype html>
+<html>
+<head><title>{{ page.title }}</title></head>
+<body>
+<header class="site">{% include nav.html %}</header>
+<main>{{ content }}</main>
+<aside>{{ "**from markdownify**" | markdownify }}</aside>
+<script>var x = "<div>";</script>
+{% raw %}<p>literal</p>{% endraw %}
+<!-- <section>commented</section> -->
+</body>
+</html>
