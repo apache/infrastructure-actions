@@ -163,11 +163,19 @@ def normalize_package_json(obj: dict) -> dict:
     rebuild hold the *published* one — a difference in representation, not
     in what the package does.
 
+    npm v5/v6 also writes ``"bundleDependencies": false`` and
+    ``"deprecated": false`` into packages that declare neither; both are
+    dropped only when exactly ``false``, so a real bundle list or
+    deprecation message is still compared.
+
     Combined with :func:`strip_npm_install_metadata`.  Fields this does
     not recognise are left untouched and still compared strictly, so an
     edit to ``main``, ``bin``, ``scripts`` or a dependency still fails.
     """
     out = strip_npm_install_metadata(obj)
+    for key in ("bundleDependencies", "deprecated"):
+        if out.get(key) is False:
+            del out[key]
     for key in ("author",):
         if key in out:
             out[key] = _normalize_person(out[key])
