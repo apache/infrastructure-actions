@@ -205,7 +205,7 @@ runs:
       if: false
     - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8  # v2.9.0
       if: false
-    - uses: manusa/actions-setup-minikube@b65276017fdec6f1e6498129fb740e34e260dc55  # v2.18.0
+    - uses: manusa/actions-setup-minikube@001b9f30165b2a875b835ec5183ced75b94bc269  # v2.19.0
       if: false
     - uses: matlab-actions/run-tests@214a16e600ef2c705a4b2dd6c0794dc6957682a9  # v3.3.0
       if: false
