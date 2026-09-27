@@ -271,6 +271,7 @@
 - lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8
 - manusa/actions-setup-minikube@*
 - manusa/actions-setup-minikube@b65276017fdec6f1e6498129fb740e34e260dc55
+- manusa/actions-setup-minikube@001b9f30165b2a875b835ec5183ced75b94bc269
 - matlab-actions/run-tests@ae0e80cb44fdec28d35d0831d8acf38ee4fdf91a
 - matlab-actions/run-tests@83e368e0b18d9c0c7d510fd911d546e16b73bbdb
 - matlab-actions/run-tests@214a16e600ef2c705a4b2dd6c0794dc6957682a9
@@ -379,6 +380,7 @@
 - untitaker/hyperlink@9375bc4063712ad490d5eb3d54df0b6aade15e54
 - uraimo/run-on-arch-action@f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9
 - uraimo/run-on-arch-action@460cb8e6d9f726a588fc9b5e681c8a6cab09ae41
+- uraimo/run-on-arch-action@fa1f3e7de95534497266c7265950b5188355fbfb
 - vapier/coverity-scan-action@2068473c7bdf8c2fb984a6a40ae76ee7facd7a85
 - vapier/coverity-scan-action@1b6fd4eaba6651aa354c9ea7f48caa1710b4e12e
 - vapier/coverity-scan-action@8fe7b0af23cbbd4eced5f63dcd2384640eaa5d49

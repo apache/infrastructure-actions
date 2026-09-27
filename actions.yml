@@ -771,6 +771,9 @@ manusa/actions-setup-minikube:
     keep: true
   b65276017fdec6f1e6498129fb740e34e260dc55:
     tag: v2.18.0
+    expires_at: 2026-12-20
+  001b9f30165b2a875b835ec5183ced75b94bc269:
+    tag: v2.19.0
 matlab-actions/run-tests:
   ae0e80cb44fdec28d35d0831d8acf38ee4fdf91a:
     tag: v3.2.0
@@ -1097,6 +1100,9 @@ uraimo/run-on-arch-action:
     expires_at: 2026-11-30
   460cb8e6d9f726a588fc9b5e681c8a6cab09ae41:
     tag: v3.2.0
+    expires_at: 2026-12-20
+  fa1f3e7de95534497266c7265950b5188355fbfb:
+    tag: v3.2.1
 vapier/coverity-scan-action:
   2068473c7bdf8c2fb984a6a40ae76ee7facd7a85:
     tag: v1.8.0
