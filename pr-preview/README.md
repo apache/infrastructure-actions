@@ -28,6 +28,7 @@ produced that part of the page, when the site generator can tell us.
 - [Quick start](#quick-start)
 - [Choose your path](#choose-your-path) — Jekyll, Astro, Pelican, anything else
 - [Using a preview](#using-a-preview)
+- [The overlay on the published site](#the-overlay-on-the-published-site)
 - [Lifecycle and retention](#lifecycle-and-retention)
 - [Security model](#security-model)
 - [Reference](#reference)
@@ -46,7 +47,7 @@ graph LR
       a["build the site"] --> b["preview-annotate<br/>(optional)"] --> c["build again"] --> d["preview-artifact"]
     end
     d -- "preview-site artifact" --> publish
-    subgraph publish["Your publish workflow (schedule, write token)"]
+    subgraph publish["Your publish workflow (workflow_run, write token)"]
       e["preview-publish"]
     end
     e -- "push preview/pr&lt;N&gt;-staging" --> staging["&lt;site&gt;-pr&lt;N&gt;.staged.apache.org"]
@@ -56,11 +57,15 @@ graph LR
 | Action | Runs in | Does |
 |---|---|---|
 | [`preview-annotate`](preview-annotate/action.yml) | your PR build | Switches on source annotation for your generator, so elements carry `data-preview-src="path:line"`. Optional. |
-| [`preview-artifact`](preview-artifact/action.yml) | your PR build | Writes `preview-meta.json` and uploads the built site as the `preview-site` artifact. |
-| [`preview-publish`](preview-publish/action.yml) | a scheduled workflow | Publishes armed pull requests, retires the rest, keeps one status comment per PR up to date. |
+| [`preview-artifact`](preview-artifact/action.yml) | your PR build | Writes `preview-meta.json`, with the diff-line anchors, and uploads the built site as the `preview-site` artifact. |
+| [`preview-publish`](preview-publish/action.yml) | a workflow that runs when the build completes | Publishes armed pull requests, retires the rest, keeps one status comment per PR up to date. |
+
+A fourth, optional action, [`preview-main-overlay`](preview-main-overlay/action.yml),
+puts the same review overlay on your published site; see
+[below](#the-overlay-on-the-published-site).
 
 Nothing is published until a committer asks for it: previews are **opt-in per
-pull request**, with a `/show-preview` comment.
+pull request**, with the `preview` label or a `/show-preview` comment.
 
 ## Quick start
 
@@ -82,6 +87,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read   # the PR's changed files, for the diff-line anchors
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -108,31 +116,55 @@ jobs:
           path: _site
 ```
 
-**2. Add the publisher** (`.github/workflows/preview-publish.yml`):
+**2. Add a signal workflow** (`.github/workflows/preview-signal.yml`). Adding
+or removing the label, or closing the PR, starts no build, but the publisher
+still has to run. This workflow holds no permissions and runs nothing; its
+completion is what triggers the publisher:
+
+```yaml
+name: Preview signal
+on:
+  pull_request:
+    types: [opened, reopened, labeled, unlabeled, closed]
+permissions: {}
+jobs:
+  signal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: echo "preview-publish.yml runs on this workflow's completion"
+```
+
+**3. Add the publisher** (`.github/workflows/preview-publish.yml`):
 
 ```yaml
 name: Publish PR previews
 on:
-  schedule:
-    - cron: "*/15 * * * *"
+  # Runs this file from the default branch, never the PR's; see Security model.
+  workflow_run:  # zizmor: ignore[dangerous-triggers] -- default-branch code, no PR input
+    workflows: ["Build", "Preview signal"]   # the workflows' `name:`s
+    types: [completed]
+  issue_comment:        # a /show-preview comment publishes at once
+    types: [created]
   workflow_dispatch:
     inputs:
       pr:
-        description: "Publish only this PR now (skips the /show-preview check)"
+        description: "Arm and publish this PR number (blank: reconcile every PR)"
         required: false
         type: string
-permissions:
-  contents: write        # push and delete preview/* branches
-  pull-requests: write   # comment on pull requests
-  issues: write
-  actions: read          # find and download the preview-site artifact
-concurrency:
-  group: preview-publish
-  cancel-in-progress: false
+permissions: {}
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
+    permissions:
+      contents: write        # push and delete preview/* branches
+      pull-requests: write   # comment on and label pull requests
+      issues: write          # create the label, react to /show-preview
+      actions: read          # find and download the preview-site artifact
+    concurrency:
+      group: preview-publish
+      cancel-in-progress: false
     steps:
       - uses: apache/infrastructure-actions/pr-preview/preview-publish@<sha>  # preview-publish/v1.0.0
         with:
@@ -142,10 +174,13 @@ jobs:
 ```
 
 No checkout is needed: the publisher never looks at your repository's files.
+It skips events it has nothing to do with (a comment on an issue, a
+`workflow_run` from a push to `main`) and fails on any other trigger.
 
-**3. Try it.** Open a pull request, let the build go green, and comment
-`/show-preview` on it (you need write access). Within one cron interval the
-bot replies with the preview URL; staging takes a few more minutes to serve it.
+**4. Try it.** Open a pull request and add the `preview` label, or comment
+`/show-preview` on it (you need write access; the bot adds the label and
+reacts 🚀). Once the build is green the bot posts the preview URL; staging
+takes a few more minutes to serve it.
 
 ## Choose your path
 
@@ -248,37 +283,74 @@ stamped ancestor of the marked region, so partial coverage is fine.
 
 ## Using a preview
 
-- **Arm it.** Comment `/show-preview` — the whole comment, on its own line — on
-  the pull request. Only commenters with write access count. A maintainer can
-  also run the publish workflow by hand with `pr: <N>`, which publishes at
-  once and records the arming in a bot comment.
-- **Follow it.** From then on every new head commit is republished once its
-  build goes green. The bot keeps **one** status comment per pull request up to
-  date (published / waiting on a build / refused / retired).
+- **Arm it.** The `preview` label arms a pull request, when whoever added it
+  last has write access. Three ways to put it there: add it directly; comment
+  `/show-preview` — the whole comment, on its own line — and the bot adds it
+  and reacts 🚀; or run the publish workflow by hand with `pr: <N>`, which
+  adds it and publishes at once. The label is created on first use.
+- **Follow it.** From then on every new head commit is republished the moment
+  its build goes green. The bot keeps **one** status comment per pull request
+  up to date (published / waiting on a build / refused / retired), and posts a
+  new *Preview updated* comment on each publish, since an edit notifies nobody.
+  Every preview comment leads with the preview URL.
+- **Disarm it.** Remove the label. The preview is retired on the next run.
 - **Review on it.** The page shows a banner naming the pull request, so a
-  forwarded link is never mistaken for the live site. Press `c` or the
-  *Comment on this preview* button, drag a box, and the preview copies a
-  captioned screenshot and offers an **Open PR** button — to the Files tab on
-  the source line when it was resolved, otherwise the Conversation tab. Paste
-  into the comment box.
+  forwarded link is never mistaken for the live site. Press `c`, or pick
+  *Comment on a region of this page* from the *Comment / Suggest a change*
+  button, drag a box, and the preview copies a captioned screenshot and offers
+  an **Open PR** button — to the Files tab on the source line when it was
+  resolved, otherwise the Conversation tab. Paste into the comment box. If the
+  page has its own `a.suggest-change` edit link, the overlay hides it and
+  offers it from the same menu, so there is one button, not two.
+
+## The overlay on the published site
+
+`preview-main-overlay` injects the same overlay into the site built from your
+default branch. There it shows no preview banner, and a comment opens a **new
+issue** prefilled with the page URL, the source line on the branch, and the
+commit — the screenshot is on the clipboard, ready to paste. Build the site
+annotated, then inject before you publish:
+
+```yaml
+      - if: github.ref == 'refs/heads/main'
+        uses: apache/infrastructure-actions/pr-preview/preview-annotate@<sha>  # preview-annotate/v1.0.0
+        with:
+          generator: jekyll
+      - if: github.ref == 'refs/heads/main'
+        run: bundle exec jekyll build
+      - if: github.ref == 'refs/heads/main'
+        uses: apache/infrastructure-actions/pr-preview/preview-main-overlay@<sha>  # preview-main-overlay/v1.0.0
+        with:
+          path: _site
+```
+
+This deliberately ships `data-preview-src` to the live site, so do not point
+`preview-annotate`'s `production-output` check at this output. Pass
+`generated:` for source trees that are not in this repository, such as pages
+synced from elsewhere: their lines cannot be linked, so the issue carries only
+the page.
 
 ## Lifecycle and retention
 
-Everything this system creates is either replaced in place or removed on a
-schedule; nothing accumulates per commit.
+Everything this system creates is either replaced in place or removed by the
+publisher; nothing accumulates per commit.
 
 | Thing | Kept for | Removed when |
 |---|---|---|
 | `preview-site` artifact | `retention-days` (default **30**) | GitHub expires it. The publisher only needs the artifact for the PR's **current** head commit; an older one is never used again. If it expires before a preview is armed, the status comment says *waiting on a build* — re-run the build. |
-| `preview/pr<N>-staging` branch | While the PR is open **and** armed | The PR closes or merges, or every `/show-preview` comment is deleted (and it was not armed by dispatch). Each publish is a single force-pushed orphan commit, so the branch never grows history. |
+| `preview/pr<N>-staging` branch | While the PR is open **and** armed | The PR closes or merges, or the label is removed. Each publish is a single force-pushed orphan commit, so the branch never grows history. |
 | The staged site `<site>-pr<N>.staged.apache.org` | While the branch is live | **Never unstaged.** ASF staging keeps serving the last content after its branch is deleted. So retirement is two steps: first a **tombstone** — a one-page "this preview has been retired" notice with `robots.txt: Disallow: /` — is force-pushed over the preview, and only on the **next** run is the branch deleted. The hostname keeps serving the tombstone, never the pull request's code. |
-| Status / how-to / arming comments | The life of the pull request | Never deleted; edited in place, so each PR has at most one of each. |
+| Status and how-to comments | The life of the pull request | Never deleted; edited in place, so each PR has at most one of each. |
+| *Preview updated* and dispatch comments | The life of the pull request | Never deleted. One per publish, and one per arming by dispatch. |
 | Your repository's head branches of closed PRs | Until the PR closes | Only with `reap-head-branches: "true"`: deleted once every PR from the branch is closed, and only if nobody pushed to it after. Protected, `main`, `publish`, `preview/*` and `asf-*` branches are never touched. |
 
 Cost and noise:
 
-- The publisher runs every 15 minutes and exits quickly when nothing changed.
-  An unchanged head is not republished.
+- The publisher runs on events — a build or signal run completing, a PR
+  comment, a dispatch — with no schedule, and exits quickly when nothing
+  changed. An unchanged head is not republished. Every run reconciles every
+  open PR, so a run that fails part-way is repaired by the next event, or by a
+  dispatch with no PR number.
 - Every preview push is a branch update, which ASF mirrors to your
   `commits@` list. Previews are opt-in per PR for exactly this reason.
 - Staging content is `noindex`; `robots.txt` disallows everything.
@@ -288,17 +360,33 @@ Cost and noise:
 - **`preview-artifact` refuses anything but `pull_request`.** Under
   `pull_request_target` the build would run pull-request code while holding a
   privileged token.
-- **`preview-publish` refuses anything but `schedule` and
-  `workflow_dispatch`.** It never checks out or executes repository code; it
-  only downloads the artifact.
+- **`preview-publish` runs on `workflow_run`, `issue_comment` and
+  `workflow_dispatch` only, never `pull_request_target`.** `workflow_run` and
+  `issue_comment` run the workflow from the default branch, so pull-request
+  code never gets near the write token. The events are signals: nothing is
+  taken from them into the publisher, which re-derives everything from the
+  API. It never checks out or executes repository code; it only downloads the
+  artifact.
+- **The publisher never reads pull-request content.** Every GitHub response
+  passes through a projection in [`lib/github.mjs`](lib/github.mjs) first, so
+  it learns only the PR number, label names, head SHA, author login and type,
+  and a comment's body only when that is exactly `/show-preview` or
+  bot-authored — never code, diff, title, description, branch name or commit
+  messages. The diff-line anchors are computed by the unprivileged build and
+  sanitised by the publisher. [`lib/boundary.test.mjs`](lib/boundary.test.mjs)
+  enforces this with a full run against responses baited in every forbidden
+  field, plus a fixed endpoint allowlist.
 - **The artifact is untrusted input.** Before publishing, the publisher checks
   `preview-meta.json` against the pull request's real number and head commit,
   refuses archive entries with absolute or `..` paths and symlinks, and strips
   `.git`, `.gitignore` and `.gitmodules` from the tree.
 - **The publisher writes `.asf.yaml` itself**, after copying the artifact, so
   a pull request can never ship a `publish:` block or another staging profile.
-- **Arming is checked per commenter** against actual repository permission,
-  and only a comment that is exactly the command counts.
+- **Arming is checked against actual repository permission.** The label counts
+  only when whoever last added it has write access (triage can label without
+  being a committer); a label with no visible `labeled` event counts as
+  unarmed. A `/show-preview` counts only from a commenter with write access,
+  and only when the comment is exactly the command.
 - **Bot comments are edited only when authored by a bot and ending in the
   exact marker**, so nobody can plant a marker in a human comment to have it
   overwritten.
@@ -324,6 +412,7 @@ Cost and noise:
 |---|---|---|---|
 | `path` | yes | | Directory holding the built preview site |
 | `retention-days` | no | `30` | Days to keep the `preview-site` artifact |
+| `token` | no | `github.token` | Reads the PR's changed files for the anchors; needs `pull-requests: read`. Without it the overlay links to the Conversation tab. |
 
 ### `preview-publish`
 
@@ -331,9 +420,18 @@ Cost and noise:
 |---|---|---|---|
 | `site-name` | yes | | First label of the staging hostname: `foo` for `foo-pr<N>.staged.apache.org` |
 | `build-workflow` | no | `build.yml` | File name of the workflow that runs `preview-artifact` |
-| `pr` | no | | Publish just this PR now, skipping `/show-preview` |
+| `label` | no | `preview` | The label that arms a pull request |
+| `pr` | no | | `workflow_dispatch` only: arm and publish this PR now |
 | `reap-head-branches` | no | `false` | Also delete head branches of closed PRs |
 | `token` | no | `github.token` | Needs `contents`, `pull-requests`, `issues` write and `actions` read |
+
+### `preview-main-overlay`
+
+| Input | Required | Default | Description |
+|---|---|---|---|
+| `path` | yes | | Directory holding the built, annotated site |
+| `branch` | no | the default branch | Branch the site was built from; issue links point at its source lines |
+| `generated` | no | | Source-path prefixes, one per line, whose files are not in this repository |
 
 ### The build contract
 
@@ -343,8 +441,12 @@ publisher expects: an artifact named `preview-site`, from a successful run of
 `preview-meta.json` at its root:
 
 ```json
-{"pr": 123, "headSha": "<40-hex head commit>"}
+{"pr": 123, "headSha": "<40-hex head commit>", "anchors": {}}
 ```
+
+`anchors` is optional: `lib/write-meta.mjs` derives it from the PR's changed
+files. The publisher treats it as untrusted and rebuilds each entry from its
+path.
 
 ## Development
 
@@ -360,11 +462,12 @@ bundle exec ruby adapters/jekyll/test/preview_src_test.rb   # Jekyll adapter
 
 CI runs both in [`pr-preview-test.yml`](../.github/workflows/pr-preview-test.yml),
 plus an end-to-end run of `preview-annotate` and `preview-artifact` against
-the Jekyll fixture site.
+the Jekyll fixture site, `preview-main-overlay` against a small site, and a
+check that `preview-publish` refuses a `pull_request` event.
 
 | Path | What it is |
 |---|---|
-| `lib/` | The publisher: arming, planning, publishing, retiring, GitHub and git clients |
+| `lib/` | The publisher (arming, planning, publishing, retiring, GitHub and git clients), the build's metadata writer and the main-site injector |
 | `overlay/` | The review overlay injected into every published page |
 | `adapters/` | Generator-specific source annotation |
 | `vendor/html2canvas-pro/` | Screenshot library served with the overlay (MIT) |

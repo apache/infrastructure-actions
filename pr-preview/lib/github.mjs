@@ -32,6 +32,77 @@ export function buildWorkflow(env = process.env) {
   return name;
 }
 
+/*
+ * What the privileged publisher may learn about a pull request.
+ *
+ * Every read below passes GitHub's response through one of these projections
+ * before any other code sees it, so a PR's title, description, branch name,
+ * commit messages, diff and discussion never reach the publisher — not even as
+ * values it ignores. The allowed fields, and why each is needed:
+ *
+ *   PR number                 identifies the PR and its preview
+ *   label names               the arming state
+ *   head SHA (40-hex)         binds the build artifact to the PR's current head
+ *   author login + type       skips the explainer on bot-authored PRs
+ *   comment id/author/type    arming commands and the publisher's own markers;
+ *   comment body              ONLY when it is exactly the /show-preview command
+ *                             or authored by a bot — never human discussion
+ *   label-event actor         who armed it, to check write access
+ *
+ * The one thing taken from a pull request beyond this is the built site, which
+ * comes as the unprivileged build's artifact and is screened, never executed.
+ * github.test.mjs pins the projections and the set of reachable endpoints.
+ */
+const SHA_RE = /^[0-9a-f]{40}$/;
+const str = (v) => (typeof v === "string" ? v : null);
+const int = (v) => (Number.isInteger(v) ? v : null);
+
+export const projectPull = (p) => ({
+  number: int(p?.number),
+  state: str(p?.state),
+  labels: Array.isArray(p?.labels) ? p.labels.map((l) => ({ name: str(l?.name) })) : [],
+  head: { sha: SHA_RE.test(String(p?.head?.sha)) ? p.head.sha : null },
+  user: { login: str(p?.user?.login), type: str(p?.user?.type) },
+});
+
+/**
+ * A pull request opened from a branch of THIS repository, for the head-branch
+ * reap. The branch name is this repository's own ref, compared against its own
+ * branch list; it is never interpolated into a path or a shell.
+ */
+export const projectHeadPull = (p) => ({
+  number: int(p?.number),
+  state: str(p?.state),
+  head: {
+    ref: str(p?.head?.ref),
+    sha: SHA_RE.test(String(p?.head?.sha)) ? p.head.sha : null,
+    repo: { full_name: str(p?.head?.repo?.full_name) },
+  },
+});
+
+const COMMAND_RE = /^\s*\/show-preview\s*$/;
+export const projectComment = (c) => {
+  const type = str(c?.user?.type);
+  const body = str(c?.body);
+  return {
+    id: int(c?.id),
+    user: { login: str(c?.user?.login), type },
+    body: body !== null && (type === "Bot" || COMMAND_RE.test(body)) ? body : null,
+  };
+};
+
+export const projectLabelEvent = (e) => ({
+  event: str(e?.event),
+  label: { name: str(e?.label?.name) },
+  actor: { login: str(e?.actor?.login) },
+});
+
+export const projectBranch = (b) => ({
+  name: str(b?.name),
+  protected: b?.protected === true,
+  commit: { sha: str(b?.commit?.sha) },
+});
+
 export function createClient({ repo, token, fetchImpl = fetch, workflow = buildWorkflow() }) {
   async function request(path, { method = "GET", body } = {}) {
     const res = await fetchImpl(`${API}${path}`, {
@@ -72,12 +143,10 @@ export function createClient({ repo, token, fetchImpl = fetch, workflow = buildW
   }
 
   return {
-    request,
-
-    listOpenPulls: () => paginate(`/repos/${repo}/pulls?state=open`),
-    getPull: (n) => request(`/repos/${repo}/pulls/${n}`),
-    listComments: (n) => paginate(`/repos/${repo}/issues/${n}/comments`),
-    listPullFiles: (n) => paginate(`/repos/${repo}/pulls/${n}/files`),
+    listOpenPulls: async () =>
+      (await paginate(`/repos/${repo}/pulls?state=open`)).map(projectPull),
+    listComments: async (n) =>
+      (await paginate(`/repos/${repo}/issues/${n}/comments`)).map(projectComment),
 
     async hasWriteAccess(login) {
       try {
@@ -97,7 +166,7 @@ export function createClient({ repo, token, fetchImpl = fetch, workflow = buildW
       const tag = `<!-- ${marker} -->`;
       const withMarker = `${body}\n\n${tag}`;
 
-      const existing = (await paginate(`/repos/${repo}/issues/${n}/comments`)).find(
+      const existing = (await paginate(`/repos/${repo}/issues/${n}/comments`)).map(projectComment).find(
         (c) =>
           c?.user?.type === "Bot" &&
           typeof c.body === "string" &&
@@ -116,6 +185,51 @@ export function createClient({ repo, token, fetchImpl = fetch, workflow = buildW
       });
     },
 
+    /**
+     * A new comment, never an edit. For events people should be notified of —
+     * an edit to an existing comment notifies nobody.
+     */
+    createComment: (n, body) =>
+      request(`/repos/${repo}/issues/${n}/comments`, { method: "POST", body: { body } }),
+
+    /** Create the label if the repository does not have it yet. */
+    async ensureLabel(name) {
+      try {
+        await request(`/repos/${repo}/labels/${encodeURIComponent(name)}`);
+      } catch (e) {
+        if (e.status !== 404) throw e;
+        await request(`/repos/${repo}/labels`, {
+          method: "POST",
+          body: { name, color: "0e8a16", description: "Publish a live staging preview of this pull request" },
+        });
+      }
+    },
+
+    addLabel: (n, name) =>
+      request(`/repos/${repo}/issues/${n}/labels`, { method: "POST", body: { labels: [name] } }),
+
+    /** The pull request's labeled / unlabeled events, oldest first. */
+    async listLabelEvents(n) {
+      const events = await paginate(`/repos/${repo}/issues/${n}/events`);
+      return events
+        .filter((e) => e?.event === "labeled" || e?.event === "unlabeled")
+        .map(projectLabelEvent);
+    },
+
+    /** Whether `login` has already left a `content` reaction on a comment. */
+    async hasReaction(commentId, content, login) {
+      const reactions = await paginate(
+        `/repos/${repo}/issues/comments/${commentId}/reactions?content=${content}`,
+      );
+      return reactions.some((r) => str(r?.user?.login) === login);
+    },
+
+    addReaction: (commentId, content) =>
+      request(`/repos/${repo}/issues/comments/${commentId}/reactions`, {
+        method: "POST",
+        body: { content },
+      }),
+
     async listPreviewBranches() {
       const refs = await paginate(`/repos/${repo}/git/matching-refs/heads/preview/`);
       return refs.map((r) => r.ref.replace("refs/heads/", ""));
@@ -125,19 +239,38 @@ export function createClient({ repo, token, fetchImpl = fetch, workflow = buildW
       request(`/repos/${repo}/git/refs/heads/${name}`, { method: "DELETE" }),
 
     /** Every branch, with its tip SHA and protection flag. */
-    listBranches: () => paginate(`/repos/${repo}/branches`),
+    listBranches: async () => (await paginate(`/repos/${repo}/branches`)).map(projectBranch),
 
     /** Pull requests in any state whose head is this repository's `branch`. */
-    listPullsForHead: (branch) =>
-      paginate(
-        `/repos/${repo}/pulls?state=all&head=${encodeURIComponent(`${repo.split("/")[0]}:${branch}`)}`,
-      ),
+    listPullsForHead: async (branch) =>
+      (
+        await paginate(
+          `/repos/${repo}/pulls?state=all&head=${encodeURIComponent(`${repo.split("/")[0]}:${branch}`)}`,
+        )
+      ).map(projectHeadPull),
 
+    /**
+     * The newest successful build of this commit, as { id } only. A workflow
+     * run object also carries the PR's branch name, title and head commit
+     * message, none of which the publisher may see.
+     */
     async latestSuccessfulBuild(headSha) {
+      if (!SHA_RE.test(String(headSha))) throw new TypeError(`bad head SHA ${JSON.stringify(headSha)}`);
       const runs = await request(
         `/repos/${repo}/actions/workflows/${workflow}/runs?head_sha=${headSha}&status=success&per_page=1`,
       );
-      return runs.workflow_runs?.[0] ?? null;
+      const id = int(runs.workflow_runs?.[0]?.id);
+      return id === null ? null : { id };
+    },
+
+    /** A build run's artifacts, as { id, name, expired } only. */
+    async listRunArtifacts(runId) {
+      const list = await request(`/repos/${repo}/actions/runs/${int(runId)}/artifacts`);
+      return (list.artifacts ?? []).map((a) => ({
+        id: int(a?.id),
+        name: str(a?.name),
+        expired: a?.expired === true,
+      }));
     },
 
     artifactZipUrl: (artifactId) =>

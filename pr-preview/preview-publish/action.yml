@@ -29,8 +29,14 @@ inputs:
     description: "File name of the workflow that runs preview-artifact"
     required: false
     default: "build.yml"
+  label:
+    description: "The label that arms a pull request's preview"
+    required: false
+    default: "preview"
   pr:
-    description: "Publish only this pull request now, skipping the /show-preview check. Leave empty on schedule."
+    description: >-
+      workflow_dispatch only: arm and publish this pull request now. Leave
+      empty to reconcile every pull request.
     required: false
     default: ""
   reap-head-branches:
@@ -46,29 +52,51 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Refuse to run from a pull-request event
+    # This action holds a token that can push, label and comment. It consumes
+    # artifacts; it must never run where pull-request code could, and it takes
+    # nothing from the event but the checks below. Every trigger is a signal:
+    # each run re-derives arming from the API and reconciles every open PR.
+    - name: Check the triggering event
+      id: gate
       shell: bash
       env:
         EVENT_NAME: ${{ github.event_name }}
+        RUN_EVENT: ${{ github.event.workflow_run.event }}
+        ON_PULL: ${{ github.event.issue.pull_request && 'true' || 'false' }}
+        PR_INPUT: ${{ inputs.pr }}
       run: |
-        # This step holds a token that can push and comment. It consumes
-        # artifacts; it must never run where pull-request code could.
         case "$EVENT_NAME" in
-          schedule|workflow_dispatch) ;;
-          *) echo "::error::preview-publish runs on schedule or workflow_dispatch only, got '$EVENT_NAME'"; exit 1 ;;
+          workflow_dispatch) run=true ;;
+          # A completed build or signal run. Only pull-request runs matter.
+          workflow_run) [ "$RUN_EVENT" = "pull_request" ] && run=true || run=false ;;
+          # A /show-preview comment publishes at once. Issues are not PRs.
+          issue_comment) [ "$ON_PULL" = "true" ] && run=true || run=false ;;
+          *)
+            echo "::error::preview-publish runs on workflow_run, issue_comment or workflow_dispatch only, got '$EVENT_NAME'"
+            exit 1
+            ;;
         esac
+        if [ -n "$PR_INPUT" ] && [ "$EVENT_NAME" != "workflow_dispatch" ]; then
+          echo "::error::the pr input arms a pull request, so it is honoured on workflow_dispatch only"
+          exit 1
+        fi
+        [ "$run" = "true" ] || echo "Nothing to do for this $EVENT_NAME event"
+        echo "run=$run" >> "$GITHUB_OUTPUT"
 
     - name: Setup Node
+      if: steps.gate.outputs.run == 'true'
       uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
         node-version: "22"
 
     - name: Publish and retire previews
+      if: steps.gate.outputs.run == 'true'
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
         PREVIEW_SITE_NAME: ${{ inputs.site-name }}
         PREVIEW_BUILD_WORKFLOW: ${{ inputs.build-workflow }}
+        PREVIEW_LABEL: ${{ inputs.label }}
         PREVIEW_REAP_HEAD_BRANCHES: ${{ inputs.reap-head-branches }}
         PR_INPUT: ${{ inputs.pr }}
         LIB: ${{ github.action_path }}/../lib

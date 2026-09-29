@@ -38,6 +38,7 @@ prefix a consumer repeats in the `@ref`:
 | `pr-preview/preview-annotate`                  | `preview-annotate` | `preview-annotate/v1.2.3` |
 | `pr-preview/preview-artifact`                  | `preview-artifact` | `preview-artifact/v1.2.3` |
 | `pr-preview/preview-publish`                   | `preview-publish`  | `preview-publish/v1.2.3`  |
+| `pr-preview/preview-main-overlay`              | `preview-main-overlay` | `preview-main-overlay/v1.2.3` |
 
 For every `X.Y.Z` release we also move a **major** tag (`<prefix>/vN`) to the
 same commit, so consumers can track a major line if they prefer.
@@ -60,8 +61,9 @@ on every push to `main` that touches an action's files. The workflow runs
 1. Diffs the pushed range and maps changed files to the affected action(s). A
    change under `stash/shared/` releases **both** stash actions, since they
    import that shared code at runtime. Likewise `pr-preview/adapters/`
-   releases `preview-annotate`, and `pr-preview/lib/`, `overlay/` and
-   `vendor/` release `preview-publish`.
+   releases `preview-annotate`; `pr-preview/lib/` releases `preview-artifact`,
+   `preview-publish` and `preview-main-overlay`; and `overlay/` and `vendor/`
+   release `preview-publish` and `preview-main-overlay`.
 2. Picks the bump type (see below).
 3. For each affected action, computes the next version from the newest
    existing `<prefix>/vX.Y.Z` tag (the first release seeds `v1.0.0`), creates

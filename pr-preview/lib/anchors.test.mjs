@@ -76,3 +76,19 @@ test("deletions never advance the new-file line number", () => {
     "three deletions must not push the replacement to line 14",
   );
 });
+
+test("sanitizeAnchors recomputes each anchor and keeps only well-formed ranges", async () => {
+  const { sanitizeAnchors } = await import("./anchors.mjs");
+  const out = sanitizeAnchors({
+    "src/a.astro": { anchor: "diff-evil", ranges: [[3, 5], [0, 1], [7, 6], ["1", 2], [8, 8]] },
+    "bad\npath": { ranges: [[1, 1]] },
+  });
+  assert.deepEqual(Object.keys(out), ["src/a.astro"]);
+  assert.equal(out["src/a.astro"].anchor, diffAnchor("src/a.astro"), "never trust the artifact's anchor");
+  assert.deepEqual(out["src/a.astro"].ranges, [[3, 5], [8, 8]]);
+});
+
+test("sanitizeAnchors turns anything that is not a manifest into none", async () => {
+  const { sanitizeAnchors } = await import("./anchors.mjs");
+  for (const raw of [null, undefined, "x", 3, [], [["a", {}]]]) assert.deepEqual(sanitizeAnchors(raw), {});
+});
