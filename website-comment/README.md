@@ -100,7 +100,7 @@ jobs:
 
       - name: Switch on source annotation
         if: github.event_name == 'pull_request'
-        uses: apache/infrastructure-actions/pr-preview/preview-annotate@<sha>  # preview-annotate/v1.0.0
+        uses: apache/infrastructure-actions/website-comment/preview-annotate@<sha>  # preview-annotate/v1.0.0
         with:
           generator: jekyll
           production-output: _site   # fails the build if the production output is annotated
@@ -111,7 +111,7 @@ jobs:
 
       - name: Upload the preview
         if: github.event_name == 'pull_request'
-        uses: apache/infrastructure-actions/pr-preview/preview-artifact@<sha>  # preview-artifact/v1.0.0
+        uses: apache/infrastructure-actions/website-comment/preview-artifact@<sha>  # preview-artifact/v1.0.0
         with:
           path: _site
 ```
@@ -166,7 +166,7 @@ jobs:
       group: preview-publish
       cancel-in-progress: false
     steps:
-      - uses: apache/infrastructure-actions/pr-preview/preview-publish@<sha>  # preview-publish/v1.0.0
+      - uses: apache/infrastructure-actions/website-comment/preview-publish@<sha>  # preview-publish/v1.0.0
         with:
           site-name: foo          # apache/foo-site stages at foo-pr<N>.staged.apache.org
           build-workflow: build.yml
@@ -236,7 +236,7 @@ Then in the build workflow, pass the plugin to the preview build step:
       - run: npm run build
       - if: github.event_name == 'pull_request'
         id: annotate
-        uses: apache/infrastructure-actions/pr-preview/preview-annotate@<sha>  # preview-annotate/v1.0.0
+        uses: apache/infrastructure-actions/website-comment/preview-annotate@<sha>  # preview-annotate/v1.0.0
         with:
           generator: astro
           production-output: dist
@@ -246,7 +246,7 @@ Then in the build workflow, pass the plugin to the preview build step:
           PREVIEW_BABEL_PLUGIN: ${{ steps.annotate.outputs.babel-plugin }}
         run: npm run build
       - if: github.event_name == 'pull_request'
-        uses: apache/infrastructure-actions/pr-preview/preview-artifact@<sha>  # preview-artifact/v1.0.0
+        uses: apache/infrastructure-actions/website-comment/preview-artifact@<sha>  # preview-artifact/v1.0.0
         with:
           path: dist
 ```
@@ -266,7 +266,7 @@ requests and upload its output:
           publish: ${{ github.event_name != 'pull_request' }}
           output: output
       - if: github.event_name == 'pull_request'
-        uses: apache/infrastructure-actions/pr-preview/preview-artifact@<sha>  # preview-artifact/v1.0.0
+        uses: apache/infrastructure-actions/website-comment/preview-artifact@<sha>  # preview-artifact/v1.0.0
         with:
           path: output
 ```
@@ -313,13 +313,13 @@ annotated, then inject before you publish:
 
 ```yaml
       - if: github.ref == 'refs/heads/main'
-        uses: apache/infrastructure-actions/pr-preview/preview-annotate@<sha>  # preview-annotate/v1.0.0
+        uses: apache/infrastructure-actions/website-comment/preview-annotate@<sha>  # preview-annotate/v1.0.0
         with:
           generator: jekyll
       - if: github.ref == 'refs/heads/main'
         run: bundle exec jekyll build
       - if: github.ref == 'refs/heads/main'
-        uses: apache/infrastructure-actions/pr-preview/preview-main-overlay@<sha>  # preview-main-overlay/v1.0.0
+        uses: apache/infrastructure-actions/website-comment/preview-main-overlay@<sha>  # preview-main-overlay/v1.0.0
         with:
           path: _site
 ```
@@ -451,7 +451,7 @@ path.
 ## Development
 
 ```sh
-cd pr-preview
+cd website-comment
 npm ci
 npm test                                   # publisher, overlay, Astro adapter
 
@@ -460,7 +460,7 @@ bundle install
 bundle exec ruby adapters/jekyll/test/preview_src_test.rb   # Jekyll adapter
 ```
 
-CI runs both in [`pr-preview-test.yml`](../.github/workflows/pr-preview-test.yml),
+CI runs both in [`website-comment-test.yml`](../.github/workflows/website-comment-test.yml),
 plus an end-to-end run of `preview-annotate` and `preview-artifact` against
 the Jekyll fixture site, `preview-main-overlay` against a small site, and a
 check that `preview-publish` refuses a `pull_request` event.

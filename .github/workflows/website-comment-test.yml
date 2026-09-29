@@ -20,15 +20,15 @@ name: Test the PR preview actions
 on:
   pull_request:
     paths:
-      - "pr-preview/**"
-      - ".github/workflows/pr-preview-test.yml"
+      - "website-comment/**"
+      - ".github/workflows/website-comment-test.yml"
   push:
     # Branches only, so release tag pushes do not re-run it.
     branches:
       - main
     paths:
-      - "pr-preview/**"
-      - ".github/workflows/pr-preview-test.yml"
+      - "website-comment/**"
+      - ".github/workflows/website-comment-test.yml"
 
 permissions:
   contents: read
@@ -48,16 +48,16 @@ jobs:
           node-version: "22"
 
       - name: Install the locked test dependencies
-        working-directory: pr-preview
+        working-directory: website-comment
         run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Unit tests
-        working-directory: pr-preview
+        working-directory: website-comment
         run: npm test
 
       - name: preview-annotate outputs the Astro plugin
         id: astro
-        uses: ./pr-preview/preview-annotate
+        uses: ./website-comment/preview-annotate
         with:
           generator: astro
 
@@ -72,7 +72,7 @@ jobs:
           echo '<html><body><h1 data-preview-src="index.md:1">x</h1></body></html>' > "$RUNNER_TEMP/main-site/index.html"
 
       - name: preview-main-overlay injects the overlay in main mode
-        uses: ./pr-preview/preview-main-overlay
+        uses: ./website-comment/preview-main-overlay
         with:
           path: ${{ runner.temp }}/main-site
           branch: main
@@ -85,7 +85,7 @@ jobs:
       - name: preview-publish does nothing outside its events
         id: gate
         continue-on-error: true
-        uses: ./pr-preview/preview-publish
+        uses: ./website-comment/preview-publish
         with:
           site-name: example
 
@@ -100,7 +100,7 @@ jobs:
       - name: preview-annotate rejects an unknown generator
         id: unknown
         continue-on-error: true
-        uses: ./pr-preview/preview-annotate
+        uses: ./website-comment/preview-annotate
         with:
           generator: gatsby
 
@@ -121,9 +121,9 @@ jobs:
       image: ruby:3.3@sha256:21e6a5125535e13999143c49b6471f68c92a74d8faad0a3541c51b11de0266ad
     env:
       # Install exactly what the lockfile names, checksums included.
-      BUNDLE_GEMFILE: pr-preview/adapters/jekyll/test/Gemfile
+      BUNDLE_GEMFILE: website-comment/adapters/jekyll/test/Gemfile
       BUNDLE_FROZEN: "true"
-      FIXTURE: pr-preview/adapters/jekyll/test/fixture
+      FIXTURE: website-comment/adapters/jekyll/test/fixture
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -133,27 +133,27 @@ jobs:
         run: bundle install
 
       - name: Plugin tests
-        run: bundle exec ruby pr-preview/adapters/jekyll/test/preview_src_test.rb
+        run: bundle exec ruby website-comment/adapters/jekyll/test/preview_src_test.rb
 
       - name: Production build
         run: bundle exec jekyll build -s "$FIXTURE" -d "$RUNNER_TEMP/production"
 
       - name: preview-annotate installs the plugin
-        uses: ./pr-preview/preview-annotate
+        uses: ./website-comment/preview-annotate
         with:
           generator: jekyll
-          source: pr-preview/adapters/jekyll/test/fixture
+          source: website-comment/adapters/jekyll/test/fixture
           production-output: ${{ runner.temp }}/production
 
       - name: Preview build is annotated with repository paths
         run: |
           bundle exec jekyll build -s "$FIXTURE" -d "$RUNNER_TEMP/preview"
-          grep -q 'data-preview-src="pr-preview/adapters/jekyll/test/fixture/index.md:7"' "$RUNNER_TEMP/preview/index.html"
+          grep -q 'data-preview-src="website-comment/adapters/jekyll/test/fixture/index.md:7"' "$RUNNER_TEMP/preview/index.html"
 
       - name: preview-annotate rejects an annotated production build
         id: dirty
         continue-on-error: true
-        uses: ./pr-preview/preview-annotate
+        uses: ./website-comment/preview-annotate
         with:
           generator: none
           production-output: ${{ runner.temp }}/preview
@@ -166,7 +166,7 @@ jobs:
 
       - name: preview-artifact packages the preview
         if: github.event_name == 'pull_request'
-        uses: ./pr-preview/preview-artifact
+        uses: ./website-comment/preview-artifact
         with:
           path: ${{ runner.temp }}/preview
           retention-days: 1
