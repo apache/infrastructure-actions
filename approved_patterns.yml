@@ -41,7 +41,6 @@
 - anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439
 - arduino/setup-protoc@*
 - astral-sh/setup-uv@eb1897b8dc4b5d5bfe39a428a8f2304605e0983c
-- astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3
 - astral-sh/setup-uv@f98e06938123ccabd21905ea5d0069192241f9f1
 - astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
 - astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
@@ -127,7 +126,6 @@
 - codecov/codecov-action@*
 - codelytv/pr-size-labeler@*
 - CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea
-- commit-check/commit-check-action@0e0ac2f48ed0d43062a4ab46bf74127e27aab58f
 - commit-check/commit-check-action@a9ee0cfa8e2b0399715e016e1dd4624e08427281
 - commit-check/commit-check-action@bbb6580f01838e475563514f115ec7ef41c9ddc7
 - commit-check/commit-check-action@d109324148a73dc758891d1d85924c912dbfd38b
@@ -198,7 +196,6 @@
 - google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@8f634126459ac994f47076ee3ba0be6b348d75e2
 - goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94
 - gr2m/twitter-together@*
-- graalvm/setup-graalvm@cabbb10818fabc989d6dbd508e4846596d20dd2d
 - graalvm/setup-graalvm@8c5543b71f44568342e106336639979e94a8f6de
 - graalvm/setup-graalvm@186d0493a2df5eb62df5ecc498883d18fd58c303
 - graalvm/setup-graalvm@0def53c0fd8534bc13416c9469f5be45265824fd
