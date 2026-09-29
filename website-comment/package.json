@@ -1,5 +1,5 @@
 {
-  "name": "asf-pr-preview",
+  "name": "asf-website-comment",
   "private": true,
   "description": "Per-pull-request website previews on ASF staging, with a review overlay",
   "license": "Apache-2.0",

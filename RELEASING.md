@@ -35,10 +35,10 @@ prefix a consumer repeats in the `@ref`:
 | `pelican`                                       | `pelican`        | `pelican/v1.2.3`         |
 | `stash/save`                                    | `save`           | `save/v1.2.3`            |
 | `stash/restore`                                 | `restore`        | `restore/v1.2.3`         |
-| `pr-preview/preview-annotate`                  | `preview-annotate` | `preview-annotate/v1.2.3` |
-| `pr-preview/preview-artifact`                  | `preview-artifact` | `preview-artifact/v1.2.3` |
-| `pr-preview/preview-publish`                   | `preview-publish`  | `preview-publish/v1.2.3`  |
-| `pr-preview/preview-main-overlay`              | `preview-main-overlay` | `preview-main-overlay/v1.2.3` |
+| `website-comment/preview-annotate`              | `preview-annotate` | `preview-annotate/v1.2.3` |
+| `website-comment/preview-artifact`              | `preview-artifact` | `preview-artifact/v1.2.3` |
+| `website-comment/preview-publish`               | `preview-publish`  | `preview-publish/v1.2.3`  |
+| `website-comment/preview-main-overlay`          | `preview-main-overlay` | `preview-main-overlay/v1.2.3` |
 
 For every `X.Y.Z` release we also move a **major** tag (`<prefix>/vN`) to the
 same commit, so consumers can track a major line if they prefer.
@@ -60,8 +60,8 @@ on every push to `main` that touches an action's files. The workflow runs
 
 1. Diffs the pushed range and maps changed files to the affected action(s). A
    change under `stash/shared/` releases **both** stash actions, since they
-   import that shared code at runtime. Likewise `pr-preview/adapters/`
-   releases `preview-annotate`; `pr-preview/lib/` releases `preview-artifact`,
+   import that shared code at runtime. Likewise `website-comment/adapters/`
+   releases `preview-annotate`; `website-comment/lib/` releases `preview-artifact`,
    `preview-publish` and `preview-main-overlay`; and `overlay/` and `vendor/`
    release `preview-publish` and `preview-main-overlay`.
 2. Picks the bump type (see below).

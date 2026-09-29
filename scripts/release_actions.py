@@ -72,7 +72,7 @@ class Action:
 
 # The actions this repo publishes.  ``stash/save`` and ``stash/restore`` both
 # import ``stash/shared/mung.py`` at runtime (PYTHONPATH -> ../shared), so a
-# change there releases both.  The ``pr-preview/*`` actions run code from
+# change there releases both.  The ``website-comment/*`` actions run code from
 # sibling directories through ``github.action_path/..``: the annotator the
 # generator adapters, the artifact step the library's metadata writer, and the
 # publisher and main-site overlay the library, the overlay they inject and the
@@ -84,32 +84,32 @@ ACTIONS: tuple[Action, ...] = (
     Action("restore", "stash/restore", ("stash/restore/", "stash/shared/")),
     Action(
         "preview-annotate",
-        "pr-preview/preview-annotate",
-        ("pr-preview/preview-annotate/", "pr-preview/adapters/"),
+        "website-comment/preview-annotate",
+        ("website-comment/preview-annotate/", "website-comment/adapters/"),
     ),
     Action(
         "preview-artifact",
-        "pr-preview/preview-artifact",
-        ("pr-preview/preview-artifact/", "pr-preview/lib/"),
+        "website-comment/preview-artifact",
+        ("website-comment/preview-artifact/", "website-comment/lib/"),
     ),
     Action(
         "preview-main-overlay",
-        "pr-preview/preview-main-overlay",
+        "website-comment/preview-main-overlay",
         (
-            "pr-preview/preview-main-overlay/",
-            "pr-preview/lib/",
-            "pr-preview/overlay/",
-            "pr-preview/vendor/",
+            "website-comment/preview-main-overlay/",
+            "website-comment/lib/",
+            "website-comment/overlay/",
+            "website-comment/vendor/",
         ),
     ),
     Action(
         "preview-publish",
-        "pr-preview/preview-publish",
+        "website-comment/preview-publish",
         (
-            "pr-preview/preview-publish/",
-            "pr-preview/lib/",
-            "pr-preview/overlay/",
-            "pr-preview/vendor/",
+            "website-comment/preview-publish/",
+            "website-comment/lib/",
+            "website-comment/overlay/",
+            "website-comment/vendor/",
         ),
     ),
 )

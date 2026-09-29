@@ -114,7 +114,7 @@ repos:
           ^(?:.*/)?AGENTS\.md$|
           ^(?:.*/)?CLAUDE\.md$|
           ^stash/.*\.md$|
-          ^pr-preview/adapters/jekyll/test/fixture/
+          ^website-comment/adapters/jekyll/test/fixture/
         args:
           - --comment-style
           - "<!--|  |-->"
