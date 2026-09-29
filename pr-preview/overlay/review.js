@@ -18,11 +18,20 @@
 (function () {
   "use strict";
   var cfg = window.__ASF_PREVIEW__;
-  if (!cfg || !cfg.repo || !cfg.pr) return; // not a preview
+  if (!cfg || !cfg.repo) return;
+  // Two modes. A pull request's preview links comments to the PR and carries a
+  // banner saying it is not the published site. "main" runs on the published
+  // site itself: no banner, and a comment becomes a new issue.
+  var onMain = cfg.mode === "main";
+  if (!onMain && !cfg.pr) return;
 
   var armed = false;
   var drag = null;
-  var root, box, button, toast, banner, mark, panel;
+  var root, box, button, menu, toast, banner, mark, panel;
+  // The page's own "Suggest a change" link. The overlay hides that button and
+  // offers the same link from its menu, so there is one control, not two.
+  var editUrl = null;
+  var LABEL = "Comment / Suggest a change";
 
   function el(tag, style, text) {
     var n = document.createElement(tag);
@@ -43,14 +52,15 @@
   function hideChrome() {
     root.style.display = "none";
     button.style.display = "none";
+    menu.style.display = "none";
     toast.style.display = "none";
-    banner.style.display = "none";
+    if (banner) banner.style.display = "none";
     hideResult();
   }
 
   function showChrome() {
     button.style.display = "";
-    banner.style.display = "";
+    if (banner) banner.style.display = "";
   }
 
   function sourceUnder(x, y) {
@@ -93,7 +103,9 @@
     go.style.cssText =
       "display:inline-block;margin-right:8px;padding:6px 12px;border-radius:6px;" +
       "background:#e11d48;color:#fff;text-decoration:none;font:600 13px system-ui";
-    go.textContent = "Open PR #" + cfg.pr + (source ? " at this line" : "") + " \u2197";
+    go.textContent = onMain
+      ? "Open an issue \u2197"
+      : "Open PR #" + cfg.pr + (source ? " at this line" : "") + " \u2197";
     go.addEventListener("click", function () { setTimeout(hideResult, 0); });
     panel.appendChild(go);
 
@@ -122,7 +134,15 @@
     drag = null;
     root.style.display = "none";
     box.style.display = "none";
-    button.textContent = "Comment on this preview";
+    button.textContent = LABEL;
+  }
+
+  function arm() {
+    hideResult();
+    menu.style.display = "none";
+    armed = true;
+    root.style.display = "block";
+    button.textContent = "Cancel (Esc)";
   }
 
   async function submit(region) {
@@ -134,7 +154,12 @@
     hideChrome();
 
     var source = sourceUnder(region.x + region.w / 2, region.y + region.h / 2);
-    var url = targetUrl({ repo: cfg.repo, pr: cfg.pr, source: source, anchors: cfg.anchors });
+    var url = onMain
+      ? issueUrl({
+          repo: cfg.repo, branch: cfg.branch || "main", pageUrl: location.href,
+          source: source, generated: cfg.generated || [], sha: cfg.sha,
+        })
+      : targetUrl({ repo: cfg.repo, pr: cfg.pr, source: source, anchors: cfg.anchors });
     var caption = captionFor({
       url: location.href,
       source: source,
@@ -231,43 +256,79 @@
 
       var a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "preview-pr" + cfg.pr + ".png";
+      a.download = onMain ? "feedback.png" : "preview-pr" + cfg.pr + ".png";
       a.click();
       disarm();
       showResult(region, url, source,
-        "Clipboard refused \u2014 the screenshot was downloaded; drag it into the comment box");
+        "Clipboard refused \u2014 the screenshot was downloaded; drag it into the " +
+        (onMain ? "issue" : "comment box"));
     } else {
       disarm();
       showResult(region, url, source,
-        "Screenshot copied \u2014 paste it into the comment box");
+        "Screenshot copied \u2014 paste it into the " + (onMain ? "issue" : "comment box"));
     }
   }
 
   function build() {
+    var pencils = document.querySelectorAll("a.suggest-change");
+    for (var k = 0; k < pencils.length; k++) {
+      if (!editUrl) editUrl = pencils[k].getAttribute("href");
+      pencils[k].style.display = "none";
+    }
+
     button = el("button",
       "position:fixed;right:16px;bottom:16px;z-index:2147483646;padding:8px 12px;" +
       "border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;" +
-      "font:13px system-ui;cursor:pointer", "Comment on this preview");
+      "font:13px system-ui;cursor:pointer", LABEL);
+    button.setAttribute("aria-haspopup", "menu");
+
+    // Opens upwards from the button: "Comment" marks a region for a
+    // screenshot, "Suggest a change" is the page's edit link, as before.
+    menu = el("div",
+      "position:fixed;right:16px;bottom:56px;z-index:2147483646;display:none;" +
+      "min-width:220px;padding:6px;border-radius:8px;background:#0f172a;" +
+      "border:1px solid #334155;box-shadow:0 4px 16px rgba(0,0,0,.35)");
+    menu.setAttribute("role", "menu");
+    var item = "display:block;width:100%;box-sizing:border-box;text-align:left;padding:8px 10px;" +
+      "border:0;border-radius:6px;background:transparent;color:#e2e8f0;" +
+      "font:13px system-ui;text-decoration:none;cursor:pointer";
+    var comment = el("button", item, "Comment on a region of this page");
+    comment.setAttribute("role", "menuitem");
+    comment.addEventListener("click", arm);
+    menu.appendChild(comment);
+    if (editUrl) {
+      var suggest = document.createElement("a");
+      suggest.href = editUrl;
+      suggest.target = "_blank";
+      suggest.rel = "noopener noreferrer";
+      suggest.style.cssText = item;
+      suggest.textContent = "Suggest a change \u2197";
+      suggest.setAttribute("role", "menuitem");
+      suggest.addEventListener("click", function () { menu.style.display = "none"; });
+      menu.appendChild(suggest);
+    }
+
     button.addEventListener("click", function () {
+      if (armed) { disarm(); return; }
       hideResult();
-      armed = !armed;
-      root.style.display = armed ? "block" : "none";
-      button.textContent = armed ? "Cancel (Esc)" : "Comment on this preview";
+      menu.style.display = menu.style.display === "none" ? "block" : "none";
     });
 
-    // Always on, and deliberately not dismissible: someone sent this URL to
-    // someone else, and the reader needs to know it is a pull request's
-    // preview and not the project's published site.
-    banner = document.createElement("a");
-    banner.href = "https://github.com/" + cfg.repo + "/pull/" + cfg.pr;
-    banner.target = "_blank";
-    banner.rel = "noopener";
-    banner.style.cssText =
-      "position:fixed;top:0;right:16px;z-index:2147483646;padding:4px 10px;" +
-      "border-radius:0 0 6px 6px;background:#b45309;color:#fff;text-decoration:none;" +
-      "font:12px/1.6 system-ui;box-shadow:0 1px 4px rgba(0,0,0,.3)";
-    banner.textContent =
-      "Preview of " + cfg.repo + " #" + cfg.pr + " · " + cfg.sha + " · not the published site";
+    if (!onMain) {
+      // Always on, and deliberately not dismissible: someone sent this URL to
+      // someone else, and the reader needs to know it is a pull request's
+      // preview and not the project's published site.
+      banner = document.createElement("a");
+      banner.href = "https://github.com/" + cfg.repo + "/pull/" + cfg.pr;
+      banner.target = "_blank";
+      banner.rel = "noopener";
+      banner.style.cssText =
+        "position:fixed;top:0;right:16px;z-index:2147483646;padding:4px 10px;" +
+        "border-radius:0 0 6px 6px;background:#b45309;color:#fff;text-decoration:none;" +
+        "font:12px/1.6 system-ui;box-shadow:0 1px 4px rgba(0,0,0,.3)";
+      banner.textContent =
+        "Preview of " + cfg.repo + " #" + cfg.pr + " \u00b7 " + cfg.sha + " \u00b7 not the published site";
+    }
 
     root = el("div", "position:fixed;inset:0;z-index:2147483645;display:none;cursor:crosshair");
     box = el("div", "position:absolute;border:2px solid #e11d48;background:rgba(225,29,72,0.08);display:none");
@@ -311,6 +372,7 @@
 
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && armed) disarm();
+      else if (e.key === "Escape" && menu.style.display !== "none") menu.style.display = "none";
       else if (e.key === "Escape" && panel.style.display !== "none") hideResult();
       if (
         e.key === "c" &&
@@ -318,7 +380,7 @@
         !e.metaKey && !e.ctrlKey && !e.altKey &&
         e.target === document.body
       ) {
-        button.click();
+        arm();
       }
     });
 
@@ -334,10 +396,11 @@
       box.style.display = "none";
     });
 
-    document.body.appendChild(banner);
+    if (banner) document.body.appendChild(banner);
     document.body.appendChild(root);
     document.body.appendChild(mark);
     document.body.appendChild(panel);
+    document.body.appendChild(menu);
     document.body.appendChild(button);
     document.body.appendChild(toast);
   }

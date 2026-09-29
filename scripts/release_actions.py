@@ -74,8 +74,9 @@ class Action:
 # import ``stash/shared/mung.py`` at runtime (PYTHONPATH -> ../shared), so a
 # change there releases both.  The ``pr-preview/*`` actions run code from
 # sibling directories through ``github.action_path/..``: the annotator the
-# generator adapters, the publisher the library, the overlay it injects and
-# the vendored screenshot library.
+# generator adapters, the artifact step the library's metadata writer, and the
+# publisher and main-site overlay the library, the overlay they inject and the
+# vendored screenshot library.
 ACTIONS: tuple[Action, ...] = (
     Action("allowlist-check", "allowlist-check", ("allowlist-check/",)),
     Action("pelican", "pelican", ("pelican/",)),
@@ -89,7 +90,17 @@ ACTIONS: tuple[Action, ...] = (
     Action(
         "preview-artifact",
         "pr-preview/preview-artifact",
-        ("pr-preview/preview-artifact/",),
+        ("pr-preview/preview-artifact/", "pr-preview/lib/"),
+    ),
+    Action(
+        "preview-main-overlay",
+        "pr-preview/preview-main-overlay",
+        (
+            "pr-preview/preview-main-overlay/",
+            "pr-preview/lib/",
+            "pr-preview/overlay/",
+            "pr-preview/vendor/",
+        ),
     ),
     Action(
         "preview-publish",

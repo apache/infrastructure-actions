@@ -28,16 +28,22 @@ inputs:
       published the head commit it was built from; see pr-preview/README.md.
     required: false
     default: "30"
+  token:
+    description: >-
+      Token that can read the pull request's changed files (pull-requests:
+      read), for the diff-line anchors. Without that permission the preview
+      still publishes, and the overlay links to the Conversation tab.
+    required: false
+    default: ${{ github.token }}
 runs:
   using: "composite"
   steps:
-    - name: Write preview metadata
+    - name: Check the event and the site
       shell: bash
       env:
         SITE: ${{ inputs.path }}
         EVENT_NAME: ${{ github.event_name }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
-        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       run: |
         # pull_request only. Under pull_request_target this job would hold a
         # privileged token while building pull-request code.
@@ -52,7 +58,23 @@ runs:
         case "$PR_NUMBER" in
           ''|*[!0-9]*) echo "::error::no pull request number in the event"; exit 1 ;;
         esac
-        printf '{"pr":%s,"headSha":"%s"}\n' "$PR_NUMBER" "$HEAD_SHA" > "$SITE/preview-meta.json"
+
+    - name: Setup Node
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: "22"
+
+    # Includes the anchor manifest, derived from the PR's diff here rather than
+    # in the privileged publisher, which never reads pull-request content.
+    - name: Write preview metadata
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        OUT: ${{ inputs.path }}/preview-meta.json
+        LIB: ${{ github.action_path }}/../lib
+      run: node "$LIB/write-meta.mjs"
 
     - name: Upload the preview site
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

@@ -17,57 +17,125 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveArmed } from "./armed.mjs";
+import { resolveArmed, pendingArmingCommands, previewLabel, hasLabel } from "./armed.mjs";
 
-const comment = (body, login) => ({ body, user: { login } });
+const comment = (body, login, id = 1) => ({ id, body, user: { login } });
 const writers = (...logins) => async (login) => logins.includes(login);
+const labelled = { labels: [{ name: "preview" }] };
+const labeledBy = (login, name = "preview") => ({ event: "labeled", label: { name }, actor: { login } });
 
-test("arms when a writer posts the command", async () => {
-  const result = await resolveArmed({
+test("previewLabel defaults to preview and rejects anything path-unsafe", () => {
+  assert.equal(previewLabel({}), "preview");
+  assert.equal(previewLabel({ PREVIEW_LABEL: "show preview" }), "show preview");
+  assert.throws(() => previewLabel({ PREVIEW_LABEL: "../x" }), TypeError);
+  assert.throws(() => previewLabel({ PREVIEW_LABEL: "a/b" }), TypeError);
+});
+
+test("hasLabel reads the pull request's labels", () => {
+  assert.equal(hasLabel(labelled, "preview"), true);
+  assert.equal(hasLabel({ labels: [] }, "preview"), false);
+  assert.equal(hasLabel({}, "preview"), false);
+});
+
+test("is unarmed without the label, whatever the events say", async () => {
+  const r = await resolveArmed({
+    pull: { labels: [] }, label: "preview", labelEvents: [labeledBy("maintainer")], hasWriteAccess: writers("maintainer"),
+  });
+  assert.equal(r.armed, false);
+});
+
+test("arms when a writer added the label", async () => {
+  const r = await resolveArmed({
+    pull: labelled, label: "preview", labelEvents: [labeledBy("maintainer")], hasWriteAccess: writers("maintainer"),
+  });
+  assert.deepEqual(r, { armed: true, by: "maintainer" });
+});
+
+test("does not arm when a triager without write access added the label", async () => {
+  const r = await resolveArmed({
+    pull: labelled, label: "preview", labelEvents: [labeledBy("triager")], hasWriteAccess: writers("maintainer"),
+  });
+  assert.equal(r.armed, false);
+});
+
+test("judges the LAST time the label was added", async () => {
+  const r = await resolveArmed({
+    pull: labelled,
+    label: "preview",
+    labelEvents: [labeledBy("maintainer"), { event: "unlabeled", label: { name: "preview" } }, labeledBy("triager")],
+    hasWriteAccess: writers("maintainer"),
+  });
+  assert.equal(r.armed, false);
+});
+
+test("trusts the publisher's own login, and no other bot", async () => {
+  const noone = writers();
+  const own = await resolveArmed({
+    pull: labelled, label: "preview", labelEvents: [labeledBy("github-actions[bot]")], hasWriteAccess: noone,
+  });
+  const other = await resolveArmed({
+    pull: labelled, label: "preview", labelEvents: [labeledBy("other-app[bot]")], hasWriteAccess: noone,
+  });
+  assert.equal(own.armed, true);
+  assert.equal(other.armed, false);
+});
+
+test("a label with no labeled event is unarmed", async () => {
+  const r = await resolveArmed({
+    pull: labelled, label: "preview", labelEvents: [labeledBy("maintainer", "other")], hasWriteAccess: writers("maintainer"),
+  });
+  assert.equal(r.armed, false);
+});
+
+test("a writer's unacknowledged command is pending", async () => {
+  const c = comment("/show-preview", "maintainer");
+  const out = await pendingArmingCommands({
+    comments: [c], hasWriteAccess: writers("maintainer"), isAcknowledged: async () => false,
+  });
+  assert.deepEqual(out, [c]);
+});
+
+test("an acknowledged command is not pending again", async () => {
+  const out = await pendingArmingCommands({
     comments: [comment("/show-preview", "maintainer")],
     hasWriteAccess: writers("maintainer"),
+    isAcknowledged: async () => true,
   });
-  assert.deepEqual(result, { armed: true, by: "maintainer" });
+  assert.deepEqual(out, []);
 });
 
-test("does not arm when a non-writer posts the command", async () => {
-  const result = await resolveArmed({
+test("a non-writer's command is never pending, and costs no acknowledgement lookup", async () => {
+  let looked = 0;
+  const out = await pendingArmingCommands({
     comments: [comment("/show-preview", "drive-by")],
     hasWriteAccess: writers("maintainer"),
+    isAcknowledged: async () => {
+      looked += 1;
+      return false;
+    },
   });
-  assert.deepEqual(result, { armed: false, by: null });
+  assert.deepEqual(out, []);
+  assert.equal(looked, 0);
 });
 
-test("reports the first writer who armed it", async () => {
-  const result = await resolveArmed({
-    comments: [
-      comment("looks good", "maintainer"),
-      comment("/show-preview", "second"),
-      comment("/show-preview", "maintainer"),
-    ],
-    hasWriteAccess: writers("maintainer", "second"),
+test("ignores comments that merely mention the command", async () => {
+  const out = await pendingArmingCommands({
+    comments: [comment("try /show-preview here", "maintainer")],
+    hasWriteAccess: writers("maintainer"),
+    isAcknowledged: async () => false,
   });
-  assert.equal(result.by, "second");
+  assert.deepEqual(out, []);
 });
 
 test("checks each author at most once", async () => {
   let calls = 0;
-  const result = await resolveArmed({
-    comments: [
-      comment("/show-preview", "drive-by"),
-      comment("/show-preview", "drive-by"),
-      comment("/show-preview", "drive-by"),
-    ],
+  await pendingArmingCommands({
+    comments: [comment("/show-preview", "drive-by", 1), comment("/show-preview", "drive-by", 2)],
     hasWriteAccess: async () => {
       calls += 1;
       return false;
     },
+    isAcknowledged: async () => false,
   });
-  assert.equal(result.armed, false);
   assert.equal(calls, 1);
-});
-
-test("is unarmed with no comments", async () => {
-  const result = await resolveArmed({ comments: [], hasWriteAccess: writers("x") });
-  assert.deepEqual(result, { armed: false, by: null });
 });

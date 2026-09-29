@@ -68,10 +68,9 @@ export function uncompressedBytes(longListing) {
   return m ? Number(m[1]) : null;
 }
 
-export function createArtifactFetcher({ gh, repo, token, fetchImpl = fetch }) {
+export function createArtifactFetcher({ gh, token, fetchImpl = fetch }) {
   return async function fetchArtifact(runId) {
-    const list = await gh.request(`/repos/${repo}/actions/runs/${runId}/artifacts`);
-    const artifact = list.artifacts?.find((a) => a.name === "preview-site");
+    const artifact = (await gh.listRunArtifacts(runId)).find((a) => a.name === "preview-site");
     if (!artifact || artifact.expired) return null;
 
     const dir = await mkdtemp(join(tmpdir(), "preview-artifact-"));

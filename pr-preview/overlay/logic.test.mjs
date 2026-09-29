@@ -100,3 +100,43 @@ test("clampRegion yields no region for a drag entirely off-screen", () => {
   assert.equal(clampRegion({ x1: 1200, y1: 100, x2: 1300, y2: 200 }, viewport), null);
   assert.equal(clampRegion({ x1: 100, y1: -300, x2: 200, y2: -200 }, viewport), null);
 });
+
+test("sourceUrl links the marked line on the branch", async () => {
+  const { sourceUrl } = await import("./logic.mjs");
+  assert.equal(
+    sourceUrl({ repo: "apache/magpie-site", branch: "main", source: "src/pages/tools.astro:12" }),
+    "https://github.com/apache/magpie-site/blob/main/src/pages/tools.astro#L12",
+  );
+  assert.equal(sourceUrl({ repo: "a/b", branch: "main", source: null }), null);
+  assert.equal(sourceUrl({ repo: "a/b", branch: "main", source: "no-line" }), null);
+  assert.equal(
+    sourceUrl({ repo: "a/b", branch: "main", source: "src/content/docs/x.md:3", generated: ["src/content/docs/"] }),
+    null,
+    "generated files are not in this repository",
+  );
+});
+
+test("issueUrl prefills a new issue with the page, source and build", async () => {
+  const { issueUrl } = await import("./logic.mjs");
+  const url = new URL(issueUrl({
+    repo: "apache/magpie-site",
+    branch: "main",
+    pageUrl: "https://magpie.apache.org/tools/",
+    source: "src/pages/tools.astro:12",
+    sha: "abc1234",
+  }));
+  assert.equal(url.origin + url.pathname, "https://github.com/apache/magpie-site/issues/new");
+  assert.equal(url.searchParams.get("title"), "Feedback on /tools/");
+  const body = url.searchParams.get("body");
+  assert.match(body, /\*\*Page:\*\* https:\/\/magpie\.apache\.org\/tools\//);
+  assert.match(body, /blob\/main\/src\/pages\/tools\.astro#L12/);
+  assert.match(body, /abc1234/);
+  assert.match(body, /paste it here/);
+});
+
+test("issueUrl leaves the source out when it cannot be linked", async () => {
+  const { issueUrl } = await import("./logic.mjs");
+  const body = new URL(issueUrl({ repo: "a/b", branch: "main", pageUrl: "https://x.org/", source: null }))
+    .searchParams.get("body");
+  assert.doesNotMatch(body, /Source/);
+});

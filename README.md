@@ -116,6 +116,7 @@ which you repeat after the `@`:
 | `pr-preview/preview-annotate` | `apache/infrastructure-actions/pr-preview/preview-annotate@<sha> # preview-annotate/v1.0.0` |
 | `pr-preview/preview-artifact` | `apache/infrastructure-actions/pr-preview/preview-artifact@<sha> # preview-artifact/v1.0.0` |
 | `pr-preview/preview-publish`  | `apache/infrastructure-actions/pr-preview/preview-publish@<sha>  # preview-publish/v1.0.0`  |
+| `pr-preview/preview-main-overlay` | `apache/infrastructure-actions/pr-preview/preview-main-overlay@<sha> # preview-main-overlay/v1.0.0` |
 
 Pinning to a commit SHA with the version in a trailing comment is the
 recommended, [Zizmor](https://zizmor.sh/)-friendly form: the SHA is immutable,

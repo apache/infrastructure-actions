@@ -15,13 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { readFile, writeFile, readdir } from "node:fs/promises";
-import { join } from "node:path";
-import { resolveArmed } from "./armed.mjs";
+import {
+  resolveArmed,
+  pendingArmingCommands,
+  previewLabel,
+  hasLabel,
+  PUBLISHER_LOGIN,
+} from "./armed.mjs";
 import { planActions } from "./plan.mjs";
 import { staleHeadBranches } from "./stale.mjs";
 import { validateMeta, findUnsafeEntries } from "./validate.mjs";
-import { buildAnchors } from "./anchors.mjs";
+import { sanitizeAnchors } from "./anchors.mjs";
+import { overlayFiles, injectOverlay, injectIntoTree } from "./overlay-files.mjs";
 import {
   renderAsfYaml,
   renderRobots,
@@ -31,8 +36,11 @@ import {
 } from "./files.mjs";
 
 const MARKER = "asf-preview-status";
+const PUBLISHED_MARKER = "asf-preview-published";
 const HOWTO_MARKER = "asf-preview-howto";
-const ARMED_MARKER = "asf-preview-armed";
+// The publisher's acknowledgement on a /show-preview comment it has turned
+// into the label. See pendingArmingCommands.
+const ACK_REACTION = "rocket";
 const TOMBSTONE_TAG = "[tombstone]";
 
 /**
@@ -86,6 +94,7 @@ export async function run({
   only = null,
   dispatchedBy = null,
   reapHeads = false,
+  label = previewLabel(),
 }) {
   let failures = 0;
 
@@ -97,25 +106,62 @@ export async function run({
     throw new Error(`--pr ${only} is not an open pull request`);
   }
 
+  // One permission lookup per login per run, however many PRs it touches.
+  const access = new Map();
+  const hasWriteAccess = async (login) => {
+    if (!access.has(login)) access.set(login, await gh.hasWriteAccess(login));
+    return access.get(login);
+  };
+
+  let labelReady = false;
+  const arm = async (n) => {
+    if (!labelReady) {
+      await gh.ensureLabel(label);
+      labelReady = true;
+    }
+    await gh.addLabel(n, label);
+  };
+
   // Armed state is resolved for EVERY open PR, even when publishing just one:
   // scoping this to the dispatched PR would leave every other preview looking
   // disarmed, and the reap step would tombstone all of them.
+  //
+  // The label is the arming state. A maintainer's /show-preview comment and a
+  // manual dispatch are two ways of putting it there; removing it disarms.
   const armedByPr = new Map();
   for (const pull of openPulls) {
     try {
       const comments = await gh.listComments(pull.number);
-      const { armed } = await resolveArmed({
-        comments,
-        hasWriteAccess: gh.hasWriteAccess,
-      });
+      let labelled = hasLabel(pull, label);
+      let armedHere = false;
 
-      // A manual dispatch leaves a durable, bot-authored arming record. Without
-      // it a dispatched preview reads as unarmed on the next scheduled run and
-      // is tombstoned within one cron interval.
-      armedByPr.set(
-        pull.number,
-        armed || hasBotMarker(comments, ARMED_MARKER, { login: "github-actions[bot]" }),
-      );
+      const pending = await pendingArmingCommands({
+        comments,
+        hasWriteAccess,
+        isAcknowledged: (c) => gh.hasReaction(c.id, ACK_REACTION, PUBLISHER_LOGIN),
+      });
+      // A dispatch is itself the authorisation.
+      if (pending.length || only === pull.number) {
+        if (!labelled) {
+          await arm(pull.number);
+          labelled = true;
+          if (only === pull.number) {
+            await gh.createComment(pull.number, armedBody(pull.number, dispatchedBy, label));
+          }
+        }
+        armedHere = true;
+        // Acknowledged only after the label is on, so a failure in between
+        // retries on the next run instead of losing the request.
+        for (const c of pending) await gh.addReaction(c.id, ACK_REACTION);
+      }
+
+      const armed = armedHere || (labelled && (await resolveArmed({
+        pull,
+        label,
+        labelEvents: await gh.listLabelEvents(pull.number),
+        hasWriteAccess,
+      })).armed);
+      armedByPr.set(pull.number, armed);
 
       // Announce to humans only. A dependency-bump bot opens many pull
       // requests and reads none of them, so the explainer is noise on its
@@ -123,7 +169,7 @@ export async function run({
       // way: a maintainer who wants a preview of a bot's PR can still ask for
       // one, and it will publish.
       if (!isBotAuthored(pull) && !hasBotMarker(comments, HOWTO_MARKER)) {
-        await gh.upsertComment(pull.number, HOWTO_MARKER, howtoBody(pull.number));
+        await gh.upsertComment(pull.number, HOWTO_MARKER, howtoBody(label));
       }
     } catch (err) {
       // One PR's transient failure must not abort every other publish and the
@@ -133,9 +179,6 @@ export async function run({
       failures += 1;
     }
   }
-
-  // A dispatch is itself the authorisation.
-  if (only !== null) armedByPr.set(only, true);
 
   const previewBranches = await gh.listPreviewBranches();
 
@@ -173,7 +216,7 @@ export async function run({
 
   for (const pr of actions.publish) {
     try {
-      const published = await publishOne({
+      await publishOne({
         gh,
         git,
         repo,
@@ -183,9 +226,6 @@ export async function run({
         publishedSha: publishedByBranch.get(previewBranch(pr)) ?? null,
         force: only === pr,
       });
-      if (published && only === pr) {
-        await gh.upsertComment(pr, ARMED_MARKER, armedBody(dispatchedBy));
-      }
     } catch (err) {
       console.error(`preview: publish failed for #${pr}: ${err.message}`);
       failures += 1;
@@ -286,31 +326,31 @@ async function publishOne({
   const headSha = pull.head.sha;
 
   // Nothing has changed since the last publish. Republishing anyway force-pushes
-  // an identical tree every fifteen minutes — a commits@ mail and a rewritten
+  // an identical tree on every run — a commits@ mail and a rewritten
   // status comment for a preview nobody touched. A manual dispatch is an
   // explicit request, so it republishes regardless.
   if (!force && publishedSha && headSha.startsWith(publishedSha)) return false;
 
   const build = await gh.latestSuccessfulBuild(headSha);
   if (!build) {
-    await gh.upsertComment(pr, MARKER, waitingBody(headSha));
+    await gh.upsertComment(pr, MARKER, waitingBody(pr, headSha));
     return false;
   }
 
   const artifact = await fetchArtifact(build.id);
   if (!artifact) {
-    await gh.upsertComment(pr, MARKER, waitingBody(headSha));
+    await gh.upsertComment(pr, MARKER, waitingBody(pr, headSha));
     return false;
   }
 
   const check = validateMeta(artifact.meta, { number: pr, headSha });
   if (!check.ok) {
-    await gh.upsertComment(pr, MARKER, refusedBody(check.reason));
+    await gh.upsertComment(pr, MARKER, refusedBody(pr, check.reason));
     return false;
   }
 
   if (!artifact.dir) {
-    await gh.upsertComment(pr, MARKER, refusedBody("artifact had no extracted directory"));
+    await gh.upsertComment(pr, MARKER, refusedBody(pr, "artifact had no extracted directory"));
     return false;
   }
 
@@ -320,37 +360,24 @@ async function publishOne({
   try {
     unsafe = await findUnsafeEntries(artifact.dir);
   } catch (err) {
-    await gh.upsertComment(pr, MARKER, refusedBody(`could not screen the artifact: ${err.message}`));
+    await gh.upsertComment(pr, MARKER, refusedBody(pr, `could not screen the artifact: ${err.message}`));
     return false;
   }
   if (unsafe.length) {
-    await gh.upsertComment(pr, MARKER, refusedBody(`unsafe entries: ${unsafe.join(", ")}`));
+    await gh.upsertComment(pr, MARKER, refusedBody(pr, `unsafe entries: ${unsafe.join(", ")}`));
     return false;
   }
 
-  const anchors = buildAnchors(await gh.listPullFiles(pr));
-  const logic = await readFile(new URL("../overlay/logic.mjs", import.meta.url), "utf8");
-  const overlay = await readFile(new URL("../overlay/review.js", import.meta.url), "utf8");
-  const vendor = await readFile(
-    new URL("../vendor/html2canvas-pro/html2canvas-pro.min.js", import.meta.url), "utf8",
-  );
-
+  // Computed by the unprivileged build: the diff is pull-request content, and
+  // the publisher never reads it.
+  const anchors = sanitizeAnchors(artifact.meta?.anchors);
   const generated = {
     ".asf.yaml": renderAsfYaml(pr),
     "robots.txt": renderRobots(),
-    "_preview/html2canvas-pro.min.js": vendor,
-    // The overlay's pure logic is unit-tested as a module and inlined here; the
-    // browser file has no build step and no imports.
-    "_preview/review.js":
-      logic.replace(/^export /gm, "") +
-      `\nwindow.__ASF_PREVIEW__ = ${JSON.stringify({
-        repo, pr, sha: headSha.slice(0, 7), anchors,
-      })};\n` + overlay,
+    ...(await overlayFiles({ repo, pr, sha: headSha.slice(0, 7), anchors })),
   };
 
-  for (const page of await findHtmlFiles(artifact.dir)) {
-    await writeFile(page, injectOverlay(await readFile(page, "utf8")));
-  }
+  await injectIntoTree(artifact.dir);
 
   await git.pushTree(
     previewBranch(pr),
@@ -360,68 +387,52 @@ async function publishOne({
   );
 
   await gh.upsertComment(pr, MARKER, publishedBody(pr, headSha));
+  // The status comment above is edited in place, and an edit notifies nobody.
+  // Each publish is also announced as a new comment, so everyone following the
+  // pull request learns that the preview now shows the latest push.
+  await gh.createComment(pr, `${announceBody(pr, headSha)}\n\n<!-- ${PUBLISHED_MARKER} -->`);
   return true;
 }
 
-const OVERLAY_MARKER = "<!-- asf-preview-overlay -->";
-const OVERLAY_TAGS =
-  OVERLAY_MARKER + "\n" +
-  '<script src="/_preview/html2canvas-pro.min.js"></script>\n' +
-  '<script src="/_preview/review.js"></script>\n';
+// Re-exported for the tests and any caller that imported it from here.
+export { injectOverlay };
 
-/**
- * Add the overlay's script tags to a page, exactly once.
- *
- * Guarded on a marker comment rather than on the script path: a page whose
- * CONTENT mentions "/_preview/review.js" — this feature's own design document,
- * once published — would otherwise silently get no overlay. Injected at the
- * LAST </body>, because an earlier one can appear inside an inline script or a
- * serialised island prop, and injecting there corrupts the page.
- */
-export function injectOverlay(html) {
-  if (typeof html !== "string") return html;
-  if (html.includes(OVERLAY_MARKER)) return html;
-
-  const at = html.lastIndexOf("</body>");
-  if (at === -1) return html;
-  return html.slice(0, at) + OVERLAY_TAGS + html.slice(at);
-}
-
-async function findHtmlFiles(root) {
-  const out = [];
-  for (const entry of await readdir(root, { withFileTypes: true })) {
-    const full = join(root, entry.name);
-    if (entry.isDirectory() && !entry.isSymbolicLink()) out.push(...(await findHtmlFiles(full)));
-    else if (entry.isFile() && entry.name.endsWith(".html")) out.push(full);
-  }
-  return out;
-}
+// Every preview comment leads with the preview URL on its own line, so it is
+// one click away whatever the comment is about.
+const urlLine = (pr) => `**Preview:** ${previewUrl(pr)}`;
 
 const publishedBody = (pr, sha) =>
-  `### Preview published\n\n${previewUrl(pr)}\n\nBuilt from \`${sha.slice(0, 7)}\`. ` +
+  `### Preview published\n\n${urlLine(pr)}\n\nBuilt from \`${sha.slice(0, 7)}\`. ` +
   `Staging takes a few minutes to pick up a new push.`;
 
-const waitingBody = (sha) =>
-  `### Preview waiting on a build\n\nNo successful build for \`${sha.slice(0, 7)}\` yet. ` +
-  `The preview publishes on the next run after the build goes green.`;
+const announceBody = (pr, sha) =>
+  `### Preview updated to \`${sha.slice(0, 7)}\`\n\n${urlLine(pr)}\n\n` +
+  `Staging usually serves it within a few minutes.`;
 
-const refusedBody = (reason) =>
-  `### Preview could not be published\n\nThe build artifact was refused: ${String(reason).slice(0, 200)}`;
+const waitingBody = (pr, sha) =>
+  `### Preview waiting on a build\n\n${urlLine(pr)}\n\nNo successful build for \`${sha.slice(0, 7)}\` yet. ` +
+  `The preview publishes as soon as the build goes green.`;
+
+const refusedBody = (pr, reason) =>
+  `### Preview could not be published\n\n${urlLine(pr)} (unchanged)\n\n` +
+  `The build artifact was refused: ${String(reason).slice(0, 200)}`;
 
 const retiredBody = (pr) =>
   `### Preview retired\n\nThe preview for this pull request is no longer published. ` +
   `${previewUrl(pr)} now serves a notice instead.`;
 
-const armedBody = (by) =>
-  `### Preview armed by manual dispatch\n\n` +
-  (by ? `@${by} published this preview by dispatching the workflow.` : `This preview was published by manual dispatch.`) +
-  ` It will keep tracking this PR's head commit until the PR closes.`;
+const armedBody = (pr, by, label) =>
+  `### Preview armed by manual dispatch\n\n${urlLine(pr)}\n\n` +
+  (by ? `@${by} armed this preview by dispatching the workflow.` : `This preview was armed by manual dispatch.`) +
+  ` The \`${label}\` label now tracks this PR's head commit; remove the label to retire the preview.`;
 
-const howtoBody = (pr) =>
+// No URL here: the PR has no preview yet, and a link that does not resolve is
+// worse than none. The URL is posted with the preview, once it is published.
+const howtoBody = (label) =>
   `### Preview this pull request\n\nA committer can publish a live preview of this PR by ` +
-  `commenting \`/show-preview\` on its own line. It will appear at ${previewUrl(pr)} ` +
-  `and then track this PR's head commit until it closes.\n\nStaging takes a few minutes ` +
-  `to pick up each push.`;
+  `adding the \`${label}\` label, or by commenting \`/show-preview\` on its own line, which ` +
+  `adds the label. The preview's link is posted here once it is published, and it then tracks ` +
+  `this PR's head commit until the PR closes or the label is removed.`;
 
 import { createClient } from "./github.mjs";
 import { createGit } from "./git.mjs";
@@ -468,12 +479,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     only = Number(raw);
   }
 
+
   const gh = createClient({ repo, token });
   await run({
     gh,
     git: createGit({ repo, token }),
     repo,
-    fetchArtifact: createArtifactFetcher({ gh, repo, token }),
+    fetchArtifact: createArtifactFetcher({ gh, token }),
     only,
     dispatchedBy: process.env.GITHUB_ACTOR ?? null,
     reapHeads: process.env.PREVIEW_REAP_HEAD_BRANCHES === "true",
