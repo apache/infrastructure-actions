@@ -25,7 +25,7 @@ inputs:
   retention-days:
     description: >-
       Days to keep the artifact. The publisher only needs it until it has
-      published the head commit it was built from; see pr-preview/README.md.
+      published the head commit it was built from; see website-comment/README.md.
     required: false
     default: "30"
   token:

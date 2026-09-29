@@ -17,7 +17,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# Run: BUNDLE_GEMFILE=pr-preview/adapters/jekyll/test/Gemfile bundle exec ruby pr-preview/adapters/jekyll/test/preview_src_test.rb
+# Run: BUNDLE_GEMFILE=website-comment/adapters/jekyll/test/Gemfile bundle exec ruby website-comment/adapters/jekyll/test/preview_src_test.rb
 # Needs the jekyll gem (4.x) and minitest.
 
 require "minitest/autorun"

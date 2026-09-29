@@ -62,13 +62,13 @@ def test_save_only_change_bumps_only_save():
     assert _prefixes(ra.affected_actions(changed)) == ["save"]
 
 
-def test_pr_preview_adapter_change_releases_only_the_annotator():
-    changed = ["pr-preview/adapters/jekyll/preview_src.rb"]
+def test_website_comment_adapter_change_releases_only_the_annotator():
+    changed = ["website-comment/adapters/jekyll/preview_src.rb"]
     assert _prefixes(ra.affected_actions(changed)) == ["preview-annotate"]
 
 
-def test_pr_preview_library_change_releases_every_action_that_runs_it():
-    changed = ["pr-preview/lib/anchors.mjs"]
+def test_website_comment_library_change_releases_every_action_that_runs_it():
+    changed = ["website-comment/lib/anchors.mjs"]
     assert _prefixes(ra.affected_actions(changed)) == [
         "preview-artifact",
         "preview-main-overlay",
@@ -76,10 +76,10 @@ def test_pr_preview_library_change_releases_every_action_that_runs_it():
     ]
 
 
-def test_pr_preview_overlay_change_releases_the_actions_that_inject_it():
+def test_website_comment_overlay_change_releases_the_actions_that_inject_it():
     for path in (
-        "pr-preview/overlay/review.js",
-        "pr-preview/vendor/html2canvas-pro/html2canvas-pro.min.js",
+        "website-comment/overlay/review.js",
+        "website-comment/vendor/html2canvas-pro/html2canvas-pro.min.js",
     ):
         assert _prefixes(ra.affected_actions([path])) == [
             "preview-main-overlay",
@@ -87,8 +87,8 @@ def test_pr_preview_overlay_change_releases_the_actions_that_inject_it():
         ], path
 
 
-def test_pr_preview_docs_release_nothing():
-    changed = ["pr-preview/README.md", "pr-preview/package.json"]
+def test_website_comment_docs_release_nothing():
+    changed = ["website-comment/README.md", "website-comment/package.json"]
     assert ra.affected_actions(changed) == []
 
 

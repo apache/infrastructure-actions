@@ -31,4 +31,4 @@ Coverage: `.tsx` and `.jsx` only. `.astro` templates and Markdown content are
 compiled by Astro, not Babel, so a region there falls back to the pull
 request's Conversation tab.
 
-Tests: `npm test` in `pr-preview/`.
+Tests: `npm test` in `website-comment/`.

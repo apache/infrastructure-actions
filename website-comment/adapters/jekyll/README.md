@@ -62,11 +62,11 @@ since anything built while it is there is annotated.
 ## Tests
 
 ```sh
-export BUNDLE_GEMFILE=pr-preview/adapters/jekyll/test/Gemfile
+export BUNDLE_GEMFILE=website-comment/adapters/jekyll/test/Gemfile
 bundle install
-bundle exec ruby pr-preview/adapters/jekyll/test/preview_src_test.rb
+bundle exec ruby website-comment/adapters/jekyll/test/preview_src_test.rb
 ```
 
 The test builds `test/fixture/` with the plugin loaded and checks the stamped
-lines. CI runs it in `.github/workflows/pr-preview-test.yml`. Verified against
+lines. CI runs it in `.github/workflows/website-comment-test.yml`. Verified against
 Jekyll 4.4.1 and 4.3.4.
