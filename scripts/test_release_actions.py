@@ -67,13 +67,24 @@ def test_pr_preview_adapter_change_releases_only_the_annotator():
     assert _prefixes(ra.affected_actions(changed)) == ["preview-annotate"]
 
 
-def test_pr_preview_shared_code_releases_the_publisher():
+def test_pr_preview_library_change_releases_every_action_that_runs_it():
+    changed = ["pr-preview/lib/anchors.mjs"]
+    assert _prefixes(ra.affected_actions(changed)) == [
+        "preview-artifact",
+        "preview-main-overlay",
+        "preview-publish",
+    ]
+
+
+def test_pr_preview_overlay_change_releases_the_actions_that_inject_it():
     for path in (
-        "pr-preview/lib/publish.mjs",
         "pr-preview/overlay/review.js",
         "pr-preview/vendor/html2canvas-pro/html2canvas-pro.min.js",
     ):
-        assert _prefixes(ra.affected_actions([path])) == ["preview-publish"], path
+        assert _prefixes(ra.affected_actions([path])) == [
+            "preview-main-overlay",
+            "preview-publish",
+        ], path
 
 
 def test_pr_preview_docs_release_nothing():

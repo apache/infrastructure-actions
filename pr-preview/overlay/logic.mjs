@@ -66,3 +66,39 @@ export function targetUrl({ repo, pr, source, anchors }) {
 
   return `https://github.com/${repo}/pull/${pr}/files#${entry.anchor}R${line}`;
 }
+
+/**
+ * The marked source line on the branch it was built from, or null when the
+ * source is unresolved or lives in a generated tree whose files are not in
+ * this repository (for example, pages synced from another repository).
+ */
+export function sourceUrl({ repo, branch, source, generated = [] }) {
+  const match = /^(.*):(\d+)$/.exec(String(source ?? ""));
+  if (!match) return null;
+  const [, file, line] = match;
+  if (generated.some((prefix) => file.startsWith(prefix))) return null;
+  return `https://github.com/${repo}/blob/${branch}/${file}#L${line}`;
+}
+
+/**
+ * A new issue about the marked region, prefilled with where it is. The
+ * screenshot is on the clipboard (or downloaded): GitHub cannot take it in a
+ * URL, so the body asks for it to be pasted.
+ */
+export function issueUrl({ repo, branch, pageUrl, source, generated = [], sha }) {
+  const page = new URL(pageUrl);
+  const link = sourceUrl({ repo, branch, source, generated });
+  const body = [
+    `**Page:** ${pageUrl}`,
+    link ? `**Source:** ${link}` : null,
+    sha ? `**Built from:** \`${sha}\`` : null,
+    "",
+    "<!-- The screenshot of the marked region is on your clipboard: paste it here. -->",
+    "",
+    "",
+    "**What should change?**",
+    "",
+  ].filter((line) => line !== null).join("\n");
+  const title = `Feedback on ${page.pathname}`;
+  return `https://github.com/${repo}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+}

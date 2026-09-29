@@ -38,3 +38,19 @@ declare function targetUrl(input: {
   source: string | null;
   anchors: Record<string, { anchor: string; ranges: [number, number][] }> | null;
 }): string;
+
+declare function sourceUrl(input: {
+  repo: string;
+  branch: string;
+  source: string | null;
+  generated?: string[];
+}): string | null;
+
+declare function issueUrl(input: {
+  repo: string;
+  branch: string;
+  pageUrl: string;
+  source: string | null;
+  generated?: string[];
+  sha?: string;
+}): string;
