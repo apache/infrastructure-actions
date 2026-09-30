@@ -498,6 +498,9 @@ editorconfig-checker/action-editorconfig-checker:
     expires_at: 2026-11-30
   51f63319f592f97930c73d9c46184d20bd206393:
     tag: v3.0.0
+endersonmenezes/free-disk-space:
+  2a22f8c59cae9cddae7194b33e6b92d023b2b4b8:
+    tag: v4.0.0
 EnricoMi/publish-unit-test-result-action:
   '*':
     keep: true
