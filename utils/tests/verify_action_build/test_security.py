@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+import re
 from unittest import mock
 
 from verify_action_build.security import (
@@ -590,6 +591,122 @@ runs:
                 warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
         assert len(failures) >= 1
 
+    # Faithful trim of orhun/git-cliff-action@a9a9552 install.sh (v4.9.1).
+    # The tarball URL is resolved from the releases API into $LOCATION, so no
+    # literal URL ever appears on the download line.  Reviewed in
+    # apache/infrastructure-actions#1311; the tool reported "No binary
+    # downloads detected" for a script whose whole job is downloading one.
+    GIT_CLIFF_INSTALL_SH = """\
+#!/bin/bash
+set -euo pipefail
+
+ARCHIVE_EXT='tar.gz'
+ARCHIVE_CMD='tar -xf'
+GIT_CLIFF_BIN='git-cliff'
+
+case "${RUNNER_OS}" in
+    macOS)   OS=apple-darwin ;;
+    *)       OS=unknown-linux-gnu ;;
+esac
+
+INSTALL_DIR="$RUNNER_TEMP/git-cliff"
+mkdir -p "$INSTALL_DIR"
+cd "$INSTALL_DIR"
+
+RELEASE_URL='https://api.github.com/repos/orhun/git-cliff/releases/latest'
+if [[ "${VERSION}" != 'latest' ]]; then
+    RELEASE_URL="https://api.github.com/repos/orhun/git-cliff/releases/tags/${VERSION}"
+fi
+
+RELEASE_INFO="$(curl --silent --show-error --fail \\
+    --header "authorization: Bearer ${GITHUB_API_TOKEN}" \\
+    --header 'Cache-Control: no-cache, must-revalidate' \\
+    "${RELEASE_URL}")"
+
+TAG_NAME="$(echo "${RELEASE_INFO}" | jq --raw-output ".tag_name")"
+TARGET="git-cliff-${TAG_NAME:1}-x86_64-${OS}.${ARCHIVE_EXT}"
+LOCATION="$(echo "${RELEASE_INFO}" |
+    jq --raw-output ".assets[].browser_download_url" |
+    grep "${TARGET}$")"
+
+mkdir -p ./bin
+
+if [[ ! -e "$TARGET" ]]; then
+    curl --silent --show-error --fail --location --output "$TARGET" "$LOCATION"
+    ${ARCHIVE_CMD} "$TARGET"
+    mv git-cliff-${TAG_NAME:1}/${GIT_CLIFF_BIN} "./bin/$GIT_CLIFF_BIN"
+fi
+"""
+
+    def _git_cliff_files(self, install_sh: str) -> dict:
+        action_yml = (
+            "name: git-cliff\n"
+            "runs:\n"
+            "  using: composite\n"
+            "  steps:\n"
+            "    - shell: bash\n"
+            "      run: ${GITHUB_ACTION_PATH}/install.sh\n"
+        )
+        return {"action.yml": action_yml, "install.sh": install_sh}
+
+    def test_variable_url_download_to_file_is_flagged(self):
+        files = self._git_cliff_files(self.GIT_CLIFF_INSTALL_SH)
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=files["action.yml"]):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        # Exactly the tarball download is flagged -- not the API metadata
+        # fetch that only feeds a command substitution.
+        assert len(failures) == 1
+        assert '--output "$TARGET" "$LOCATION"' in failures[0]
+        assert "install.sh" in failures[0]
+
+    def test_variable_url_download_with_checksum_passes(self):
+        verified = self.GIT_CLIFF_INSTALL_SH.replace(
+            '    ${ARCHIVE_CMD} "$TARGET"\n',
+            '    curl -sSfL --output "$TARGET.sha512" "$LOCATION.sha512"\n'
+            '    shasum -a 512 -c "$TARGET.sha512"\n'
+            '    ${ARCHIVE_CMD} "$TARGET"\n',
+        )
+        files = self._git_cliff_files(verified)
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=files["action.yml"]):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+        assert any("download present" in w for w in warnings)
+
+    def test_variable_url_data_fetch_is_not_flagged(self):
+        # A variable-URL curl whose output is consumed as data (command
+        # substitution, stdout) with nothing extracted or installed in the
+        # file is a metadata fetch, not a binary download.
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                'RUN VERSION="$(curl -fsSL "$RELEASE_URL" | jq -r .tag_name)" '
+                '&& echo "$VERSION" > /version\n'
+                'RUN wget -qO- "$INDEX_URL" | grep -c foo\n'
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+        assert warnings == []
+
+    def test_variable_url_wget_to_file_then_install_is_flagged(self):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                'RUN wget -q -O /tmp/tool.tgz "$TOOL_URL" '
+                "&& tar -xzf /tmp/tool.tgz -C /usr/local/bin "
+                "&& chmod +x /usr/local/bin/tool\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) == 1
+        assert "$TOOL_URL" in failures[0]
+
 
 class TestAnalyzeBinaryDownloadsRecursive:
     def test_recurses_through_composite(self):
@@ -697,6 +814,24 @@ class TestAnalyzeRepoMetadata:
         with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
             warnings = analyze_repo_metadata("unknown-org", "unknown-repo", "a" * 40)
         assert any("LICENSE" in w for w in warnings)
+
+    def test_dual_license_apache_mit_detected(self, capsys):
+        # Rust-style dual licensing (orhun/git-cliff-action): no bare LICENSE,
+        # only LICENSE-APACHE + LICENSE-MIT at the root.
+        def fetch(org, repo, commit, path):
+            return {
+                "LICENSE-APACHE": "                                 Apache License\n"
+                                  "                           Version 2.0, January 2004\n",
+                "LICENSE-MIT": "The MIT License (MIT)\n\nCopyright (c) 2021 Orhun\n",
+            }.get(path)
+
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=fetch):
+            warnings = analyze_repo_metadata("orhun", "git-cliff-action", "a" * 40)
+        assert not any("LICENSE" in w for w in warnings)
+        captured = capsys.readouterr()
+        # CI forces colour, so strip ANSI escapes before matching the text.
+        plain = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", captured.out + captured.err)
+        assert "LICENSE-APACHE (Apache 2.0)" in plain
 
     def test_well_known_org(self):
         def fetch(org, repo, commit, path):
