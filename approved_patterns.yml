@@ -30,7 +30,6 @@
 - actions-cool/check-user-permission@c21884f3dda18dafc2f8b402fe807ccc9ec1aa5e
 - addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185
 - AdoptOpenJDK/install-jdk@*
-- advanced-security/dismiss-alerts@046d6b48d2e43cf563f96f67332c47c432eff83e
 - advanced-security/dismiss-alerts@a18f986bdb40edba0dd7a74382c15d4a3d50a1c8
 - al-cheb/configure-pagefile-action@9b6da52fb72a3c6147c1aad2df22d8d905681adc
 - amannn/action-semantic-pull-request@*
@@ -124,7 +123,6 @@
 - codecov/codecov-action@*
 - codelytv/pr-size-labeler@*
 - CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea
-- commit-check/commit-check-action@a9ee0cfa8e2b0399715e016e1dd4624e08427281
 - commit-check/commit-check-action@bbb6580f01838e475563514f115ec7ef41c9ddc7
 - commit-check/commit-check-action@d109324148a73dc758891d1d85924c912dbfd38b
 - commit-check/commit-check-action@562a184b2b8e583e757b17eb385bc48370f44547
@@ -261,7 +259,6 @@
 - lhotari/sandboxed-trivy-action@f01374b6cc3bf7264ab238293e94f6db7ada6dd0
 - loadingalias/cargo-rail-action@e706767c343acb6a2ab1917f243b1616ae9eb05b
 - loadingalias/cargo-rail-action@4a8df181e4f340a164190cf092c9f9239b20edab
-- lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411
 - lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8
 - manusa/actions-setup-minikube@*
 - manusa/actions-setup-minikube@b65276017fdec6f1e6498129fb740e34e260dc55
