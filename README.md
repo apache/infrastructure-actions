@@ -262,6 +262,8 @@ Files that appear **only in the rebuild** are reported as informational rather t
 
 The **source diff vs approved** and the **Script analysis** check both cover more than the language the entrypoint is written in. A node action is free to shell out to a script committed beside it — `uraimo/run-on-arch-action` declares `main: src/run-on-arch.js`, which then `exec()`s `src/run-on-arch.sh` — so shell/interpreter scripts (`.sh`, `.bash`, `.ps1`, `.py`, `.rb`, `.pl`) and `Dockerfile*` are diffed alongside the JS/TS sources, and committed shell scripts are discovered from the repo tree rather than only from the files `action.yml` or a `Dockerfile` happen to name. Script analysis runs for every action type; for JavaScript actions its findings are reported in the summary but do not change the pass/fail verdict.
 
+The **Dockerfile analysis** check locates the Dockerfile the runner actually builds, by resolving the path named in the action's `runs.image:` rather than assuming the conventional `Dockerfile` beside `action.yml`. A docker action may rename the file and place it anywhere in the repository — `google/oss-fuzz`'s cifuzz actions sit at `infra/cifuzz/actions/build_fuzzers` and point `image:` three levels up at `infra/build_fuzzers.Dockerfile` — and probing only the conventional locations reported "no Dockerfile" for actions that have one, silently skipping every base-image and command check. Paths that climb past the repository root are ignored, and an `image: docker://…` reference still takes the pre-built-image path, where the check reports whether that image is digest-pinned.
+
 #### Security Review Checklist
 
 When reviewing an action (new or updated), watch for these potential issues in the source diff between the approved and new versions:
