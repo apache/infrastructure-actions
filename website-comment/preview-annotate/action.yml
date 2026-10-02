@@ -1,0 +1,84 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+name: "PR preview: annotate the build"
+description: "Make a preview build stamp rendered elements with the source file and line they came from"
+inputs:
+  generator:
+    description: "Site generator: jekyll, astro or none"
+    required: true
+  source:
+    description: "jekyll only: the site source directory, holding _config.yml"
+    required: false
+    default: "."
+  production-output:
+    description: >-
+      Optional: the production build's output directory. The action fails if it
+      already carries data-preview-src, which must never ship to the live site.
+    required: false
+    default: ""
+outputs:
+  babel-plugin:
+    description: >-
+      astro only: path of the Babel plugin, for the preview build step to pass
+      to astro.config as PREVIEW_BABEL_PLUGIN
+    value: ${{ steps.annotate.outputs.babel-plugin }}
+runs:
+  using: "composite"
+  steps:
+    - name: Check the production build carries no preview annotation
+      if: inputs.production-output != ''
+      shell: bash
+      env:
+        OUTPUT: ${{ inputs.production-output }}
+      run: |
+        if [ ! -d "$OUTPUT" ]; then
+          echo "::error::production-output '$OUTPUT' is not a directory"
+          exit 1
+        fi
+        if grep -rlq "data-preview-src" -- "$OUTPUT"; then
+          echo "::error::data-preview-src found in the production build in $OUTPUT; it must never ship"
+          grep -rl "data-preview-src" -- "$OUTPUT" | head -20
+          exit 1
+        fi
+
+    - name: Switch on source annotation
+      id: annotate
+      shell: bash
+      env:
+        GENERATOR: ${{ inputs.generator }}
+        SOURCE: ${{ inputs.source }}
+        ADAPTERS: ${{ github.action_path }}/../adapters
+      run: |
+        case "$GENERATOR" in
+          jekyll)
+            sh "$ADAPTERS/jekyll/prepare.sh" "$SOURCE"
+            ;;
+          astro)
+            # An output rather than GITHUB_ENV: the build step opts in
+            # explicitly, and nothing leaks into later steps. See README.md.
+            echo "babel-plugin=$ADAPTERS/astro/babel-plugin-preview-src.mjs" >> "$GITHUB_OUTPUT"
+            ;;
+          none)
+            echo "No source annotation: the overlay links to the pull request's Conversation tab"
+            ;;
+          *)
+            echo "::error::generator must be jekyll, astro or none, got '$GENERATOR'"
+            exit 1
+            ;;
+        esac

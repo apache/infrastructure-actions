@@ -1,0 +1,88 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+name: "PR preview: upload the preview site"
+description: "Package a pull request's built site as the preview-site artifact the publisher consumes"
+inputs:
+  path:
+    description: "Directory holding the built preview site"
+    required: true
+  retention-days:
+    description: >-
+      Days to keep the artifact. The publisher only needs it until it has
+      published the head commit it was built from; see website-comment/README.md.
+    required: false
+    default: "30"
+  token:
+    description: >-
+      Token that can read the pull request's changed files (pull-requests:
+      read), for the diff-line anchors. Without that permission the preview
+      still publishes, and the overlay links to the Conversation tab.
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: "composite"
+  steps:
+    - name: Check the event and the site
+      shell: bash
+      env:
+        SITE: ${{ inputs.path }}
+        EVENT_NAME: ${{ github.event_name }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        # pull_request only. Under pull_request_target this job would hold a
+        # privileged token while building pull-request code.
+        if [ "$EVENT_NAME" != "pull_request" ]; then
+          echo "::error::preview-artifact runs on pull_request events only, got '$EVENT_NAME'"
+          exit 1
+        fi
+        if [ ! -d "$SITE" ]; then
+          echo "::error::path '$SITE' is not a directory"
+          exit 1
+        fi
+        case "$PR_NUMBER" in
+          ''|*[!0-9]*) echo "::error::no pull request number in the event"; exit 1 ;;
+        esac
+
+    - name: Setup Node
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: "22"
+
+    # Includes the anchor manifest, derived from the PR's diff here rather than
+    # in the privileged publisher, which never reads pull-request content.
+    - name: Write preview metadata
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        OUT: ${{ inputs.path }}/preview-meta.json
+        LIB: ${{ github.action_path }}/../lib
+      run: node "$LIB/write-meta.mjs"
+
+    - name: Upload the preview site
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        # The publisher looks for exactly this name.
+        name: preview-site
+        path: ${{ inputs.path }}
+        retention-days: ${{ inputs.retention-days }}
+        # Sites often carry dotfiles (.htaccess); without this they are dropped.
+        include-hidden-files: true
+        if-no-files-found: error
