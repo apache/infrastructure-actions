@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+import subprocess
 from unittest import mock
 
 from verify_action_build.docker_build import (
@@ -123,11 +124,47 @@ class TestReadDockerfileTemplate:
         content = _read_dockerfile_template()
         assert "/kept-js.log" in content
         # Minified-detection heuristic must be present and mirror the
-        # Python is_minified() in diff_js.py: <10 lines OR avg line >500.
+        # Python is_minified() in diff_js.py: avg line >500, OR <10 lines
+        # with a line >500.
         assert "wc -l" in content
         assert "wc -c" in content
-        assert '"$lines" -lt 10' in content
         assert '"$((chars / lines))" -gt 500' in content
+        assert '"$maxlen" -gt 500' in content
+
+    def test_deletion_loop_agrees_with_is_minified(self, tmp_path):
+        """Run the Dockerfile's deletion loop and check each file lands where
+        diff_js.is_minified() says it should."""
+        from verify_action_build.diff_js import is_minified
+        from .test_diff_js import SHA256_HEX_JS, SHELL_QUOTE_JS
+
+        content = _read_dockerfile_template()
+        start = content.rindex(
+            "RUN OUT_DIR=$(cat /out-dir.txt)", 0, content.index(": > /deleted-js.log")
+        )
+        end = content.index("\n    fi\n", start) + len("\n    fi\n")
+        script = content[start + len("RUN "):end]
+        for path in ("/out-dir.txt", "/deleted-js.log", "/kept-js.log"):
+            script = script.replace(path, str(tmp_path / path.lstrip("/")))
+
+        files = {
+            "shell-quote.js": SHELL_QUOTE_JS,
+            "sha256-hex.js": SHA256_HEX_JS,
+            "index.js": "!function(){" + "a();" * 200 + "}();",
+            "banner.js": "/*! banner */\n'use strict';\n" + "var a=1;" * 100 + "\n",
+            "readable.js": "const a = 1;\n" * 50,
+        }
+        out = tmp_path / "src"
+        out.mkdir()
+        for name, text in files.items():
+            (out / name).write_text(text)
+        (tmp_path / "out-dir.txt").write_text("src")
+
+        subprocess.run(["sh", "-c", script], cwd=tmp_path, check=True)
+
+        deleted = {line.split("/")[-1] for line in
+                   (tmp_path / "deleted-js.log").read_text().split()}
+        expected = {name for name, text in files.items() if is_minified(text)}
+        assert deleted == expected == {"index.js", "banner.js"}
 
 
 class TestPrintDockerBuildSteps:

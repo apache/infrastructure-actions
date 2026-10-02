@@ -149,8 +149,10 @@ RUN if [ -d "node_modules" ]; then \
 # diffing the committed file against the previously-approved version
 # instead — see diff_source.py / verification.py.
 #
-# Mirrors the Python is_minified() heuristic in diff_js.py: <10 lines OR
-# average line length >500 chars.
+# Mirrors the Python is_minified() heuristic in diff_js.py: average line
+# length >500 chars, OR <10 lines with any line >500 chars.  Shortness alone
+# is not minification — a hand-written 8-line module in an action with no
+# build step would be deleted and never come back.
 RUN OUT_DIR=$(cat /out-dir.txt); \
     if [ -d "$OUT_DIR" ]; then \
       : > /deleted-js.log; \
@@ -158,7 +160,8 @@ RUN OUT_DIR=$(cat /out-dir.txt); \
       find "$OUT_DIR" \( -name '*.js' -o -name '*.cjs' -o -name '*.mjs' \) -type f | while IFS= read -r f; do \
         lines=$(wc -l < "$f"); \
         chars=$(wc -c < "$f"); \
-        if [ "$lines" -lt 10 ] || { [ "$lines" -gt 0 ] && [ "$((chars / lines))" -gt 500 ]; }; then \
+        maxlen=$(awk '{ if (length($0) > m) m = length($0) } END { print m + 0 }' "$f"); \
+        if { [ "$lines" -gt 0 ] && [ "$((chars / lines))" -gt 500 ]; } || { [ "$lines" -lt 10 ] && [ "$maxlen" -gt 500 ]; }; then \
           echo "$f" >> /deleted-js.log; \
           rm -f "$f"; \
         else \
