@@ -187,7 +187,7 @@ runs:
       if: false
     - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c  # v4.3.0
       if: false
-    - uses: JetBrains/qodana-action@10be11607eb323a180e2b76b26c9c5cdceac3e77  # v2026.2.1
+    - uses: JetBrains/qodana-action@3e8d76ff0e0241618abd808682f426afe84bab3f  # v2026.2.2
       if: false
     - uses: Jimver/cuda-toolkit@b8bf9c6c28f8a92fbb04dcfcaee872e60c57462d  # v0.2.36
       if: false
