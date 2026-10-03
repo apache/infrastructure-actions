@@ -127,7 +127,7 @@ runs:
       if: false
     - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d  # v4.0.3
       if: false
-    - uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2  # v3.0.0
+    - uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a  # v3.2.0
       if: false
     - uses: editorconfig-checker/action-editorconfig-checker@51f63319f592f97930c73d9c46184d20bd206393  # v3.0.0
       if: false
