@@ -992,9 +992,6 @@ sigstore/cosign-installer:
     expires_at: 2026-12-31
     tag: v4.0.0
 slackapi/slack-github-action:
-  45a88b9581bfab2566dc881e2cd66d334e621e2c:
-    tag: v3.0.3
-    expires_at: 2026-10-03
   0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc:
     tag: v3.0.5
     expires_at: 2026-10-09
