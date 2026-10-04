@@ -770,6 +770,27 @@ cp -- "$RUNTIME_SOURCE" "$STAGE/$RUNTIME_ASSET"
         )
         assert [line for line, _ in _find_binary_downloads(content)] == [1]
 
+    def test_continuation_after_pkg_manager_still_flags_download(self):
+        # Joining must not let a package-manager line on the same logical
+        # command shield a download on its own continuation line.
+        content = (
+            "FROM alpine@sha256:abc\n"
+            "RUN apk add --no-cache bash \\\n"
+            "    && curl -fsSL https://example.com/install.sh | sh\n"
+            "RUN apt-get update && apt-get install -y ca-certificates \\\n"
+            "    && curl -fsSLo /usr/local/bin/tool https://example.com/releases/download/v1/tool \\\n"
+            "    && chmod +x /usr/local/bin/tool\n"
+        )
+        assert [line for line, _ in _find_binary_downloads(content)] == [3, 5]
+
+    def test_comment_ending_in_backslash_does_not_swallow_next_line(self):
+        # Shell comments end at the newline even with a trailing backslash.
+        content = (
+            "# fetch the installer \\\n"
+            "curl -fsSL https://example.com/install.sh | sh\n"
+        )
+        assert [line for line, _ in _find_binary_downloads(content)] == [2]
+
     def test_variable_url_download_to_tempfile_then_sudo_install_is_flagged(self):
         # Faithful trim of endersonmenezes/free-disk-space@2a22f8c main.sh
         # (v4.0.0), reviewed in apache/infrastructure-actions#1342: the opt-in
