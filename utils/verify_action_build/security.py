@@ -516,6 +516,27 @@ def analyze_dockerfile(
     return warnings
 
 
+_ACTION_PATH_PREFIX = re.compile(
+    r"(?:\$\{\{\s*github\.action_path\s*\}\}|\$\{?GITHUB_ACTION_PATH\}?)/"
+)
+
+
+_EXPRESSION = re.compile(r"\$\{\{.*?\}\}")
+
+
+def _script_ref_text(line: str) -> str:
+    """Normalise an ``action.yml`` line for script-path discovery.
+
+    Action-path prefixes are dropped so ``$GITHUB_ACTION_PATH/scripts/x.sh``
+    and ``${{ github.action_path }}/scripts/x.sh`` resolve to
+    ``scripts/x.sh`` — the bare env-var form otherwise yields a bogus
+    ``GITHUB_ACTION_PATH/...`` path.  Any other ``${{ }}`` expression is
+    blanked rather than causing the whole line to be skipped, so an input
+    or token passed to a script cannot hide the script itself.
+    """
+    return _EXPRESSION.sub(" ", _ACTION_PATH_PREFIX.sub("", line))
+
+
 def analyze_scripts(
     org: str, repo: str, commit_hash: str, sub_path: str = "",
 ) -> list[str]:
@@ -528,9 +549,7 @@ def analyze_scripts(
     script_files: set[str] = set()
 
     for line in action_yml.splitlines():
-        stripped = line.strip()
-        if "${{" in stripped and "}}" in stripped:
-            continue
+        stripped = _script_ref_text(line.strip())
         for ext in (".py", ".sh", ".bash", ".rb", ".pl"):
             matches = re.findall(r"(?<![.\w])[\w][\w./-]*" + re.escape(ext) + r"\b", stripped)
             for m in matches:
@@ -1573,9 +1592,7 @@ def analyze_binary_downloads(
     script_files: set[str] = set()
     if action_yml:
         for line in action_yml.splitlines():
-            stripped = line.strip()
-            if "${{" in stripped and "}}" in stripped:
-                continue
+            stripped = _script_ref_text(line.strip())
             for ext in (".sh", ".bash", ".py", ".ps1"):
                 for m in re.findall(r"(?<![.\w])[\w][\w./-]*" + re.escape(ext) + r"\b", stripped):
                     clean = m.lstrip("./").strip("'\"")
