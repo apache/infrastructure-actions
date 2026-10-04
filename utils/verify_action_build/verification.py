@@ -560,7 +560,23 @@ def verify_single_action(
                         )
                     )
 
-            if all_match:
+            # Kept (non-minified) files are skipped by diff_js_files and only
+            # diffed against the approved version further down, so a match
+            # says nothing about them.  Say so instead of crediting the
+            # rebuild; with no approved version, nothing checks them at all.
+            if all_match and kept_repo_paths and not approved:
+                js_status, js_detail = (
+                    "warn",
+                    f"{len(kept_repo_paths)} non-minified JS file(s) not rebuilt "
+                    "and no approved version to diff against; review manually",
+                )
+            elif all_match and kept_repo_paths:
+                js_status, js_detail = (
+                    "pass",
+                    "rebuilt JS matches; "
+                    f"{len(kept_repo_paths)} non-minified file(s) diffed vs approved",
+                )
+            elif all_match:
                 js_status, js_detail = "pass", "compiled JS matches rebuild"
             elif matched_with_approved_lockfile:
                 js_status, js_detail = (

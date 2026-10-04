@@ -256,6 +256,55 @@ class TestVerifySingleActionLockFileRetry:
         assert js_rows[0][1] == "fail"
         assert "approved lock files" in js_rows[0][2]
 
+    def _js_row_with_kept(self, *, approved: list[dict], kept: list[str]):
+        """Run a matching rebuild that kept *kept* and return the JS summary row."""
+        captured: dict = {}
+
+        def capture_summary(*args, **kwargs):
+            captured["checks"] = kwargs.get("checks_performed") or args[9]
+
+        summary_patch = mock.patch(
+            "verify_action_build.verification.show_verification_summary",
+            side_effect=capture_summary,
+        )
+        started = self._patch_stack(
+            approved=approved,
+            diff_js_side_effect=[True],
+            extra_patches=[("show_verification_summary", summary_patch)],
+        )
+        started["build_in_docker"].return_value = _build_in_docker_result()[:-1] + (kept,)
+        try:
+            result = verify_single_action("org/repo@" + "c" * 40, ci_mode=True)
+        finally:
+            self._stop(started)
+        js_rows = [row for row in captured["checks"] if row[0] == "JS build verification"]
+        assert len(js_rows) == 1
+        return result, js_rows[0]
+
+    def test_kept_js_is_not_reported_as_rebuilt(self):
+        """Non-minified JS kept from the rebuild must not be credited to it.
+
+        Seen on jdx/mise-action v5.0.1 and coursier/setup-action v3.0.4: the
+        only compiled file, dist/index.js, was diffed against the approved
+        version, yet the row read "compiled JS matches rebuild".
+        """
+        result, row = self._js_row_with_kept(
+            approved=[{"hash": "b" * 40, "version": "v1.0.0"}],
+            kept=["dist/index.js"],
+        )
+        assert result is True
+        assert row[1] == "pass"
+        assert row[2] != "compiled JS matches rebuild"
+        assert "1 non-minified" in row[2]
+        assert "approved" in row[2]
+
+    def test_kept_js_without_approved_version_warns(self):
+        """With no approved version there is nothing to diff kept JS against."""
+        result, row = self._js_row_with_kept(approved=[], kept=["dist/index.js"])
+        assert result is True
+        assert row[1] == "warn"
+        assert "review manually" in row[2]
+
 
 class TestVerifySingleActionResultMessage:
     """The RESULT panel text must describe the actual failure cause."""
