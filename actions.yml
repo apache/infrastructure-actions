@@ -680,6 +680,9 @@ JetBrains/qodana-action:
     expires_at: 2026-11-30
   10be11607eb323a180e2b76b26c9c5cdceac3e77:
     tag: v2026.2.1
+    expires_at: 2026-12-27
+  3e8d76ff0e0241618abd808682f426afe84bab3f:
+    tag: v2026.2.2
 jidicula/clang-format-action:
   '*':
     keep: true
