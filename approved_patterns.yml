@@ -123,6 +123,7 @@
 - codecov/codecov-action@*
 - codelytv/pr-size-labeler@*
 - CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea
+- CodSpeedHQ/action@c4fd08a3a159bd0cc208da1e0edf32b8c47d75e5
 - commit-check/commit-check-action@bbb6580f01838e475563514f115ec7ef41c9ddc7
 - commit-check/commit-check-action@d109324148a73dc758891d1d85924c912dbfd38b
 - commit-check/commit-check-action@562a184b2b8e583e757b17eb385bc48370f44547

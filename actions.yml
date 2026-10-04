@@ -326,6 +326,9 @@ codelytv/pr-size-labeler:
 CodSpeedHQ/action:
   373d6868929f444bc08d901fd0eb0ad52a8875ea:
     tag: v5.2.1
+    expires_at: 2026-12-27
+  c4fd08a3a159bd0cc208da1e0edf32b8c47d75e5:
+    tag: v5.4.0
 commit-check/commit-check-action:
   bbb6580f01838e475563514f115ec7ef41c9ddc7:
     tag: v2.11.1
