@@ -476,6 +476,9 @@ dorny/paths-filter:
 dorny/test-reporter:
   a43b3a5f7366b97d083190328d2c652e1a8b6aa2:
     tag: v3.0.0
+    expires_at: 2026-12-27
+  d1b5dff021aa968b288b02285a8bf47471c5928a:
+    tag: v3.2.0
 dtolnay/rust-toolchain:
   # Deliberately carries no `tag:` annotation. Upstream publishes `stable` as a
   # rolling branch that is force-pushed on each toolchain release, so a SHA
@@ -945,6 +948,9 @@ runs-on/action:
     expires_at: 2026-11-30
   efac073ea2507ec18797de3a81704201ade11d9d:
     tag: v2.3.1
+    expires_at: 2026-12-27
+  17b59092eb37ebfdbb034460892887c09100eaa3:
+    tag: v2.5.0
 rust-lang/crates-io-auth-action:
   c6f97d42243bad5fab37ca0427f495c86d5b1a18:
     tag: v1.0.5

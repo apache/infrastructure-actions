@@ -174,6 +174,7 @@
 - dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706
 - dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d
 - dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
+- dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a
 - dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
 - easimon/maximize-build-space@*
 - editorconfig-checker/action-editorconfig-checker@840e866d93b8e032123c23bac69dece044d4d84c
@@ -329,6 +330,7 @@
 - runs-on/action@4e5f72399b6b17f2e79c511c1b38a315a64d22dc
 - runs-on/action@46910bf61b41721b0579f237e186afb35477007a
 - runs-on/action@efac073ea2507ec18797de3a81704201ade11d9d
+- runs-on/action@17b59092eb37ebfdbb034460892887c09100eaa3
 - rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18
 - rustsec/*@*
 - sbt/setup-sbt@66fb4376e81982c7d92a4074170846fff88e2e30
