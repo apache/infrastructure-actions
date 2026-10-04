@@ -200,6 +200,7 @@
 - graalvm/setup-graalvm@0def53c0fd8534bc13416c9469f5be45265824fd
 - graalvm/setup-graalvm@5298d94fb55a4f185c602eeac5de1b553882abe2
 - graalvm/setup-graalvm@0426e2e191540e8514dff98dc52a5f5146a2a276
+- graalvm/setup-graalvm@27b360dbb857524eaf0b4c4cef364d38e5b4f173
 - gradle/actions/dependency-submission@3f131e8634966bd73d06cc69884922b02e6faf92
 - gradle/actions/dependency-submission@9c971963bec38e04b3d30dcc455b5382be2fdbfb
 - gradle/actions/dependency-submission@3f5f9adaf7d9fecd50b5935e54106014257a94e6
@@ -265,6 +266,7 @@
 - lhotari/sandboxed-trivy-action@f01374b6cc3bf7264ab238293e94f6db7ada6dd0
 - loadingalias/cargo-rail-action@e706767c343acb6a2ab1917f243b1616ae9eb05b
 - loadingalias/cargo-rail-action@4a8df181e4f340a164190cf092c9f9239b20edab
+- loadingalias/cargo-rail-action@409962f05d90a78aae995ef6b1c8466010c0a460
 - lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8
 - manusa/actions-setup-minikube@*
 - manusa/actions-setup-minikube@b65276017fdec6f1e6498129fb740e34e260dc55
