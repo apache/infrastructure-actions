@@ -18,6 +18,8 @@
 #
 from unittest import mock
 
+import pytest
+
 from verify_action_build.security import (
     analyze_binary_downloads,
     analyze_binary_downloads_recursive,
@@ -127,6 +129,25 @@ runs:
         # Warnings list may be empty since script analysis only logs to console
         # but doesn't add to warnings for all patterns
         assert isinstance(warnings, list)
+
+    @pytest.mark.parametrize("run", [
+        'bash "$GITHUB_ACTION_PATH/scripts/bootstrap.sh"',
+        "${{ github.action_path }}/scripts/bootstrap.sh",
+    ])
+    def test_script_under_action_path_is_analyzed(self, run):
+        action_yml = f"runs:\n  using: composite\n  steps:\n    - run: {run}\n"
+        fetched: list[str] = []
+
+        def fetch(org, repo, commit, path):
+            fetched.append(path)
+            return None
+
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml), \
+                self._mock_tree(), \
+                mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=fetch):
+            analyze_scripts("org", "repo", "a" * 40)
+        assert "scripts/bootstrap.sh" in fetched
+        assert not any("GITHUB_ACTION_PATH" in p for p in fetched)
 
     def test_no_scripts_no_warnings(self):
         action_yml = """\
@@ -370,6 +391,36 @@ class TestAnalyzeBinaryDownloads:
                 warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
         assert len(failures) >= 1
         assert any("tool.tar.gz" in f for f in failures)
+
+    # Composite actions reach their bundled scripts through the action path.
+    # Only the braced env-var form used to resolve: the bare form produced a
+    # bogus "GITHUB_ACTION_PATH/scripts/..." path and the expression form was
+    # skipped outright, so the script was never scanned.  Seen on
+    # loadingalias/cargo-rail-action v10.1.1 (#1345), whose
+    # scripts/bootstrap.sh downloads a release binary.
+    @pytest.mark.parametrize("run", [
+        'bash "$GITHUB_ACTION_PATH/scripts/bootstrap.sh" run planner',
+        'bash "${GITHUB_ACTION_PATH}/scripts/bootstrap.sh"',
+        "${{ github.action_path }}/scripts/bootstrap.sh",
+        'bash "${{github.action_path}}/scripts/bootstrap.sh"',
+        # Another expression on the same line must not hide the script.
+        '${{ github.action_path }}/scripts/bootstrap.sh "${{ inputs.mode }}"',
+        'bash scripts/bootstrap.sh --token "${{ github.token }}"',
+    ])
+    def test_script_under_action_path_is_scanned(self, run):
+        action_yml = (
+            "runs:\n"
+            "  using: composite\n"
+            "  steps:\n"
+            "    - shell: bash\n"
+            f"      run: {run}\n"
+        )
+        files = {"scripts/bootstrap.sh": "curl -fsSL https://example.com/install.sh | sh\n"}
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) == 1
+        assert "scripts/bootstrap.sh" in failures[0]
 
     def test_sha256sum_verification_passes(self):
         files = {
