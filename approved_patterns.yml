@@ -210,6 +210,7 @@
 - gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6
 - gradle/actions/wrapper-validation@3f131e8634966bd73d06cc69884922b02e6faf92
 - gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb
+- gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6
 - gradle/develocity-actions/maven-publish-build-scan@0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642
 - gradle/develocity-actions/maven-publish-build-scan@4b276bd81fb55e2fcbae724c48699de57e2156eb
 - gradle/develocity-actions/setup-maven@0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642
