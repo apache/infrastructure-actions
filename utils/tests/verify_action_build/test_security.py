@@ -707,6 +707,49 @@ fi
         assert len(failures) == 1
         assert "$TOOL_URL" in failures[0]
 
+    def test_variable_url_download_to_tempfile_then_sudo_install_is_flagged(self):
+        # Faithful trim of endersonmenezes/free-disk-space@2a22f8c main.sh
+        # (v4.0.0), reviewed in apache/infrastructure-actions#1342: the opt-in
+        # `rm_cmd: rmz` path downloads a release binary into a mktemp file
+        # and `sudo install`s it with no checksum.  The literal URL sits on
+        # an assignment line, so the download line itself carries only
+        # variables; the tool reported "No binary downloads detected".
+        main_sh = """\
+#!/usr/bin/env bash
+RMZ_VERSION="${RMZ_VERSION:-3.1.1}"
+ASSET="x86_64-unknown-linux-gnu-rmz"
+RMZ_RELEASE_URL="https://github.com/SUPERCILEX/fuc/releases/download/${RMZ_VERSION}/${ASSET}"
+
+# Download to a temporary file first so curl failures are detected, then install atomically
+tmpfile=$(mktemp)
+if ! curl -fsSL -o "${tmpfile}" "${RMZ_RELEASE_URL}"; then
+    echo "Failed to download rmz from ${RMZ_RELEASE_URL}"
+    rm -f "${tmpfile}"
+    exit 0
+fi
+sudo install -m 0755 "${tmpfile}" /usr/local/bin/rmz
+rm -f "${tmpfile}"
+"""
+        files = {
+            "action.yaml": (
+                "name: free-disk-space\n"
+                "runs:\n"
+                "  using: composite\n"
+                "  steps:\n"
+                "    - shell: bash\n"
+                '      run: echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH\n'
+                "    - shell: bash\n"
+                "      run: main.sh\n"
+            ),
+            "main.sh": main_sh,
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=files["action.yaml"]):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) == 1
+        assert '"${RMZ_RELEASE_URL}"' in failures[0]
+        assert "main.sh" in failures[0]
+
 
 class TestAnalyzeBinaryDownloadsRecursive:
     def test_recurses_through_composite(self):
