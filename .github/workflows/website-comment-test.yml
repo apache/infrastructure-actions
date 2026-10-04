@@ -110,15 +110,15 @@ jobs:
           echo "::error::preview-annotate accepted an unknown generator"
           exit 1
 
+  # ubuntu-slim cannot start a job container, so Ruby comes from apt rather
+  # than a Ruby image, and no third-party setup-ruby action is added.
   jekyll:
     name: "Jekyll adapter, end to end"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       contents: read
       pull-requests: read # preview-artifact lists the PR's changed files for anchors
     timeout-minutes: 10
-    container:
-      image: ruby:3.3@sha256:21e6a5125535e13999143c49b6471f68c92a74d8faad0a3541c51b11de0266ad
     env:
       # Install exactly what the lockfile names, checksums included.
       BUNDLE_GEMFILE: website-comment/adapters/jekyll/test/Gemfile
@@ -128,6 +128,20 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
+
+      # eventmachine and friends build native extensions, hence the toolchain.
+      - name: Install Ruby, Bundler and a C toolchain
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends ruby-full ruby-bundler build-essential
+          ruby --version
+
+      # A writable gem home, so Bundler can switch itself to the version the
+      # lockfile's BUNDLED WITH names, instead of an unpinned `gem install`.
+      - name: Use a user gem home
+        run: |
+          echo "GEM_HOME=$RUNNER_TEMP/gems" >> "$GITHUB_ENV"
+          echo "$RUNNER_TEMP/gems/bin" >> "$GITHUB_PATH"
 
       - name: Install the locked test dependencies
         run: bundle install
