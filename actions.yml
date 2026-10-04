@@ -1091,6 +1091,9 @@ terraform-linters/setup-tflint:
     expires_at: 2026-11-30
   1cf010d3c7aef302051ccdb68c14c5dc2efa34ef:
     tag: v6.3.1
+    expires_at: 2026-12-27
+  6ffdbaa3be476b3431f7275c26966ef32ff60337:
+    tag: v6.3.2
 test-summary/action:
   '*':
     keep: true
