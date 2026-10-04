@@ -33,6 +33,7 @@ from verify_action_build.security import (
 from verify_action_build.security import (
     _fetch_release_asset_bytes,
     _file_is_pure_data_fetch,
+    _find_binary_downloads,
     _find_binary_downloads_js,
     _looks_like_in_tree_binary,
     _parse_sha256sums,
@@ -706,6 +707,68 @@ fi
                 warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
         assert len(failures) == 1
         assert "$TOOL_URL" in failures[0]
+
+    # Faithful trim of loadingalias/cargo-rail-action@409962f
+    # scripts/bootstrap.sh (v10.1.1), reviewed in
+    # apache/infrastructure-actions#1345.  Both curl calls put the output
+    # flag and the URL on a backslash-continued line, so the line-based scan
+    # saw a bare `curl --fail ... \` and reported "No binary downloads".
+    CARGO_RAIL_BOOTSTRAP_SH = """\
+#!/usr/bin/env bash
+set -euo pipefail
+sha256_file() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{print $1}'
+  else
+    shasum -a 256 "$1" | awk '{print $1}'
+  fi
+}
+MANIFEST_PATH="$BOOTSTRAP_TEMP/$RUNTIME_MANIFEST"
+RELEASE_ROOT="https://github.com/loadingalias/cargo-rail-action/releases/download/$RUNTIME_RELEASE"
+curl --fail --silent --show-error --location --retry 3 --proto '=https' --tlsv1.2 \\
+  --max-filesize "$MAX_MANIFEST_BYTES" --output "$MANIFEST_PATH" "$RELEASE_ROOT/$RUNTIME_MANIFEST" \\
+  || fail "cannot download the Cargo-Rail Action runtime manifest for $RUNTIME_RELEASE"
+RUNTIME_SOURCE="$BOOTSTRAP_TEMP/$RUNTIME_ASSET"
+curl --fail --silent --show-error --location --retry 3 --proto '=https' --tlsv1.2 \\
+  --max-filesize "$MAX_RUNTIME_BYTES" --output "$RUNTIME_SOURCE" "$RELEASE_ROOT/$RUNTIME_ASSET" \\
+  || fail "cannot download the Cargo-Rail Action runtime for $TARGET"
+[[ "$(sha256_file "$RUNTIME_SOURCE")" == "$RUNTIME_DIGEST" ]] || fail "runtime digest does not match the manifest"
+STAGE="$(mktemp -d "$INSTALL_BASE/$RUNTIME_VERSION/.runtime-stage.XXXXXX")"
+chmod 700 "$STAGE"
+cp -- "$RUNTIME_SOURCE" "$STAGE/$RUNTIME_ASSET"
+"""
+
+    def test_backslash_continued_download_is_found(self):
+        findings = _find_binary_downloads(self.CARGO_RAIL_BOOTSTRAP_SH)
+        # Reported at the first physical line of each logical command.
+        assert [line for line, _ in findings] == [12, 16]
+        assert all(snippet.startswith("curl --fail") for _, snippet in findings)
+
+    def test_backslash_continued_download_with_checksum_is_a_warning(self):
+        files = {
+            "action.yml": (
+                "runs:\n"
+                "  using: composite\n"
+                "  steps:\n"
+                "    - shell: bash\n"
+                '      run: bash "${GITHUB_ACTION_PATH}/scripts/bootstrap.sh" run planner\n'
+            ),
+            "scripts/bootstrap.sh": self.CARGO_RAIL_BOOTSTRAP_SH,
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=files["action.yml"]):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+        assert len(warnings) == 2
+
+    def test_literal_url_on_continuation_line_is_found(self):
+        content = (
+            "curl -fsSL \\\n"
+            "  -o /usr/local/bin/tool \\\n"
+            "  https://example.com/releases/download/v1/tool-linux-amd64\n"
+            "chmod +x /usr/local/bin/tool\n"
+        )
+        assert [line for line, _ in _find_binary_downloads(content)] == [1]
 
     def test_variable_url_download_to_tempfile_then_sudo_install_is_flagged(self):
         # Faithful trim of endersonmenezes/free-disk-space@2a22f8c main.sh

@@ -1480,6 +1480,30 @@ def _discover_shell_script_files(
     return paths
 
 
+def _logical_lines(content: str) -> list[tuple[int, str]]:
+    """Join backslash-continued shell lines into one logical command.
+
+    Returns ``(first_line_num, line)`` pairs.  Long ``curl`` calls routinely
+    put the output flag and URL on continuation lines, which a per-line scan
+    never sees together with the command name.
+    """
+    result: list[tuple[int, str]] = []
+    start, parts = 0, []
+    for i, line in enumerate(content.splitlines(), 1):
+        if not parts:
+            start = i
+        body = line.rstrip()
+        if body.endswith("\\"):
+            parts.append(body[:-1].strip())
+            continue
+        parts.append(line.strip())
+        result.append((start, " ".join(p for p in parts if p)))
+        parts = []
+    if parts:
+        result.append((start, " ".join(p for p in parts if p)))
+    return result
+
+
 def _find_binary_downloads(content: str) -> list[tuple[int, str]]:
     """Find lines that download binaries or scripts over HTTP(S).
 
@@ -1492,7 +1516,7 @@ def _find_binary_downloads(content: str) -> list[tuple[int, str]]:
     """
     findings: list[tuple[int, str]] = []
     handles_binary = any(p.search(content) for p in _SHELL_BINARY_HANDLE_PATTERNS)
-    for i, line in enumerate(content.splitlines(), 1):
+    for i, line in _logical_lines(content):
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
