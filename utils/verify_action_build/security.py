@@ -1480,28 +1480,58 @@ def _discover_shell_script_files(
     return paths
 
 
-def _logical_lines(content: str) -> list[tuple[int, str]]:
+def _continued_commands(content: str) -> list[tuple[int, int, str]]:
     """Join backslash-continued shell lines into one logical command.
 
-    Returns ``(first_line_num, line)`` pairs.  Long ``curl`` calls routinely
-    put the output flag and URL on continuation lines, which a per-line scan
-    never sees together with the command name.
+    Returns ``(first_line_num, last_line_num, line)`` for each command that
+    spans more than one physical line.  Long ``curl`` calls routinely put the
+    output flag and URL on continuation lines, which a per-line scan never
+    sees together with the command name.  A comment ends at its newline even
+    with a trailing backslash, so a comment never starts a continuation.
     """
-    result: list[tuple[int, str]] = []
+    result: list[tuple[int, int, str]] = []
     start, parts = 0, []
     for i, line in enumerate(content.splitlines(), 1):
+        body = line.strip()
         if not parts:
             start = i
-        body = line.rstrip()
+            if body.startswith("#"):
+                continue
         if body.endswith("\\"):
             parts.append(body[:-1].strip())
             continue
-        parts.append(line.strip())
-        result.append((start, " ".join(p for p in parts if p)))
-        parts = []
-    if parts:
-        result.append((start, " ".join(p for p in parts if p)))
+        if parts:
+            parts.append(body)
+            result.append((start, i, " ".join(p for p in parts if p)))
+            parts = []
+    if len(parts) > 1:
+        result.append((start, start + len(parts) - 1, " ".join(p for p in parts if p)))
     return result
+
+
+def _is_binary_download_line(line: str, handles_binary: bool) -> bool:
+    stripped = line.strip()
+    if not stripped or stripped.startswith("#"):
+        return False
+    if _line_is_pkg_manager(stripped):
+        return False
+
+    if _PIPE_TO_SHELL.search(line):
+        return True
+
+    if not any(p.search(stripped) for p in _DOWNLOAD_LINE_PATTERNS):
+        return False
+
+    url_match = re.search(r"https?://\S+", stripped)
+    if not url_match:
+        return handles_binary and _is_variable_url_download(stripped)
+    url = url_match.group(0).rstrip(",;'\")}\\")
+
+    if url.lower().endswith(_BINARY_EXTS):
+        return True
+    if stripped.upper().startswith("ADD "):
+        return True
+    return any(m in url for m in ("/releases/download/", "/bin/", "/binaries/", "/dist/"))
 
 
 def _find_binary_downloads(content: str) -> list[tuple[int, str]]:
@@ -1513,40 +1543,24 @@ def _find_binary_downloads(content: str) -> list[tuple[int, str]]:
     A download line needs either a literal URL that looks like a binary, or a
     shell-variable URL written to a file in a script that goes on to extract
     or install what it fetched (see :func:`_is_variable_url_download`).
+
+    Every physical line is scanned on its own; a backslash-continued command
+    is then scanned joined, and reported at its first line, only when none of
+    its physical lines was already flagged.  Joining can therefore add
+    findings but never hide one — e.g. a package-manager call earlier in the
+    same ``RUN`` must not shield a ``curl`` on a continuation line.
     """
-    findings: list[tuple[int, str]] = []
     handles_binary = any(p.search(content) for p in _SHELL_BINARY_HANDLE_PATTERNS)
-    for i, line in _logical_lines(content):
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if _line_is_pkg_manager(stripped):
-            continue
-
-        if _PIPE_TO_SHELL.search(line):
-            findings.append((i, stripped[:120]))
-            continue
-
-        if not any(p.search(stripped) for p in _DOWNLOAD_LINE_PATTERNS):
-            continue
-
-        url_match = re.search(r"https?://\S+", stripped)
-        if not url_match:
-            if handles_binary and _is_variable_url_download(stripped):
-                findings.append((i, stripped[:120]))
-            continue
-        url = url_match.group(0).rstrip(",;'\")}\\")
-
-        if url.lower().endswith(_BINARY_EXTS):
-            findings.append((i, stripped[:120]))
-            continue
-        if stripped.upper().startswith("ADD "):
-            findings.append((i, stripped[:120]))
-            continue
-        if any(m in url for m in ("/releases/download/", "/bin/", "/binaries/", "/dist/")):
-            findings.append((i, stripped[:120]))
-            continue
-    return findings
+    findings: list[tuple[int, str]] = [
+        (i, line.strip()[:120])
+        for i, line in enumerate(content.splitlines(), 1)
+        if _is_binary_download_line(line, handles_binary)
+    ]
+    flagged = {i for i, _ in findings}
+    for first, last, joined in _continued_commands(content):
+        if flagged.isdisjoint(range(first, last + 1)) and _is_binary_download_line(joined, handles_binary):
+            findings.append((first, joined[:120]))
+    return sorted(findings)
 
 
 def _has_verification(content: str) -> bool:
