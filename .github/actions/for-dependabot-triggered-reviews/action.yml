@@ -179,7 +179,7 @@ runs:
       if: false
     - uses: italia/publiccode-parser-action@0deab88c3f094aa12c5826e52ac2c4f176446821  # v1.6.0
       if: false
-    - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece  # v3.0.0
+    - uses: j178/prek-action@1382ad72dea72f9d53832f2bcb65b3e87a947204  # v3.0.1
       if: false
     - uses: JamesIves/github-pages-deploy-action@fa24774553152dd7873cd16ebd8d959b010c5445  # v4.9.0
       if: false
