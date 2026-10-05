@@ -212,9 +212,6 @@ carabiner-dev/actions/install/ampel-bootstrap:
     expires_at: 2026-10-11
   # transitive dep pulled by install/download-and-verify @ v1.2.1 (f882fa9e);
   # completes the v1.2.1 (94f29392) approval so the transitive-failures canary resolves.
-  94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
-    tag: v1.2.1
-    expires_at: 2026-10-05
   be6b4fa42fa3a8432416475d74218b9aa51ea527:
     expires_at: 2026-10-19
   # transitive: referenced by carabiner-dev/actions v1.2.3 internal refs.
