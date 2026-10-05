@@ -597,6 +597,9 @@ gradle/develocity-actions/maven-publish-build-scan:
     expires_at: 2026-11-30
   4b276bd81fb55e2fcbae724c48699de57e2156eb:
     tag: v2.3
+gradle/develocity-actions/setup-docker:
+  f852d93dada312948b1ba533226c28e05d756866:
+    tag: v2.4
 gradle/develocity-actions/setup-maven:
   0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642:
     tag: v2.2
