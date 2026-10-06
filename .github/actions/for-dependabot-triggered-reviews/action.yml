@@ -165,7 +165,7 @@ runs:
       if: false
     - uses: gradle/develocity-actions/setup-docker@f852d93dada312948b1ba533226c28e05d756866  # v2.4
       if: false
-    - uses: gradle/develocity-actions/setup-maven@4b276bd81fb55e2fcbae724c48699de57e2156eb  # v2.3
+    - uses: gradle/develocity-actions/setup-maven@f852d93dada312948b1ba533226c28e05d756866  # v2.4
       if: false
     - uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
       if: false
