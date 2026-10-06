@@ -654,6 +654,9 @@ j178/prek-action:
     expires_at: 2026-10-22
   4e14d07f9231acabce116ccfca13b13dd9755ece:
     tag: v3.0.0
+    expires_at: 2026-12-29
+  1382ad72dea72f9d53832f2bcb65b3e87a947204:
+    tag: v3.0.1
 JamesIves/github-pages-deploy-action:
   d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
     tag: v4.8.0
