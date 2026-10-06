@@ -161,7 +161,7 @@ runs:
       if: false
     - uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6  # v6.4.0
       if: false
-    - uses: gradle/develocity-actions/maven-publish-build-scan@4b276bd81fb55e2fcbae724c48699de57e2156eb  # v2.3
+    - uses: gradle/develocity-actions/maven-publish-build-scan@f852d93dada312948b1ba533226c28e05d756866  # v2.4
       if: false
     - uses: gradle/develocity-actions/setup-docker@f852d93dada312948b1ba533226c28e05d756866  # v2.4
       if: false
