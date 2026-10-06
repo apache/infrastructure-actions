@@ -597,6 +597,9 @@ gradle/develocity-actions/maven-publish-build-scan:
     expires_at: 2026-11-30
   4b276bd81fb55e2fcbae724c48699de57e2156eb:
     tag: v2.3
+    expires_at: 2026-12-29
+  f852d93dada312948b1ba533226c28e05d756866:
+    tag: v2.4
 gradle/develocity-actions/setup-docker:
   f852d93dada312948b1ba533226c28e05d756866:
     tag: v2.4
@@ -606,6 +609,9 @@ gradle/develocity-actions/setup-maven:
     expires_at: 2026-11-30
   4b276bd81fb55e2fcbae724c48699de57e2156eb:
     tag: v2.3
+    expires_at: 2026-12-29
+  f852d93dada312948b1ba533226c28e05d756866:
+    tag: v2.4
 hadolint/hadolint-action:
   2332a7b74a6de0dda2e2221d575162eba76ba5e5:
     tag: v3.3.0
@@ -630,6 +636,9 @@ helm/kind-action:
     expires_at: 2026-11-30
   06c1ae10762d3b9c1644e7fe69596ae519e015a2:
     tag: v1.15.0
+    expires_at: 2026-12-29
+  1544676c07bb3570fcb70166beaa07c4528fd4aa:
+    tag: v1.15.1
 houseabsolute/actions-rust-cross:
   '*':
     keep: true
@@ -680,6 +689,9 @@ jdx/mise-action:
     expires_at: 2026-12-27
   94c60b39bc2d90ab2f9bab27f38d3cc4812c1834:
     tag: v5.1.0
+    expires_at: 2026-12-29
+  2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca:
+    tag: v5.1.1
 JetBrains/qodana-action:
   4861e015da555e86a72b862892aba6c2b93e6891:
     tag: v2026.1.3
@@ -912,6 +924,9 @@ pypa/cibuildwheel:
     expires_at: 2026-12-01
   e090b81e30c4d855ea63bf4b6e59204c09a101ae:
     tag: v4.2.1
+    expires_at: 2026-12-29
+  adba99c781d3746d38b3a09b1cf797965bcb7fe6:
+    tag: v4.3.0
 pypa/gh-action-pip-audit:
   1220774d901786e6f652ae159f7b6bc8fea6d266:
     tag: v1.1.0
