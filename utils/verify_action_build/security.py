@@ -1080,6 +1080,7 @@ _BINARY_EXTS = (
     ".exe", ".msi", ".deb", ".rpm", ".dmg", ".pkg", ".appimage",
     ".jar", ".so", ".dylib", ".dll", ".bin",
 )
+_BINARY_URL_PATH_MARKERS = ("/releases/download/", "/bin/", "/binaries/", "/dist/")
 
 # Pipe-to-shell: curl/wget output piped straight into a shell interpreter.
 _PIPE_TO_SHELL = re.compile(
@@ -1424,9 +1425,29 @@ def _discover_shell_script_files(
 def _find_binary_downloads(content: str) -> list[tuple[int, str]]:
     """Find lines that download binaries or scripts over HTTP(S).
 
+    Shell URL variables pointing at known binary paths are followed to their
+    curl/wget use so dynamically composed release URLs are still checked.
     Returns a list of ``(line_num, snippet)`` tuples. Lines that are part of a
     package-manager invocation are skipped.
     """
+    binary_url_vars: set[str] = set()
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        assignment = re.search(
+            r"\b([A-Za-z_]\w*)\s*=\s*[\"']?(https?://\S+)",
+            stripped,
+        )
+        if not assignment:
+            continue
+        url = assignment.group(2).rstrip(",;'\"})\\")
+        if (
+            url.lower().endswith(_BINARY_EXTS)
+            or any(marker in url.lower() for marker in _BINARY_URL_PATH_MARKERS)
+        ):
+            binary_url_vars.add(assignment.group(1))
+
     findings: list[tuple[int, str]] = []
     for i, line in enumerate(content.splitlines(), 1):
         stripped = line.strip()
@@ -1444,8 +1465,13 @@ def _find_binary_downloads(content: str) -> list[tuple[int, str]]:
 
         url_match = re.search(r"https?://\S+", stripped)
         if not url_match:
+            if any(
+                re.search(rf"\$\{{?{re.escape(name)}\}}?", stripped)
+                for name in binary_url_vars
+            ):
+                findings.append((i, stripped[:120]))
             continue
-        url = url_match.group(0).rstrip(",;'\")}\\")
+        url = url_match.group(0).rstrip(",;'\"})\\")
 
         if url.lower().endswith(_BINARY_EXTS):
             findings.append((i, stripped[:120]))
@@ -1453,7 +1479,7 @@ def _find_binary_downloads(content: str) -> list[tuple[int, str]]:
         if stripped.upper().startswith("ADD "):
             findings.append((i, stripped[:120]))
             continue
-        if any(m in url for m in ("/releases/download/", "/bin/", "/binaries/", "/dist/")):
+        if any(marker in url.lower() for marker in _BINARY_URL_PATH_MARKERS):
             findings.append((i, stripped[:120]))
             continue
     return findings

@@ -590,6 +590,39 @@ runs:
                 warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
         assert len(failures) >= 1
 
+    def test_shell_variable_release_download_fails(self):
+        action_yml = """\
+name: Test
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: main.sh
+"""
+        files = {
+            "main.sh": (
+                'ASSET="x86_64-unknown-linux-gnu-rmz"\n'
+                'RMZ_RELEASE_URL="https://github.com/SUPERCILEX/fuc/releases/download/'
+                '${RMZ_VERSION}/${ASSET}"\n'
+                'curl -fsSL -o "${tmpfile}" "${RMZ_RELEASE_URL}"\n'
+                'sudo install -m 0755 "${tmpfile}" /usr/local/bin/rmz\n'
+            ),
+        }
+        with mock.patch(
+            "verify_action_build.security.fetch_file_from_github",
+            side_effect=self._mock_fetch(files),
+        ):
+            with mock.patch(
+                "verify_action_build.security.fetch_action_yml",
+                return_value=action_yml,
+            ):
+                warnings, failures = analyze_binary_downloads(
+                    "org", "repo", "a" * 40,
+                )
+        assert not warnings
+        assert len(failures) == 1
+        assert "main.sh line 3: unverified download" in failures[0]
+
 
 class TestAnalyzeBinaryDownloadsRecursive:
     def test_recurses_through_composite(self):
