@@ -131,6 +131,8 @@ runs:
       if: false
     - uses: editorconfig-checker/action-editorconfig-checker@51f63319f592f97930c73d9c46184d20bd206393  # v3.0.0
       if: false
+    - uses: endersonmenezes/free-disk-space@2a22f8c59cae9cddae7194b33e6b92d023b2b4b8  # v4.0.0
+      if: false
     - uses: erisu/apache-rat-action@30c94d10ed21e6f6fd5590dc5c158f58cae7a0dd  # v3.0.0
       if: false
     - uses: erisu/license-checker-action@04511f4c052b5773f11e1c65b42cda88235c62ae  # v2.1.0
