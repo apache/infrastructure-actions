@@ -132,6 +132,9 @@ azure/setup-helm:
 azure/setup-kubectl:
   829323503d1be3d00ca8346e5391ca0b07a9ab0d:
     tag: v5.1.0
+    expires_at: 2026-12-31
+  bda439f5f36b99b262ebdcd3613869bddb064c8e:
+    tag: v5.2.0
 bazel-contrib/setup-bazel:
   c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86:
     tag: 0.19.0
