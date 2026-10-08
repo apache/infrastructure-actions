@@ -205,6 +205,13 @@ carabiner-dev/actions/install/ampel:
   32587e82f960d49b36101e8c45d1956e511965d3:
     tag: v1.2.9
     expires_at: 2026-12-09
+  # transitive: sbt/setup-sbt v1.5.11 (6158cb09) pins ampel/verify @ v1.2.9
+  # (32587e82), which pins this ref; it in turn pins download-and-verify
+  # @ 2fec8bd8 -> ampel-bootstrap @ 16009dca, extended to the same date.
+  # Verified carabiner release-bot commit.
+  d6d91c5c88723021a8798392cb9780c89ff6fdad:
+    tag: v1.2.7
+    expires_at: 2026-12-09
   d41fe10fe88deaf493ce026007da73738b9f570c:
     tag: v1.3.0
 carabiner-dev/actions/install/ampel-bootstrap:
@@ -230,7 +237,7 @@ carabiner-dev/actions/install/ampel-bootstrap:
   2fec8bd8e1dcfdea26080648070b4827f1fa0584:
     expires_at: 2026-10-21
   16009dca48ac369882d4333f1d15d7cd3a4ded31:
-    expires_at: 2026-10-21
+    expires_at: 2026-12-09
   ade14d87ee05bd60ec9028e3f5f430ee571ac8df:
     expires_at: 2026-11-17
   833eed5876a6db1dbfd60289611ee40fc12f4fe2:
@@ -286,7 +293,7 @@ carabiner-dev/actions/install/download-and-verify:
   # install/ampel @ 2fec8bd8 in turn pins 16009dca. Verified carabiner
   # release-bot commits.
   2fec8bd8e1dcfdea26080648070b4827f1fa0584:
-    expires_at: 2026-10-21
+    expires_at: 2026-12-09
   16009dca48ac369882d4333f1d15d7cd3a4ded31:
     expires_at: 2026-10-21
   ade14d87ee05bd60ec9028e3f5f430ee571ac8df:
