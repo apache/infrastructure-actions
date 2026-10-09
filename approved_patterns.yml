@@ -364,7 +364,6 @@
 - shivammathur/setup-php@*
 - shogo82148/actions-setup-perl@*
 - sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad
-- slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc
 - slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d
 - slsa-framework/actions@dea965cdca5e0cb422bf7b2653c9d15f678ad01c
 - snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263
@@ -397,7 +396,6 @@
 - vapier/coverity-scan-action@8fe7b0af23cbbd4eced5f63dcd2384640eaa5d49
 - vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
 - vishalsinha21/dynamic-checklist@*
-- zizmorcore/zizmor-action@192e21d79ab29983730a13d1382995c2307fbcaa
 - zizmorcore/zizmor-action@6599ee8b7a49aef6a770f63d261d214911a7ce02
 - zizmorcore/zizmor-action@6fc4b006235f201fdab3722e17240ab420d580e5
 - zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054

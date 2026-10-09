@@ -1056,9 +1056,6 @@ sigstore/cosign-installer:
     expires_at: 2026-12-31
     tag: v4.0.0
 slackapi/slack-github-action:
-  0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc:
-    tag: v3.0.5
-    expires_at: 2026-10-09
   dcb1066f776dd043e64d0e8ba94ca15cc7e1875d:
     tag: v4.0.0
 slsa-framework/actions:
@@ -1156,9 +1153,6 @@ vishalsinha21/dynamic-checklist:
   '*':
     keep: true
 zizmorcore/zizmor-action:
-  192e21d79ab29983730a13d1382995c2307fbcaa:
-    tag: v0.5.7
-    expires_at: 2026-10-09
   6599ee8b7a49aef6a770f63d261d214911a7ce02:
     tag: v0.6.0
     expires_at: 2026-10-24
