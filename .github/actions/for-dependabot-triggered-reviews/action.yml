@@ -89,7 +89,7 @@ runs:
       if: false
     - uses: CodSpeedHQ/action@c4fd08a3a159bd0cc208da1e0edf32b8c47d75e5  # v5.4.0
       if: false
-    - uses: commit-check/commit-check-action@fd3d923eab0876650f261d2a75572e8161a9a58e  # v2.16.0
+    - uses: commit-check/commit-check-action@a61779784a953fd9047c001c102cfeac5cf26964  # v2.17.1
       if: false
     - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d  # v8.1.1
       if: false
