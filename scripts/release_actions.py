@@ -72,12 +72,46 @@ class Action:
 
 # The actions this repo publishes.  ``stash/save`` and ``stash/restore`` both
 # import ``stash/shared/mung.py`` at runtime (PYTHONPATH -> ../shared), so a
-# change there releases both.
+# change there releases both.  The ``website-comment/*`` actions run code from
+# sibling directories through ``github.action_path/..``: the annotator the
+# generator adapters, the artifact step the library's metadata writer, and the
+# publisher and main-site overlay the library, the overlay they inject and the
+# vendored screenshot library.
 ACTIONS: tuple[Action, ...] = (
     Action("allowlist-check", "allowlist-check", ("allowlist-check/",)),
     Action("pelican", "pelican", ("pelican/",)),
     Action("save", "stash/save", ("stash/save/", "stash/shared/")),
     Action("restore", "stash/restore", ("stash/restore/", "stash/shared/")),
+    Action(
+        "preview-annotate",
+        "website-comment/preview-annotate",
+        ("website-comment/preview-annotate/", "website-comment/adapters/"),
+    ),
+    Action(
+        "preview-artifact",
+        "website-comment/preview-artifact",
+        ("website-comment/preview-artifact/", "website-comment/lib/"),
+    ),
+    Action(
+        "preview-main-overlay",
+        "website-comment/preview-main-overlay",
+        (
+            "website-comment/preview-main-overlay/",
+            "website-comment/lib/",
+            "website-comment/overlay/",
+            "website-comment/vendor/",
+        ),
+    ),
+    Action(
+        "preview-publish",
+        "website-comment/preview-publish",
+        (
+            "website-comment/preview-publish/",
+            "website-comment/lib/",
+            "website-comment/overlay/",
+            "website-comment/vendor/",
+        ),
+    ),
 )
 
 VALID_BUMPS = ("major", "minor", "patch")
