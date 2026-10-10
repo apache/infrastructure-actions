@@ -42,6 +42,24 @@ def _collect_compiled_js(base: Path) -> set[Path]:
     return found
 
 
+def is_minified(content: str) -> bool:
+    """Check if JS content appears to be minified.
+
+    Minified means long lines: an average over 500 chars, or — for a file
+    under 10 lines — any single line over 500 chars.  Shortness alone does
+    not count: manusa/actions-setup-minikube ships hand-written 6-10 line
+    modules (``src/shell-quote.js``) that a rebuild with no build step never
+    recreates.  Mirrored in ``dockerfiles/build_action.Dockerfile``.
+    """
+    lines = content.splitlines()
+    if not lines:
+        return False
+    lengths = [len(l) for l in lines]
+    if sum(lengths) / len(lengths) > 500:
+        return True
+    return len(lines) < 10 and max(lengths) > 500
+
+
 def beautify_js(content: str) -> str:
     """Reformat JavaScript for readable diffing."""
     opts = jsbeautifier.default_options()
@@ -110,14 +128,6 @@ def diff_js_files(
             f"{len(rebuilt_files)} file(s) but the action publishes none"
         )
         all_match = False
-
-    def is_minified(content: str) -> bool:
-        """Check if JS content appears to be minified."""
-        lines = content.splitlines()
-        if not lines:
-            return False
-        avg_len = sum(len(l) for l in lines) / len(lines)
-        return avg_len > 500 or len(lines) < 10
 
     # Check which ignored files are actually referenced by other JS files
     all_js_contents: dict[Path, str] = {}

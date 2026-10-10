@@ -18,7 +18,61 @@
 #
 from pathlib import Path
 
-from verify_action_build.diff_js import _collect_compiled_js, beautify_js, diff_js_files
+from verify_action_build.diff_js import (
+    _collect_compiled_js,
+    beautify_js,
+    diff_js_files,
+    is_minified,
+)
+
+# Hand-written modules shipped as-is by manusa/actions-setup-minikube@001b9f30
+# (v2.19.0), which has no build step.  The old "<10 lines is minified" rule
+# deleted both before the rebuild, and nothing recreated them.
+SHELL_QUOTE_JS = r"""'use strict';
+
+// Quotes a value so the shell passes it as a single, literal argument
+const shellQuote = value => `'${value.replaceAll("'", "'\\''")}'`;
+
+module.exports = {
+  shellQuote
+};
+"""
+
+SHA256_HEX_JS = """'use strict';
+
+const crypto = require('node:crypto');
+
+const sha256Hex = buffer =>
+  crypto.createHash('sha256').update(buffer).digest('hex');
+
+module.exports = {
+  sha256Hex
+};
+"""
+
+
+class TestIsMinified:
+    def test_short_hand_written_modules_are_not_minified(self):
+        assert len(SHELL_QUOTE_JS.splitlines()) < 10
+        assert is_minified(SHELL_QUOTE_JS) is False
+        assert is_minified(SHA256_HEX_JS) is False
+
+    def test_single_long_line_is_minified(self):
+        assert is_minified("!function(){" + "a();" * 200 + "}();") is True
+
+    def test_short_file_with_one_long_line_is_minified(self):
+        # License banner + one minified line: average stays under 500.
+        content = "/*! banner */\n'use strict';\n" + "var a=1;" * 100 + "\n"
+        assert is_minified(content) is True
+
+    def test_long_average_line_length_is_minified(self):
+        assert is_minified(("x" * 600 + "\n") * 20) is True
+
+    def test_long_readable_file_is_not_minified(self):
+        assert is_minified("const a = 1;\n" * 50) is False
+
+    def test_empty_file_is_not_minified(self):
+        assert is_minified("") is False
 
 
 class TestBeautifyJs:
