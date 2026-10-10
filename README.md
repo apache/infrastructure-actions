@@ -124,7 +124,9 @@ contributed specifically for this repository.
 
 A release is the tag pair (`<prefix>/vX.Y.Z` plus the moving `<prefix>/vN`) and
 nothing more — this repo publishes no GitHub Release objects, because
-Dependabot resolves versions from the tags themselves.
+Dependabot resolves versions from the tags themselves. The major tag is
+force-moved on each release, so refresh an existing clone with
+`git fetch --tags --force` to see where it points now.
 
 Tracking `@main` (as in the quick-start above) also works and always gives you
 the latest code, but it drifts from any pinned SHA and Zizmor will flag the

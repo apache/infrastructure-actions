@@ -39,6 +39,12 @@ prefix a consumer repeats in the `@ref`:
 For every `X.Y.Z` release we also move a **major** tag (`<prefix>/vN`) to the
 same commit, so consumers can track a major line if they prefer.
 
+Because the major tag is force-moved, a plain `git fetch` in an existing clone
+keeps the old local copy (git refuses to clobber a tag it already has), so
+`<prefix>/vN` can look stale locally while it is current on GitHub. Refresh
+with `git fetch --tags --force`, or check the remote directly with
+`git ls-remote --tags origin '<prefix>/v*'`.
+
 This leaf-name prefix scheme is the format Dependabot's `github_actions`
 ecosystem understands for monorepos
 ([dependabot/dependabot-core#11286][11286], added specifically for this repo).
