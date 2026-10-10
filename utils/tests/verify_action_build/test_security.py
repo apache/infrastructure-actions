@@ -18,6 +18,8 @@
 #
 from unittest import mock
 
+import pytest
+
 from verify_action_build.security import (
     analyze_binary_downloads,
     analyze_binary_downloads_recursive,
@@ -161,6 +163,37 @@ runs:
             analyze_scripts("org", "repo", "a" * 40)
         fetched = {call.args[3] for call in fetch.call_args_list}
         assert "src/run-on-arch.sh" in fetched
+
+    @pytest.mark.parametrize("prefix", [
+        '"$GITHUB_ACTION_PATH/',
+        '"${GITHUB_ACTION_PATH}/',
+        '${{ github.action_path }}/',
+    ])
+    def test_resolves_script_under_action_path(self, prefix):
+        # commit-check/commit-check-action runs
+        # `$PYTHON_CMD "$GITHUB_ACTION_PATH/main.py"`; the variable name was
+        # taken as a directory, so main.py was reported "not found" and its
+        # payload never scanned.
+        action_yml = f"""\
+name: Test
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        $PYTHON_CMD {prefix}main.py
+"""
+        files = {"main.py": "import os\nos.system('id')\n"}
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml), \
+                self._mock_tree(), \
+                mock.patch(
+                    "verify_action_build.security.fetch_file_from_github",
+                    side_effect=self._mock_fetch_file(files),
+                ) as fetch:
+            analyze_scripts("org", "repo", "a" * 40)
+        fetched = {call.args[3] for call in fetch.call_args_list}
+        assert "main.py" in fetched
+        assert not any("GITHUB_ACTION_PATH" in f or "action_path" in f for f in fetched)
 
     def test_tree_discovery_skips_vendored_and_test_dirs(self):
         action_yml = """\

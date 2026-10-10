@@ -516,6 +516,11 @@ def analyze_dockerfile(
     return warnings
 
 
+_ACTION_PATH_PREFIX = re.compile(
+    r"\$\{\{\s*github\.action_path\s*\}\}/|\$\{?GITHUB_ACTION_PATH\}?/"
+)
+
+
 def analyze_scripts(
     org: str, repo: str, commit_hash: str, sub_path: str = "",
 ) -> list[str]:
@@ -528,7 +533,10 @@ def analyze_scripts(
     script_files: set[str] = set()
 
     for line in action_yml.splitlines():
-        stripped = line.strip()
+        # A script run from the action's own directory is the action's root
+        # file: drop the action-path prefix so the variable name isn't taken
+        # for a directory (and ${{ github.action_path }} isn't skipped below).
+        stripped = _ACTION_PATH_PREFIX.sub("", line.strip())
         if "${{" in stripped and "}}" in stripped:
             continue
         for ext in (".py", ".sh", ".bash", ".rb", ".pl"):
