@@ -1081,6 +1081,65 @@ _BINARY_EXTS = (
     ".jar", ".so", ".dylib", ".dll", ".bin",
 )
 
+# --- Variable-URL downloads -------------------------------------------------
+#
+# The common "resolve, then fetch" installer shape never puts a literal URL
+# on the download line:
+#
+#     LOCATION="$(curl -s "$RELEASE_URL" | jq -r '.assets[].browser_download_url' | grep "$TARGET$")"
+#     curl -sSfL --output "$TARGET" "$LOCATION"
+#     tar -xf "$TARGET" && mv tool ./bin/
+#
+# orhun/git-cliff-action's install.sh (apache/infrastructure-actions#1311)
+# is exactly this, and the literal-URL scan reported "no downloads" for it.
+# A download line whose URL is a shell variable counts when it is written
+# to a file (not piped or command-substituted as data) and the same file
+# then treats the result as a binary: extracts it, marks it executable,
+# moves it into a ``bin/`` dir, or prepends it to ``GITHUB_PATH``.
+
+# ``$URL`` / ``${URL}`` on the download line.
+_SHELL_VAR_REF = re.compile(r"\$\{?[A-Za-z_][A-Za-z0-9_]*\}?")
+
+# curl only writes to a file with an explicit output flag: ``-o``/``-O`` in
+# any short-flag cluster (``-fsSLo``), or the long forms.
+_CURL_TO_FILE = re.compile(
+    r"(?:^|\s)(?:-[a-zA-Z]*[oO][a-zA-Z]*|--output|--remote-name(?:-all)?)(?=\s|=|$)"
+)
+# wget writes to a file by default; only ``-O-`` / ``--output-document=-``
+# send the body to stdout.
+_WGET_TO_STDOUT = re.compile(
+    r"(?:^|\s)-[a-zA-Z]*O\s*-(?=\s|$)|--output-document(?:=|\s+)-(?=\s|$)"
+)
+# PowerShell writes to a file only with ``-OutFile``.
+_IWR_TO_FILE = re.compile(r"-OutFile\b", re.IGNORECASE)
+
+# File-level "the download is a binary" markers for shell scripts.
+_SHELL_BINARY_HANDLE_PATTERNS = [
+    re.compile(r"\btar\s+(?:-|x|--extract)"),
+    re.compile(r"\b(?:unzip|gunzip|unxz|bunzip2)\b"),
+    re.compile(r"\b7z\s+[xe]\b"),
+    re.compile(r"\bExpand-Archive\b", re.IGNORECASE),
+    re.compile(r"\bchmod\s+(?:[ugoa]*\+x|[0-7]*[1357][0-7]*)\b"),
+    re.compile(r"\binstall\s+-m\b"),
+    re.compile(r"\b(?:mv|cp)\b[^\n]*\bbin/"),
+    re.compile(r"\$\{?GITHUB_PATH\b"),
+]
+
+
+def _is_variable_url_download(stripped: str) -> bool:
+    """True when a download-command line fetches a shell-variable URL into a file."""
+    if not _SHELL_VAR_REF.search(stripped):
+        return False
+    lower = stripped.lower()
+    if re.search(r"\bcurl\b", lower):
+        return bool(_CURL_TO_FILE.search(stripped))
+    if re.search(r"\bwget\b", lower):
+        return not _WGET_TO_STDOUT.search(stripped)
+    if re.search(r"\b(?:iwr|invoke-webrequest)\b", lower):
+        return bool(_IWR_TO_FILE.search(stripped))
+    return False
+
+
 # Pipe-to-shell: curl/wget output piped straight into a shell interpreter.
 _PIPE_TO_SHELL = re.compile(
     r"\b(curl|wget|iwr|Invoke-WebRequest)\b[^\n]*\|\s*(ba|z|k|a)?sh\b",
@@ -1421,42 +1480,87 @@ def _discover_shell_script_files(
     return paths
 
 
+def _continued_commands(content: str) -> list[tuple[int, int, str]]:
+    """Join backslash-continued shell lines into one logical command.
+
+    Returns ``(first_line_num, last_line_num, line)`` for each command that
+    spans more than one physical line.  Long ``curl`` calls routinely put the
+    output flag and URL on continuation lines, which a per-line scan never
+    sees together with the command name.  A comment ends at its newline even
+    with a trailing backslash, so a comment never starts a continuation.
+    """
+    result: list[tuple[int, int, str]] = []
+    start, parts = 0, []
+    for i, line in enumerate(content.splitlines(), 1):
+        body = line.strip()
+        if not parts:
+            start = i
+            if body.startswith("#"):
+                continue
+        if body.endswith("\\"):
+            parts.append(body[:-1].strip())
+            continue
+        if parts:
+            parts.append(body)
+            result.append((start, i, " ".join(p for p in parts if p)))
+            parts = []
+    if len(parts) > 1:
+        result.append((start, start + len(parts) - 1, " ".join(p for p in parts if p)))
+    return result
+
+
+def _is_binary_download_line(line: str, handles_binary: bool) -> bool:
+    stripped = line.strip()
+    if not stripped or stripped.startswith("#"):
+        return False
+    if _line_is_pkg_manager(stripped):
+        return False
+
+    if _PIPE_TO_SHELL.search(line):
+        return True
+
+    if not any(p.search(stripped) for p in _DOWNLOAD_LINE_PATTERNS):
+        return False
+
+    url_match = re.search(r"https?://\S+", stripped)
+    if not url_match:
+        return handles_binary and _is_variable_url_download(stripped)
+    url = url_match.group(0).rstrip(",;'\")}\\")
+
+    if url.lower().endswith(_BINARY_EXTS):
+        return True
+    if stripped.upper().startswith("ADD "):
+        return True
+    return any(m in url for m in ("/releases/download/", "/bin/", "/binaries/", "/dist/"))
+
+
 def _find_binary_downloads(content: str) -> list[tuple[int, str]]:
     """Find lines that download binaries or scripts over HTTP(S).
 
     Returns a list of ``(line_num, snippet)`` tuples. Lines that are part of a
     package-manager invocation are skipped.
+
+    A download line needs either a literal URL that looks like a binary, or a
+    shell-variable URL written to a file in a script that goes on to extract
+    or install what it fetched (see :func:`_is_variable_url_download`).
+
+    Every physical line is scanned on its own; a backslash-continued command
+    is then scanned joined, and reported at its first line, only when none of
+    its physical lines was already flagged.  Joining can therefore add
+    findings but never hide one — e.g. a package-manager call earlier in the
+    same ``RUN`` must not shield a ``curl`` on a continuation line.
     """
-    findings: list[tuple[int, str]] = []
-    for i, line in enumerate(content.splitlines(), 1):
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if _line_is_pkg_manager(stripped):
-            continue
-
-        if _PIPE_TO_SHELL.search(line):
-            findings.append((i, stripped[:120]))
-            continue
-
-        if not any(p.search(stripped) for p in _DOWNLOAD_LINE_PATTERNS):
-            continue
-
-        url_match = re.search(r"https?://\S+", stripped)
-        if not url_match:
-            continue
-        url = url_match.group(0).rstrip(",;'\")}\\")
-
-        if url.lower().endswith(_BINARY_EXTS):
-            findings.append((i, stripped[:120]))
-            continue
-        if stripped.upper().startswith("ADD "):
-            findings.append((i, stripped[:120]))
-            continue
-        if any(m in url for m in ("/releases/download/", "/bin/", "/binaries/", "/dist/")):
-            findings.append((i, stripped[:120]))
-            continue
-    return findings
+    handles_binary = any(p.search(content) for p in _SHELL_BINARY_HANDLE_PATTERNS)
+    findings: list[tuple[int, str]] = [
+        (i, line.strip()[:120])
+        for i, line in enumerate(content.splitlines(), 1)
+        if _is_binary_download_line(line, handles_binary)
+    ]
+    flagged = {i for i, _ in findings}
+    for first, last, joined in _continued_commands(content):
+        if flagged.isdisjoint(range(first, last + 1)) and _is_binary_download_line(joined, handles_binary):
+            findings.append((first, joined[:120]))
+    return sorted(findings)
 
 
 def _has_verification(content: str) -> bool:
@@ -1758,7 +1862,12 @@ def analyze_repo_metadata(
     console.print()
     console.rule("[bold]Repository Metadata[/bold]")
 
-    for license_name in ("LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING"):
+    # LICENSE-APACHE / LICENSE-MIT is the Rust-ecosystem dual-license layout
+    # (orhun/git-cliff-action has no bare LICENSE at all).
+    for license_name in (
+        "LICENSE", "LICENSE.md", "LICENSE.txt", "LICENCE", "COPYING",
+        "LICENSE-APACHE", "LICENSE-MIT",
+    ):
         content = fetch_file_from_github(org, repo, commit_hash, license_name)
         if content is not None:
             first_lines = content[:500].lower()
