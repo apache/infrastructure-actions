@@ -172,9 +172,6 @@ burrunan/gradle-cache-action:
   '*':
     keep: true
 carabiner-dev/actions/ampel/verify:
-  94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
-    tag: v1.2.1
-    expires_at: 2026-10-11
   2a4b2cd115ede14629b03ef7e77586d3269d4c72:
     tag: v1.2.3
     expires_at: 2026-10-20
@@ -187,13 +184,6 @@ carabiner-dev/actions/ampel/verify:
   d41fe10fe88deaf493ce026007da73738b9f570c:
     tag: v1.3.0
 carabiner-dev/actions/install/ampel:
-  94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
-    tag: v1.2.1
-  # transitive: v1.2.3 (2a4b2cd1) pins its internal action refs to this
-  # untagged commit (carabiner-dev/actions#83). Verified carabiner release-bot commit.
-    expires_at: 2026-10-11
-  619a474b2178d06ccf274349397cd67a7802a4fe:
-    expires_at: 2026-10-11
   2a4b2cd115ede14629b03ef7e77586d3269d4c72:
     tag: v1.2.3
     expires_at: 2026-10-20
@@ -218,10 +208,6 @@ carabiner-dev/actions/install/ampel:
   d41fe10fe88deaf493ce026007da73738b9f570c:
     tag: v1.3.0
 carabiner-dev/actions/install/ampel-bootstrap:
-  f882fa9eb795141737eecac4ffb056df5ad14954:
-    expires_at: 2026-10-11
-  # transitive dep pulled by install/download-and-verify @ v1.2.1 (f882fa9e);
-  # completes the v1.2.1 (94f29392) approval so the transitive-failures canary resolves.
   be6b4fa42fa3a8432416475d74218b9aa51ea527:
     expires_at: 2026-10-19
   # transitive: referenced by carabiner-dev/actions v1.2.3 internal refs.
@@ -258,13 +244,6 @@ carabiner-dev/actions/install/ampel-bootstrap:
   d41fe10fe88deaf493ce026007da73738b9f570c:
     tag: v1.3.0
 carabiner-dev/actions/install/bnd:
-  94f29392187fe5082d1195a7d4cae3a7ddf09d9c:
-    tag: v1.2.1
-  # transitive: v1.2.3 (2a4b2cd1) pins its internal action refs to this
-  # untagged commit (carabiner-dev/actions#83). Verified carabiner release-bot commit.
-    expires_at: 2026-10-11
-  619a474b2178d06ccf274349397cd67a7802a4fe:
-    expires_at: 2026-10-11
   2a4b2cd115ede14629b03ef7e77586d3269d4c72:
     tag: v1.2.3
     expires_at: 2026-10-20
@@ -277,15 +256,6 @@ carabiner-dev/actions/install/bnd:
   d41fe10fe88deaf493ce026007da73738b9f570c:
     tag: v1.3.0
 carabiner-dev/actions/install/download-and-verify:
-  f882fa9eb795141737eecac4ffb056df5ad14954:
-    expires_at: 2026-10-11
-  # transitive: referenced by carabiner-dev/actions v1.2.3 internal refs.
-  # Verified carabiner release-bot commits.
-  174f1c83779af3d3d7e451b7ead7ba824d0d2aa9:
-    tag: v1.2.2
-    expires_at: 2026-10-11
-  619a474b2178d06ccf274349397cd67a7802a4fe:
-    expires_at: 2026-10-11
   be6b4fa42fa3a8432416475d74218b9aa51ea527:
     expires_at: 2026-10-19
   60563b5460a9e4ae9921c0da551b4ddd6059ff45:
@@ -404,9 +374,6 @@ dart-lang/setup-dart:
   6afc89df92d6eb3834022f73cd65adc8cdfcb92d:
     tag: v1.8.1
 DavidAnson/markdownlint-cli2-action:
-  8de2aa07cae85fd17c0b35642db70cf5495f1d25:
-    tag: v24.0.0
-    expires_at: 2026-10-11
   6bf21b07787794f89a243495939cd651942aeabe:
     tag: v24.1.0
     expires_at: 2026-11-01
@@ -668,9 +635,6 @@ italia/publiccode-parser-action:
   0deab88c3f094aa12c5826e52ac2c4f176446821:
     tag: v1.6.0
 j178/prek-action:
-  e98a699c41eb69ab013a45817a0406469a748f8d:
-    tag: v2.0.5
-    expires_at: 2026-10-11
   5337cb91e0fa35a7ff31b9ca345126d8bbbcdf16:
     tag: v2.0.6
     expires_at: 2026-10-22
