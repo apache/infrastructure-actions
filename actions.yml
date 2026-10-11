@@ -773,6 +773,9 @@ loadingalias/cargo-rail-action:
     expires_at: 2026-12-27
   409962f05d90a78aae995ef6b1c8466010c0a460:
     tag: v10.1.1
+    expires_at: 2027-01-03
+  98167d6d7fbea02d1994fb292f049defd49cf6a6:
+    tag: v11.0.0
 lycheeverse/lychee-action:
   e7477775783ea5526144ba13e8db5eec57747ce8:
     tag: v2.9.0
@@ -913,6 +916,9 @@ pypa/cibuildwheel:
     expires_at: 2026-12-29
   adba99c781d3746d38b3a09b1cf797965bcb7fe6:
     tag: v4.3.0
+    expires_at: 2027-01-03
+  b3395e271a35f73dad77f21802abe9b986dfe299:
+    tag: v4.3.1
 pypa/gh-action-pip-audit:
   1220774d901786e6f652ae159f7b6bc8fea6d266:
     tag: v1.1.0
