@@ -163,11 +163,15 @@ runs:
       if: false
     - uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6  # v6.4.0
       if: false
-    - uses: gradle/develocity-actions/maven-publish-build-scan@f852d93dada312948b1ba533226c28e05d756866  # v2.4
+    - uses: gradle/develocity-actions/maven-publish-build-scan@9d8792ab22712b19790c2abce53e9ebb2694c312  # v2.5
       if: false
-    - uses: gradle/develocity-actions/setup-docker@f852d93dada312948b1ba533226c28e05d756866  # v2.4
+    - uses: gradle/develocity-actions/setup-docker@9d8792ab22712b19790c2abce53e9ebb2694c312  # v2.5
       if: false
-    - uses: gradle/develocity-actions/setup-maven@f852d93dada312948b1ba533226c28e05d756866  # v2.4
+    - uses: gradle/develocity-actions/setup-maven@9d8792ab22712b19790c2abce53e9ebb2694c312  # v2.5
+      if: false
+    - uses: gradle/develocity-actions/setup-npm@9d8792ab22712b19790c2abce53e9ebb2694c312  # v2.5
+      if: false
+    - uses: gradle/develocity-actions/setup-python@9d8792ab22712b19790c2abce53e9ebb2694c312  # v2.5
       if: false
     - uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
       if: false
