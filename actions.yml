@@ -93,9 +93,6 @@ astral-sh/setup-uv:
   eb1897b8dc4b5d5bfe39a428a8f2304605e0983c:
     tag: v7.0.0
     expires_at: 2026-12-14
-  11f9893b081a58869d3b5fccaea48c9e9e46f990:
-    tag: v8.3.2
-    expires_at: 2026-10-14
   c771a70e6277c0a99b617c7a806ffedaca235ff9:
     tag: v9.0.0
     expires_at: 2026-11-09
