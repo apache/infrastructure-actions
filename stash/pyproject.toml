@@ -18,7 +18,7 @@
 #
 
 [build-system]
-requires = ["setuptools>=82.0.1"]
+requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -55,8 +55,8 @@ dependencies = []
 # desired, alongside `python3 test_*.py`.
 [dependency-groups]
 dev = [
-    "ruff>=0.15.20",
-    "mypy>=2.1.0",
+    "ruff>=0.16.1",
+    "mypy>=2.3.0",
     "pytest>=9.1.1",
 ]
 

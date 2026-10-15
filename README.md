@@ -23,17 +23,20 @@ This repository hosts GitHub Actions developed by the ASF community and approved
 - [Checking the Action Usage in an ASF Project](#checking-the-action-usage-in-an-asf-project)
 - [Submitting an Action](#submitting-an-action)
 - [Available GitHub Actions](#available-github-actions)
+- [Versioning and Pinning Actions](#versioning-and-pinning-actions)
 - [Organization-wide GitHub Actions Allow List](#management-of-organization-wide-github-actions-allow-list)
   - [Pipeline Overview](#pipeline-overview)
   - [Adding a New Action](#adding-a-new-action-to-the-allow-list)
   - [Reviewing](#reviewing)
   - [Updating Version of Already Approved Action](#updating-version-of-already-approved-action)
     - [Automated Verification in CI](#automated-verification-in-ci)
+    - [Dependabot Update Grouping](#dependabot-update-grouping)
     - [Dependabot Cooldown Period](#dependabot-cooldown-period)
   - [Manual Version Addition](#manual-addition-of-specific-versions)
   - [Automatic Expiration of Old Versions](#automatic-expiration-of-old-versions)
   - [Removing a Version](#removing-a-version-manually)
 - [Auditing Repositories for Actions Security Tooling](#auditing-repositories-for-actions-security-tooling)
+- [Snapshotting Queued and Running Actions Jobs](#snapshotting-queued-and-running-actions-jobs)
 
 ## Checking the Action Usage in an ASF Project
 
@@ -55,6 +58,9 @@ jobs:
 
 When calling the `check-project-actions` workflow from a `push` or `pull_request` event, it should work
 automatically against the "right" reference. See the sample workflow linked above for more details.
+
+To pin to an immutable, Dependabot-trackable version instead of `@main`, see
+[Versioning and Pinning Actions](#versioning-and-pinning-actions).
 
 ## Submitting an Action
 
@@ -92,6 +98,37 @@ correctness of the action.
   - [ASF Infrastructure Pelican Action](/pelican/README.md): Generate and publish project websites with GitHub Actions
   - [Stash Action](/stash/README.md): Manage large build caches
   - [ASF Allowlist Check](/allowlist-check/README.md): Verify workflow action refs are on the ASF allowlist
+
+## Versioning and Pinning Actions
+
+The actions in this repo are a *monorepo of actions*, and each one is released
+under its own **path-prefixed tag** so you can pin a specific version and let
+Dependabot propose bumps. The tag prefix is the action's leaf directory name,
+which you repeat after the `@`:
+
+| Action                | Pin it like this                                                              |
+| --------------------- | ----------------------------------------------------------------------------- |
+| `allowlist-check`     | `apache/infrastructure-actions/allowlist-check@<sha>  # allowlist-check/v1.2.3`|
+| `pelican`             | `apache/infrastructure-actions/pelican@<sha>          # pelican/v1.2.3`        |
+| `stash/save`          | `apache/infrastructure-actions/stash/save@<sha>       # save/v1.2.3`           |
+| `stash/restore`       | `apache/infrastructure-actions/stash/restore@<sha>    # restore/v1.2.3`        |
+
+Pinning to a commit SHA with the version in a trailing comment is the
+recommended, [Zizmor](https://zizmor.sh/)-friendly form: the SHA is immutable,
+and Dependabot's `github_actions` ecosystem recognises the `# <prefix>/vX.Y.Z`
+comment and opens a PR (updating both the SHA and the comment) when a newer
+tag for that prefix is published. Support for this monorepo leaf-prefix scheme
+was added to Dependabot in
+[dependabot/dependabot-core#11286](https://github.com/dependabot/dependabot-core/pull/11286),
+contributed specifically for this repository.
+
+A release is the tag pair (`<prefix>/vX.Y.Z` plus the moving `<prefix>/vN`) and
+nothing more — this repo publishes no GitHub Release objects, because
+Dependabot resolves versions from the tags themselves.
+
+Tracking `@main` (as in the quick-start above) also works and always gives you
+the latest code, but it drifts from any pinned SHA and Zizmor will flag the
+unpinned ref. See [RELEASING.md](RELEASING.md) for how releases are cut.
 
 ## Management of Organization-wide GitHub Actions Allow List
 
@@ -221,6 +258,10 @@ A clean result confirms that the compiled JS was built from the declared source.
 
 Non-minified compiled JS (e.g. Deno `deno task bundle` output, Dart `dart compile js` readable output) is handled differently: a clean rebuild for these tends to produce toolchain-version noise (esbuild/ncc/webpack boilerplate differences) rather than actionable diffs. The script keeps these files in place during the pre-rebuild deletion step and instead diffs them against the previously approved version of the action, so reviewers see real source changes rather than rebuild artifacts. The detection threshold mirrors the comparison heuristic — fewer than 10 lines or an average line length above 500 chars is treated as minified.
 
+Files that appear **only in the rebuild** are reported as informational rather than as a failure. The action does not publish them, so they never reach a consumer's runner and cannot be a supply-chain vector. In practice they are intermediate build output from a multi-stage build that upstream deliberately does not commit — for example `JetBrains/qodana-action` declares `main: scan/dist/index.js`, so the output directory resolves to the whole `scan/` sub-project and the rebuild's gitignored `scan/lib/*.js` (stage one of its `tsc` → `esbuild` build) lands inside the compared tree. The inverse remains a hard failure: JS present in the published tree but *absent* from the rebuild is unaccounted-for shipped code, as is a published tree with no compiled JS at all when the rebuild produced some — there is then nothing to reconcile the rebuild against.
+
+The **source diff vs approved** and the **Script analysis** check both cover more than the language the entrypoint is written in. A node action is free to shell out to a script committed beside it — `uraimo/run-on-arch-action` declares `main: src/run-on-arch.js`, which then `exec()`s `src/run-on-arch.sh` — so shell/interpreter scripts (`.sh`, `.bash`, `.ps1`, `.py`, `.rb`, `.pl`) and `Dockerfile*` are diffed alongside the JS/TS sources, and committed shell scripts are discovered from the repo tree rather than only from the files `action.yml` or a `Dockerfile` happen to name. Script analysis runs for every action type; for JavaScript actions its findings are reported in the summary but do not change the pass/fail verdict.
+
 #### Security Review Checklist
 
 When reviewing an action (new or updated), watch for these potential issues in the source diff between the approved and new versions:
@@ -233,7 +274,7 @@ When reviewing an action (new or updated), watch for these potential issues in t
 - **Obfuscated code**: hex-encoded strings, base64 blobs, or intentionally unreadable code in source files (not in compiled `dist/`).
 - **File-system tampering**: writing to locations outside the workspace (`$GITHUB_WORKSPACE`), modifying `$GITHUB_ENV`, `$GITHUB_PATH`, or `$GITHUB_OUTPUT` in unexpected ways to influence subsequent workflow steps.
 - **Compiled JS mismatch**: any unexplained diff between the published `dist/` and a clean rebuild — this is the primary check the verification script performs.
-- **Pre-compiled native binaries shipped in-tree**: actions that commit Go/Rust/C-style binaries (`main-linux-amd64`, `*.exe`, `*.dll`, `*.so`, `*.dylib`, `*.jar`, `*.wasm`, etc.) directly in the repo and exec them from a small launcher are running opaque executable code on the runner. The JS-rebuild check verifies the launcher but **cannot** reconcile the binaries with source on its own. `verify-action-build`'s **In-tree binary check** tries to close the gap automatically: each detected binary is verified first via `gh attestation verify --owner <org>` (the SLSA attestation transparency log populated by [`actions/attest-build-provenance`](https://github.com/actions/attest-build-provenance)), then by SHA256-comparing each binary against the release's `SHA256SUMS` asset. Binaries that pass either check are ✓; binaries that pass neither are a hard reject. Push back on actions in this shape until upstream adds attestation or `SHA256SUMS` so the chain from release to artifact can be verified.
+- **Pre-compiled native binaries shipped in-tree**: actions that commit Go/Rust/C-style binaries (`main-linux-amd64`, `*.exe`, `*.dll`, `*.so`, `*.dylib`, `*.jar`, `*.wasm`, etc.) directly in the repo and exec them from a small launcher are running opaque executable code on the runner. The JS-rebuild check verifies the launcher but **cannot** reconcile the binaries with source on its own. `verify-action-build`'s **In-tree binary check** tries to close the gap automatically: each detected binary is verified first by the clean rebuild (binaries a bundler copies into the output directory — `.wasm`, `.node`, native libraries — are deleted before the rebuild along with the minified JS, so one that comes back byte-identical was regenerated from the lockfile-pinned dependency tree and needs no release provenance of its own; `1Password/load-secrets-action` ships `dist/core_bg.wasm` this way, copied by `ncc` out of `@1password/sdk-core`), then via `gh attestation verify --owner <org>` (the SLSA attestation transparency log populated by [`actions/attest-build-provenance`](https://github.com/actions/attest-build-provenance)), then by SHA256-comparing each binary against the release's `SHA256SUMS` asset. Binaries that pass any of the three are ✓; binaries that pass none are a hard reject. Push back on actions in this shape until upstream adds attestation or `SHA256SUMS` so the chain from release to artifact can be verified.
 - **Runtime binary downloads without an in-source checksum**: some actions pull their tool binary at runtime via `tc.downloadTool` / `curl` / `fetch` and rely on the publishing pipeline (GitHub release immutability + Sigstore attestation) for integrity rather than an inline `sha256sum -c` / `cosign verify-blob`. The **Binary Download Verification** check fails these by default. A per-action escape hatch lives in `utils/verify_action_build/security.py` as the `TRUSTED_DOWNLOAD_PROVENANCE` dict — an entry asserts that the configured `release_repo` publishes immutable releases AND emits Sigstore attestations via `actions/attest-build-provenance`. Adding an entry is a security review decision and the rationale must link the upstream confirmation (e.g. a maintainer comment). The config alone is not enough: at scan time the verify pipeline GETs `releases/latest` of the configured `release_repo`, confirms `release.immutable` is true, downloads one small attested asset (`.sbom.json` preferred), and runs `gh attestation verify` against it. Only when both halves pass are the action's unverified-download findings reclassified as warnings; if the runtime check fails, failures stay failures and the reason is printed. Note the scope: the spot-check proves the *release repo's pipeline* attests and that its latest release is immutable — it does not machine-verify that the action downloads from that `release_repo`, nor that the *specific version* it fetches is itself immutable (only `releases/latest` is checked). That binding remains the reviewer's call, backed by the entry's `rationale`.
 
 For the full approval policy and requirements, see the [ASF GitHub Actions Policy](https://infra.apache.org/github-actions-policy.html).
@@ -267,7 +308,17 @@ export GITHUB_TOKEN=ghp_...
 uv run utils/verify-action-build.py --no-gh --check-dependabot-prs
 ```
 
+If neither is set and `gh` happens to be installed and logged in, the token is taken from
+`gh auth token` as a last resort — so `--no-gh` only needs an explicit token when there is no
+authenticated `gh` to borrow one from.
+
 The `--no-gh` mode supports all the same features as the default `gh`-based mode.
+
+> Even in the default `gh`-based mode, some checks (lockfile discovery, in-tree binary lookups) call
+> `api.github.com` directly and read `GITHUB_TOKEN` from the environment. Unauthenticated those calls
+> share a 60-requests/hour budget, which a single run can exhaust — so when `GITHUB_TOKEN` is unset,
+> `verify-action-build` fills it in from `--github-token` or `gh auth token` for the duration of the
+> run. Nothing to configure: just stay logged in with `gh auth login`.
 
 #### Automated Verification in CI
 
@@ -296,6 +347,23 @@ Additional flags:
 > [!NOTE]
 > **Prerequisites:** `docker` and `uv`. When using the default mode (without `--no-gh`), `gh` (GitHub CLI, authenticated via `gh auth login`) is also required. The build runs in a `node:20-slim` container so no local Node.js installation is needed.
 
+#### Dependabot Update Grouping
+
+`.github/dependabot.yml` groups updates so that related bumps arrive as one PR:
+
+| Ecosystem | Group | What it collects |
+|---|---|---|
+| `github-actions` (`/.github/workflows`, …) | `codeql-action` | `github/codeql-action*` — init/autobuild/analyze must run the same version, so a split PR fails the Analyze jobs |
+| `uv` (`/`, `/pelican/`, `/stash/`) | `dev-tooling` | everything in the PEP 735 `dev` group (ruff, mypy, pytest, pylint, `types-*`) — lint/test tooling that never ships in the published action |
+| `uv` | `runtime-minor-patch` | patch and minor bumps of runtime dependencies |
+
+Dependabot opens one PR per directory per group, so `/pelican` and `/stash` each get a single dev-tooling PR rather than one per tool.
+
+Two things stay deliberately ungrouped:
+
+- **Major bumps of runtime dependencies** match no group, so each gets its own PR. A major version of something the action ships can break consumers and deserves to be reviewed and released on its own.
+- **The allow-list ecosystem** (`/.github/actions/for-dependabot-triggered-reviews`). Every bump there is an allow-list change with its own security review and its own `verify` run, approved or held on its own merits. Grouping would tie an action that fails verification to unrelated ones that passed, so a single bad actor would block the whole batch.
+
 #### Dependabot Cooldown Period
 
 This repository uses a [Dependabot cooldown period](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#cooldown) of 0 days so that maintainers can review before Dependabot opens a PR on project repositories.
@@ -318,19 +386,23 @@ This repository uses a [Dependabot cooldown period](https://docs.github.com/en/c
 If you need to add a specific version of an already approved action (especially an older one):
 
 1. **Fork** this repository
-2. **Add** a new version entry to an existing action in `actions.yml` with the following format:
+2. **Add** a new version entry to an existing action in `actions.yml`. Choose its metadata based on
+   why the version is needed.
+
+For the newest version:
 
 ```yaml
 existing/action:
   '<exact-commit-sha>':
-    keep: true
     tag: vX.Y.Z
 ```
 
-if this is the newest version of the action (make sure to remove the `keep: true` from the
-previously newest version and add `expires_at: <date>` to it, if you want to set an expiration date for it),
+The current version must have neither `keep` nor `expires_at`, so that it is included in the
+composite action watched by Dependabot. Each action must have at most one such version. When adding
+a new current version manually, add `expires_at: <date>` to the previous current version to give
+projects time to migrate.
 
-or
+For an older version that is needed temporarily:
 
 ```yaml
 existing/action:
@@ -339,7 +411,20 @@ existing/action:
     tag: vX.Y.Z
 ```
 
-If you add older version of the action and want to set an expiration date for it.
+Use `keep: true` only as an exceptional alternative when an older version must remain available
+indefinitely:
+
+```yaml
+existing/action:
+  '<exact-commit-sha>':
+    # Explain why this version must remain available indefinitely.
+    keep: true
+    tag: vX.Y.Z
+```
+
+A reference with `keep: true` is retained indefinitely and is not watched for updates by
+Dependabot. To keep the action updated, it must also have a separate current version with neither
+`keep` nor `expires_at`. Never set both `keep` and `expires_at` on the same reference.
 
 
 3. **Create a PR** against the `main` branch
@@ -414,7 +499,7 @@ The audit script checks each repository for four security configurations and can
 ### Prerequisites
 
 - **Python 3.11+** and [**uv**](https://docs.astral.sh/uv/) **>= 0.9.17** (dependencies are managed inline via PEP 723). Make sure your uv is up to date — depending on how you installed it, run `uv self update`, `pip install --upgrade uv`, `pipx upgrade uv`, or `brew upgrade uv`
-- **`gh`** (GitHub CLI, authenticated via `gh auth login`) — or provide a `--github-token` with `repo` scope and use `--no-gh`
+- **`gh`** (GitHub CLI, authenticated via `gh auth login`) — or provide a `--github-token` with `repo` scope and use `--no-gh`. With `--no-gh` and no token given, an authenticated `gh` is still used once to mint one via `gh auth token`
 - **`zizmor`** ([install instructions](https://docs.zizmor.dev/installation/)) — required for PR creation mode; not needed for `--dry-run`. If missing, zizmor pre-checks are skipped with a warning
 
 ### Usage
@@ -450,8 +535,8 @@ uv run utils/actions-audit.py --pmc spark --max-num 10
 | `--dry-run` | Report findings without creating PRs or branches. |
 | `--max-num N` | Maximum number of repositories to check (0 = unlimited, default). |
 | `--batch-size N` | Number of repos to fetch per GraphQL request (default: 50, max: 100). |
-| `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN` environment variable. |
-| `--no-gh` | Use Python `requests` instead of the `gh` CLI for all API calls. Requires `--github-token` or a token env var. |
+| `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN` environment variable. With `--no-gh`, falls back to `gh auth token` when neither is set. |
+| `--no-gh` | Use Python `requests` instead of the `gh` CLI for all API calls. Needs a token — from `--github-token`, a token env var, or an authenticated `gh`. |
 
 #### How PMC Filtering Works
 
@@ -494,3 +579,278 @@ When not in `--dry-run` mode, the script prompts for confirmation before creatin
 #### Idempotency
 
 The script is safe to re-run. Before creating a PR for a repository, it checks whether a PR with the branch name `asf-actions-security-audit` already exists — open, closed, or merged — and skips the repo if so.
+
+## Snapshotting Queued and Running Actions Jobs
+
+When the ASF runners feel slow, the first question is always "who is using them right now, and
+who is waiting?" The `actions-queue-status.py` script answers that across the whole organisation
+without needing org-admin rights.
+
+### Why This Matters
+
+The obvious endpoint — `GET /orgs/apache/actions/runners`, which reports each runner's `status`
+and `busy` flag — requires `admin:org`, so only Infra can call it. Everyone else debugging a slow
+queue is left guessing. Check-run state, on the other hand, is readable by anyone who can read the
+repository, and a check run maps one-to-one onto a workflow job. That is enough to see which
+repositories are consuming capacity and which are stuck behind it.
+
+There is no org-wide REST endpoint for queued jobs at all — the only alternatives are polling every
+repository one at a time or running a `workflow_job` webhook listener. This script batches the
+question into a handful of GraphQL requests instead.
+
+### Prerequisites
+
+- **Python 3.11+** and [**uv**](https://docs.astral.sh/uv/) (dependencies are declared inline via PEP 723)
+- **`gh`** (GitHub CLI, authenticated via `gh auth login`) — or pass `--github-token` with a token
+  that can read the org's repositories and use `--no-gh`. An authenticated `gh` also supplies the
+  token for `--no-gh` automatically, via `gh auth token`
+
+### Usage
+
+```bash
+# Whole org: snapshot job state across the stored repository list
+uv run utils/actions-queue-status.py
+
+# Discard the stored list, discover the org afresh, and rewrite it
+uv run utils/actions-queue-status.py --delete-cached-projects
+
+# Read the repository list from somewhere else instead
+uv run utils/actions-queue-status.py --repos-file /tmp/asf-repos.txt --top 40
+
+# Write both orderings to CSV: <path>-by-running.csv and <path>-by-queued.csv
+uv run utils/actions-queue-status.py --csv /tmp/asf-ci.csv
+
+# A single project, sampling more of its open PRs
+uv run utils/actions-queue-status.py --repos-file <(echo airflow) --prs 25
+
+# Group the rows by PMC instead of by repository
+uv run utils/actions-queue-status.py --by-pmc
+```
+
+Output is two tables — repositories sorted by running jobs, and by queued jobs — plus a one-line
+total. Each table closes with a `TOTAL` row carrying the org-wide queued and running counts and
+the number of active repositories; when `--top` truncates the table, a dim `shown (top N)` row
+above it subtotals the visible rows, so what the table leaves out is visible from the table
+itself rather than only from the summary line printed above it. `--json` prints the same data as
+JSON, with the same figures under `totals`, and each CSV ends with a matching `TOTAL` row.
+
+Each of the three long phases — discovering the org's repositories, sweeping their status, and the
+REST re-count — shows a progress bar with the repositories done so far and the GraphQL points left.
+The bars are written to stderr and disappear when the phase ends, so `--json` output and the tables
+stay clean when stdout is piped or redirected.
+
+#### Options
+
+| Flag | Description |
+|------|-------------|
+| `--org ORG` | Organisation to sweep (default: `apache`). |
+| `--batch-size N` | Repositories per GraphQL query (default: 20). |
+| `--prs N` | Open PRs sampled per repository, most recently updated first (default: 3). |
+| `--suites N` | Check suites read per commit (default: 5). |
+| `--workers N` | Batched queries in flight (default: 3). |
+| `--top N` | Rows shown per table (default: 25). |
+| `--by-pmc` | Group rows by PMC — the repository name's prefix before the first hyphen. The `Repos` column reads active / total. |
+| `--include-archived` | Include archived repositories. |
+| `--repos-file PATH` | Read repository names from this file instead of the stored list. `#` lines are ignored. |
+| `--save-repos PATH` | Write the discovered repository list to a file as well. |
+| `--delete-cached-projects` | Ignore the stored repository list, discover the organisation afresh, and rewrite the list with what it finds. |
+| `--csv PATH` | Write both orderings as CSV alongside `PATH`. |
+| `--json` | Print JSON instead of tables. |
+| `--github-token TOKEN` | GitHub token. Defaults to `GH_TOKEN` or `GITHUB_TOKEN`, then `gh auth token`. |
+| `--no-gh` | Use Python `requests` instead of the `gh` CLI. Requires a token — an authenticated `gh` supplies one automatically. |
+| `--no-rest-fallback` | Skip the exact REST re-count for repos with more open PRs than `--prs`. |
+| `-v`, `--verbose` | Add per-batch, per-retry and per-repo diagnostics to the progress output. |
+| `-q`, `--quiet` | Suppress progress and diagnostics; print only the result. Overrides `--verbose`. |
+| `--no-color` | Disable colour and progress bars. `NO_COLOR` in the environment does the same. |
+
+#### Progress and Diagnostics
+
+A full sweep takes minutes, so it reports what it is doing while it does it. Everything below goes
+to **stderr** — stdout carries only the `--json` payload, so piping stays safe.
+
+Each phase is announced with a banner and closed with its elapsed time and the GraphQL points it
+spent, and while it runs it draws a live progress bar:
+
+```text
+▸ Phase 2/3  Status  62 queries of up to 20 repos
+  Status ━━━━━━━━━━━━━╺━━━━━━━━━  38/62  61% 4102 pts 0:01:12 eta 0:00:45
+```
+
+The points figure is colour-coded — green above 2,000, yellow down to the 200-point floor, red
+below it — so an approaching budget stop is visible before it happens.
+
+Bars are drawn only on a terminal. When output is piped or redirected, the same progress degrades
+to one line per step (every page during discovery, every tenth batch afterwards), which keeps log
+files readable and greppable:
+
+```text
+  Status 10/62  4102 pts
+```
+
+The run ends with a `Run diagnostics` table — queries issued, retries, batches split, repositories
+skipped, REST requests, points spent and wall time — so a slow or partial sweep can be explained
+after the fact rather than guessed at. Counters that represent failures stay dim while they are
+zero and turn yellow or red when they are not.
+
+`--verbose` adds the detail behind those counters: each discovery page and its cursor, every retry
+with its backoff and the error that caused it, each batch split, and — for every repository
+re-counted over REST — the exact counts next to what the GraphQL sample had reported:
+
+```text
+    query attempt 1/4 failed, retrying in 4s: 502 Bad Gateway
+    batch of 20 failed, splitting in two: 502 Bad Gateway
+    airflow: 10 active runs → 37 running, 0 queued (GraphQL sampled 13 running, 0 queued)
+```
+
+`--quiet` goes the other way and prints only the result tables; `--no-color` (or `NO_COLOR` in the
+environment) drops both colour and bars.
+
+#### How Discovery Works
+
+Rather than guessing from `pushedAt` or probing each repository over REST, the discovery query
+reads the workflows directory straight out of the git tree:
+
+```graphql
+workflows: object(expression: "HEAD:.github/workflows") {
+  ... on Tree { entries { name } }
+}
+```
+
+A repository counts as using Actions only when that tree exists and holds at least one `.yml` or
+`.yaml` entry. Archived, disabled and empty repositories are skipped.
+
+Pages are read 50 repositories at a time. Each node costs a git-tree lookup and an open-PR count,
+and at 100 the query times out server-side often enough to end a sweep — two consecutive full runs
+died on `HTTP 502`, after 200 and 300 repositories, with every retry exhausted. The same paging at
+50 walked the whole organisation without a single retry.
+
+#### Grouping by PMC
+
+`--by-pmc` changes the unit of the report from repository to PMC. Both orderings, the `TOTAL`
+footer, `--top`, `--csv` and `--json` work exactly as before; only the rows change:
+
+```text
+Sorted by RUNNING jobs
+┏━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ PMC        ┃ Queued ┃ Running ┃     Repos ┃ Repositories                   ┃
+┡━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ airflow    │     13 │     133 │    2 / 10 │ airflow, airflow-client-python │
+│ fineract   │      0 │      96 │     1 / 8 │ fineract                       │
+│ datafusion │     21 │      49 │    2 / 12 │ datafusion, datafusion-comet   │
+├────────────┼────────┼─────────┼───────────┼────────────────────────────────┤
+│ TOTAL      │    330 │     881 │ 60 / 1258 │ 49 PMCs                        │
+└────────────┴────────┴─────────┴───────────┴────────────────────────────────┘
+```
+
+The `Repos` column reads *active / total*: how many of the PMC's repositories have jobs right
+now, out of every repository of theirs the sweep covered. Four busy repositories mean something
+different for a PMC of four than for a PMC of forty-seven, and the denominator is what says
+which one you are looking at. It counts the repositories the sweep actually ran over, so a
+`--repos-file` run measures against that file rather than the whole organisation.
+
+A repository's PMC is the text before the first hyphen in its name, and the whole name when there
+is no hyphen — so `spark`, `spark-connect-go` and `spark-docker` group under `spark`. That is the
+same rule [`--pmc` uses in `actions-audit.py`](#how-pmc-filtering-works), so the two scripts agree
+on what a PMC covers.
+
+It is a naming convention, not authoritative ownership, and it is not checked against the
+committee list: an `incubator-` repository groups under `incubator` rather than under the
+podling's eventual PMC. For per-repository detail, drop the flag.
+
+The `Source` column is spent on the repository count instead, since which API counted a row is a
+per-repository fact that a PMC of several repositories can only blur. The CSV keeps it, reading
+`mixed` where a PMC's repositories were counted different ways.
+
+#### The Stored Repository List
+
+Discovery is the slowest and most rate-limit-hungry phase of a sweep — it walks every repository in
+the organisation before a single job is counted — and its result changes slowly. So the current
+answer is stored in this repository at
+[`utils/apache-actions-repos.txt`](utils/apache-actions-repos.txt) and **read by default**: a plain
+`uv run utils/actions-queue-status.py` skips discovery entirely and goes straight to the status
+sweep.
+
+The file is one repository name per line, sorted, with `#` comment lines the reader ignores. Its
+header records how many repositories it holds and when they were discovered, and that date is
+echoed on every run. Sorting is what keeps it reviewable: discovery returns repositories in push
+order, which reshuffles on every run, so an unsorted file would diff as a thousand moved lines
+instead of the handful that actually joined or left.
+
+The list is named after the organisation it describes, so `--org` other than `apache` finds no
+stored list of its own and discovers, rather than answering from apache's. `--include-archived`
+also falls through to discovery, because the stored list holds no archived repositories.
+
+**It must be refreshed periodically.** A stored list only ages in one direction — repositories are
+created, archived, and adopt Actions after it was written — and a stale list fails silently,
+because the sweep reports totals across the repositories it was given without any way to know which
+ones are missing. Past 30 days the run says so in yellow. Refresh it with:
+
+```bash
+uv run utils/actions-queue-status.py --delete-cached-projects
+```
+
+That runs a full sweep and rewrites the file, header and all, so the refresh and the snapshot come
+from the same pass. The list is only rewritten once discovery has succeeded — a sweep that dies
+partway through costs time, not the list you already had. Commit the result; the diff shows exactly
+which repositories joined and left.
+
+#### Rate Limits
+
+A full sweep of the `apache` organisation is not free: GraphQL charges by node count, and the cost
+climbs sharply with `--prs`. Measured over the ~1,250 `apache` repositories that use Actions, a
+sweep costs roughly 250 points at `--prs 3`, 2,700 at `--prs 5` and 21,000 at `--prs 10`, against
+a budget of 5,000 points per hour.
+
+Raising `--prs` is a worse trade than it looks. It buys coverage of *quiet* repositories -- the
+open-PR distribution is long-tailed, so `--prs 3` already covers 46% of them outright and `--prs 5`
+only reaches 57% -- and every repository it fails to cover costs about one cheap REST call instead.
+The two budgets are separate pools of 5,000, and a full REST pass uses only ~2,100-2,800 calls, so
+GraphQL points are the scarce resource, not REST calls. Keeping the cheap pass genuinely cheap is
+therefore also what keeps the sweep accurate. Each run prints the open-PR distribution during
+discovery, so the trade-off can be re-checked against the organisation as it is today. Three safeguards keep a
+sweep inside the caller's hourly allowance:
+
+- every query asks for `rateLimit { cost remaining resetAt }`, and the sweep stops with a warning
+  once fewer than 200 points remain, reporting partial counts rather than dying;
+- transient failures (502, and rate-limit rejections) are retried with 4s/16s/64s backoff, because
+  GitHub enforces a per-minute points cap as well as the hourly one;
+- `--workers` defaults to 3 — higher concurrency reliably trips that per-minute cap mid-sweep.
+
+Note that the REST `/rate_limit` endpoint is **not** a reliable pre-flight check here: it can report
+a full GraphQL budget (`5000/5000, used=0`) while the API is actively rejecting queries with
+`RATE_LIMIT`. The `rateLimit` block returned inside each query is the trustworthy signal.
+
+#### Why Some Repositories Are Counted Over REST
+
+GraphQL caps `pullRequests(first:)` at 100, and a sweep samples far fewer than that, so a
+repository with more open PRs than `--prs` is necessarily under-counted — `apache/airflow` reported
+0 running jobs from a 3-PR sample while REST found 176 in the same repository.
+
+So the sweep uses each API where it is strongest. Every repo's query also returns the two
+`totalCount`s that reveal whether the sample was complete: `pullRequests(states: OPEN)` and
+`checkSuites` per commit. A repository's GraphQL numbers stand only when **both** limits held --
+no more open PRs than `--prs`, and no commit carrying more check suites than `--suites`. Checking
+only the PR count is not enough: `apache/skywalking-java` has a single open PR but thirteen active
+runs on its head commit, and reading five of them reported 32 queued jobs where the true figure was
+203. Everything else is re-counted over REST, which has no org-wide endpoint but is exact per
+repository: list the runs that are still active, then count their jobs. In practice that is a small minority of repositories, so the sweep keeps
+GraphQL's batching for the bulk of the org and pays REST's per-repo cost only where it buys
+accuracy. The `source` column records which API produced each row, and `--no-rest-fallback` turns
+the second pass off.
+
+#### Known Limits
+
+- Neither API attributes a job to a runner -- no labels, no runner name, no self-hosted versus
+  GitHub-hosted split -- so a job held back by a `concurrency` group cannot be told apart from one
+  waiting for capacity. Runs blocked on maintainer approval are reported separately in the
+  `runs_awaiting_approval` column, since those are not capacity waits either. For true runner
+  state, Infra can use `GET /orgs/apache/actions/runners` (`admin:org`), whose objects carry
+  `status` and `busy`.
+- GraphQL reaches workflow runs through check suites, which hang off commits, so the cheap pass
+  sees only the default branch head and open PR heads. A run started by a push to another branch,
+  by a tag, or by a schedule on a non-default branch is invisible to it, and no `totalCount`
+  reveals that. Such a repository is only counted if something else routes it to REST. In a paired
+  run against a full REST sweep the residual difference was 8 repositories out of ~160, all small,
+  and indistinguishable from ordinary churn over the twenty minutes separating the two passes.
+- The snapshot is a moment, not an average. A busy organisation moves enough in twenty minutes to
+  change totals by a third, so compare runs taken close together or not at all.

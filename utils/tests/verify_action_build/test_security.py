@@ -23,6 +23,7 @@ from verify_action_build.security import (
     analyze_binary_downloads_recursive,
     analyze_dockerfile,
     analyze_in_tree_binaries,
+    find_rebuild_reproduced_binaries,
     analyze_lock_files,
     analyze_scripts,
     analyze_action_metadata,
@@ -102,6 +103,11 @@ class TestAnalyzeScripts:
             return files.get(path)
         return fetch
 
+    def _mock_tree(self, paths=()):
+        return mock.patch(
+            "verify_action_build.security._list_repo_files", return_value=list(paths)
+        )
+
     def test_detects_eval(self):
         action_yml = """\
 name: Test
@@ -113,9 +119,10 @@ runs:
         files = {
             "script.py": 'eval("malicious code")\n',
         }
-        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
-            with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch_file(files)):
-                warnings = analyze_scripts("org", "repo", "a" * 40)
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml), \
+                self._mock_tree(), \
+                mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch_file(files)):
+            warnings = analyze_scripts("org", "repo", "a" * 40)
         # Script analysis finds suspicious patterns (eval is in findings)
         # Warnings list may be empty since script analysis only logs to console
         # but doesn't add to warnings for all patterns
@@ -128,16 +135,79 @@ runs:
   using: node20
   main: dist/index.js
 """
-        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
-            with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
-                warnings = analyze_scripts("org", "repo", "a" * 40)
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml), \
+                self._mock_tree(), \
+                mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
+            warnings = analyze_scripts("org", "repo", "a" * 40)
         assert warnings == []
+
+    def test_scans_shell_script_only_reachable_from_js_entrypoint(self):
+        # uraimo/run-on-arch-action: action.yml names only the JS entrypoint,
+        # which then exec()s src/run-on-arch.sh.  Nothing in action.yml or a
+        # Dockerfile mentions the script, so it has to come from the tree.
+        action_yml = """\
+name: Run on architecture
+runs:
+  using: node24
+  main: 'src/run-on-arch.js'
+"""
+        files = {"src/run-on-arch.sh": "#!/bin/bash\ndocker run --rm ubuntu\n"}
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml), \
+                self._mock_tree(["src/run-on-arch.js", "src/run-on-arch.sh", "README.md"]), \
+                mock.patch(
+                    "verify_action_build.security.fetch_file_from_github",
+                    side_effect=self._mock_fetch_file(files),
+                ) as fetch:
+            analyze_scripts("org", "repo", "a" * 40)
+        fetched = {call.args[3] for call in fetch.call_args_list}
+        assert "src/run-on-arch.sh" in fetched
+
+    def test_tree_discovery_skips_vendored_and_test_dirs(self):
+        action_yml = """\
+name: Test
+runs:
+  using: node24
+  main: 'dist/index.js'
+"""
+        tree = [
+            "node_modules/foo/install.sh",
+            "__tests__/fixture.sh",
+            "docs/example.sh",
+            "src/entry.sh",
+        ]
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml), \
+                self._mock_tree(tree), \
+                mock.patch(
+                    "verify_action_build.security.fetch_file_from_github",
+                    side_effect=self._mock_fetch_file({"src/entry.sh": "echo hi\n"}),
+                ) as fetch:
+            analyze_scripts("org", "repo", "a" * 40)
+        fetched = {call.args[3] for call in fetch.call_args_list}
+        assert "src/entry.sh" in fetched
+        assert not any(p.startswith(("node_modules/", "__tests__/", "docs/")) for p in fetched)
+
+    def test_tree_discovery_respects_sub_path(self):
+        action_yml = """\
+name: Test
+runs:
+  using: node24
+  main: 'index.js'
+"""
+        tree = ["other/setup.sh", "sub/action/src/setup.sh"]
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml), \
+                self._mock_tree(tree), \
+                mock.patch(
+                    "verify_action_build.security.fetch_file_from_github",
+                    side_effect=self._mock_fetch_file({"sub/action/src/setup.sh": "echo hi\n"}),
+                ) as fetch:
+            analyze_scripts("org", "repo", "a" * 40, sub_path="sub/action")
+        fetched = {call.args[3] for call in fetch.call_args_list}
+        assert "sub/action/src/setup.sh" in fetched
+        assert "other/setup.sh" not in fetched
 
 
 class TestAnalyzeActionMetadata:
     def test_pipe_to_shell_warns(self):
-        # Multi-line run: blocks are needed — single-line run: is detected
-        # as a block start and the content is on the next line.
         action_yml = """\
 name: Test
 runs:
@@ -164,6 +234,72 @@ runs:
         with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
             warnings = analyze_action_metadata("org", "repo", "a" * 40)
         assert any("injection" in w for w in warnings)
+
+    def test_env_binding_of_input_is_not_injection(self):
+        # Real shape from carabiner-dev/actions/install/download-and-verify
+        # @60563b5, seen while reviewing apache/infrastructure-actions#1076.
+        # Binding the input to an env var and dereferencing "$INPUTS_INSTALL_DIR"
+        # inside the script is the recommended mitigation, so the `env:` block
+        # must not be scanned as if it were shell body.
+        action_yml = """\
+name: Test
+runs:
+  using: composite
+  steps:
+      - name: Validate install-dir
+        shell: bash
+        run: |
+          case "$INPUTS_INSTALL_DIR" in
+            ''|*[!A-Za-z0-9._/$~-]*)
+              echo "::error::install-dir must be non-empty; got: $INPUTS_INSTALL_DIR"
+              exit 1
+              ;;
+          esac
+        env:
+          INPUTS_INSTALL_DIR: ${{ inputs.install-dir }}
+"""
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            warnings = analyze_action_metadata("org", "repo", "a" * 40)
+        assert not any("injection" in w for w in warnings), warnings
+
+    def test_run_block_ends_at_sibling_key(self):
+        # A `run:` block scalar ends at the next key indented no deeper than
+        # `run:` itself; later steps' non-shell keys are not shell body.
+        action_yml = """\
+name: Test
+runs:
+  using: composite
+  steps:
+    - name: safe
+      run: |
+        echo hello
+      env:
+        TOKEN: ${{ inputs.token }}
+    - name: also safe
+      with:
+        path: ${{ inputs.path }}
+"""
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            warnings = analyze_action_metadata("org", "repo", "a" * 40)
+        assert not any("injection" in w for w in warnings), warnings
+
+    def test_single_line_run_is_scanned(self):
+        # The command sits on the `run:` line itself, so it has to be scanned
+        # there; nothing after it belongs to the block.
+        action_yml = """\
+name: Test
+runs:
+  using: composite
+  steps:
+    - name: dangerous
+      run: curl https://example.com | sh
+      env:
+        SAFE: ${{ inputs.name }}
+"""
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            warnings = analyze_action_metadata("org", "repo", "a" * 40)
+        assert any("pipe-to-shell" in w for w in warnings), warnings
+        assert not any("injection" in w for w in warnings), warnings
 
     def test_clean_action_no_warnings(self):
         action_yml = """\
@@ -611,6 +747,17 @@ class TestAnalyzeLockFiles:
         files = {
             "package.json": '{"name":"x","dependencies":{"a":"1.0.0"}}',
             "bun.lock": "",
+        }
+        assert self._run(files) == []
+
+    def test_node_package_json_with_aube_lock_passes(self):
+        # apache/infrastructure-actions#1167: jdx/mise-action v4.2.4 moved its
+        # build to aube (jdx/aube), which writes aube-lock.yaml in pnpm's
+        # lockfileVersion 9 format — resolved versions plus sha512 integrity
+        # for every transitive dep, so the pinning guarantee is unchanged.
+        files = {
+            "package.json": '{"name":"x","dependencies":{"a":"1.0.0"}}',
+            "aube-lock.yaml": "lockfileVersion: '9.0'\n",
         }
         assert self._run(files) == []
 
@@ -1491,6 +1638,53 @@ class TestLooksLikeInTreeBinary:
         assert _looks_like_in_tree_binary("dist/gradle-wrapper.jar") is True
         assert _looks_like_in_tree_binary("Library.jar") is True
 
+    def test_actions_tool_cache_7zdec_exempt(self):
+        # 7zdec.exe ships inside the first-party @actions/tool-cache npm
+        # package (it backs tc.extractZip on Windows), so every action that
+        # vendors node_modules carries it verbatim from the published
+        # tarball.  reactivecircus/android-emulator-runner was false-flagged
+        # for it.
+        assert _looks_like_in_tree_binary(
+            "node_modules/@actions/tool-cache/scripts/externals/7zdec.exe"
+        ) is False
+        # Exempt under a nested action sub-path too.
+        assert _looks_like_in_tree_binary(
+            "subdir/node_modules/@actions/tool-cache/scripts/externals/7zdec.exe"
+        ) is False
+        # Precision: the same name dropped anywhere else is still caught —
+        # the suffix match needs the canonical package path.
+        assert _looks_like_in_tree_binary("dist/7zdec.exe") is True
+        assert _looks_like_in_tree_binary(
+            "node_modules/evil-pkg/scripts/externals/7zdec.exe"
+        ) is True
+
+    def test_test_fixture_binaries_exempt(self):
+        # Binaries under a test-fixture tree are test *input*, never
+        # reached by the action's entrypoint, so they never run on a
+        # consumer's runner.  anchore/sbom-action@v0.24.2 was
+        # false-flagged for this sample app used in SBOM coverage tests.
+        assert _looks_like_in_tree_binary(
+            "tests/fixtures/image-debian-match-coverage/java/"
+            "example-java-app-maven-0.1.0.jar"
+        ) is False
+        # Other conventional spellings of the same thing.
+        for path in (
+            "test/fixtures/sample.jar",
+            "spec/fixtures/nested/deep/lib.so",
+            "__tests__/__fixtures__/app.exe",
+            "testdata/binary.dll",
+            "src/testdata/golden/tool",
+        ):
+            assert _looks_like_in_tree_binary(path) is False, path
+        # Precision: a test tree alone is not enough — a helper binary
+        # that really is executed still gets flagged.
+        assert _looks_like_in_tree_binary("tests/bin/helper.exe") is True
+        # ...and so is a fixtures tree outside any test directory, which
+        # is a shape real actions use for shipped sample data.
+        assert _looks_like_in_tree_binary("fixtures/payload.jar") is True
+        # The segments must be directories, not the filename itself.
+        assert _looks_like_in_tree_binary("dist/test-fixtures.jar") is True
+
     def test_matlab_platform_dir_naming(self):
         # MATLAB's launcher convention: dist/bin/<platform>/run-matlab-command
         # where <platform> is MATLAB's own arch identifier and the file has
@@ -1516,6 +1710,124 @@ class TestLooksLikeInTreeBinary:
         # The signal is parent-directory == platform, not filename.
         assert not _looks_like_in_tree_binary("glnxa64")
         assert not _looks_like_in_tree_binary("docs/glnxa64.md")
+
+
+class TestFindRebuildReproducedBinaries:
+    """1Password/load-secrets-action ships dist/core_bg.wasm, which ncc copies
+    out of the lockfile-pinned @1password/sdk-core package.  It has no GitHub
+    release provenance of its own and never will, so the in-tree check's
+    attestation/SHA256SUMS cascade rejected it.  The rebuild deletes it and
+    puts it back, which is the guarantee that actually applies."""
+
+    def _tree(self, root, files):
+        for rel, data in files.items():
+            path = root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+
+    def test_identical_binary_is_credited(self, tmp_path):
+        original, rebuilt = tmp_path / "orig", tmp_path / "new"
+        self._tree(original, {"core_bg.wasm": b"\x00asm\x01wasm-bytes"})
+        self._tree(rebuilt, {"core_bg.wasm": b"\x00asm\x01wasm-bytes"})
+        assert find_rebuild_reproduced_binaries(original, rebuilt, "dist") == {
+            "dist/core_bg.wasm"
+        }
+
+    def test_differing_binary_is_not_credited(self, tmp_path):
+        original, rebuilt = tmp_path / "orig", tmp_path / "new"
+        self._tree(original, {"core_bg.wasm": b"\x00asm\x01committed"})
+        self._tree(rebuilt, {"core_bg.wasm": b"\x00asm\x01rebuilt"})
+        assert find_rebuild_reproduced_binaries(original, rebuilt, "dist") == set()
+
+    def test_binary_missing_from_rebuild_is_not_credited(self, tmp_path):
+        # The deletion step removed it and the build never put it back — that
+        # is shipped code the rebuild cannot account for.
+        original, rebuilt = tmp_path / "orig", tmp_path / "new"
+        self._tree(original, {"core_bg.wasm": b"\x00asm\x01bytes"})
+        rebuilt.mkdir(parents=True)
+        assert find_rebuild_reproduced_binaries(original, rebuilt, "dist") == set()
+
+    def test_nested_path_and_out_dir_prefix(self, tmp_path):
+        original, rebuilt = tmp_path / "orig", tmp_path / "new"
+        self._tree(original, {"vendor/native.node": b"native"})
+        self._tree(rebuilt, {"vendor/native.node": b"native"})
+        assert find_rebuild_reproduced_binaries(original, rebuilt, "lib") == {
+            "lib/vendor/native.node"
+        }
+
+    def test_non_binary_files_ignored(self, tmp_path):
+        original, rebuilt = tmp_path / "orig", tmp_path / "new"
+        self._tree(original, {"index.js": b"console.log(1)"})
+        self._tree(rebuilt, {"index.js": b"console.log(1)"})
+        assert find_rebuild_reproduced_binaries(original, rebuilt, "dist") == set()
+
+    def test_missing_directories(self, tmp_path):
+        assert find_rebuild_reproduced_binaries(
+            tmp_path / "nope", tmp_path / "also-nope", "dist"
+        ) == set()
+
+
+class TestInTreeBinaryRebuildCredit:
+    def _patch_tree(self, paths):
+        return mock.patch(
+            "verify_action_build.security._list_repo_files", return_value=list(paths)
+        )
+
+    def test_reproduced_binary_passes_without_release_provenance(self):
+        # No attestation, no SHA256SUMS — the old cascade's only outcome was a
+        # hard error.  The rebuild credit has to short-circuit before either
+        # network path is consulted.
+        with self._patch_tree(["dist/index.js", "dist/core_bg.wasm"]), \
+                mock.patch("verify_action_build.security._resolve_tag_for_commit") as tag, \
+                mock.patch("verify_action_build.security._fetch_blob_bytes") as blob:
+            errors = analyze_in_tree_binaries(
+                "org", "repo", "a" * 40,
+                reproduced_by_rebuild={"dist/core_bg.wasm"},
+            )
+        assert errors == []
+        tag.assert_not_called()
+        blob.assert_not_called()
+
+    def test_unreproduced_binary_still_fails(self):
+        with self._patch_tree(["dist/core_bg.wasm"]), \
+                mock.patch(
+                    "verify_action_build.security._resolve_tag_for_commit",
+                    return_value=None,
+                ), \
+                mock.patch(
+                    "verify_action_build.security._fetch_blob_bytes",
+                    return_value=b"opaque",
+                ), \
+                mock.patch(
+                    "verify_action_build.security._verify_via_gh_attestation",
+                    return_value=False,
+                ):
+            errors = analyze_in_tree_binaries("org", "repo", "a" * 40)
+        assert len(errors) == 1
+        assert "core_bg.wasm" in errors[0]
+
+    def test_credit_does_not_leak_to_other_binaries(self):
+        # A committed launcher binary next to a reproduced asset must still be
+        # rejected on its own merits.
+        with self._patch_tree(["dist/core_bg.wasm", "bin/main-linux-amd64"]), \
+                mock.patch(
+                    "verify_action_build.security._resolve_tag_for_commit",
+                    return_value=None,
+                ), \
+                mock.patch(
+                    "verify_action_build.security._fetch_blob_bytes",
+                    return_value=b"opaque",
+                ), \
+                mock.patch(
+                    "verify_action_build.security._verify_via_gh_attestation",
+                    return_value=False,
+                ):
+            errors = analyze_in_tree_binaries(
+                "org", "repo", "a" * 40,
+                reproduced_by_rebuild={"dist/core_bg.wasm"},
+            )
+        assert len(errors) == 1
+        assert "main-linux-amd64" in errors[0]
 
 
 class TestParseSha256sums:

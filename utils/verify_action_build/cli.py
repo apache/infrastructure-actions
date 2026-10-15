@@ -23,9 +23,11 @@ import os
 import shutil
 import sys
 
+from rich_argparse import RichHelpFormatter
+
 from .console import console
 from .dependabot import check_dependabot_prs
-from .github_client import GitHubClient
+from .github_client import GitHubClient, gh_auth_token
 from .pr_extraction import extract_action_refs_from_diff
 from .verification import SECURITY_CHECKLIST_URL, verify_single_action
 
@@ -37,6 +39,7 @@ def _exit(code: int) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
+        formatter_class=RichHelpFormatter,
         description="Verify compiled JS in a GitHub Action matches a local rebuild.",
         usage="uv run %(prog)s [org/repo@commit_hash | --check-dependabot-prs | --from-pr N]",
         epilog=f"Security review checklist: {SECURITY_CHECKLIST_URL}",
@@ -59,7 +62,8 @@ def main() -> None:
     parser.add_argument(
         "--github-token",
         default=os.environ.get("GITHUB_TOKEN"),
-        help="GitHub token for API access (default: $GITHUB_TOKEN env var). Required with --no-gh",
+        help="GitHub token for API access (default: $GITHUB_TOKEN env var, then `gh auth token`). "
+             "Required with --no-gh",
     )
     parser.add_argument(
         "--from-pr",
@@ -94,6 +98,16 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # Several checks (lockfile discovery, in-tree binary lookups) call api.github.com
+    # directly and read GITHUB_TOKEN from the environment. Unauthenticated they share a
+    # 60-requests/hour budget, which a single run can exhaust — so borrow the gh CLI's
+    # token when the caller has not set one. Env only: it must not flip GitHubClient into
+    # requests mode, which keys off --github-token being present.
+    if not os.environ.get("GITHUB_TOKEN"):
+        inherited = args.github_token or gh_auth_token()
+        if inherited:
+            os.environ["GITHUB_TOKEN"] = inherited
+
     ci_mode = args.ci
     cache = not args.no_cache
     show_build_steps = args.show_build_steps
@@ -105,10 +119,15 @@ def main() -> None:
 
     # Build the GitHub client
     if args.no_gh:
+        # Reads back what the priming block above resolved, so the fallback costs at most
+        # one `gh auth token` subprocess per run.
+        if not args.github_token:
+            args.github_token = os.environ.get("GITHUB_TOKEN") or gh_auth_token()
         if not args.github_token:
             console.print(
                 "[red]Error:[/red] --no-gh requires a GitHub token. "
-                "Pass --github-token TOKEN or set the GITHUB_TOKEN environment variable."
+                "Pass --github-token TOKEN, set the GITHUB_TOKEN environment variable, "
+                "or run `gh auth login`."
             )
             _exit(1)
         gh = GitHubClient(token=args.github_token)

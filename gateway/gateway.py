@@ -216,13 +216,21 @@ runs:
         elif len(ref_to_update) == 1:
             ref = ref_to_update[0]
             details = refs[ref]
-            comments = []
-            if details and 'tag' in details:
-                comments.append(details['tag'])
-            if name in ZIZMOR_UNPINNED_TOOLS_ACTIONS:
-                comments.append(f"# {ZIZMOR_UNPINNED_TOOLS_IGNORE}")
-            steps.append(f"    - uses: {name}@{ref}" + (f"  # {'  '.join(comments)}" if comments else ''))
-            steps.append( "      if: false")
+            tag_comment = f"  # {details['tag']}" if details and 'tag' in details else ''
+            steps.append(f"    - uses: {name}@{ref}{tag_comment}")
+            # The zizmor `unpinned-tools` ignore is emitted on the `if: false`
+            # line -- within the sentinel step's finding span, per
+            # https://docs.zizmor.sh/usage/#ignoring-results -- rather than on
+            # the `uses:` line. That keeps the version tag as the trailing token
+            # of the `uses:` comment, so Dependabot's comment-updater keeps
+            # `# <tag>` in sync when it bumps the hash (it skips comments with
+            # text after the version). See #952.
+            if_comment = (
+                f"  # {ZIZMOR_UNPINNED_TOOLS_IGNORE}"
+                if name in ZIZMOR_UNPINNED_TOOLS_ACTIONS
+                else ''
+            )
+            steps.append(f"      if: false{if_comment}")
             # zizmor's `unpinned-tools` audit flags certain actions whose
             # default behavior is to install the "latest" version of an
             # external tool. The remediation is to set `with.version` to

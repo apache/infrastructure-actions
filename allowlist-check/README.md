@@ -89,6 +89,7 @@ Actions from these GitHub organizations are implicitly trusted and don't need to
 ### Skipped
 
 - **Local refs** (`./`) — paths within the same repo are not subject to the org allowlist
+- **Self-repository refs** (`$/`) — same-repo paths resolved at the commit being run; GitHub's recommended form of `./`, likewise not subject to the org allowlist
 - **Docker refs** (`docker://`) — container actions pulled directly from a registry
 - **Empty YAML files** — skipped
 - **Malformed YAML files** — fails with an error

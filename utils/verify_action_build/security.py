@@ -569,6 +569,10 @@ def analyze_scripts(
                         if clean:
                             script_files.add(clean)
 
+    # Scripts nothing references from action.yml or a Dockerfile still ship
+    # with the action and still run when the entrypoint shells out to them.
+    script_files.update(_discover_shell_script_files(org, repo, commit_hash, sub_path))
+
     if not script_files:
         return warnings
 
@@ -680,7 +684,10 @@ def analyze_lock_files(
 
     # (ecosystem, manifest, [acceptable lock files in priority order])
     ecosystems: list[tuple[str, str, list[str]]] = [
-        ("node",   "package.json",   ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lock", "bun.lockb"]),
+        # aube (jdx/aube) writes aube-lock.yaml in pnpm's lockfileVersion 9
+        # format — same resolved-version + sha512-integrity guarantees the
+        # other node lock files give, under a different filename.
+        ("node",   "package.json",   ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lock", "bun.lockb", "aube-lock.yaml"]),
         ("python", "pyproject.toml", ["uv.lock", "poetry.lock", "pdm.lock", "requirements.txt"]),
         ("python", "Pipfile",        ["Pipfile.lock"]),
         ("deno",   "deno.json",      ["deno.lock"]),
@@ -917,7 +924,7 @@ def analyze_dependency_pinning(
         except (json.JSONDecodeError, KeyError):
             pass
 
-    lock_files = ["package-lock.json", "yarn.lock", "pnpm-lock.yaml"]
+    lock_files = ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "aube-lock.yaml"]
     if sub_path:
         lock_files = [f"{sub_path}/{lf}" for lf in lock_files] + lock_files
     for lf_path in lock_files:
@@ -961,7 +968,6 @@ def analyze_action_metadata(
                 console.print(f"    [dim]{line.strip()[:100]}[/dim]")
                 warnings.append(f"action.yml line {i}: {desc}")
 
-    in_run_block = False
     dangerous_shell_patterns = [
         (r"curl\s+.*\|\s*(ba)?sh", "pipe-to-shell (curl | sh) — high risk"),
         (r"wget\s+.*\|\s*(ba)?sh", "pipe-to-shell (wget | sh) — high risk"),
@@ -972,24 +978,47 @@ def analyze_action_metadata(
     ]
 
     shell_findings: list[tuple[int, str, str]] = []
+
+    def scan_shell_line(line_num: int, raw: str, snippet: str) -> None:
+        for pattern, desc in dangerous_shell_patterns:
+            if desc is None:
+                continue
+            if re.search(pattern, raw):
+                shell_findings.append((line_num, desc, snippet[:100]))
+
+    in_run_block = False
+    run_key_indent = 0
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
-        if re.match(r"run:\s*\|", stripped) or re.match(r"run:\s+\S", stripped):
-            in_run_block = True
+        # Blank lines are part of a block scalar, so they never close one.
+        if not stripped:
             continue
-        if in_run_block:
-            if stripped and not line[0].isspace():
-                in_run_block = False
-            elif stripped and re.match(r"\s+\w+:", line) and not line.startswith("        "):
-                if not stripped.startswith("#") and not stripped.startswith("-"):
-                    in_run_block = False
+        indent = len(line) - len(line.lstrip())
 
-        if in_run_block or (re.match(r"\s+run:\s+", line)):
-            for pattern, desc in dangerous_shell_patterns:
-                if desc is None:
-                    continue
-                if re.search(pattern, line):
-                    shell_findings.append((i, desc, stripped[:100]))
+        # `run: |` (or `>`) opens a block scalar whose body must be indented
+        # deeper than the `run:` key itself.
+        if re.match(r"(?:-\s+)?run:\s*[|>][-+\d]*\s*$", stripped):
+            in_run_block = True
+            run_key_indent = indent
+            continue
+
+        # `run: some-command` is self-contained: scan the command on this
+        # line, but do not treat what follows as shell body.
+        if re.match(r"(?:-\s+)?run:\s+\S", stripped):
+            in_run_block = False
+            scan_shell_line(i, line, stripped)
+            continue
+
+        # Content at or left of the `run:` key closes the block scalar. This
+        # is what keeps sibling keys out of the shell body -- notably `env:`,
+        # where binding an input to an environment variable is the
+        # recommended way to keep it out of the script text. Scanning those
+        # lines reports the mitigation as if it were the injection.
+        if in_run_block and indent <= run_key_indent:
+            in_run_block = False
+
+        if in_run_block:
+            scan_shell_line(i, line, stripped)
 
     if shell_findings:
         seen: set[str] = set()
@@ -1233,6 +1262,7 @@ _JS_VERIFICATION_PATTERNS = [
 ]
 
 _JS_SOURCE_EXTENSIONS = (".ts", ".js", ".mjs", ".cjs")
+_SHELL_SCRIPT_EXTENSIONS = (".sh", ".bash", ".ps1")
 _JS_SCAN_DIR_PREFIXES = ("src/", "lib/", "source/", "sources/", "scripts/")
 _JS_EXCLUDE_DIR_PREFIXES = (
     "dist/", "build/", "out/", "node_modules/", "coverage/",
@@ -1356,6 +1386,39 @@ def _discover_js_source_files(
         if content is not None:
             files.append((rel, content))
     return files
+
+
+def _discover_shell_script_files(
+    org: str, repo: str, commit_hash: str, sub_path: str,
+) -> list[str]:
+    """Return repo paths of committed shell/interpreter scripts worth scanning.
+
+    ``analyze_scripts`` otherwise only learns about a script when action.yml or
+    a Dockerfile names it.  A node action's entrypoint is free to shell out to
+    a script that neither file mentions -- uraimo/run-on-arch-action declares
+    ``main: src/run-on-arch.js``, which then ``exec()``s ``src/run-on-arch.sh``
+    -- so the script that actually invokes docker went unscanned.  Discover
+    them from the tree instead, using the same directory filters as the JS
+    discovery so vendored and test material stays out.
+    """
+    paths: list[str] = []
+    all_paths = _list_repo_files(org, repo, commit_hash)
+    if not all_paths:
+        return paths
+
+    prefix = f"{sub_path.rstrip('/')}/" if sub_path else ""
+    for path in all_paths:
+        if prefix and not path.startswith(prefix):
+            continue
+        rel = path[len(prefix):] if prefix else path
+        if not rel.endswith(_SHELL_SCRIPT_EXTENSIONS):
+            continue
+        if any(rel.startswith(d) for d in _JS_EXCLUDE_DIR_PREFIXES):
+            continue
+        if "/" in rel and not any(rel.startswith(d) for d in _JS_SCAN_DIR_PREFIXES):
+            continue
+        paths.append(rel)
+    return paths
 
 
 def _find_binary_downloads(content: str) -> list[tuple[int, str]]:
@@ -1748,6 +1811,14 @@ _IN_TREE_BINARY_EXTENSIONS = (
     ".wasm",
 )
 
+# Binaries a JS bundler copies into the output directory as dependency assets
+# rather than the action committing them by hand.  These are deleted before
+# the rebuild (see build_action.Dockerfile) so that a byte-identical file
+# coming back proves the rebuild produced it.
+_REBUILDABLE_BINARY_EXTENSIONS = (
+    ".wasm", ".node", ".so", ".dll", ".dylib", ".exe",
+)
+
 # Cross-compiled binary naming convention used by Go, Rust, and similar
 # toolchains: ``<name>-<os>-<arch>`` with an optional ``.exe``.  Catches
 # the runs-on/action shape (main-linux-amd64, main-windows-amd64.exe).
@@ -1789,7 +1860,45 @@ _IN_TREE_BINARY_EXEMPT_PATH_SUFFIXES = (
     # gradle/wrapper-validation-action).  Seen on JetBrains/qodana-action,
     # a node24 action that never shells out to Gradle at runtime.
     "gradle/wrapper/gradle-wrapper.jar",
+    # 7-Zip's standalone decoder, bundled inside the first-party
+    # @actions/tool-cache npm package (it backs ``tc.extractZip`` on
+    # Windows).  It is not the action's own code: any action that vendors
+    # its node_modules ships it verbatim from the published tarball, and
+    # the Vendored npm Registry Check verifies that package's bytes against
+    # the lockfile integrity hash.  Seen on reactivecircus/android-emulator-
+    # runner.  The general fix — crediting any binary under a node_modules
+    # package the registry check already verified — needs the two checks
+    # reordered, so this keeps the narrow, reviewable form used above.
+    "node_modules/@actions/tool-cache/scripts/externals/7zdec.exe",
 )
+
+# Directory segments that mark a test tree, and the fixture / sample-data
+# subtrees inside one.  A binary under BOTH (or under a ``testdata``
+# segment, Go's convention for the same thing) is test *input*: the
+# action's entrypoint never reaches it, so it never runs on a consumer's
+# runner and is not a supply-chain vector.  Same reasoning already
+# applied to only-in-rebuild output (cf. the #1123 precedent).
+#
+# Requiring both a test segment and a fixture segment keeps this narrow.
+# A top-level ``fixtures/`` tree, or a genuine helper binary sitting at
+# ``tests/bin/tool``, still gets flagged.
+_TEST_DIR_SEGMENTS = frozenset({"test", "tests", "spec", "specs", "__tests__"})
+_FIXTURE_DIR_SEGMENTS = frozenset({"fixture", "fixtures", "__fixtures__"})
+_TESTDATA_DIR_SEGMENTS = frozenset({"testdata", "test-data"})
+
+
+def _is_test_fixture_binary(path: str) -> bool:
+    """Return True if ``path`` sits inside a test-fixture tree.
+
+    Only the *directory* segments are considered, so a file merely named
+    like a fixture does not qualify.
+    """
+    segments = set(path.lower().split("/")[:-1])
+    if segments & _TESTDATA_DIR_SEGMENTS:
+        return True
+    return bool(segments & _TEST_DIR_SEGMENTS) and bool(
+        segments & _FIXTURE_DIR_SEGMENTS
+    )
 
 
 def _looks_like_in_tree_binary(path: str) -> bool:
@@ -1805,6 +1914,8 @@ def _looks_like_in_tree_binary(path: str) -> bool:
     if name in _IN_TREE_BINARY_EXEMPT_NAMES:
         return False
     if path.lower().endswith(_IN_TREE_BINARY_EXEMPT_PATH_SUFFIXES):
+        return False
+    if _is_test_fixture_binary(path):
         return False
     lower = name.lower()
     if lower.endswith(_IN_TREE_BINARY_EXTENSIONS):
@@ -2152,8 +2263,42 @@ def verify_trusted_download_provenance(
     )
 
 
+def find_rebuild_reproduced_binaries(
+    original_dir: Path, rebuilt_dir: Path, out_dir_name: str,
+) -> set[str]:
+    """Repo-relative paths of output-dir binaries the rebuild reproduced.
+
+    The rebuild deletes bundler-copied binaries (``*.wasm``, ``*.node``,
+    native libraries) from the output directory before building, exactly as
+    it deletes minified JS.  A file that comes back byte-identical was
+    therefore regenerated from the lockfile-pinned dependency tree rather
+    than read back off the committed tree — the same guarantee the JS
+    rebuild check provides, so the in-tree binary check can credit it.
+
+    Returns paths prefixed with *out_dir_name* (e.g. ``dist/core_bg.wasm``)
+    so they line up with the repo-relative paths the in-tree check uses.
+    """
+    reproduced: set[str] = set()
+    if not original_dir.is_dir() or not rebuilt_dir.is_dir():
+        return reproduced
+
+    for original in original_dir.rglob("*"):
+        if not original.is_file():
+            continue
+        rel = original.relative_to(original_dir)
+        if not rel.name.lower().endswith(_REBUILDABLE_BINARY_EXTENSIONS):
+            continue
+        rebuilt = rebuilt_dir / rel
+        if not rebuilt.is_file():
+            continue
+        if original.read_bytes() == rebuilt.read_bytes():
+            reproduced.add(f"{out_dir_name}/{rel.as_posix()}")
+    return reproduced
+
+
 def analyze_in_tree_binaries(
     org: str, repo: str, commit_hash: str, sub_path: str = "",
+    reproduced_by_rebuild: set[str] | None = None,
 ) -> list[str]:
     """Flag pre-compiled native binaries shipped in the action's tree
     that lack verifiable upstream provenance.
@@ -2205,20 +2350,31 @@ def analyze_in_tree_binaries(
     console.print()
     console.rule("[bold]In-tree Binary Check[/bold]")
 
-    # Look up the tag once — both verification paths key off the release
-    # for this commit.
-    tag_name = _resolve_tag_for_commit(org, repo, commit_hash)
+    # Binaries the clean rebuild regenerated byte-for-byte are build output
+    # from the lockfile-pinned dependency tree, not opaque code the action
+    # committed — upstream release provenance is the wrong thing to ask of
+    # them.  Settle these first so a fully-reproduced action skips the
+    # release lookups entirely.
+    reproduced = reproduced_by_rebuild or set()
+    verified_rebuild = [b for b in binaries if b in reproduced]
+    pending = [b for b in binaries if b not in reproduced]
+
+    tag_name: str | None = None
     sha256sums: dict[str, str] | None = None
-    if tag_name:
-        text = _fetch_release_asset_text(org, repo, tag_name, "SHA256SUMS")
-        if text:
-            sha256sums = _parse_sha256sums(text)
+    if pending:
+        # Look up the tag once — both remaining verification paths key off
+        # the release for this commit.
+        tag_name = _resolve_tag_for_commit(org, repo, commit_hash)
+        if tag_name:
+            text = _fetch_release_asset_text(org, repo, tag_name, "SHA256SUMS")
+            if text:
+                sha256sums = _parse_sha256sums(text)
 
     verified_attestation: list[str] = []
     verified_sha256sums: list[str] = []
     unverified: list[tuple[str, str]] = []  # (path, reason)
 
-    for binary in binaries:
+    for binary in pending:
         full_path = f"{prefix}{binary}"
         content = _fetch_blob_bytes(org, repo, commit_hash, full_path)
         if content is None:
@@ -2262,6 +2418,14 @@ def analyze_in_tree_binaries(
         unverified.append((binary, reason))
 
     # Summary block.
+    if verified_rebuild:
+        console.print(
+            f"  [green]✓[/green] {len(verified_rebuild)} binary(ies) "
+            f"reproduced byte-for-byte by the clean rebuild (bundler-copied "
+            f"dependency assets):"
+        )
+        for path in verified_rebuild:
+            console.print(f"    [green]✓[/green] {path}")
     if verified_attestation:
         console.print(
             f"  [green]✓[/green] {len(verified_attestation)} binary(ies) "

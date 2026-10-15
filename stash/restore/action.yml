@@ -52,6 +52,12 @@ inputs:
       the download will be retried until it succeeds or this many attempts have been
       made. Other exit codes are not retried.
     default: "3"
+  retry-delay:
+    description: >
+      Base number of seconds to wait between download attempts. The wait grows
+      exponentially with each attempt and is fully jittered, so jobs that fail
+      together do not retry together. Set to "0" to retry immediately.
+    default: "5"
   fail-on-download:
     description: >
       If true, the action will fail when a stash artifact was found but could not be
@@ -165,6 +171,7 @@ runs:
         STASH_DIR: "${{ steps.mung.outputs.stash_path }}"
         CLEAN: "${{ inputs.clean }}"
         RETRY_COUNT: "${{ inputs.retry-count }}"
+        RETRY_DELAY: "${{ inputs.retry-delay }}"
         FAIL_ON_DOWNLOAD: "${{ inputs.fail-on-download }}"
       run: |
         import os, sys

@@ -19,6 +19,12 @@
 name: Test the Pelican build action
 on:
   push:
+    # Branches only. Release tags (pelican/v1.0.0, pelican/v1, ...) touch the
+    # same paths, and github.ref_name for a tag push is the tag name, which
+    # would make TARGET below "testsite-pelican/v1" -- not a branch this
+    # workflow can create. Naming any branches filter excludes tag pushes.
+    branches:
+      - '**'
     paths:
       - 'pelican/**'
       - '.github/workflows/pelican-action-test.yml'
@@ -38,7 +44,7 @@ jobs:
       group: testsite-${{ github.ref_name }} # must agree with TARGET
     steps:
       - name: Checkout the test site
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: ${{ env.SOURCE }}
           # Credentials must persist: the pelican action's publish step runs
@@ -47,7 +53,7 @@ jobs:
         run: |
           echo "self/" >> .git/info/exclude
       - name: Checkout self
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           path: self
           persist-credentials: false

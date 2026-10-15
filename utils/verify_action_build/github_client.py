@@ -20,12 +20,30 @@
 
 import json
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
 import requests
 
 GITHUB_API = "https://api.github.com"
+
+
+def gh_auth_token() -> str | None:
+    """Return the token the ``gh`` CLI is logged in with, or None if it cannot supply one.
+
+    Lets anyone already running ``gh auth login`` stay authenticated against the raw
+    api.github.com calls the checks make, instead of minting a second PAT just to set
+    ``GITHUB_TOKEN`` — unauthenticated, those calls share a 60-requests/hour budget.
+    """
+    gh = shutil.which("gh")
+    if not gh:
+        return None
+    try:
+        result = subprocess.run([gh, "auth", "token"], capture_output=True, text=True, check=True)
+    except (subprocess.CalledProcessError, OSError):
+        return None
+    return result.stdout.strip() or None
 
 
 def _detect_repo() -> str:
