@@ -814,7 +814,7 @@ wheels = [
 
 [[package]]
 name = "pylint"
-version = "4.1.1"
+version = "4.1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astroid" },
@@ -826,9 +826,9 @@ dependencies = [
     { name = "tomli", marker = "python_full_version < '3.11'" },
     { name = "tomlkit" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7a/ae/e1732157f8b6418532a1a2a733068c5c1ca62790ff8cc320433d2523682e/pylint-4.1.1.tar.gz", hash = "sha256:47538540de0a563ff0b6cb781330944b0c9c1a130986ad1c183116ed37ec4538", size = 1737156, upload-time = "2026-09-29T21:11:13.7Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/19/3c/be4bb2d62e3d1bee3f3aa14af5b294813ad53351cacb3b03fbaf3f851e03/pylint-4.1.2.tar.gz", hash = "sha256:235f13dc418c0041c649b42a5c35c99f2ffc6ca8b6a7574958eac5335906a68a", size = 1739885, upload-time = "2026-10-02T22:49:42.64Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/35/58/0dbfe9e837e70504a133b3ec59d98a5cb77a472e1d2918f1efbe18fffa21/pylint-4.1.1-py3-none-any.whl", hash = "sha256:84901850af1c67240afbe7b0ef696b7ab391ed4838e4ffc48511661026ebc565", size = 585294, upload-time = "2026-09-29T21:11:11.95Z" },
+    { url = "https://files.pythonhosted.org/packages/90/61/b76698429225f848921f4d620f5c7b16f616daf53f99cc25afd1c86496fc/pylint-4.1.2-py3-none-any.whl", hash = "sha256:e34c8636edc7d60a2eaadca4ad6c18a49e202361987a26e81b2a17fa92be28e1", size = 585512, upload-time = "2026-10-02T22:49:40.451Z" },
 ]
 
 [[package]]
@@ -1085,11 +1085,11 @@ wheels = [
 
 [[package]]
 name = "types-markdown"
-version = "3.10.2.20260712"
+version = "3.10.2.20261007"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/19/eb/9520ed01687401b47265594955c0a9202a4f547795176de61bff77c8dfda/types_markdown-3.10.2.20260712.tar.gz", hash = "sha256:25aea17282490f35ab6b17a87771abd2f479185aaff8e8f4a0035043f02f2c52", size = 20185, upload-time = "2026-07-12T05:13:53.537Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/36/53/74c0baab10afb715c6c206f56fe16b9e50656d68abcab2df84cc449f8359/types_markdown-3.10.2.20261007.tar.gz", hash = "sha256:0259c70643291f4a1841d795dfabcd86380625db6854e5dea639fdaae9e4a623", size = 20393, upload-time = "2026-10-07T07:49:28.758Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9f/ea/a8dc2c8977870d27b8b44c4ba2952d765f9d39626e42d0083c871c1c1ebf/types_markdown-3.10.2.20260712-py3-none-any.whl", hash = "sha256:a551ddedde46e0eaca7059aa3d0e42db71afe2b53d8b58f72f2de63f3284f625", size = 25842, upload-time = "2026-07-12T05:13:52.702Z" },
+    { url = "https://files.pythonhosted.org/packages/de/90/2235ec76f463899971086b90c362d993c2c1792ea34b86bc2a622d15dadc/types_markdown-3.10.2.20261007-py3-none-any.whl", hash = "sha256:d1d5faa7b06045d783ad99a27fd909b5d0c5d67c02dc4e4d44052adb2aace169", size = 25914, upload-time = "2026-10-07T07:49:27.661Z" },
 ]
 
 [[package]]
@@ -1103,14 +1103,14 @@ wheels = [
 
 [[package]]
 name = "types-requests"
-version = "2.33.0.20260906"
+version = "2.33.0.20261006"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c0/18/4c2c0290953f8b3b9612adfcb07b57f144ade3ad32a76764fca42b77c5f3/types_requests-2.33.0.20260906.tar.gz", hash = "sha256:76ab8a0fb736744a0c3deee7aa57b2927e301f078d9e61f5391b3e92002416b9", size = 25263, upload-time = "2026-09-06T06:35:47.707Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/57/15/9b7e2e2e7c87d01366185b198b3febc6bc0c973f2bf21a62da4ab7d3495e/types_requests-2.33.0.20261006.tar.gz", hash = "sha256:0652999e9306aea345f40732d58fa49a7f6cade6a0d74d92119c5c8d82eddaf0", size = 25316, upload-time = "2026-10-06T08:15:57.782Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/60/4c/51ec821d22a45b4162fa3f3e9e94ea4c0f8c49e82363b10955baa5438391/types_requests-2.33.0.20260906-py3-none-any.whl", hash = "sha256:9f53622652bd921ead7a54d665be1b8d518165c8b51cc9d68d944cd6b6bfa8fb", size = 21461, upload-time = "2026-09-06T06:35:45.856Z" },
+    { url = "https://files.pythonhosted.org/packages/4d/72/b82789207b3d360ce9f5a4372c790c52cc3dd928aeb7d4faeec652b651b2/types_requests-2.33.0.20261006-py3-none-any.whl", hash = "sha256:26cc8146505cab33cda9737991929e4144c559bebe05078ccc6998f27c4ca2c1", size = 21445, upload-time = "2026-10-06T08:15:56.658Z" },
 ]
 
 [[package]]
