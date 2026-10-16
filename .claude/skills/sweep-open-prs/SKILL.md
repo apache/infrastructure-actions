@@ -51,7 +51,10 @@ failed to load config: open /Users/<user>/.config/gh/config.yml: operation not p
 `deny network-outbound api.github.com:443`, or with
 `tls: failed to verify certificate: x509: OSStatus -26276` once the host is
 allowed. Filter with `--jq` / `--template` instead of piping, and read output
-from the tool result instead of redirecting it to a file.
+from the tool result instead of redirecting it to a file. Keep the command on
+one line too: a multi-line argument (a `--body` with newlines, a `\`
+continuation) does not match the exclusion either, so pass long text with
+`--body-file`.
 
 Two more traps, both of which produce a bogus `HTTP 401`:
 
@@ -62,31 +65,20 @@ Two more traps, both of which produce a bogus `HTTP 401`:
 
 ## Step 1: gather
 
-Two calls cover the queue. Run them as written - the per-PR alternative burns
-a call per PR and hits the loop trap above.
+Two calls cover the queue. Run them as written, each on a single line (see
+Environment) - the per-PR alternative burns a call per PR and hits the loop
+trap above.
 
 State:
 
 ```
-gh pr list --repo apache/infrastructure-actions --limit 50 \
-  --json number,title,author,isDraft,mergeable,mergeStateStatus,reviewDecision \
-  --jq '.[] | "\(.number)\t@\(.author.login)\tmergeable=\(.mergeable)\tstate=\(.mergeStateStatus)\treview=\(.reviewDecision)\t\(.title)"'
+gh pr list --repo apache/infrastructure-actions --limit 50 --json number,title,author,isDraft,mergeable,mergeStateStatus,reviewDecision --jq '.[] | "\(.number)\t@\(.author.login)\tmergeable=\(.mergeable)\tstate=\(.mergeStateStatus)\treview=\(.reviewDecision)\t\(.title)"'
 ```
 
 Checks, collapsed to only what is NOT green:
 
 ```
-gh pr list --repo apache/infrastructure-actions --limit 50 \
-  --json number,statusCheckRollup \
-  --jq '.[] | "\(.number)\t" + ([.statusCheckRollup[]
-       | . as $c
-       | (if ($c.status // "COMPLETED") != "COMPLETED" then $c.status
-          elif ($c.conclusion // "") != "" then $c.conclusion
-          elif ($c.state // "") != "" then $c.state
-          else "PENDING" end) as $s
-       | select($s != "SUCCESS" and $s != "NEUTRAL" and $s != "SKIPPED")
-       | "\($c.name // $c.context)=\($s)"]
-       | if length==0 then "ALL GREEN" else join(" ") end)'
+gh pr list --repo apache/infrastructure-actions --limit 50 --json number,statusCheckRollup --jq '.[] | "\(.number)\t" + ([.statusCheckRollup[] | . as $c | (if ($c.status // "COMPLETED") != "COMPLETED" then $c.status elif ($c.conclusion // "") != "" then $c.conclusion elif ($c.state // "") != "" then $c.state else "PENDING" end) as $s | select($s != "SUCCESS" and $s != "NEUTRAL" and $s != "SKIPPED") | "\($c.name // $c.context)=\($s)"] | if length==0 then "ALL GREEN" else join(" ") end)'
 ```
 
 **Read `status` before `conclusion`.** A `CheckRun` carries `conclusion: null`
@@ -155,8 +147,7 @@ diff, confirm it touches no action surface, approve.
 Read the failing job before forming a view:
 
 ```
-gh pr checks <N> --repo apache/infrastructure-actions --json name,state,link \
-  --jq '.[] | select(.state=="FAILURE") | .link'
+gh pr checks <N> --repo apache/infrastructure-actions --json name,state,link --jq '.[] | select(.state=="FAILURE") | .link'
 gh run view --repo apache/infrastructure-actions --job <job-id> --log-failed
 ```
 
