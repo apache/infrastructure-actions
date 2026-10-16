@@ -35,13 +35,23 @@ as needing a human read.
 
 ## Environment
 
-`gh` reads its config and auth keyring from `~/.config/gh`, which the sandbox
-denies. Every `gh` call in this skill needs `dangerouslyDisableSandbox: true`.
-The first failure looks like this and is not an auth problem:
+`gh` reads its config and auth keyring from `~/.config/gh` and needs
+api.github.com, so it does not work inside the sandbox. The usual setup
+excludes it with `sandbox.excludedCommands: ["gh *"]`, and then every `gh`
+call runs unsandboxed with no bypass needed. Without that exclusion, each call
+needs `dangerouslyDisableSandbox: true`, and the first failure looks like this
+(it is not an auth problem):
 
 ```
 failed to load config: open /Users/<user>/.config/gh/config.yml: operation not permitted
 ```
+
+**The exclusion only matches a bare `gh` command.** A pipe, redirect, `;` or
+`&&` puts the whole command back in the sandbox, where it fails with
+`deny network-outbound api.github.com:443`, or with
+`tls: failed to verify certificate: x509: OSStatus -26276` once the host is
+allowed. Filter with `--jq` / `--template` instead of piping, and read output
+from the tool result instead of redirecting it to a file.
 
 Two more traps, both of which produce a bogus `HTTP 401`:
 
@@ -147,11 +157,11 @@ Read the failing job before forming a view:
 ```
 gh pr checks <N> --repo apache/infrastructure-actions --json name,state,link \
   --jq '.[] | select(.state=="FAILURE") | .link'
-gh run view --repo apache/infrastructure-actions --job <job-id> --log-failed \
-  | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g'
+gh run view --repo apache/infrastructure-actions --job <job-id> --log-failed
 ```
 
-Always strip the ANSI escapes or the summary table is unreadable.
+Run each as its own Bash call, with no pipe (see Environment). The log keeps
+its ANSI colour escapes; read past them to the summary table.
 
 **A red check on a stale branch may be a fixed bug.** Before reporting a
 finding, check whether the failure predates something already merged to main -
@@ -185,3 +195,4 @@ Merging a PR they just approved in the same turn is the mid-flow exception.
 | Treating a carried-over warning as a regression | Blocks a bump that is no worse than the approved version |
 | Filing upstream before searching the target repo | Duplicate issues; search existing issues, including the maintainer's own |
 | Looping `gh` over PR numbers | Spurious `HTTP 401` on every call after the first |
+| Piping or redirecting `gh` output | The command runs sandboxed and fails with a network deny or `x509` TLS error |
