@@ -91,7 +91,7 @@ runs:
       if: false
     - uses: commit-check/commit-check-action@a61779784a953fd9047c001c102cfeac5cf26964  # v2.17.1
       if: false
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d  # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc  # v8.2.0
       if: false
     - uses: coursier/setup-action@648df969f41ef15fda2baba8b37f9fa3d16390a3  # v3.0.4
       if: false
