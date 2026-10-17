@@ -518,6 +518,9 @@ google/oss-fuzz/infra/cifuzz/actions/run_fuzzers:
 goreleaser/goreleaser-action:
   f06c13b6b1a9625abc9e6e439d9c05a8f2190e94:
     tag: v7.2.3
+    expires_at: 2027-01-09
+  a4f02ab5355a589de60d917a659ce617ed19b3de:
+    tag: v7.3.0
 gr2m/twitter-together:
   '*':
     keep: true
