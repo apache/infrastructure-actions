@@ -135,6 +135,9 @@ azure/setup-kubectl:
 bazel-contrib/setup-bazel:
   c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86:
     tag: 0.19.0
+    expires_at: 2027-01-09
+  104e3eea9447cdaa4b00d0fb46191a3985d26ab3:
+    tag: 0.19.1
 benchmark-action/github-action-benchmark:
   52576c92bccf6ac60c8223ec7eb2565637cae9ba:
     tag: v1.22.1

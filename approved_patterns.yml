@@ -55,6 +55,7 @@
 - azure/setup-kubectl@829323503d1be3d00ca8346e5391ca0b07a9ab0d
 - azure/setup-kubectl@bda439f5f36b99b262ebdcd3613869bddb064c8e
 - bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86
+- bazel-contrib/setup-bazel@104e3eea9447cdaa4b00d0fb46191a3985d26ab3
 - benchmark-action/github-action-benchmark@52576c92bccf6ac60c8223ec7eb2565637cae9ba
 - benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc
 - betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619
