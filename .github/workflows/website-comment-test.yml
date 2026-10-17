@@ -1,0 +1,194 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+name: Test the PR preview actions
+on:
+  pull_request:
+    paths:
+      - "website-comment/**"
+      - ".github/workflows/website-comment-test.yml"
+  push:
+    # Branches only, so release tag pushes do not re-run it.
+    branches:
+      - main
+    paths:
+      - "website-comment/**"
+      - ".github/workflows/website-comment-test.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  node:
+    name: "publisher, overlay and Astro adapter"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: "22"
+
+      - name: Install the locked test dependencies
+        working-directory: website-comment
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Unit tests
+        working-directory: website-comment
+        run: npm test
+
+      - name: preview-annotate outputs the Astro plugin
+        id: astro
+        uses: ./website-comment/preview-annotate
+        with:
+          generator: astro
+
+      - name: The plugin path resolves
+        env:
+          PLUGIN: ${{ steps.astro.outputs.babel-plugin }}
+        run: test -f "$PLUGIN"
+
+      - name: A built site
+        run: |
+          mkdir -p "$RUNNER_TEMP/main-site"
+          echo '<html><body><h1 data-preview-src="index.md:1">x</h1></body></html>' > "$RUNNER_TEMP/main-site/index.html"
+
+      - name: preview-main-overlay injects the overlay in main mode
+        uses: ./website-comment/preview-main-overlay
+        with:
+          path: ${{ runner.temp }}/main-site
+          branch: main
+
+      - name: The page loads the overlay, configured for the published site
+        run: |
+          grep -q '_preview/review.js' "$RUNNER_TEMP/main-site/index.html"
+          grep -q '"mode":"main"' "$RUNNER_TEMP/main-site/_preview/review.js"
+
+      - name: preview-publish does nothing outside its events
+        id: gate
+        continue-on-error: true
+        uses: ./website-comment/preview-publish
+        with:
+          site-name: example
+
+      - name: It did not fail
+        if: steps.gate.outcome != 'failure'
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          echo "::error::preview-publish accepted a $EVENT_NAME event"
+          exit 1
+
+      - name: preview-annotate rejects an unknown generator
+        id: unknown
+        continue-on-error: true
+        uses: ./website-comment/preview-annotate
+        with:
+          generator: gatsby
+
+      - name: It did not fail
+        if: steps.unknown.outcome != 'failure'
+        run: |
+          echo "::error::preview-annotate accepted an unknown generator"
+          exit 1
+
+  # ubuntu-slim cannot start a job container, so Ruby comes from apt rather
+  # than a Ruby image, and no third-party setup-ruby action is added.
+  jekyll:
+    name: "Jekyll adapter, end to end"
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+      pull-requests: read # preview-artifact lists the PR's changed files for anchors
+    timeout-minutes: 10
+    env:
+      # Install exactly what the lockfile names, checksums included.
+      BUNDLE_GEMFILE: website-comment/adapters/jekyll/test/Gemfile
+      BUNDLE_FROZEN: "true"
+      FIXTURE: website-comment/adapters/jekyll/test/fixture
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      # eventmachine and friends build native extensions, hence the toolchain.
+      - name: Install Ruby, Bundler and a C toolchain
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends ruby-full ruby-bundler build-essential
+          ruby --version
+
+      # A writable gem home, so Bundler can switch itself to the version the
+      # lockfile's BUNDLED WITH names, instead of an unpinned `gem install`.
+      - name: Use a user gem home
+        run: |
+          echo "GEM_HOME=$RUNNER_TEMP/gems" >> "$GITHUB_ENV"
+          echo "$RUNNER_TEMP/gems/bin" >> "$GITHUB_PATH"
+
+      - name: Install the locked test dependencies
+        run: bundle install
+
+      - name: Plugin tests
+        run: bundle exec ruby website-comment/adapters/jekyll/test/preview_src_test.rb
+
+      - name: Production build
+        run: bundle exec jekyll build -s "$FIXTURE" -d "$RUNNER_TEMP/production"
+
+      - name: preview-annotate installs the plugin
+        uses: ./website-comment/preview-annotate
+        with:
+          generator: jekyll
+          source: website-comment/adapters/jekyll/test/fixture
+          production-output: ${{ runner.temp }}/production
+
+      - name: Preview build is annotated with repository paths
+        run: |
+          bundle exec jekyll build -s "$FIXTURE" -d "$RUNNER_TEMP/preview"
+          grep -q 'data-preview-src="website-comment/adapters/jekyll/test/fixture/index.md:7"' "$RUNNER_TEMP/preview/index.html"
+
+      - name: preview-annotate rejects an annotated production build
+        id: dirty
+        continue-on-error: true
+        uses: ./website-comment/preview-annotate
+        with:
+          generator: none
+          production-output: ${{ runner.temp }}/preview
+
+      - name: It did not fail
+        if: steps.dirty.outcome != 'failure'
+        run: |
+          echo "::error::preview-annotate accepted an annotated production build"
+          exit 1
+
+      - name: preview-artifact packages the preview
+        if: github.event_name == 'pull_request'
+        uses: ./website-comment/preview-artifact
+        with:
+          path: ${{ runner.temp }}/preview
+          retention-days: 1
+
+      - name: The metadata names this pull request
+        if: github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          grep -q "\"pr\":$PR_NUMBER," "$RUNNER_TEMP/preview/preview-meta.json"
+          grep -q '"anchors":{' "$RUNNER_TEMP/preview/preview-meta.json"

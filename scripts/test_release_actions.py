@@ -62,6 +62,36 @@ def test_save_only_change_bumps_only_save():
     assert _prefixes(ra.affected_actions(changed)) == ["save"]
 
 
+def test_website_comment_adapter_change_releases_only_the_annotator():
+    changed = ["website-comment/adapters/jekyll/preview_src.rb"]
+    assert _prefixes(ra.affected_actions(changed)) == ["preview-annotate"]
+
+
+def test_website_comment_library_change_releases_every_action_that_runs_it():
+    changed = ["website-comment/lib/anchors.mjs"]
+    assert _prefixes(ra.affected_actions(changed)) == [
+        "preview-artifact",
+        "preview-main-overlay",
+        "preview-publish",
+    ]
+
+
+def test_website_comment_overlay_change_releases_the_actions_that_inject_it():
+    for path in (
+        "website-comment/overlay/review.js",
+        "website-comment/vendor/html2canvas-pro/html2canvas-pro.min.js",
+    ):
+        assert _prefixes(ra.affected_actions([path])) == [
+            "preview-main-overlay",
+            "preview-publish",
+        ], path
+
+
+def test_website_comment_docs_release_nothing():
+    changed = ["website-comment/README.md", "website-comment/package.json"]
+    assert ra.affected_actions(changed) == []
+
+
 def test_multiple_actions_changed_at_once():
     changed = ["pelican/entrypoint.sh", "allowlist-check/action.yml"]
     assert _prefixes(ra.affected_actions(changed)) == ["allowlist-check", "pelican"]

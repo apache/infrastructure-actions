@@ -1,0 +1,108 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+name: "PR preview: publish and retire previews"
+description: "Publish armed pull requests' preview sites to ASF staging, and retire the rest"
+inputs:
+  site-name:
+    description: >-
+      First label of the staging hostname, as ASF staging derives it from the
+      repository: apache/foo-site stages at foo-pr<N>.staged.apache.org, so
+      this is "foo".
+    required: true
+  build-workflow:
+    description: "File name of the workflow that runs preview-artifact"
+    required: false
+    default: "build.yml"
+  label:
+    description: "The label that arms a pull request's preview"
+    required: false
+    default: "preview"
+  pr:
+    description: >-
+      workflow_dispatch only: arm and publish this pull request now. Leave
+      empty to reconcile every pull request.
+    required: false
+    default: ""
+  reap-head-branches:
+    description: >-
+      "true" to also delete this repository's branches whose pull requests have
+      all closed. Off by default; preview/* branches are always retired.
+    required: false
+    default: "false"
+  token:
+    description: "Token with contents, pull-requests and issues write, and actions read"
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: "composite"
+  steps:
+    # This action holds a token that can push, label and comment. It consumes
+    # artifacts; it must never run where pull-request code could, and it takes
+    # nothing from the event but the checks below. Every trigger is a signal:
+    # each run re-derives arming from the API and reconciles every open PR.
+    - name: Check the triggering event
+      id: gate
+      shell: bash
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        RUN_EVENT: ${{ github.event.workflow_run.event }}
+        ON_PULL: ${{ github.event.issue.pull_request && 'true' || 'false' }}
+        PR_INPUT: ${{ inputs.pr }}
+      run: |
+        case "$EVENT_NAME" in
+          workflow_dispatch) run=true ;;
+          # A completed build or signal run. Only pull-request runs matter.
+          workflow_run) [ "$RUN_EVENT" = "pull_request" ] && run=true || run=false ;;
+          # A /show-preview comment publishes at once. Issues are not PRs.
+          issue_comment) [ "$ON_PULL" = "true" ] && run=true || run=false ;;
+          *)
+            echo "::error::preview-publish runs on workflow_run, issue_comment or workflow_dispatch only, got '$EVENT_NAME'"
+            exit 1
+            ;;
+        esac
+        if [ -n "$PR_INPUT" ] && [ "$EVENT_NAME" != "workflow_dispatch" ]; then
+          echo "::error::the pr input arms a pull request, so it is honoured on workflow_dispatch only"
+          exit 1
+        fi
+        [ "$run" = "true" ] || echo "Nothing to do for this $EVENT_NAME event"
+        echo "run=$run" >> "$GITHUB_OUTPUT"
+
+    - name: Setup Node
+      if: steps.gate.outputs.run == 'true'
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: "22"
+
+    - name: Publish and retire previews
+      if: steps.gate.outputs.run == 'true'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        PREVIEW_SITE_NAME: ${{ inputs.site-name }}
+        PREVIEW_BUILD_WORKFLOW: ${{ inputs.build-workflow }}
+        PREVIEW_LABEL: ${{ inputs.label }}
+        PREVIEW_REAP_HEAD_BRANCHES: ${{ inputs.reap-head-branches }}
+        PR_INPUT: ${{ inputs.pr }}
+        LIB: ${{ github.action_path }}/../lib
+      run: |
+        if [ -n "$PR_INPUT" ]; then
+          node "$LIB/publish.mjs" --pr "$PR_INPUT"
+        else
+          node "$LIB/publish.mjs"
+        fi

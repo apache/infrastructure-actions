@@ -1,0 +1,12 @@
+{
+  "name": "asf-website-comment",
+  "private": true,
+  "description": "Per-pull-request website previews on ASF staging, with a review overlay",
+  "license": "Apache-2.0",
+  "scripts": {
+    "test": "node --test \"**/*.test.mjs\""
+  },
+  "devDependencies": {
+    "@babel/core": "^8.0.5"
+  }
+}

@@ -14,3 +14,11 @@
 # limitations under the License.
 
 **/uv.lock
+# website-comment: vendored MIT library (credited in LICENSE), JSON and lock files
+# that cannot carry a header, and a Jekyll fixture site whose line numbers the
+# adapter's tests assert.
+website-comment/vendor/**
+website-comment/package.json
+website-comment/package-lock.json
+website-comment/adapters/jekyll/test/Gemfile.lock
+website-comment/adapters/jekyll/test/fixture/**
