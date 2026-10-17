@@ -22,6 +22,7 @@ This repository hosts GitHub Actions developed by the ASF community and approved
 
 - [Checking the Action Usage in an ASF Project](#checking-the-action-usage-in-an-asf-project)
 - [Submitting an Action](#submitting-an-action)
+- [Agent Skills](#agent-skills)
 - [Available GitHub Actions](#available-github-actions)
 - [Versioning and Pinning Actions](#versioning-and-pinning-actions)
 - [Organization-wide GitHub Actions Allow List](#management-of-organization-wide-github-actions-allow-list)
@@ -92,6 +93,28 @@ associated with the projects that (would like to) use a particular
 action, even if they're not committers on _this_ project: you're
 especially qualified to judge and vouch for the safety and
 correctness of the action.
+
+## Agent Skills
+
+Skills under `.claude/skills/` package the review workflows a maintainer repeats, so an
+agent runs them the same way each time. They are agent-facing and need no setup beyond
+an authenticated `gh` CLI; a human can follow the same steps by reading the `SKILL.md`.
+
+  - [`analyze-action-pr`](/.claude/skills/analyze-action-pr/SKILL.md): Triage a single PR
+    that adds or bumps an action. Runs `verify-action-build`, classifies each failing
+    action (pipe-to-shell, unverified download, unverified in-tree binaries, gaps in the
+    verify script itself) and proposes the next step -- recommend approval, open an
+    upstream issue, or fix `verify-action-build` with a regression test. Its "Recent
+    precedents" table records how earlier PRs in each shape were resolved.
+  - [`sweep-open-prs`](/.claude/skills/sweep-open-prs/SKILL.md): Triage the whole open PR
+    queue in one pass. Buckets every open PR into merge-now, approve-and-merge,
+    needs-triage or blocked, and routes anything red to `analyze-action-pr`. Useful after
+    an overnight dependabot batch.
+
+Use `sweep-open-prs` to find what needs attention and `analyze-action-pr` to go deep on
+one PR. For the non-agent equivalent of the sweep, see
+[Batch-Reviewing Dependabot PRs](#batch-reviewing-dependabot-prs), which drives the same
+verification from `verify-action-build` directly.
 
 ## Available GitHub Actions
 
