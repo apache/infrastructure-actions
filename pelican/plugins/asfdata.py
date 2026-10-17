@@ -732,8 +732,10 @@ def process_eccn(fname, debug):
 
 # create sequence of sequences of ASF Events data.
 # event_type:
-#   future   -> events with endDate > today, sorted ascending
-#   archived -> events with endDate <= today, sorted descending
+#   future   -> events with endDate >= today, sorted ascending
+#   archived -> events with endDate < today, sorted descending
+# An event stays in the future group through its end date and is
+# archived starting the day after it ends.
 def process_events(fname, debug, event_type='future'):
     if debug:
         print(f'-----\nEVENTS ({event_type.upper()}): {fname}')
@@ -788,7 +790,7 @@ def process_events(fname, debug, event_type='future'):
                 # Convert datetime to date if needed
                 event_date = event_date_value.date() if hasattr(event_date_value, 'date') else event_date_value
 
-            is_future = event_date > today
+            is_future = event_date >= today
             if (event_type == 'future' and is_future) or (event_type == 'archived' and not is_future):
                 # Create a copy of the event with normalized date for consistent sorting
                 event_copy = event.copy()
