@@ -21,6 +21,7 @@
 import hashlib
 import json
 import os
+import posixpath
 import re
 import shutil
 import subprocess
@@ -417,15 +418,66 @@ def analyze_nested_actions(
     return warnings, checked
 
 
+def _dockerfile_from_action_yml(action_yml: str | None, sub_path: str = "") -> str | None:
+    """Resolve the repo-relative Dockerfile a docker action's ``runs.image:`` names.
+
+    A docker action is free to point ``image:`` at any path, under any name:
+    ``google/oss-fuzz``'s cifuzz actions use
+    ``image: '../../../build_fuzzers.Dockerfile'``, which both renames the file
+    and places it three levels above the action directory. Probing only
+    ``<sub_path>/Dockerfile`` misses those entirely.
+
+    Returns ``None`` when there is no ``image:``, when it names a pre-built
+    registry image (``docker://…`` — handled separately, since there is no
+    Dockerfile to read), or when the path escapes the repository root.
+    """
+    if not action_yml:
+        return None
+
+    for line in action_yml.splitlines():
+        img_m = re.search(r"image:\s*['\"]?(\S+?)['\"]?\s*$", line.strip())
+        if not img_m:
+            continue
+        image = img_m.group(1)
+        if image.startswith("docker://"):
+            return None
+        resolved = posixpath.normpath(posixpath.join(sub_path, image))
+        # `..` that climbs past the repo root is not a path we can fetch.
+        if resolved.startswith("..") or posixpath.isabs(resolved):
+            return None
+        return resolved
+
+    return None
+
+
+def resolve_dockerfile_candidates(
+    org: str, repo: str, commit_hash: str, sub_path: str = "",
+) -> list[str]:
+    """Repo-relative paths that may hold this action's Dockerfile, best first.
+
+    The path named by ``runs.image:`` wins over the conventional locations,
+    because it is the one the runner actually builds.
+    """
+    candidates = ["Dockerfile"]
+    if sub_path:
+        candidates.insert(0, f"{sub_path}/Dockerfile")
+
+    named = _dockerfile_from_action_yml(
+        fetch_action_yml(org, repo, commit_hash, sub_path), sub_path
+    )
+    if named and named not in candidates:
+        candidates.insert(0, named)
+
+    return candidates
+
+
 def analyze_dockerfile(
     org: str, repo: str, commit_hash: str, sub_path: str = "",
 ) -> list[str]:
     """Analyze Dockerfiles in the action for security concerns."""
     warnings: list[str] = []
 
-    candidates = ["Dockerfile"]
-    if sub_path:
-        candidates.insert(0, f"{sub_path}/Dockerfile")
+    candidates = resolve_dockerfile_candidates(org, repo, commit_hash, sub_path)
 
     found_dockerfile = False
     for path in candidates:
