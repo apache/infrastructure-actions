@@ -65,6 +65,7 @@
 - bufbuild/buf-setup-action@*
 - burnett01/rsync-deployments@4d419d1dc46d4a8a2b6ceab2f951f0f93b2da8f5
 - burnett01/rsync-deployments@155b6d6c1219ab2224c20c58d423a3f1b850395f
+- burnett01/rsync-deployments@2cbb5ed94b73d111d07a40b071b1c7d3c0272435
 - burrunan/gradle-cache-action@*
 - carabiner-dev/actions/ampel/verify@2a4b2cd115ede14629b03ef7e77586d3269d4c72
 - carabiner-dev/actions/ampel/verify@36a39ef667efe7112df8b1a534a4e37f35fad6fd
@@ -117,15 +118,18 @@
 - CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea
 - CodSpeedHQ/action@c4fd08a3a159bd0cc208da1e0edf32b8c47d75e5
 - CodSpeedHQ/action@f842b9a3ffe213dbb81768fd7f7eeb4dfcf1c369
+- CodSpeedHQ/action@821a40cd6c80e3cfe387caf55668287addd808da
 - commit-check/commit-check-action@bbb6580f01838e475563514f115ec7ef41c9ddc7
 - commit-check/commit-check-action@d109324148a73dc758891d1d85924c912dbfd38b
 - commit-check/commit-check-action@562a184b2b8e583e757b17eb385bc48370f44547
 - commit-check/commit-check-action@f803083a5bf0867b60d77189bc3810fce2f0e314
 - commit-check/commit-check-action@fd3d923eab0876650f261d2a75572e8161a9a58e
 - commit-check/commit-check-action@a61779784a953fd9047c001c102cfeac5cf26964
+- commit-check/commit-check-action@bcbadb3fec596872bcae51074d8fdbea15c02ba5
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d
+- coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc
 - coursier/setup-action@*
 - coursier/setup-action@fd1707a76b027efdfb66ca79318b4d29b72e5a02
 - coursier/setup-action@63a23764316528a1b627103472030d5a16fc6133
@@ -148,6 +152,7 @@
 - dlang-community/setup-dlang@*
 - docker/bake-action@d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b
 - docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f
+- docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e
 - docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
 - docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
 - docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7
@@ -171,6 +176,7 @@
 - editorconfig-checker/action-editorconfig-checker@840e866d93b8e032123c23bac69dece044d4d84c
 - editorconfig-checker/action-editorconfig-checker@51f63319f592f97930c73d9c46184d20bd206393
 - endersonmenezes/free-disk-space@2a22f8c59cae9cddae7194b33e6b92d023b2b4b8
+- endersonmenezes/free-disk-space@8b8cd4e2277836962939a8f3b4ea0ee4bc006156
 - EnricoMi/publish-unit-test-result-action@*
 - eps1lon/actions-label-merge-conflict@*
 - erisu/apache-rat-action@30c94d10ed21e6f6fd5590dc5c158f58cae7a0dd
@@ -241,6 +247,7 @@
 - jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492
 - jdx/mise-action@94c60b39bc2d90ab2f9bab27f38d3cc4812c1834
 - jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca
+- jdx/mise-action@9b200bcecbfd6303e69a4a261b2e09e3757440a7
 - JetBrains/qodana-action@4861e015da555e86a72b862892aba6c2b93e6891
 - JetBrains/qodana-action@b588768b6e7e6da579e518bc584f79de0d243692
 - JetBrains/qodana-action@10be11607eb323a180e2b76b26c9c5cdceac3e77
@@ -273,6 +280,7 @@
 - loadingalias/cargo-rail-action@4a8df181e4f340a164190cf092c9f9239b20edab
 - loadingalias/cargo-rail-action@409962f05d90a78aae995ef6b1c8466010c0a460
 - loadingalias/cargo-rail-action@98167d6d7fbea02d1994fb292f049defd49cf6a6
+- loadingalias/cargo-rail-action@2104429578cfeef1a6a5beb379c2202e0310df78
 - lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8
 - manusa/actions-setup-minikube@*
 - manusa/actions-setup-minikube@b65276017fdec6f1e6498129fb740e34e260dc55
@@ -353,6 +361,7 @@
 - sbt/setup-sbt@82da71df4e122282484a99a8d70096bc2369dbd8
 - sbt/setup-sbt@ce95da69b39609ea153bad087708da5f37366897
 - sbt/setup-sbt@6158cb0903b8ceeae04f830055f3155e1b6a5ad7
+- sbt/setup-sbt@ecad189dd245444b9ae0a0cd5922fd938b88906f
 - scalacenter/sbt-dependency-submission@d84eef4c09e633bcf5f113bcad7fd5e9af1baee9
 - scottbrenner/puppet-lint-action@*
 - securego/gosec@*
@@ -396,3 +405,4 @@
 - zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054
 - zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99
 - zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482
+- zizmorcore/zizmor-action@85b2b9fb8e3325e7a23d7d0a9d7ba5ae0f999e3e

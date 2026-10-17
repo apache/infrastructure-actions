@@ -165,6 +165,9 @@ burnett01/rsync-deployments:
     expires_at: 2026-11-30
   155b6d6c1219ab2224c20c58d423a3f1b850395f:
     tag: 9.0.1
+    expires_at: 2027-01-09
+  2cbb5ed94b73d111d07a40b071b1c7d3c0272435:
+    tag: 9.0.2
 burrunan/gradle-cache-action:
   '*':
     keep: true
@@ -309,6 +312,9 @@ CodSpeedHQ/action:
     expires_at: 2027-01-03
   f842b9a3ffe213dbb81768fd7f7eeb4dfcf1c369:
     tag: v5.4.2
+    expires_at: 2027-01-09
+  821a40cd6c80e3cfe387caf55668287addd808da:
+    tag: v5.5.0
 commit-check/commit-check-action:
   bbb6580f01838e475563514f115ec7ef41c9ddc7:
     tag: v2.11.1
@@ -327,6 +333,9 @@ commit-check/commit-check-action:
     expires_at: 2027-01-02
   a61779784a953fd9047c001c102cfeac5cf26964:
     tag: v2.17.1
+    expires_at: 2027-01-09
+  bcbadb3fec596872bcae51074d8fdbea15c02ba5:
+    tag: v2.18.0
 conda-incubator/setup-miniconda:
   '*':
     keep: true
@@ -336,6 +345,9 @@ container-tools/kind-action:
 coursier/cache-action:
   95e5b1029b6b86e7bac033ee44a0697d8a527d2d:
     tag: v8.1.1
+    expires_at: 2027-01-09
+  057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc:
+    tag: v8.2.0
 coursier/setup-action:
   '*':
     keep: true
@@ -400,6 +412,9 @@ docker/bake-action:
     expires_at: 2026-12-09
   018cb6412ab401ebaa809aa5f85966b74628600f:
     tag: v7.4.0
+    expires_at: 2027-01-09
+  59cb1203cd42bcefd40a1b6d73b589e48c86040e:
+    tag: v7.5.0
 docker/build-push-action:
   53b7df96c91f9c12dcc8a07bcb9ccacbed38856a:
     tag: v7.3.0
@@ -475,6 +490,9 @@ editorconfig-checker/action-editorconfig-checker:
 endersonmenezes/free-disk-space:
   2a22f8c59cae9cddae7194b33e6b92d023b2b4b8:
     tag: v4.0.0
+    expires_at: 2027-01-09
+  8b8cd4e2277836962939a8f3b4ea0ee4bc006156:
+    tag: v4.0.1
 EnricoMi/publish-unit-test-result-action:
   '*':
     keep: true
@@ -684,6 +702,9 @@ jdx/mise-action:
     expires_at: 2026-12-29
   2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca:
     tag: v5.1.1
+    expires_at: 2027-01-09
+  9b200bcecbfd6303e69a4a261b2e09e3757440a7:
+    tag: v5.2.0
 JetBrains/qodana-action:
   4861e015da555e86a72b862892aba6c2b93e6891:
     tag: v2026.1.3
@@ -779,6 +800,9 @@ loadingalias/cargo-rail-action:
     expires_at: 2027-01-03
   98167d6d7fbea02d1994fb292f049defd49cf6a6:
     tag: v11.0.0
+    expires_at: 2027-01-09
+  2104429578cfeef1a6a5beb379c2202e0310df78:
+    tag: v11.0.1
 lycheeverse/lychee-action:
   e7477775783ea5526144ba13e8db5eec57747ce8:
     tag: v2.9.0
@@ -1018,6 +1042,9 @@ sbt/setup-sbt:
     expires_at: 2026-12-18
   6158cb0903b8ceeae04f830055f3155e1b6a5ad7:
     tag: v1.5.11
+    expires_at: 2027-01-09
+  ecad189dd245444b9ae0a0cd5922fd938b88906f:
+    tag: v1.5.12
 scalacenter/sbt-dependency-submission:
   d84eef4c09e633bcf5f113bcad7fd5e9af1baee9:
     tag: v3.2.3
@@ -1149,3 +1176,6 @@ zizmorcore/zizmor-action:
     expires_at: 2026-12-05
   cc914d7f3750a2d13d75c7f184a1060aa0e9d482:
     tag: v0.6.4
+    expires_at: 2027-01-09
+  85b2b9fb8e3325e7a23d7d0a9d7ba5ae0f999e3e:
+    tag: v0.7.1
