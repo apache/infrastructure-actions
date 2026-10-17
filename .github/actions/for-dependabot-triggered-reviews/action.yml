@@ -73,7 +73,7 @@ runs:
       if: false
     - uses: biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51  # v2.7.1
       if: false
-    - uses: burnett01/rsync-deployments@155b6d6c1219ab2224c20c58d423a3f1b850395f  # 9.0.1
+    - uses: burnett01/rsync-deployments@2cbb5ed94b73d111d07a40b071b1c7d3c0272435  # 9.0.2
       if: false
     - uses: carabiner-dev/actions/ampel/verify@d41fe10fe88deaf493ce026007da73738b9f570c  # v1.3.0
       if: false
