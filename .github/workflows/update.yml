@@ -57,7 +57,7 @@ concurrency:
 
 jobs:
   update:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # `contents: write` is required on push/dispatch so the commit step
     # can push the regenerated files back to `main`. The workflow also
     # runs on `pull_request`, where GitHub automatically downgrades the
