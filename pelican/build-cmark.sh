@@ -66,7 +66,9 @@ pushd "$EXTRACTED_AS" >/dev/null
   pushd build >/dev/null
     cmake --version >&2
     {
-      cmake -DCMARK_TESTS=OFF -DCMARK_STATIC=OFF ..
+      # cmark-gfm's CMakeLists predates CMake 3.5, which CMake 4 (Ubuntu 26.04)
+      # refuses without this; older CMake ignores the variable.
+      cmake -DCMARK_TESTS=OFF -DCMARK_STATIC=OFF -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ..
       make
     } > build.log
   popd >/dev/null
