@@ -70,6 +70,11 @@ function fakes({
   publisher = "github-actions[bot]",
 } = {}) {
   const lagging = {};
+  const write = (n, event) => {
+    const events = (labelEvents[n] ??= []);
+    lagging[n] = { from: Math.min(lagging[n]?.from ?? events.length, events.length), reads: eventsLag };
+    events.push(event);
+  };
   const pushed = [];
   const deleted = [];
   const deletedAt = [];
@@ -94,23 +99,24 @@ function fakes({
       created.push({ n, body });
     },
     ensureLabel: async () => {},
+    // GitHub records each write as a label event by the token's login, and the
+    // events API shows writes from the first unseen one on only after
+    // `eventsLag` further reads.
     addLabel: async (n, name) => {
       labelled.push({ n, name });
-      // GitHub records the add as a labeled event by the token's login.
-      (labelEvents[n] ??= []).push(labeledBy(publisher));
-      lagging[n] = eventsLag;
+      write(n, labeledBy(publisher));
     },
     removeLabel: async (n, name) => {
       unlabelled.push({ n, name });
+      write(n, unlabeledBy(publisher));
     },
-    // The events API can trail a write: the newest event shows up only after
-    // `eventsLag` further reads.
     listLabelEvents: async (n) => {
       const events = labelEvents[n] ?? [];
-      if (lagging[n] > 0) {
-        lagging[n] -= 1;
-        return events.slice(0, -1);
+      if (lagging[n]?.reads > 0) {
+        lagging[n].reads -= 1;
+        return events.slice(0, lagging[n].from);
       }
+      delete lagging[n];
       return events;
     },
     hasReaction: async (id, content, login) => {
@@ -902,6 +908,25 @@ test("a remove and bot re-add during the read-back records nothing", async () =>
   assert.deepEqual(f.reacted, [], "not acknowledged, so the next run starts over");
   assert.equal(process.exitCode, 1);
   process.exitCode = 0;
+});
+
+test("replacing a non-writer's label arms even while the events API lags the removal", async () => {
+  const events = { 5: [labeledBy("triager", 1)] };
+  const cmd = armCmd();
+  const f = fakes({
+    openPulls: [pull(5, SHA, ["preview"])],
+    comments: { 5: [cmd] },
+    labelEvents: events,
+    eventsLag: 1,
+  });
+  await go(f);
+  assert.deepEqual(f.unlabelled, [{ n: 5, name: "preview" }]);
+  const added = events[5].at(-1);
+  assert.equal(added.event, "labeled");
+  const howto = f.posted.find((p) => p.marker === "asf-preview-howto");
+  assert.ok(howto?.body.endsWith(record(added.id)), "the new label event is recorded");
+  assert.deepEqual(f.reacted, [cmd.id]);
+  assert.equal(process.exitCode ?? 0, 0);
 });
 
 test("a dispatch leaves the record that keeps its label armed", async () => {

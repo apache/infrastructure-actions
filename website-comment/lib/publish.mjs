@@ -132,12 +132,14 @@ export async function run({
    * arming record. The events API can trail the write by a moment, so it is
    * read until a new event appears. Never guessed: the label must have changed
    * exactly once since the read before the add — one new `labeled` event, by
-   * the publisher, and no removal. Anything else (a maintainer removed it and
-   * a workflow on the shared token put it back) or an event that never shows
-   * up fails this PR's run before the command is acknowledged, and the next
-   * run tries again from a clean state.
+   * the publisher, last — apart from the publisher's own removal just before
+   * it when `removed` (replacing a non-writer's label), which a lagging events
+   * API can still be catching up on. Anything else (a maintainer removed it
+   * and a workflow on the shared token put it back) or an event that never
+   * shows up fails this PR's run before the command is acknowledged, and the
+   * next run tries again from a clean state.
    */
-  const arm = async (n) => {
+  const arm = async (n, { removed = false } = {}) => {
     if (!labelReady) {
       await gh.ensureLabel(label);
       labelReady = true;
@@ -149,12 +151,20 @@ export async function run({
       const since = (await gh.listLabelEvents(n)).filter(
         (e) => e?.label?.name === label && !before.has(e?.id),
       );
-      if (since.length === 0) continue;
       const ours = ownLabelEvents(since);
-      if (since.length !== 1 || ours.length !== 1 || !Number.isInteger(ours[0].id)) {
+      if (ours.length === 0) continue;
+      const added = since.at(-1);
+      const earlier = since.slice(0, -1);
+      const expected =
+        ours.length === 1 &&
+        added === ours[0] &&
+        Number.isInteger(added.id) &&
+        earlier.length <= (removed ? 1 : 0) &&
+        earlier.every((e) => e?.event === "unlabeled" && e?.actor?.login === publisher);
+      if (!expected) {
         throw new Error("the label changed again while it was being added; not recording an arming");
       }
-      return ours[0].id;
+      return added.id;
     }
     throw new Error("the label event just added did not appear in the events API");
   };
@@ -196,12 +206,14 @@ export async function run({
         // A label someone without write access put on first does not arm, and
         // the command is acknowledged below, so it would arm this run only.
         // Re-adding the label as the publisher makes the arming stick.
+        let removed = false;
         if (labelled && !(await armedBy(pull, comments))) {
           await gh.removeLabel(pull.number, label);
           labelled = false;
+          removed = true;
         }
         if (!labelled) {
-          const record = armedRecord(await arm(pull.number));
+          const record = armedRecord(await arm(pull.number, { removed }));
           labelled = true;
           if (only === pull.number) {
             await gh.createComment(pull.number, `${armedBody(pull.number, dispatchedBy, label)}\n\n${record}`);
