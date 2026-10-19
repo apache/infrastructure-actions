@@ -349,13 +349,15 @@ The `--no-gh` mode supports all the same features as the default `gh`-based mode
 
 #### Automated Verification in CI
 
-Two workflows in `.github/workflows/` run `verify-action-build` on PRs that touch the allow list, so the verification status is visible on every PR as a required-candidate status check:
+The workflows below run on PRs that touch the allow list, so the verification and approval status is visible on every PR as a required-candidate status check:
 
 - **`verify` job in `verify_dependabot_action.yml`** — triggers on Dependabot PRs that modify `.github/actions/for-dependabot-triggered-reviews/action.yml`. Extracts the action reference from the PR, rebuilds the compiled JavaScript in Docker, and compares it against the published version.
 - **`verify` job in `verify_manual_action.yml`** — triggers on human-authored PRs that modify `actions.yml` or `approved_patterns.yml` (i.e. manual allow-list additions / version bumps). Dependabot-authored PRs are skipped, since they are already covered by the workflow above.
 - **`check_action_tags` job in `check_action_tags.yml`** — triggers when `actions.yml`, `approved_patterns.yml`, the generated Dependabot composite action, the update workflow, or gateway verification code changes. It verifies that configured action SHAs exist and, when a `tag` is recorded, that the SHA is reachable from that Git tag or branch.
 
-These workflows use regular `pull_request` triggers with read-only permissions and no PR comments — pass/fail is surfaced through the status check. They do not auto-approve or merge; a human reviewer must still approve.
+- **`approval` job in `allowlist_approval.yml`** — runs on every PR and on every review submitted, edited or dismissed. If the PR touches `actions.yml`, `approved_patterns.yml` or the generated Dependabot composite action, it fails until at least one maintainer (a reviewer with write access to this repository) has approved; only each reviewer's latest approve / request-changes / dismissal counts. Other PRs pass immediately. The logic lives in `scripts/check_allowlist_approval.py`, which the job runs from the PR's base commit so a PR cannot rewrite its own gate.
+
+These workflows use regular `pull_request` (and `pull_request_review`) triggers with read-only permissions and no PR comments — pass/fail is surfaced through the status check. They do not auto-approve or merge; a human reviewer must still approve.
 
 The script exits with code **1** (failure) when something is unexpectedly broken — for example, the action cannot be compiled, the rebuilt JavaScript is invalid, or required tools are missing. In all other cases it exits with code **0** and produces reviewable diffs: a large diff does not by itself cause an error (e.g. major version bumps will naturally have big diffs). It is always up to a human reviewer to inspect the output, assess the changes, and decide whether the update is safe to approve.
 
