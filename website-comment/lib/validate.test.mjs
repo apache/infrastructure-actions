@@ -90,3 +90,10 @@ test("reports nothing for a clean tree", async () => {
   await writeFile(join(root, "index.html"), "<h1>ok</h1>");
   assert.deepEqual(await findUnsafeEntries(root), []);
 });
+
+test("validateMeta refuses object-valued fields without coercing them", () => {
+  const expected = { number: 5, headSha: "a".repeat(40) };
+  assert.equal(validateMeta({ pr: { toString: null }, headSha: "a".repeat(40) }, expected).ok, false);
+  assert.equal(validateMeta({ pr: 5, headSha: { toString: null } }, expected).ok, false);
+  assert.equal(validateMeta({ pr: [5], headSha: "a".repeat(40) }, expected).ok, false);
+});

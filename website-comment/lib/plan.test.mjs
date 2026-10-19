@@ -97,3 +97,10 @@ test("leaves a preview alone when the PR's armed state is unknown", () => {
   assert.deepEqual(result.delete, []);
   assert.deepEqual(result.publish, []);
 });
+
+test("a tombstoned branch is deleted only once settled, and otherwise left alone", () => {
+  const branch = "preview/pr9-staging";
+  const base = { openPulls: [], armedByPr: new Map(), previewBranches: [branch], tombstoned: new Set([branch]) };
+  assert.deepEqual(planActions({ ...base, settled: new Set() }), { publish: [], tombstone: [], delete: [] });
+  assert.deepEqual(planActions({ ...base, settled: new Set([branch]) }).delete, [branch]);
+});

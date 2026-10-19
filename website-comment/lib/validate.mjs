@@ -30,7 +30,9 @@ export function validateMeta(meta, expected) {
     return { ok: false, reason: "metadata is missing or not an object" };
   }
 
-  const pr = String(meta.pr ?? "");
+  // Typed before any coercion: String() on an object can throw or run code
+  // the artifact chose ({"pr": {"toString": null}}).
+  const pr = typeof meta.pr === "number" || typeof meta.pr === "string" ? String(meta.pr) : "";
   if (!/^\d+$/.test(pr)) {
     // The value is the artifact's, so it is not echoed into the PR's comment.
     return { ok: false, reason: "pr is not a plain number" };
@@ -39,7 +41,7 @@ export function validateMeta(meta, expected) {
     return { ok: false, reason: `pr ${pr} does not match the PR being published (${expected.number})` };
   }
 
-  const sha = String(meta.headSha ?? "");
+  const sha = typeof meta.headSha === "string" ? meta.headSha : "";
   if (!SHA_RE.test(sha)) {
     return { ok: false, reason: "headSha is not a 40-character hex sha" };
   }

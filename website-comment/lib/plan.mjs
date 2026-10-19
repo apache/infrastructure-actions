@@ -22,9 +22,12 @@ const BRANCH_RE = /^preview\/pr(\d+)-staging$/;
  *
  * Tombstone and delete are separate runs on purpose. Deleting a branch does
  * not unstage the site, so the tombstone must be pushed and allowed to
- * propagate before the branch goes away.
+ * propagate before the branch goes away. Runs are event-driven and can be
+ * seconds apart, so a run is not enough time: a tombstoned branch is deleted
+ * only once it is in `settled` (its tombstone old enough to have been served),
+ * and is otherwise left as it is.
  */
-export function planActions({ openPulls, armedByPr, previewBranches, tombstoned }) {
+export function planActions({ openPulls, armedByPr, previewBranches, tombstoned, settled = tombstoned }) {
   const open = new Set(openPulls);
   const publish = openPulls.filter((n) => armedByPr.get(n) === true);
 
@@ -44,8 +47,8 @@ export function planActions({ openPulls, armedByPr, previewBranches, tombstoned 
     const retired = !open.has(pr) || armedByPr.get(pr) !== true;
     if (!retired) continue;
 
-    if (tombstoned.has(branch)) remove.push(branch);
-    else tombstone.push(pr);
+    if (!tombstoned.has(branch)) tombstone.push(pr);
+    else if (settled.has(branch)) remove.push(branch);
   }
 
   return { publish, tombstone, delete: remove };

@@ -356,7 +356,7 @@ publisher; nothing accumulates per commit.
 |---|---|---|
 | `preview-site` artifact | `retention-days` (default **30**) | GitHub expires it. The publisher only needs the artifact for the PR's **current** head commit; an older one is never used again. If it expires before a preview is armed, the status comment says *waiting on a build* — re-run the build. |
 | `preview/pr<N>-staging` branch | While the PR is open **and** armed | The PR closes or merges, or the label is removed. Each publish is a single force-pushed orphan commit, so the branch never grows history. |
-| The staged site `<site>-pr<N>.staged.apache.org` | While the branch is live | **Never unstaged.** ASF staging keeps serving the last content after its branch is deleted. So retirement is two steps: first a **tombstone** — a one-page "this preview has been retired" notice with `robots.txt: Disallow: /` — is force-pushed over the preview, and only on the **next** run is the branch deleted. The hostname keeps serving the tombstone, never the pull request's code. |
+| The staged site `<site>-pr<N>.staged.apache.org` | While the branch is live | **Never unstaged.** ASF staging keeps serving the last content after its branch is deleted. So retirement is two steps: first a **tombstone** — a one-page "this preview has been retired" notice with `robots.txt: Disallow: /` — is force-pushed over the preview, and the branch is deleted only by a later run once the tombstone is at least 30 minutes old, so staging has served it. The hostname keeps serving the tombstone, never the pull request's code. |
 | Status and how-to comments | The life of the pull request | Never deleted; edited in place, so each PR has at most one of each. |
 | *Preview updated* and dispatch comments | The life of the pull request | Never deleted. One per publish, and one per arming by dispatch. |
 | Your repository's head branches of closed PRs | Until the PR closes | Only with `reap-head-branches: "true"`: deleted once every PR from the branch is closed, and only if nobody pushed to it after — checked atomically by the delete itself. Protected, `main`, `publish`, `preview/*` and `asf-*` branches are never touched. |
@@ -365,7 +365,9 @@ Cost and noise:
 
 - The publisher runs on events — a build or signal run completing, a PR
   comment, a dispatch — with no schedule, and exits quickly when nothing
-  changed. An unchanged head is not republished. Every run reconciles every
+  changed. An unchanged head is not republished, and an artifact refused for
+  the current head is not downloaded again until a new commit or a dispatch.
+  Every run reconciles every
   open PR, so a run that fails part-way is repaired by the next event, or by a
   dispatch with no PR number.
 - Every preview push is a branch update, which ASF mirrors to your

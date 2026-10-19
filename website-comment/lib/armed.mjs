@@ -60,8 +60,9 @@ export const hasLabel = (pull, label) =>
  * maintainer's behalf (a /show-preview comment or a manual dispatch), but its
  * login is not proof of that: the default github-actions[bot] is shared by
  * every workflow in the repository, an auto-labeller included. So a label
- * from `publisher` counts only when `vouched` finds the record the publisher
- * leaves when it arms — see publisherVouched. Any other bot never counts.
+ * from `publisher` counts only when `vouched(labelEvent)` finds the record the
+ * publisher leaves when it arms, made for THAT label event — see
+ * publisherVouched. Any other bot never counts.
  *
  * A label with no matching `labeled` event is treated as unarmed: who added it
  * is unknown, and unknown must not be more permissive than a refusal.
@@ -82,7 +83,7 @@ export async function resolveArmed({
   const by = last?.actor?.login;
   if (!by) return { armed: false, by: null };
 
-  if (by === publisher) return (await vouched()) ? { armed: true, by } : { armed: false, by: null };
+  if (by === publisher) return (await vouched(last)) ? { armed: true, by } : { armed: false, by: null };
   return (await hasWriteAccess(by)) ? { armed: true, by } : { armed: false, by: null };
 }
 
@@ -120,15 +121,34 @@ export const ARMED_MARKER = "asf-preview-armed";
 
 /**
  * Whether the pull request carries the record the publisher leaves when it
- * arms on a maintainer's behalf: its own dispatch announcement, or a
- * /show-preview from someone with write access that it acknowledged. A label
- * from the publisher's login without either was put there by some other
- * workflow sharing the token, and arms nothing.
+ * arms on a maintainer's behalf, for the label event `labelEvent`: its own
+ * dispatch announcement, or its acknowledgement of a /show-preview from
+ * someone with write access, made at or after that label was added.
+ *
+ * The publisher writes the record right after adding the label, and a label
+ * cannot be added again while it is on, so a record from before the label
+ * event belongs to an earlier arming that has since been undone. Without
+ * this, a maintainer's disarm would be reversed by any workflow on the shared
+ * token re-adding the label. Missing or unreadable times never vouch.
+ *
+ * `reactedAt(comment)` gives when the publisher acknowledged a comment, or
+ * null.
  */
-export async function publisherVouched({ comments, hasWriteAccess, isAcknowledged, publisher }) {
+export async function publisherVouched({ comments, hasWriteAccess, reactedAt, publisher, labelEvent }) {
+  const since = Date.parse(labelEvent?.created_at ?? "");
+  if (!Number.isFinite(since)) return false;
+  const current = (at) => {
+    const t = Date.parse(at ?? "");
+    return Number.isFinite(t) && t >= since;
+  };
+
   const tag = `<!-- ${ARMED_MARKER} -->`;
   const announced = comments.some(
-    (c) => c?.user?.login === publisher && typeof c.body === "string" && c.body.trimEnd().endsWith(tag),
+    (c) =>
+      c?.user?.login === publisher &&
+      typeof c.body === "string" &&
+      c.body.trimEnd().endsWith(tag) &&
+      current(c.created_at),
   );
   if (announced) return true;
 
@@ -136,7 +156,7 @@ export async function publisherVouched({ comments, hasWriteAccess, isAcknowledge
     if (!isShowPreviewComment(c?.body)) continue;
     const login = c?.user?.login;
     if (!login || !(await hasWriteAccess(login))) continue;
-    if (await isAcknowledged(c)) return true;
+    if (current(await reactedAt(c))) return true;
   }
   return false;
 }

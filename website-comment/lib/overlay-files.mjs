@@ -71,9 +71,15 @@ export function injectOverlay(html) {
   if (typeof html !== "string") return html;
   if (html.includes(OVERLAY_MARKER)) return html;
 
-  const lower = html.toLowerCase();
-  let at = lower.lastIndexOf("</body>");
-  if (at === -1) at = lower.lastIndexOf("</html>");
+  // Searched in the page as it is: lowercasing first would shift indices
+  // wherever a character changes length (U+0130 becomes two code units).
+  const lastTag = (re) => {
+    let at = -1;
+    for (const m of html.matchAll(re)) at = m.index;
+    return at;
+  };
+  let at = lastTag(/<\/body\s*>/gi);
+  if (at === -1) at = lastTag(/<\/html\s*>/gi);
   if (at === -1) {
     if (!/<(?:!doctype\s+html|html|body)[\s>]/i.test(html)) return html;
     at = html.length;
@@ -91,9 +97,16 @@ export async function findHtmlFiles(root) {
   return out;
 }
 
-/** Inject the overlay's script tags into every page under `root`. */
+/**
+ * Inject the overlay's script tags into every page under `root`.
+ *
+ * Read and written as latin1, one character per byte, so every byte not part
+ * of the insertion comes back unchanged whatever the page's encoding: a UTF-8
+ * round trip would replace each byte of a legacy windows-1252 page that is
+ * not valid UTF-8. The tags searched for and inserted are ASCII.
+ */
 export async function injectIntoTree(root) {
   for (const page of await findHtmlFiles(root)) {
-    await writeFile(page, injectOverlay(await readFile(page, "utf8")));
+    await writeFile(page, injectOverlay(await readFile(page, "latin1")), "latin1");
   }
 }

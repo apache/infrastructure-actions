@@ -86,3 +86,21 @@ test("parseGenerated accepts lines or commas and drops blanks", () => {
   assert.deepEqual(parseGenerated(""), []);
   assert.deepEqual(parseGenerated(undefined), []);
 });
+
+test("injects at the right place after characters that change length when lowercased", async () => {
+  const { injectOverlay } = await import("./overlay-files.mjs");
+  const out = injectOverlay("<html><body><p>\u0130smail \u0130\u0130</p></body></html>");
+  assert.match(out, /<\/p>\n?<!-- asf-preview-overlay -->[\s\S]*<\/script>\n?<\/body><\/html>$/);
+});
+
+test("leaves every byte of a non-UTF-8 page intact", async () => {
+  const { injectIntoTree } = await import("./overlay-files.mjs");
+  const dir = await mkdtemp(join(tmpdir(), "latin1-"));
+  // "café" in windows-1252, invalid as UTF-8.
+  const before = Buffer.concat([Buffer.from("<html><body>caf"), Buffer.from([0xe9]), Buffer.from("</body></html>")]);
+  await writeFile(join(dir, "index.html"), before);
+  await injectIntoTree(dir);
+  const after = await readFile(join(dir, "index.html"));
+  assert.ok(after.includes(Buffer.from([0x63, 0x61, 0x66, 0xe9])), "the 0xE9 byte survives");
+  assert.ok(after.includes(Buffer.from("asf-preview-overlay")));
+});

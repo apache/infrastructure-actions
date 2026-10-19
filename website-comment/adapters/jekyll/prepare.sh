@@ -44,27 +44,34 @@ fi
 
 # The github-pages gem forces safe mode through its own configuration, not
 # _config.yml, so look for it in the Gemfile Bundler would use: BUNDLE_GEMFILE,
-# else the nearest one from the site up to the repository root.
-gemfiles=""
+# else the nearest one from the site up to the repository root. Only a live
+# declaration counts: `jekyll new` leaves `# gem "github-pages"` commented out.
+gemfile=""
 if [ -n "${BUNDLE_GEMFILE:-}" ]; then
-  gemfiles="$BUNDLE_GEMFILE ${BUNDLE_GEMFILE}.lock"
+  gemfile="$BUNDLE_GEMFILE"
 else
   dir="$(cd "$site" && pwd)"
   while :; do
     if [ -f "$dir/Gemfile" ] || [ -f "$dir/Gemfile.lock" ]; then
-      gemfiles="$dir/Gemfile $dir/Gemfile.lock"
+      gemfile="$dir/Gemfile"
       break
     fi
     if [ -e "$dir/.git" ] || [ "$dir" = "/" ]; then break; fi
     dir="$(dirname "$dir")"
   done
 fi
-for g in $gemfiles; do
-  if [ -f "$g" ] && grep -Eq '(^|[^A-Za-z0-9_-])github-pages([^A-Za-z0-9_-]|$)' "$g"; then
-    echo "prepare.sh: $g uses the github-pages gem, which forces safe mode and ignores _plugins" >&2
+if [ -n "$gemfile" ]; then
+  uses_pages=""
+  if [ -f "$gemfile" ] && grep -Eq "^[[:space:]]*gem[[:space:]]+['\"]github-pages['\"]" "$gemfile"; then
+    uses_pages="$gemfile"
+  elif [ -f "$gemfile.lock" ] && grep -Eq '^    github-pages \(' "$gemfile.lock"; then
+    uses_pages="$gemfile.lock"
+  fi
+  if [ -n "$uses_pages" ]; then
+    echo "prepare.sh: $uses_pages uses the github-pages gem, which forces safe mode and ignores _plugins" >&2
     exit 1
   fi
-done
+fi
 
 plugins_dir="$(sed -n 's/^plugins_dir:[[:space:]]*["'\'']*\([^"'\'' ]*\).*/\1/p' "$config" | head -n 1)"
 plugins_dir="${plugins_dir:-_plugins}"

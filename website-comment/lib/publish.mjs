@@ -45,6 +45,10 @@ const HOWTO_MARKER = "asf-preview-howto";
 // into the label. See pendingArmingCommands.
 const ACK_REACTION = "rocket";
 const TOMBSTONE_TAG = "[tombstone]";
+// How long a tombstone stays up before its branch may be deleted: ASF staging
+// picks up a push within minutes, and deleting the branch earlier would leave
+// the retired preview's content served with nothing left to replace it.
+const TOMBSTONE_GRACE_MS = 30 * 60 * 1000;
 
 /**
  * A comment by the publisher's own login ending in exactly this tag.
@@ -98,6 +102,7 @@ export async function run({
   reapHeads = false,
   label = previewLabel(),
   publisher = PUBLISHER_LOGIN,
+  now = Date.now,
 }) {
   let failures = 0;
 
@@ -134,6 +139,7 @@ export async function run({
   const armedByPr = new Map();
   const commentsByPr = new Map();
   const isAcknowledged = (c) => gh.hasReaction(c.id, ACK_REACTION, publisher);
+  const reactedAt = (c) => gh.reactedAt(c.id, ACK_REACTION, publisher);
   const armedBy = async (pull, comments) =>
     (await resolveArmed({
       pull,
@@ -141,7 +147,8 @@ export async function run({
       labelEvents: await gh.listLabelEvents(pull.number),
       hasWriteAccess,
       publisher,
-      vouched: () => publisherVouched({ comments, hasWriteAccess, isAcknowledged, publisher }),
+      vouched: (labelEvent) =>
+        publisherVouched({ comments, hasWriteAccess, reactedAt, publisher, labelEvent }),
     })).armed;
 
   for (const pull of openPulls) {
@@ -208,11 +215,17 @@ export async function run({
   // delete after a failed tombstone strands live content with nothing left to
   // overwrite it.
   const tombstoned = new Set();
+  const settled = new Set();
   const publishedByBranch = new Map();
   for (const branch of previewBranches) {
     try {
-      const message = await gh.branchHeadMessage(branch);
-      if (message.includes(TOMBSTONE_TAG)) tombstoned.add(branch);
+      const { message, date } = await gh.branchHead(branch);
+      if (message.includes(TOMBSTONE_TAG)) {
+        tombstoned.add(branch);
+        // An unreadable date never settles: keeping a branch is recoverable.
+        const age = now() - Date.parse(date);
+        if (Number.isFinite(age) && age >= TOMBSTONE_GRACE_MS) settled.add(branch);
+      }
 
       const sha = publishedShaFrom(message);
       if (sha) publishedByBranch.set(branch, sha);
@@ -230,6 +243,7 @@ export async function run({
     armedByPr,
     previewBranches,
     tombstoned,
+    settled,
   });
 
   // A dispatch publishes only its PR, but still reaps everything.
@@ -365,6 +379,12 @@ async function publishOne({
     return false;
   }
 
+  // Already refused for this head: an artifact does not change, so screening
+  // it again re-downloads up to five builds on every run for nothing. A new
+  // commit, or a dispatch, tries again.
+  const status = ownMarked(comments, MARKER, publisher);
+  if (!force && status?.startsWith(REFUSED_HEADING) && status.includes(refusedFor(headSha))) return false;
+
   const builds = await gh.successfulBuilds(headSha);
   if (!builds.length) {
     await gh.upsertComment(pr, MARKER, waitingBody(pr, headSha));
@@ -386,7 +406,14 @@ async function publishOne({
       continue;
     }
     if (!candidate) continue;
-    const check = validateMeta(candidate.meta, { number: pr, headSha });
+    let check;
+    try {
+      check = validateMeta(candidate.meta, { number: pr, headSha });
+    } catch {
+      // The metadata is the pull request's: anything validateMeta cannot even
+      // inspect is a refusal like any other, never a failed run.
+      check = { ok: false, reason: "metadata could not be read" };
+    }
     if (check.ok) {
       artifact = candidate;
       break;
@@ -395,7 +422,7 @@ async function publishOne({
     await candidate.cleanup?.();
   }
   if (!artifact) {
-    await gh.upsertComment(pr, MARKER, refusal ? refusedBody(pr, refusal) : waitingBody(pr, headSha));
+    await gh.upsertComment(pr, MARKER, refusal ? refusedBody(pr, refusal, headSha) : waitingBody(pr, headSha));
     return false;
   }
 
@@ -437,7 +464,7 @@ async function repairComments({ gh, pr, headSha, comments, publisher }) {
 /** Screen and push an artifact already matched to this PR's head. */
 async function publishArtifact({ gh, git, repo, pr, headSha, artifact }) {
   if (!artifact.dir) {
-    await gh.upsertComment(pr, MARKER, refusedBody(pr, "artifact had no extracted directory"));
+    await gh.upsertComment(pr, MARKER, refusedBody(pr, "artifact had no extracted directory", headSha));
     return false;
   }
 
@@ -449,13 +476,13 @@ async function publishArtifact({ gh, git, repo, pr, headSha, artifact }) {
   } catch (err) {
     // The message can carry paths from the artifact; it goes to the log only.
     console.error(`preview: could not screen the artifact for #${pr}: ${err.message}`);
-    await gh.upsertComment(pr, MARKER, refusedBody(pr, "could not screen the artifact"));
+    await gh.upsertComment(pr, MARKER, refusedBody(pr, "could not screen the artifact", headSha));
     return false;
   }
   if (unsafe.length) {
     // Entry names are pull-request content: the log gets them, the PR a count.
     console.error(`preview: unsafe entries for #${pr}: ${JSON.stringify(unsafe.slice(0, 20))}`);
-    await gh.upsertComment(pr, MARKER, refusedBody(pr, `${unsafe.length} symlink entr${unsafe.length === 1 ? "y" : "ies"}`));
+    await gh.upsertComment(pr, MARKER, refusedBody(pr, `${unsafe.length} symlink entr${unsafe.length === 1 ? "y" : "ies"}`, headSha));
     return false;
   }
 
@@ -504,9 +531,11 @@ const waitingBody = (pr, sha) =>
   `### Preview waiting on a build\n\n${urlLine(pr)}\n\nNo successful build for \`${sha.slice(0, 7)}\` yet. ` +
   `The preview publishes as soon as the build goes green.`;
 
-const refusedBody = (pr, reason) =>
-  `### Preview could not be published\n\n${urlLine(pr)} (unchanged)\n\n` +
-  `The build artifact was refused: ${String(reason).slice(0, 200)}`;
+const REFUSED_HEADING = "### Preview could not be published";
+const refusedFor = (sha) => `The build artifact for \`${sha.slice(0, 7)}\` was refused`;
+const refusedBody = (pr, reason, sha) =>
+  `${REFUSED_HEADING}\n\n${urlLine(pr)} (unchanged)\n\n` +
+  `${refusedFor(sha)}: ${String(reason).slice(0, 200)}`;
 
 const retiredBody = (pr) =>
   `### Preview retired\n\nThe preview for this pull request is no longer published. ` +

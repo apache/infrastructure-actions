@@ -32,7 +32,11 @@ const pull = (number, sha = SHA, labels = []) => ({
   user: { type: "User", login: "contributor" },
   labels: labels.map((name) => ({ name })),
 });
-const labeledBy = (login) => ({ event: "labeled", label: { name: "preview" }, actor: { login } });
+// Times: a label goes on at T0, and the publisher's records follow at T1.
+const T0 = "2026-01-01T00:00:00Z";
+const T1 = "2026-01-01T00:00:05Z";
+const labeledBy = (login, at = T0) => ({ event: "labeled", label: { name: "preview" }, actor: { login }, created_at: at });
+const unlabeledBy = (login, at) => ({ event: "unlabeled", label: { name: "preview" }, actor: { login }, created_at: at });
 const botPull = (number, login = "dependabot[bot]", type = "Bot") => ({
   number,
   head: { sha: SHA },
@@ -46,7 +50,7 @@ async function artifactDir({ withSymlink = false } = {}) {
   return dir;
 }
 
-const bot = (body, login = "github-actions[bot]") => ({ user: { type: "Bot", login }, body });
+const bot = (body, login = "github-actions[bot]", at = T1) => ({ user: { type: "Bot", login }, body, created_at: at });
 const human = (body, login = "drive-by") => ({ user: { type: "User", login }, body });
 let nextId = 1;
 const armCmd = (login = "maintainer") => ({ id: nextId++, user: { type: "User", login }, body: "/show-preview" });
@@ -62,6 +66,8 @@ function fakes({
   pullsForHead = {},
   labelEvents = {},
   acknowledged = [],
+  ackTimes = {},
+  headDates = {},
 } = {}) {
   const pushed = [];
   const deleted = [];
@@ -98,6 +104,11 @@ function fakes({
       reactionLogins.push(login);
       return acknowledged.includes(id) || reacted.includes(id);
     },
+    reactedAt: async (id, content, login) => {
+      reactionLogins.push(login);
+      if (id in ackTimes) return ackTimes[id];
+      return acknowledged.includes(id) || reacted.includes(id) ? T1 : null;
+    },
     addReaction: async (id) => {
       reacted.push(id);
     },
@@ -106,7 +117,8 @@ function fakes({
       deleted.push(name);
     },
     successfulBuilds: async () => (hasBuild === true ? [{ id: 1 }] : hasBuild || []),
-    branchHeadMessage: async (branch) => headMessages[branch] ?? "",
+    // Tombstones default to long ago, so they are past the grace period.
+    branchHead: async (branch) => ({ message: headMessages[branch] ?? "", date: headDates[branch] ?? "2020-01-01T00:00:00Z" }),
     listBranches: async () => repoBranches,
     listPullsForHead: async (name) => pullsForHead[name] ?? [],
   };
@@ -407,6 +419,41 @@ test("finds this PR's own build when another PR shares its head commit", async (
   assert.deepEqual(cleaned.sort(), [1, 2], "both extracted artifacts are removed");
 });
 
+test("malformed metadata is a refusal: the older build is tried, the bad one removed", async () => {
+  const dir = await artifactDir();
+  const cleaned = [];
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, hasBuild: [{ id: 2 }, { id: 1 }] });
+  await go(f, {
+    fetchArtifact: async (id) => ({
+      dir,
+      meta: id === 2 ? { pr: { toString: null }, headSha: SHA } : { pr: 5, headSha: SHA },
+      cleanup: async () => cleaned.push(id),
+    }),
+  });
+  assert.equal(process.exitCode ?? 0, 0);
+  assert.equal(f.pushed.length, 1);
+  assert.deepEqual(cleaned.sort(), [1, 2]);
+});
+
+test("does not screen again an artifact already refused for this head", async () => {
+  const refused = (sha) =>
+    bot(`### Preview could not be published\n\nx\n\nThe build artifact for \`${sha.slice(0, 7)}\` was refused: 1 symlink entry\n\n<!-- asf-preview-status -->`);
+  let fetched = 0;
+  const fetchArtifact = async () => (fetched += 1, null);
+
+  const same = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd(), refused(SHA)] } });
+  await go(same, { fetchArtifact });
+  assert.equal(fetched, 0, "no download for a head already refused");
+
+  const moved = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd(), refused("d".repeat(40))] } });
+  await go(moved, { fetchArtifact });
+  assert.equal(fetched, 1, "a new head is screened");
+
+  const dispatched = fakes({ openPulls: [pull(5)], comments: { 5: [refused(SHA)] } });
+  await go(dispatched, { only: 5, dispatchedBy: "maintainer", fetchArtifact });
+  assert.equal(fetched, 2, "a dispatch screens again");
+});
+
 test("removes a refused artifact", async () => {
   const dir = await artifactDir({ withSymlink: true });
   let cleaned = 0;
@@ -581,6 +628,28 @@ test("deletes a branch that already carries a tombstone", async () => {
   assert.deepEqual(f.deleted, ["preview/pr9-staging"]);
 });
 
+test("keeps a fresh tombstone up until staging has had time to serve it", async () => {
+  const at = Date.parse("2026-01-01T12:00:00Z");
+  const fresh = fakes({
+    openPulls: [],
+    branches: ["preview/pr9-staging"],
+    headMessages: { "preview/pr9-staging": "Retire preview for #9 [tombstone]" },
+    headDates: { "preview/pr9-staging": "2026-01-01T11:59:00Z" },
+  });
+  await go(fresh, { now: () => at });
+  assert.deepEqual(fresh.deleted, [], "a minute-old tombstone stays");
+  assert.equal(fresh.pushed.length, 0, "and is not pushed again");
+
+  const old = fakes({
+    openPulls: [],
+    branches: ["preview/pr9-staging"],
+    headMessages: { "preview/pr9-staging": "Retire preview for #9 [tombstone]" },
+    headDates: { "preview/pr9-staging": "2026-01-01T11:00:00Z" },
+  });
+  await go(old, { now: () => at });
+  assert.deepEqual(old.deleted, ["preview/pr9-staging"]);
+});
+
 test("a manual dispatch arms the PR with the label and says who", async () => {
   const dir = await artifactDir();
   const f = fakes({ openPulls: [pull(42)] });
@@ -625,6 +694,31 @@ test("a label another workflow added with the shared token arms nothing", async 
   assert.ok(f.pushed.some((p) => /tombstone/.test(p.message)), "and an existing preview is retired");
 });
 
+test("a label re-added by the shared token after a disarm does not revive an old arming", async () => {
+  // A maintainer armed with /show-preview (label T0, acknowledged T1), removed
+  // the label to disarm, and an auto-labeller then put it back.
+  const cmd = armCmd();
+  const f = fakes({
+    openPulls: [pull(42, SHA, ["preview"])],
+    comments: { 42: [cmd] },
+    acknowledged: [cmd.id],
+    ackTimes: { [cmd.id]: T1 },
+    labelEvents: {
+      42: [
+        labeledBy("github-actions[bot]", T0),
+        unlabeledBy("maintainer", "2026-01-02T00:00:00Z"),
+        labeledBy("github-actions[bot]", "2026-01-03T00:00:00Z"),
+      ],
+    },
+    branches: ["preview/pr42-staging"],
+  });
+  let fetched = 0;
+  await go(f, { fetchArtifact: async () => (fetched += 1, null) });
+  assert.equal(fetched, 0, "nothing is published");
+  assert.deepEqual(f.labelled, [], "the old command is acknowledged and is not replayed");
+  assert.ok(f.pushed.some((p) => /tombstone/.test(p.message)), "the preview stays retired");
+});
+
 test("a dispatch leaves the record that keeps its label armed", async () => {
   const dir = await artifactDir();
   const f = fakes({ openPulls: [pull(5)] });
@@ -649,7 +743,7 @@ test("one PR's failure does not abort the reap", async () => {
 
 test("a branch whose head cannot be read is tombstoned, never deleted", async () => {
   const f = fakes({ openPulls: [], branches: ["preview/pr9-staging"] });
-  f.gh.branchHeadMessage = async () => {
+  f.gh.branchHead = async () => {
     throw new Error("unreadable");
   };
 
