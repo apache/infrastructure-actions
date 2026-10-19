@@ -59,7 +59,9 @@ runs:
         # (portably: BSD grep -z does not let a pattern span lines).
         ATTR='<[A-Za-z][^<>]*[[:space:]]data-preview-src='
         found="$(find "$OUTPUT" -type f \( -iname '*.html' -o -iname '*.htm' \) -exec sh -c '
-          for f; do tr "\r\n\t" "   " < "$f" | grep -qE -- "$0" && printf "%s\n" "$f"; done
+          for f; do
+            if tr "\r\n\t" "   " < "$f" | grep -qE -- "$0"; then printf "%s\n" "$f"; fi
+          done
         ' "$ATTR" {} +)"
         if [ -n "$found" ]; then
           echo "::error::data-preview-src found in the production build in $OUTPUT; it must never ship"
