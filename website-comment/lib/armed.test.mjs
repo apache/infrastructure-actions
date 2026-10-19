@@ -100,27 +100,18 @@ test("trusts the publisher's own label only with its arming record, and no other
   assert.equal(other.armed, false);
 });
 
-test("publisherVouched needs the publisher's record for the current label event", async () => {
+test("publisherVouched needs the publisher's record naming exactly this label event", () => {
   const publisher = "github-actions[bot]";
-  const hasWriteAccess = async (login) => login === "maintainer";
-  const T0 = "2026-01-01T00:00:00Z";
-  const T1 = "2026-01-01T00:00:05Z";
-  const EARLIER = "2025-12-31T00:00:00Z";
-  const labelEvent = { event: "labeled", created_at: T0 };
-  const cmd = (login, id) => ({ id, user: { login, type: "User" }, body: "/show-preview" });
-  const vouched = (comments, acks = {}, event = labelEvent) =>
-    publisherVouched({ comments, hasWriteAccess, reactedAt: async (c) => acks[c.id] ?? null, publisher, labelEvent: event });
-  const armed = (at) => ({ user: { login: publisher, type: "Bot" }, body: "armed\n\n<!-- asf-preview-armed -->", created_at: at });
+  const own = (body) => ({ user: { login: publisher, type: "Bot" }, body });
+  const vouched = (comments, labelEvent = { event: "labeled", id: 7 }) =>
+    publisherVouched({ comments, publisher, labelEvent });
 
-  assert.equal(await vouched([]), false);
-  assert.equal(await vouched([armed(T1)]), true);
-  assert.equal(await vouched([armed(EARLIER)]), false, "a dispatch record from an earlier arming");
-  assert.equal(await vouched([{ ...armed(T1), user: { login: "other[bot]", type: "Bot" } }]), false);
-  assert.equal(await vouched([cmd("maintainer", 1)], { 1: T1 }), true);
-  assert.equal(await vouched([cmd("maintainer", 1)], { 1: EARLIER }), false, "acknowledged for an earlier arming");
-  assert.equal(await vouched([cmd("maintainer", 1)], {}), false, "not acknowledged");
-  assert.equal(await vouched([cmd("drive-by", 2)], { 2: T1 }), false, "not a writer");
-  assert.equal(await vouched([armed(T1)], {}, { event: "labeled" }), false, "an event with no time never vouches");
+  assert.equal(vouched([]), false);
+  assert.equal(vouched([own("explainer\n\n<!-- asf-preview-armed event=7 -->\n\n<!-- asf-preview-howto -->")]), true);
+  assert.equal(vouched([own("<!-- asf-preview-armed event=6 -->")]), false, "a record for an earlier label event");
+  assert.equal(vouched([own("<!-- asf-preview-armed event=77 -->")]), false, "ids are matched whole");
+  assert.equal(vouched([{ ...own("<!-- asf-preview-armed event=7 -->"), user: { login: "other[bot]", type: "Bot" } }]), false);
+  assert.equal(vouched([own("<!-- asf-preview-armed event=7 -->")], { event: "labeled" }), false, "an event with no id never vouches");
 });
 
 test("a label with no labeled event is unarmed", async () => {

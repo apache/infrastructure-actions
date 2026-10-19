@@ -22,7 +22,7 @@ import {
   hasLabel,
   publisherLogin,
   publisherVouched,
-  ARMED_MARKER,
+  armedRecord,
   PUBLISHER_LOGIN,
 } from "./armed.mjs";
 import { planActions } from "./plan.mjs";
@@ -103,6 +103,7 @@ export async function run({
   label = previewLabel(),
   publisher = PUBLISHER_LOGIN,
   now = Date.now,
+  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 }) {
   let failures = 0;
 
@@ -122,12 +123,30 @@ export async function run({
   };
 
   let labelReady = false;
+  const ownLabelEvents = (events) =>
+    events.filter((e) => e?.event === "labeled" && e?.label?.name === label && e?.actor?.login === publisher);
+
+  /**
+   * Add the label and return the id of the label event that made, for the
+   * arming record. The events API can trail the write by a moment, so it is
+   * read until an event that was not there before appears. Never guessed: a
+   * record naming the wrong event would leave the PR unarmed next run, so an
+   * event that does not show up fails this PR's run, before the command is
+   * acknowledged, and the next run tries again.
+   */
   const arm = async (n) => {
     if (!labelReady) {
       await gh.ensureLabel(label);
       labelReady = true;
     }
+    const before = new Set(ownLabelEvents(await gh.listLabelEvents(n)).map((e) => e.id));
     await gh.addLabel(n, label);
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      if (attempt) await sleep(1000);
+      const added = ownLabelEvents(await gh.listLabelEvents(n)).filter((e) => !before.has(e.id)).at(-1);
+      if (Number.isInteger(added?.id)) return added.id;
+    }
+    throw new Error("the label event just added did not appear in the events API");
   };
 
   // Armed state is resolved for EVERY open PR, even when publishing just one:
@@ -139,7 +158,6 @@ export async function run({
   const armedByPr = new Map();
   const commentsByPr = new Map();
   const isAcknowledged = (c) => gh.hasReaction(c.id, ACK_REACTION, publisher);
-  const reactedAt = (c) => gh.reactedAt(c.id, ACK_REACTION, publisher);
   const armedBy = async (pull, comments) =>
     (await resolveArmed({
       pull,
@@ -147,8 +165,7 @@ export async function run({
       labelEvents: await gh.listLabelEvents(pull.number),
       hasWriteAccess,
       publisher,
-      vouched: (labelEvent) =>
-        publisherVouched({ comments, hasWriteAccess, reactedAt, publisher, labelEvent }),
+      vouched: async (labelEvent) => publisherVouched({ comments, publisher, labelEvent }),
     })).armed;
 
   for (const pull of openPulls) {
@@ -157,6 +174,7 @@ export async function run({
       commentsByPr.set(pull.number, comments);
       let labelled = hasLabel(pull, label);
       let armedHere = false;
+      let howtoWritten = false;
 
       const pending = await pendingArmingCommands({
         comments,
@@ -173,13 +191,16 @@ export async function run({
           labelled = false;
         }
         if (!labelled) {
-          await arm(pull.number);
+          const record = armedRecord(await arm(pull.number));
           labelled = true;
           if (only === pull.number) {
-            await gh.createComment(
-              pull.number,
-              `${armedBody(pull.number, dispatchedBy, label)}\n\n<!-- ${ARMED_MARKER} -->`,
-            );
+            await gh.createComment(pull.number, `${armedBody(pull.number, dispatchedBy, label)}\n\n${record}`);
+          } else if (!isBotAuthored(pull)) {
+            // Into the explainer, edited in place: an edit notifies nobody.
+            await gh.upsertComment(pull.number, HOWTO_MARKER, `${howtoBody(label)}\n\n${record}`);
+            howtoWritten = true;
+          } else {
+            await gh.createComment(pull.number, `${armedByCommandBody(pull.number, label)}\n\n${record}`);
           }
         }
         armedHere = true;
@@ -196,7 +217,7 @@ export async function run({
       // timeline and on commits@. Arming is deliberately not gated the same
       // way: a maintainer who wants a preview of a bot's PR can still ask for
       // one, and it will publish.
-      if (!isBotAuthored(pull) && !hasOwnMarker(comments, HOWTO_MARKER, publisher)) {
+      if (!howtoWritten && !isBotAuthored(pull) && !hasOwnMarker(comments, HOWTO_MARKER, publisher)) {
         await gh.upsertComment(pull.number, HOWTO_MARKER, howtoBody(label));
       }
     } catch (err) {
@@ -379,21 +400,34 @@ async function publishOne({
     return false;
   }
 
-  // Already refused for this head: an artifact does not change, so screening
-  // it again re-downloads up to five builds on every run for nothing. A new
-  // commit, or a dispatch, tries again.
+  // Status writes that would change nothing are skipped: the publisher runs
+  // on every event in the repository, and rewriting an identical comment on
+  // each is churn.
   const status = ownMarked(comments, MARKER, publisher);
-  if (!force && status?.startsWith(REFUSED_HEADING) && status.includes(refusedFor(headSha))) return false;
+  const setStatus = async (body) => {
+    if (status?.trimEnd() === `${body}\n\n<!-- ${MARKER} -->`) return;
+    await gh.upsertComment(pr, MARKER, body);
+  };
 
   const builds = await gh.successfulBuilds(headSha);
   if (!builds.length) {
-    await gh.upsertComment(pr, MARKER, waitingBody(pr, headSha));
+    await setStatus(waitingBody(pr, headSha));
     return false;
+  }
+
+  // Already refused for this head, by exactly these builds: an artifact does
+  // not change, so screening it again re-downloads up to five builds on every
+  // run for nothing. A new build of the head, a new commit, or a dispatch tries
+  // again.
+  if (!force && status?.startsWith(REFUSED_HEADING) && status.includes(refusedFor(headSha))) {
+    const refused = refusedBuildsIn(status);
+    if (builds.every((b) => refused.has(b.id))) return false;
   }
 
   // Newest first, until one build's artifact is this PR's own.
   let artifact = null;
   let refusal = null;
+  const refusedIds = [];
   for (const build of builds) {
     let candidate;
     try {
@@ -403,6 +437,7 @@ async function publishOne({
       // (a failed download) fails the run, to be retried.
       if (err?.refused !== true) throw err;
       refusal = err.message;
+      refusedIds.push(build.id);
       continue;
     }
     if (!candidate) continue;
@@ -416,18 +451,23 @@ async function publishOne({
     }
     if (check.ok) {
       artifact = candidate;
+      artifact.buildId = build.id;
       break;
     }
-    refusal = check.reason;
     await candidate.cleanup?.();
+    // Another PR's build of the same commit says nothing about this PR's own,
+    // which may still be on its way: keep waiting rather than refuse.
+    if (check.otherPr) continue;
+    refusal = check.reason;
+    refusedIds.push(build.id);
   }
   if (!artifact) {
-    await gh.upsertComment(pr, MARKER, refusal ? refusedBody(pr, refusal, headSha) : waitingBody(pr, headSha));
+    await setStatus(refusal ? refusedBody(pr, refusal, headSha, refusedIds) : waitingBody(pr, headSha));
     return false;
   }
 
   try {
-    return await publishArtifact({ gh, git, repo, pr, headSha, artifact });
+    return await publishArtifact({ gh, git, repo, pr, headSha, artifact, setStatus });
   } finally {
     await artifact.cleanup?.();
   }
@@ -462,9 +502,10 @@ async function repairComments({ gh, pr, headSha, comments, publisher }) {
 }
 
 /** Screen and push an artifact already matched to this PR's head. */
-async function publishArtifact({ gh, git, repo, pr, headSha, artifact }) {
+async function publishArtifact({ gh, git, repo, pr, headSha, artifact, setStatus }) {
+  const refuse = (reason) => setStatus(refusedBody(pr, reason, headSha, [artifact.buildId]));
   if (!artifact.dir) {
-    await gh.upsertComment(pr, MARKER, refusedBody(pr, "artifact had no extracted directory", headSha));
+    await refuse("artifact had no extracted directory");
     return false;
   }
 
@@ -476,13 +517,13 @@ async function publishArtifact({ gh, git, repo, pr, headSha, artifact }) {
   } catch (err) {
     // The message can carry paths from the artifact; it goes to the log only.
     console.error(`preview: could not screen the artifact for #${pr}: ${err.message}`);
-    await gh.upsertComment(pr, MARKER, refusedBody(pr, "could not screen the artifact", headSha));
+    await refuse("could not screen the artifact");
     return false;
   }
   if (unsafe.length) {
     // Entry names are pull-request content: the log gets them, the PR a count.
     console.error(`preview: unsafe entries for #${pr}: ${JSON.stringify(unsafe.slice(0, 20))}`);
-    await gh.upsertComment(pr, MARKER, refusedBody(pr, `${unsafe.length} symlink entr${unsafe.length === 1 ? "y" : "ies"}`, headSha));
+    await refuse(`${unsafe.length} symlink entr${unsafe.length === 1 ? "y" : "ies"}`);
     return false;
   }
 
@@ -504,7 +545,7 @@ async function publishArtifact({ gh, git, repo, pr, headSha, artifact }) {
     artifact.dir,
   );
 
-  await gh.upsertComment(pr, MARKER, publishedBody(pr, headSha));
+  await setStatus(publishedBody(pr, headSha));
   // The status comment above is edited in place, and an edit notifies nobody.
   // Each publish is also announced as a new comment, so everyone following the
   // pull request learns that the preview now shows the latest push.
@@ -533,9 +574,15 @@ const waitingBody = (pr, sha) =>
 
 const REFUSED_HEADING = "### Preview could not be published";
 const refusedFor = (sha) => `The build artifact for \`${sha.slice(0, 7)}\` was refused`;
-const refusedBody = (pr, reason, sha) =>
+// The refused builds ride along hidden, so a later run can tell a new build of
+// the same head from the ones already turned down.
+const REFUSED_BUILDS_RE = /<!-- asf-preview-refused-builds: ([0-9,]*) -->/;
+const refusedBuildsIn = (body) =>
+  new Set((REFUSED_BUILDS_RE.exec(body)?.[1] ?? "").split(",").filter(Boolean).map(Number));
+const refusedBody = (pr, reason, sha, buildIds = []) =>
   `${REFUSED_HEADING}\n\n${urlLine(pr)} (unchanged)\n\n` +
-  `${refusedFor(sha)}: ${String(reason).slice(0, 200)}`;
+  `${refusedFor(sha)}: ${String(reason).slice(0, 200)}\n\n` +
+  `<!-- asf-preview-refused-builds: ${buildIds.filter(Number.isInteger).join(",")} -->`;
 
 const retiredBody = (pr) =>
   `### Preview retired\n\nThe preview for this pull request is no longer published. ` +
@@ -545,6 +592,11 @@ const armedBody = (pr, by, label) =>
   `### Preview armed by manual dispatch\n\n${urlLine(pr)}\n\n` +
   (by ? `@${by} armed this preview by dispatching the workflow.` : `This preview was armed by manual dispatch.`) +
   ` The \`${label}\` label now tracks this PR's head commit; remove the label to retire the preview.`;
+
+// A bot-authored PR has no explainer to carry the arming record.
+const armedByCommandBody = (pr, label) =>
+  `### Preview armed\n\n${urlLine(pr)}\n\nA committer armed this preview with \`/show-preview\`. ` +
+  `The \`${label}\` label now tracks this PR's head commit; remove the label to retire the preview.`;
 
 // No URL here: the PR has no preview yet, and a link that does not resolve is
 // worse than none. The URL is posted with the preview, once it is published.

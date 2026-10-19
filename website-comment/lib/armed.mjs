@@ -61,7 +61,7 @@ export const hasLabel = (pull, label) =>
  * login is not proof of that: the default github-actions[bot] is shared by
  * every workflow in the repository, an auto-labeller included. So a label
  * from `publisher` counts only when `vouched(labelEvent)` finds the record the
- * publisher leaves when it arms, made for THAT label event — see
+ * publisher leaves when it arms, naming THAT label event — see
  * publisherVouched. Any other bot never counts.
  *
  * A label with no matching `labeled` event is treated as unarmed: who added it
@@ -116,47 +116,27 @@ export async function pendingArmingCommands({ comments, hasWriteAccess, isAcknow
   return out;
 }
 
-/** Ends the publisher's comment announcing a dispatch-armed preview. */
 export const ARMED_MARKER = "asf-preview-armed";
 
 /**
- * Whether the pull request carries the record the publisher leaves when it
- * arms on a maintainer's behalf, for the label event `labelEvent`: its own
- * dispatch announcement, or its acknowledgement of a /show-preview from
- * someone with write access, made at or after that label was added.
- *
- * The publisher writes the record right after adding the label, and a label
- * cannot be added again while it is on, so a record from before the label
- * event belongs to an earlier arming that has since been undone. Without
- * this, a maintainer's disarm would be reversed by any workflow on the shared
- * token re-adding the label. Missing or unreadable times never vouch.
- *
- * `reactedAt(comment)` gives when the publisher acknowledged a comment, or
- * null.
+ * The hidden record the publisher leaves when it adds the label for a
+ * maintainer, naming that label event. It sits in the dispatch announcement,
+ * in the publisher's explainer comment (edited in place, which notifies
+ * nobody) for a /show-preview, or in a short comment on a bot-authored PR,
+ * which gets no explainer.
  */
-export async function publisherVouched({ comments, hasWriteAccess, reactedAt, publisher, labelEvent }) {
-  const since = Date.parse(labelEvent?.created_at ?? "");
-  if (!Number.isFinite(since)) return false;
-  const current = (at) => {
-    const t = Date.parse(at ?? "");
-    return Number.isFinite(t) && t >= since;
-  };
+export const armedRecord = (eventId) => `<!-- ${ARMED_MARKER} event=${eventId} -->`;
 
-  const tag = `<!-- ${ARMED_MARKER} -->`;
-  const announced = comments.some(
-    (c) =>
-      c?.user?.login === publisher &&
-      typeof c.body === "string" &&
-      c.body.trimEnd().endsWith(tag) &&
-      current(c.created_at),
+/**
+ * Whether the publisher's own comments carry the arming record for exactly
+ * `labelEvent`. Bound to the event's id, not its time: a label that someone
+ * removed and a workflow on the shared token re-added is a new event, which no
+ * record names, however close together they happened.
+ */
+export function publisherVouched({ comments, publisher, labelEvent }) {
+  if (!Number.isInteger(labelEvent?.id)) return false;
+  const record = armedRecord(labelEvent.id);
+  return comments.some(
+    (c) => c?.user?.login === publisher && typeof c.body === "string" && c.body.includes(record),
   );
-  if (announced) return true;
-
-  for (const c of comments) {
-    if (!isShowPreviewComment(c?.body)) continue;
-    const login = c?.user?.login;
-    if (!login || !(await hasWriteAccess(login))) continue;
-    if (current(await reactedAt(c))) return true;
-  }
-  return false;
 }

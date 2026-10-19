@@ -51,9 +51,7 @@ export function buildWorkflow(env = process.env) {
  *                             or authored by a bot or the publisher itself —
  *                             never human discussion
  *   label-event actor         who armed it, to check write access
- *   creation times            of label events, comments and the publisher's
- *                             reactions: which arming record vouches for
- *                             which label
+ *   label-event id            which label event an arming record is for
  *   preview-branch commit     its message and date, the publisher's own
  *                             commits on its own branches
  *
@@ -98,7 +96,6 @@ export const projectComment = (c, publisher = PUBLISHER_LOGIN) => {
     id: int(c?.id),
     user: { login, type },
     body: body !== null && keep ? body : null,
-    created_at: str(c?.created_at),
   };
 };
 
@@ -106,7 +103,7 @@ export const projectLabelEvent = (e) => ({
   event: str(e?.event),
   label: { name: str(e?.label?.name) },
   actor: { login: str(e?.actor?.login) },
-  created_at: str(e?.created_at),
+  id: int(e?.id),
 });
 
 export const projectBranch = (b) => ({
@@ -158,15 +155,6 @@ export function createClient({
       if (batch.length < 100) break;
     }
     return out;
-  }
-
-  /** When `login` left a `content` reaction on a comment, or null if it has not. */
-  async function reactedAt(commentId, content, login) {
-    const reactions = await paginate(
-      `/repos/${repo}/issues/comments/${commentId}/reactions?content=${content}`,
-    );
-    const mine = reactions.find((r) => str(r?.user?.login) === login);
-    return mine ? (str(mine.created_at) ?? "") : null;
   }
 
   /**
@@ -266,12 +254,14 @@ export function createClient({
     },
 
 
-    reactedAt,
     branchHead,
 
     /** Whether `login` has already left a `content` reaction on a comment. */
     async hasReaction(commentId, content, login) {
-      return (await reactedAt(commentId, content, login)) !== null;
+      const reactions = await paginate(
+        `/repos/${repo}/issues/comments/${commentId}/reactions?content=${content}`,
+      );
+      return reactions.some((r) => str(r?.user?.login) === login);
     },
 
     addReaction: (commentId, content) =>

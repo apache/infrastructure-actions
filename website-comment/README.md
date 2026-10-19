@@ -408,10 +408,12 @@ Cost and noise:
   being a committer); a label with no visible `labeled` event counts as
   unarmed. A `/show-preview` counts only from a commenter with write access,
   and only when the comment is exactly the command. A label from the
-  publisher's own login counts only next to the record it leaves when it arms
-  for a committer (its acknowledgement of a `/show-preview`, or its dispatch
-  comment): the default `github-actions[bot]` is shared by every workflow in
-  the repository, so an auto-labeller adding the label arms nothing. If other
+  publisher's own login counts only when the publisher recorded that exact
+  label event as one it added for a committer: a hidden line naming the event
+  in its explainer comment (edited, so nobody is notified), its dispatch
+  comment, or, on a bot's PR, a short "Preview armed" comment. The default
+  `github-actions[bot]` is shared by every workflow in the repository, so an
+  auto-labeller adding the label, even right after a disarm, arms nothing. If other
   workflows post comments or reactions as that login, give the publisher its
   own GitHub App token and `publisher-login`.
 - **Status comments are edited only when authored by the publisher's own

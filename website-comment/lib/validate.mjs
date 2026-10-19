@@ -38,7 +38,9 @@ export function validateMeta(meta, expected) {
     return { ok: false, reason: "pr is not a plain number" };
   }
   if (Number(pr) !== expected.number) {
-    return { ok: false, reason: `pr ${pr} does not match the PR being published (${expected.number})` };
+    // Not a defect of this PR's build: another PR with the same head commit
+    // built it. The caller keeps looking rather than reporting a refusal.
+    return { ok: false, otherPr: true, reason: `pr ${pr} does not match the PR being published (${expected.number})` };
   }
 
   const sha = typeof meta.headSha === "string" ? meta.headSha : "";

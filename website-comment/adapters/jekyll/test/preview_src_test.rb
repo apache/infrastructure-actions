@@ -157,6 +157,9 @@ class PreviewSrcUnitTest < Minitest::Test
 
       File.write(File.join(dir, "Gemfile"), %(gem "github-pages", group: :jekyll_plugins\n))
       refute system(env, PREPARE, site, out: File::NULL, err: File::NULL)
+
+      File.write(File.join(dir, "Gemfile"), %(gem("github-pages", group: :jekyll_plugins)\n))
+      refute system(env, PREPARE, site, out: File::NULL, err: File::NULL), "the parenthesised form, with no lockfile"
     end
   end
 

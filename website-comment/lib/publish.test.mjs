@@ -32,11 +32,10 @@ const pull = (number, sha = SHA, labels = []) => ({
   user: { type: "User", login: "contributor" },
   labels: labels.map((name) => ({ name })),
 });
-// Times: a label goes on at T0, and the publisher's records follow at T1.
-const T0 = "2026-01-01T00:00:00Z";
-const T1 = "2026-01-01T00:00:05Z";
-const labeledBy = (login, at = T0) => ({ event: "labeled", label: { name: "preview" }, actor: { login }, created_at: at });
-const unlabeledBy = (login, at) => ({ event: "unlabeled", label: { name: "preview" }, actor: { login }, created_at: at });
+let nextEventId = 1000;
+const labeledBy = (login, id = nextEventId++) => ({ event: "labeled", label: { name: "preview" }, actor: { login }, id });
+const unlabeledBy = (login, id = nextEventId++) => ({ event: "unlabeled", label: { name: "preview" }, actor: { login }, id });
+const record = (id) => `<!-- asf-preview-armed event=${id} -->`;
 const botPull = (number, login = "dependabot[bot]", type = "Bot") => ({
   number,
   head: { sha: SHA },
@@ -50,7 +49,7 @@ async function artifactDir({ withSymlink = false } = {}) {
   return dir;
 }
 
-const bot = (body, login = "github-actions[bot]", at = T1) => ({ user: { type: "Bot", login }, body, created_at: at });
+const bot = (body, login = "github-actions[bot]") => ({ user: { type: "Bot", login }, body });
 const human = (body, login = "drive-by") => ({ user: { type: "User", login }, body });
 let nextId = 1;
 const armCmd = (login = "maintainer") => ({ id: nextId++, user: { type: "User", login }, body: "/show-preview" });
@@ -66,9 +65,11 @@ function fakes({
   pullsForHead = {},
   labelEvents = {},
   acknowledged = [],
-  ackTimes = {},
   headDates = {},
+  eventsLag = 0,
+  publisher = "github-actions[bot]",
 } = {}) {
+  const lagging = {};
   const pushed = [];
   const deleted = [];
   const deletedAt = [];
@@ -95,19 +96,26 @@ function fakes({
     ensureLabel: async () => {},
     addLabel: async (n, name) => {
       labelled.push({ n, name });
+      // GitHub records the add as a labeled event by the token's login.
+      (labelEvents[n] ??= []).push(labeledBy(publisher));
+      lagging[n] = eventsLag;
     },
     removeLabel: async (n, name) => {
       unlabelled.push({ n, name });
     },
-    listLabelEvents: async (n) => labelEvents[n] ?? [],
+    // The events API can trail a write: the newest event shows up only after
+    // `eventsLag` further reads.
+    listLabelEvents: async (n) => {
+      const events = labelEvents[n] ?? [];
+      if (lagging[n] > 0) {
+        lagging[n] -= 1;
+        return events.slice(0, -1);
+      }
+      return events;
+    },
     hasReaction: async (id, content, login) => {
       reactionLogins.push(login);
       return acknowledged.includes(id) || reacted.includes(id);
-    },
-    reactedAt: async (id, content, login) => {
-      reactionLogins.push(login);
-      if (id in ackTimes) return ackTimes[id];
-      return acknowledged.includes(id) || reacted.includes(id) ? T1 : null;
     },
     addReaction: async (id) => {
       reacted.push(id);
@@ -137,7 +145,7 @@ function fakes({
 }
 
 const go = (f, extra = {}) =>
-  run({ gh: f.gh, git: f.git, repo: "apache/magpie-site", fetchArtifact: async () => null, ...extra });
+  run({ gh: f.gh, git: f.git, repo: "apache/magpie-site", fetchArtifact: async () => null, sleep: async () => {}, ...extra });
 
 test("announces on an open PR that has not been told about previews", async () => {
   const f = fakes({ openPulls: [pull(5)] });
@@ -294,10 +302,11 @@ test("a command leaves a maintainer's label in place", async () => {
 test("a publisher on another token recognises its own label and acknowledgements", async () => {
   const dir = await artifactDir();
   const cmd = armCmd();
+  const added = labeledBy("site-app[bot]");
   const f = fakes({
     openPulls: [pull(5, SHA, ["preview"])],
-    comments: { 5: [cmd, bot("how to <!-- asf-preview-howto -->", "site-app[bot]")] },
-    labelEvents: { 5: [labeledBy("site-app[bot]")] },
+    comments: { 5: [cmd, bot(`how to\n\n${record(added.id)}\n\n<!-- asf-preview-howto -->`, "site-app[bot]")] },
+    labelEvents: { 5: [added] },
     acknowledged: [cmd.id],
   });
 
@@ -436,8 +445,8 @@ test("malformed metadata is a refusal: the older build is tried, the bad one rem
 });
 
 test("does not screen again an artifact already refused for this head", async () => {
-  const refused = (sha) =>
-    bot(`### Preview could not be published\n\nx\n\nThe build artifact for \`${sha.slice(0, 7)}\` was refused: 1 symlink entry\n\n<!-- asf-preview-status -->`);
+  const refused = (sha, ids = "1") =>
+    bot(`### Preview could not be published\n\nx\n\nThe build artifact for \`${sha.slice(0, 7)}\` was refused: 1 symlink entry\n\n<!-- asf-preview-refused-builds: ${ids} -->\n\n<!-- asf-preview-status -->`);
   let fetched = 0;
   const fetchArtifact = async () => (fetched += 1, null);
 
@@ -452,6 +461,30 @@ test("does not screen again an artifact already refused for this head", async ()
   const dispatched = fakes({ openPulls: [pull(5)], comments: { 5: [refused(SHA)] } });
   await go(dispatched, { only: 5, dispatchedBy: "maintainer", fetchArtifact });
   assert.equal(fetched, 2, "a dispatch screens again");
+
+  const rebuilt = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd(), refused(SHA)] }, hasBuild: [{ id: 2 }, { id: 1 }] });
+  await go(rebuilt, { fetchArtifact });
+  assert.equal(fetched, 4, "a new build of the same head is screened, older ones after it");
+});
+
+test("another PR's build of a shared head commit is not a refusal of this one", async () => {
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] } });
+  let cleaned = 0;
+  await go(f, {
+    fetchArtifact: async () => ({ dir: "/nonexistent", meta: { pr: 6, headSha: SHA }, cleanup: async () => (cleaned += 1) }),
+  });
+  const status = f.posted.filter((p) => p.marker === "asf-preview-status").at(-1);
+  assert.match(status.body, /waiting on a build/, "this PR's own build may still come");
+  assert.equal(cleaned, 1);
+});
+
+test("an unchanged status comment is not rewritten", async () => {
+  const waiting =
+    "### Preview waiting on a build\n\n**Preview:** https://magpie-pr5.staged.apache.org/\n\n" +
+    `No successful build for \`${SHA.slice(0, 7)}\` yet. The preview publishes as soon as the build goes green.`;
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd(), bot(`${waiting}\n\n<!-- asf-preview-status -->`)] }, hasBuild: false });
+  await go(f);
+  assert.equal(f.posted.filter((p) => p.marker === "asf-preview-status").length, 0);
 });
 
 test("removes a refused artifact", async () => {
@@ -517,14 +550,14 @@ test("does not publish an unarmed PR", async () => {
   );
 });
 
-test("refuses an artifact whose metadata claims another PR", async () => {
+test("never publishes an artifact whose metadata claims another PR", async () => {
   const dir = await artifactDir();
   const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] } });
 
   await go(f, { fetchArtifact: async () => ({ dir, meta: { pr: 6, headSha: SHA } }) });
 
   assert.equal(f.pushed.length, 0);
-  assert.match(f.posted.at(-1).body, /could not be published/i);
+  assert.match(f.posted.at(-1).body, /waiting on a build/i, "it is another PR's build, not this one's");
 });
 
 test("refuses to publish when the unsafe-entry screen cannot run", async () => {
@@ -670,8 +703,8 @@ test("a PR the publisher labelled survives a later run", async () => {
   const dir = await artifactDir();
   const f = fakes({
     openPulls: [pull(42, SHA, ["preview"])],
-    comments: { 42: [bot("### Preview armed by manual dispatch\n\n<!-- asf-preview-armed -->")] },
-    labelEvents: { 42: [labeledBy("github-actions[bot]")] },
+    comments: { 42: [bot(`### Preview armed by manual dispatch\n\n${record(4242)}`)] },
+    labelEvents: { 42: [labeledBy("github-actions[bot]", 4242)] },
     branches: ["preview/pr42-staging"],
   });
 
@@ -695,20 +728,16 @@ test("a label another workflow added with the shared token arms nothing", async 
 });
 
 test("a label re-added by the shared token after a disarm does not revive an old arming", async () => {
-  // A maintainer armed with /show-preview (label T0, acknowledged T1), removed
-  // the label to disarm, and an auto-labeller then put it back.
+  // A maintainer armed with /show-preview (the publisher's label event 1,
+  // recorded), removed the label to disarm, and an auto-labeller then put it
+  // back as the same login: event 3, which no record names.
   const cmd = armCmd();
   const f = fakes({
     openPulls: [pull(42, SHA, ["preview"])],
-    comments: { 42: [cmd] },
+    comments: { 42: [cmd, bot(`how to\n\n${record(1)}\n\n<!-- asf-preview-howto -->`)] },
     acknowledged: [cmd.id],
-    ackTimes: { [cmd.id]: T1 },
     labelEvents: {
-      42: [
-        labeledBy("github-actions[bot]", T0),
-        unlabeledBy("maintainer", "2026-01-02T00:00:00Z"),
-        labeledBy("github-actions[bot]", "2026-01-03T00:00:00Z"),
-      ],
+      42: [labeledBy("github-actions[bot]", 1), unlabeledBy("maintainer", 2), labeledBy("github-actions[bot]", 3)],
     },
     branches: ["preview/pr42-staging"],
   });
@@ -719,11 +748,52 @@ test("a label re-added by the shared token after a disarm does not revive an old
   assert.ok(f.pushed.some((p) => /tombstone/.test(p.message)), "the preview stays retired");
 });
 
+test("a /show-preview records the new label event in the explainer, by editing it", async () => {
+  const events = { 5: [] };
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, labelEvents: events });
+  await go(f);
+  const added = events[5].at(-1);
+  const howto = f.posted.filter((p) => p.marker === "asf-preview-howto");
+  assert.equal(howto.length, 1, "one explainer write, carrying the record");
+  assert.ok(howto[0].body.endsWith(record(added.id)), howto[0].body);
+  assert.equal(f.created.filter((c) => /asf-preview-armed/.test(c.body)).length, 0, "no extra comment");
+});
+
+test("a /show-preview on a bot's PR records the label event in a short comment", async () => {
+  const f = fakes({ openPulls: [botPull(5)], comments: { 5: [armCmd()] } });
+  await go(f);
+  assert.equal(f.posted.filter((p) => p.marker === "asf-preview-howto").length, 0);
+  const armed = f.created.find((c) => /asf-preview-armed/.test(c.body));
+  assert.ok(armed, "the record has to live somewhere");
+  assert.doesNotMatch(armed.body, /@/);
+});
+
+test("the record names the event the publisher just added, waiting out a lagging events API", async () => {
+  const cmd = armCmd();
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [cmd] }, eventsLag: 2 });
+  await go(f);
+  const howto = f.posted.find((p) => p.marker === "asf-preview-howto");
+  assert.ok(howto, "the record is written once the event shows up");
+  assert.deepEqual(f.reacted, [cmd.id]);
+
+  const stuck = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, eventsLag: 99 });
+  const error = console.error;
+  console.error = () => {};
+  try {
+    await go(stuck);
+  } finally {
+    console.error = error;
+  }
+  assert.deepEqual(stuck.reacted, [], "never acknowledged without a record, so the next run retries");
+  assert.equal(process.exitCode, 1);
+  process.exitCode = 0;
+});
+
 test("a dispatch leaves the record that keeps its label armed", async () => {
   const dir = await artifactDir();
   const f = fakes({ openPulls: [pull(5)] });
   await go(f, { only: 5, dispatchedBy: "maintainer", fetchArtifact: async () => ({ dir, meta: { pr: 5, headSha: SHA } }) });
-  assert.match(f.created[0].body, /<!-- asf-preview-armed -->$/);
+  assert.match(f.created[0].body, /<!-- asf-preview-armed event=\d+ -->$/);
 });
 
 test("one PR's failure does not abort the reap", async () => {

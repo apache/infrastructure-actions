@@ -62,7 +62,7 @@ else
 fi
 if [ -n "$gemfile" ]; then
   uses_pages=""
-  if [ -f "$gemfile" ] && grep -Eq "^[[:space:]]*gem[[:space:]]+['\"]github-pages['\"]" "$gemfile"; then
+  if [ -f "$gemfile" ] && grep -Eq "^[[:space:]]*gem([[:space:]]+|[[:space:]]*\\([[:space:]]*)['\"]github-pages['\"]" "$gemfile"; then
     uses_pages="$gemfile"
   elif [ -f "$gemfile.lock" ] && grep -Eq '^    github-pages \(' "$gemfile.lock"; then
     uses_pages="$gemfile.lock"
