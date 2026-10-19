@@ -25,6 +25,12 @@ const run = promisify(execFile);
 
 const MAX_ZIP_BYTES = 200 * 1024 * 1024;
 const MAX_UNCOMPRESSED_BYTES = 500 * 1024 * 1024;
+// A site with more files than this is refused rather than listed: the listings
+// below are read into memory, and the cap keeps them a bounded size.
+export const MAX_ENTRIES = 100_000;
+// Room for MAX_ENTRIES long-listing lines with generous paths. execFile's 1 MiB
+// default rejects an ordinary site of a few thousand files.
+const LISTING_MAX_BUFFER = 256 * 1024 * 1024;
 
 /**
  * Archive entry names that must never be extracted.
@@ -62,10 +68,29 @@ export function archiveHasSymlinkMembers(longListing) {
     .some((line) => /^l[rwxsStT-]{9}/.test(line.trim()));
 }
 
-/** Total uncompressed size from `unzip -Z` trailer output, or null. */
+/**
+ * Total uncompressed size from `unzip -Z` output, or null.
+ *
+ * Read from the trailer line only — the last one, "N files, X bytes
+ * uncompressed, ...". Entry names are pull-request-controlled, so a file named
+ * "0 bytes uncompressed" must not be taken for the total.
+ */
 export function uncompressedBytes(longListing) {
-  const m = /([0-9]+)\s+bytes uncompressed/.exec(String(longListing ?? ""));
+  const last = String(longListing ?? "").trimEnd().split("\n").at(-1) ?? "";
+  const m = /^\s*[0-9]+ files?, ([0-9]+) bytes uncompressed, /.exec(last);
   return m ? Number(m[1]) : null;
+}
+
+/** `unzip` with a bounded output buffer, and a clear refusal when it overflows. */
+async function listing(args) {
+  try {
+    return (await run("unzip", args, { maxBuffer: LISTING_MAX_BUFFER })).stdout;
+  } catch (err) {
+    if (err?.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
+      throw new Error(`archive listing exceeds ${LISTING_MAX_BUFFER} bytes; too many or too long entry names`);
+    }
+    throw err;
+  }
 }
 
 export function createArtifactFetcher({ gh, token, fetchImpl = fetch }) {
@@ -106,13 +131,17 @@ export function createArtifactFetcher({ gh, token, fetchImpl = fetch }) {
       const zip = join(dir, "artifact.zip");
       await writeFile(zip, body);
 
-      const { stdout: names } = await run("unzip", ["-Z1", zip]);
+      const names = await listing(["-Z1", zip]);
+      const entries = names.split("\n").filter(Boolean).length;
+      if (entries > MAX_ENTRIES) {
+        throw new Error(`archive has ${entries} entries, over the ${MAX_ENTRIES} cap`);
+      }
       const unsafe = unsafeArchiveEntries(names);
       if (unsafe.length) {
         throw new Error(`archive contains unsafe entry names: ${unsafe.slice(0, 5).join(", ")}`);
       }
 
-      const { stdout: longListing } = await run("unzip", ["-Z", zip]);
+      const longListing = await listing(["-Z", zip]);
       if (archiveHasSymlinkMembers(longListing)) {
         throw new Error("archive contains symlink members");
       }

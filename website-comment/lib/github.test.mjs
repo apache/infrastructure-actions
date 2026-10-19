@@ -124,7 +124,7 @@ test("branchHeadMessage returns empty string for a branch that does not exist", 
 });
 
 test("upsertComment edits the bot's own marked comment in place", async () => {
-  const mine = { id: 9, user: { type: "Bot" }, body: "old\n\n<!-- asf-preview-status -->" };
+  const mine = { id: 9, user: { type: "Bot", login: "github-actions[bot]" }, body: "old\n\n<!-- asf-preview-status -->" };
   const { impl, calls } = fakeFetch({
     "GET /repos/apache/magpie-site/issues/7/comments?per_page=100&page=1": [mine],
     "PATCH /repos/apache/magpie-site/issues/comments/9": { id: 9 },
@@ -138,6 +138,30 @@ test("upsertComment edits the bot's own marked comment in place", async () => {
   assert.match(JSON.parse(patch.body).body, /new status/);
 });
 
+test("upsertComment never edits another bot's marked comment", async () => {
+  const other = { id: 9, user: { type: "Bot", login: "other-app[bot]" }, body: "x\n\n<!-- asf-preview-status -->" };
+  const { impl, calls } = fakeFetch({
+    "GET /repos/apache/magpie-site/issues/7/comments?per_page=100&page=1": [other],
+    "POST /repos/apache/magpie-site/issues/7/comments": { id: 10 },
+  });
+  const gh = createClient({ repo: "apache/magpie-site", token: "t", fetchImpl: impl });
+  await gh.upsertComment(7, "asf-preview-status", "status");
+  assert.ok(calls.every((c) => c.method !== "PATCH"));
+});
+
+test("a publisher on a personal token reads and edits its own comments", async () => {
+  const mine = { id: 9, user: { type: "User", login: "site-bot" }, body: "old\n\n<!-- asf-preview-status -->" };
+  const { impl, calls } = fakeFetch({
+    "GET /repos/apache/magpie-site/issues/7/comments?per_page=100&page=1": [mine],
+    "PATCH /repos/apache/magpie-site/issues/comments/9": { id: 9 },
+  });
+  const gh = createClient({ repo: "apache/magpie-site", token: "t", fetchImpl: impl, publisher: "site-bot" });
+
+  assert.equal((await gh.listComments(7))[0].body, mine.body);
+  await gh.upsertComment(7, "asf-preview-status", "new status");
+  assert.ok(calls.some((c) => c.method === "PATCH"), "its own comment is edited, not duplicated");
+});
+
 test("deleteBranch accepts GitHub's empty 204 response", async () => {
   const impl = async () => ({
     ok: true,
@@ -149,6 +173,26 @@ test("deleteBranch accepts GitHub's empty 204 response", async () => {
   });
   const gh = createClient({ repo: "apache/magpie-site", token: "t", fetchImpl: impl });
   assert.equal(await gh.deleteBranch("fix-counts"), null);
+});
+
+test("deleteBranch encodes each segment, so # and ? cannot retarget the ref", async () => {
+  const { impl, calls } = fakeFetch({
+    "DELETE /repos/apache/magpie-site/git/refs/heads/fix%23123": null,
+    "DELETE /repos/apache/magpie-site/git/refs/heads/preview/a%3Fb": null,
+  });
+  const gh = createClient({ repo: "apache/magpie-site", token: "t", fetchImpl: impl });
+  await gh.deleteBranch("fix#123");
+  await gh.deleteBranch("preview/a?b");
+  assert.equal(calls.length, 2);
+});
+
+test("removeLabel deletes the named label from the issue", async () => {
+  const { impl, calls } = fakeFetch({
+    "DELETE /repos/apache/magpie-site/issues/5/labels/needs%20preview": [],
+  });
+  const gh = createClient({ repo: "apache/magpie-site", token: "t", fetchImpl: impl });
+  await gh.removeLabel(5, "needs preview");
+  assert.equal(calls.length, 1);
 });
 
 test("listPullsForHead asks for every state, qualified by the repository owner", async () => {
@@ -173,7 +217,7 @@ test("buildWorkflow refuses paths and non-workflow names", () => {
 
 test("latestSuccessfulBuild queries the configured workflow", async () => {
   const { impl, calls } = fakeFetch({
-    [`GET /repos/apache/x-site/actions/workflows/jekyll.yml/runs?head_sha=${"a".repeat(40)}&status=success&per_page=1`]:
+    [`GET /repos/apache/x-site/actions/workflows/jekyll.yml/runs?head_sha=${"a".repeat(40)}&event=pull_request&status=success&per_page=1`]:
       { workflow_runs: [{ id: 7, display_title: "a PR title", head_branch: "b" }] },
   });
   const gh = createClient({ repo: "apache/x-site", token: "t", fetchImpl: impl, workflow: "jekyll.yml" });

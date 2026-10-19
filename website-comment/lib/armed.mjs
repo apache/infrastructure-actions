@@ -21,6 +21,20 @@ import { isShowPreviewComment } from "./comments.mjs";
 export const PUBLISHER_LOGIN = "github-actions[bot]";
 
 /**
+ * The login the publisher's token acts as. It defaults to the workflow token's
+ * bot; a site that passes another token (a GitHub App's, or a personal one)
+ * sets PREVIEW_PUBLISHER_LOGIN to match, or its own acknowledgements, labels
+ * and status comments would not be recognised as its own.
+ */
+export function publisherLogin(env = process.env) {
+  const login = env.PREVIEW_PUBLISHER_LOGIN || PUBLISHER_LOGIN;
+  if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:\[bot\])?$/.test(login)) {
+    throw new TypeError(`PREVIEW_PUBLISHER_LOGIN must be a GitHub login, got ${JSON.stringify(login)}`);
+  }
+  return login;
+}
+
+/**
  * The label that arms a pull request's preview. Another site sets
  * PREVIEW_LABEL; it is interpolated into an API path, so it is held to a plain
  * label-name alphabet.
@@ -44,12 +58,18 @@ export const hasLabel = (pull, label) =>
  * triage role can add labels without being committers, and arming has always
  * required write access. The publisher itself adds the label only on a
  * maintainer's behalf (a /show-preview comment or a manual dispatch), so its
- * own login is trusted — that exact login, never any bot.
+ * own login (`publisher`) is trusted — that exact login, never any bot.
  *
  * A label with no matching `labeled` event is treated as unarmed: who added it
  * is unknown, and unknown must not be more permissive than a refusal.
  */
-export async function resolveArmed({ pull, label, labelEvents, hasWriteAccess }) {
+export async function resolveArmed({
+  pull,
+  label,
+  labelEvents,
+  hasWriteAccess,
+  publisher = PUBLISHER_LOGIN,
+}) {
   if (!hasLabel(pull, label)) return { armed: false, by: null };
 
   const last = labelEvents
@@ -58,7 +78,7 @@ export async function resolveArmed({ pull, label, labelEvents, hasWriteAccess })
   const by = last?.actor?.login;
   if (!by) return { armed: false, by: null };
 
-  if (by === PUBLISHER_LOGIN) return { armed: true, by };
+  if (by === publisher) return { armed: true, by };
   return (await hasWriteAccess(by)) ? { armed: true, by } : { armed: false, by: null };
 }
 

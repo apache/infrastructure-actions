@@ -42,6 +42,28 @@ def _prefixes(actions):
     return sorted(a.tag_prefix for a in actions)
 
 
+def _push_path_globs():
+    """The `paths:` filter of the release workflow's push trigger."""
+    workflow = Path(__file__).parents[1] / ".github/workflows/release-actions.yml"
+    lines = workflow.read_text().splitlines()
+    start = lines.index("    paths:") + 1
+    globs = []
+    for line in lines[start:]:
+        if not line.startswith("      - "):
+            break
+        globs.append(line.split("- ", 1)[1].strip().strip('"'))
+    return globs
+
+
+def test_release_workflow_triggers_on_every_watched_path():
+    # A watched path outside the push filter never triggers the workflow, so
+    # the action it belongs to would never be released automatically.
+    roots = {g.removesuffix("/**") + "/" for g in _push_path_globs()}
+    for action in ra.ACTIONS:
+        for path in action.watch_paths:
+            assert any(path.startswith(root) for root in roots), (action.tag_prefix, path)
+
+
 def test_affected_single_action():
     changed = ["allowlist-check/check_asf_allowlist.py"]
     assert _prefixes(ra.affected_actions(changed)) == ["allowlist-check"]

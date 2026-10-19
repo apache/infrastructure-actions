@@ -17,7 +17,16 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveArmed, pendingArmingCommands, previewLabel, hasLabel } from "./armed.mjs";
+import { resolveArmed, pendingArmingCommands, previewLabel, hasLabel, publisherLogin } from "./armed.mjs";
+
+test("publisherLogin defaults to the workflow token's bot and holds to a login", () => {
+  assert.equal(publisherLogin({}), "github-actions[bot]");
+  assert.equal(publisherLogin({ PREVIEW_PUBLISHER_LOGIN: "site-app[bot]" }), "site-app[bot]");
+  assert.equal(publisherLogin({ PREVIEW_PUBLISHER_LOGIN: "site-bot" }), "site-bot");
+  for (const bad of ["a/b", "x y", "-lead", "a[bot", "../x"]) {
+    assert.throws(() => publisherLogin({ PREVIEW_PUBLISHER_LOGIN: bad }), /GitHub login/);
+  }
+});
 
 const comment = (body, login, id = 1) => ({ id, body, user: { login } });
 const writers = (...logins) => async (login) => logins.includes(login);

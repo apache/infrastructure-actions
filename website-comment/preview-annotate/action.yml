@@ -33,11 +33,11 @@ inputs:
     required: false
     default: ""
 outputs:
-  babel-plugin:
+  vite-plugin:
     description: >-
-      astro only: path of the Babel plugin, for the preview build step to pass
-      to astro.config as PREVIEW_BABEL_PLUGIN
-    value: ${{ steps.annotate.outputs.babel-plugin }}
+      astro only: path of the Vite plugin, for the preview build step to pass
+      to astro.config as PREVIEW_VITE_PLUGIN
+    value: ${{ steps.annotate.outputs.vite-plugin }}
 runs:
   using: "composite"
   steps:
@@ -72,7 +72,7 @@ runs:
           astro)
             # An output rather than GITHUB_ENV: the build step opts in
             # explicitly, and nothing leaks into later steps. See README.md.
-            echo "babel-plugin=$ADAPTERS/astro/babel-plugin-preview-src.mjs" >> "$GITHUB_OUTPUT"
+            echo "vite-plugin=$ADAPTERS/astro/vite-plugin-preview-src.mjs" >> "$GITHUB_OUTPUT"
             ;;
           none)
             echo "No source annotation: the overlay links to the pull request's Conversation tab"

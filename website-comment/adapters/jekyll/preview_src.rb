@@ -20,7 +20,7 @@
 # Stamps rendered elements with the source file and line they came from, as
 # data-preview-src="<repo-relative path>:<line>", so a preview's review overlay
 # can resolve a marked region back to a diff line. The Jekyll counterpart of
-# adapters/astro/babel-plugin-preview-src.mjs.
+# adapters/astro/vite-plugin-preview-src.mjs.
 #
 # Preview builds only: prepare.sh copies this file into the site's _plugins/
 # for the preview build, and nothing else loads it. A production build must
@@ -64,7 +64,7 @@ module PreviewSrc
   ].freeze
 
   LIQUID = /\{\{.*?\}\}|\{%.*?%\}/m
-  OPEN_TAG = /<([a-zA-Z][a-zA-Z0-9-]*)(?=[\s>\/])/
+  OPEN_TAG = /\A<([a-zA-Z][a-zA-Z0-9-]*)(?=[\s>\/])/
 
   module_function
 
@@ -101,8 +101,13 @@ module PreviewSrc
 
   # Stamp every opening tag of a raw template with its file line. Liquid spans
   # and opaque regions are copied through untouched.
+  #
+  # `markup` tracks whether the scan is inside a tag, and inside which quote,
+  # across Liquid spans and lines: tag-shaped text in a quoted attribute value,
+  # such as title="<b>help</b>", is not a tag and must not be stamped.
   def stamp_template(content, rel, first_line)
     closer = nil
+    markup = { in_tag: false, quote: nil }
     content.each_line.with_index.map do |line, i|
       where = "#{rel}:#{first_line + i}"
       out = +""
@@ -124,7 +129,7 @@ module PreviewSrc
                               .reject { |m, _| m.nil? }
                               .min_by { |m, _| m.begin(0) }
         stop = opener ? opener.begin(0) : rest.length
-        out << stamp_segment(rest[0...stop], where)
+        out << stamp_segment(rest[0...stop], where, markup)
         break unless opener
 
         out << rest[stop...opener.end(0)]
@@ -136,16 +141,40 @@ module PreviewSrc
   end
 
   # Stamp the tags in a run of template text that lies outside Liquid spans.
-  def stamp_segment(text, where)
+  def stamp_segment(text, where, markup = { in_tag: false, quote: nil })
     pieces = text.split(/(#{LIQUID})/)
     pieces.each_with_index.map do |piece, i|
-      next piece if i.odd?
-
-      piece.gsub(OPEN_TAG) do |tag|
-        name = Regexp.last_match(1)
-        SKIP_TAGS.include?(name.downcase) ? tag : %(#{tag} #{ATTR}="#{where}")
-      end
+      i.odd? ? piece : stamp_markup(piece, where, markup)
     end.join
+  end
+
+  # Stamp the opening tags in `text`, outside Liquid. Only `<name` met between
+  # tags opens one; inside a tag, a quote runs to its match and `>` ends it.
+  def stamp_markup(text, where, markup)
+    out = +""
+    i = 0
+    while i < text.length
+      ch = text[i]
+      if markup[:quote]
+        markup[:quote] = nil if ch == markup[:quote]
+      elsif markup[:in_tag]
+        if ch == '"' || ch == "'"
+          markup[:quote] = ch
+        elsif ch == ">"
+          markup[:in_tag] = false
+        end
+      elsif ch == "<" && (tag = OPEN_TAG.match(text[i..]))
+        name = tag[1]
+        out << tag[0]
+        out << %( #{ATTR}="#{where}") unless SKIP_TAGS.include?(name.downcase)
+        markup[:in_tag] = true
+        i += tag[0].length
+        next
+      end
+      out << ch
+      i += 1
+    end
+    out
   end
 
   # Set while Jekyll converts one document's own content, and read by the

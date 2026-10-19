@@ -102,8 +102,7 @@ export async function prepareTree({ dir, files, contentDir = null }) {
   await rm(join(dir, "preview-meta.json"), { force: true });
 }
 
-export function createGit({ repo, token }) {
-  const remote = `https://x-access-token:${token}@github.com/${repo}.git`;
+export function createGit({ repo, token, remote = `https://x-access-token:${token}@github.com/${repo}.git` }) {
 
   // Hooks and ignore files come from the artifact's tree, so every git
   // invocation neutralises both.
@@ -136,6 +135,23 @@ export function createGit({ repo, token }) {
         await git(["-C", dir, ...SAFE, "push", "-f", remote, branch]);
       } finally {
         // Always, including on failure: this tree holds the whole built site.
+        await rm(dir, { recursive: true, force: true });
+      }
+    },
+
+    /**
+     * Delete `branch` only while its tip is still `sha`. The lease makes the
+     * check and the delete one step on the server: a push since the tip was
+     * read rejects the delete instead of losing the new work.
+     */
+    async deleteBranchAt(branch, sha) {
+      if (!/^[0-9a-f]{40}$/.test(String(sha))) throw new TypeError(`bad tip SHA for ${branch}`);
+      const ref = `refs/heads/${branch}`;
+      const dir = await mkdtemp(join(tmpdir(), "preview-delete-"));
+      try {
+        await git([...SAFE, "init", "-q", dir]);
+        await git(["-C", dir, ...SAFE, "push", "--quiet", `--force-with-lease=${ref}:${sha}`, remote, `:${ref}`]);
+      } finally {
         await rm(dir, { recursive: true, force: true });
       }
     },

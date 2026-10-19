@@ -34,10 +34,11 @@ on:
       - "allowlist-check/**"
       - "pelican/**"
       - "stash/**"
+      - "website-comment/**"
   workflow_dispatch:
     inputs:
       action:
-        description: "Tag prefix to release (allowlist-check, pelican, save, restore). Leave empty to auto-detect from the latest commit."
+        description: "Tag prefix to release (allowlist-check, pelican, save, restore, preview-annotate, preview-artifact, preview-main-overlay, preview-publish). Leave empty to auto-detect from the latest commit."
         required: false
         default: ""
       bump:

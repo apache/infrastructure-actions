@@ -217,17 +217,24 @@ Details, limits and the plugin's tests: [`adapters/jekyll/`](adapters/jekyll/REA
 
 ### Astro
 
-Astro builds through Vite, so annotation is a Babel plugin wired into the
-React integration. Make `astro.config.mjs` pick it up when the action says so:
+Astro builds through Vite, so annotation is a Vite plugin that runs before
+the JSX transform. It parses with the site's own Vite (8 or later), which
+`astro.config.mjs` hands it, so it needs no Babel and no extra dependency.
+Make the config pick it up when the action says so:
 
 ```js
-integrations: [
-  react(
-    process.env.PREVIEW_ANNOTATE === "1"
-      ? { babel: { plugins: [[process.env.PREVIEW_BABEL_PLUGIN, { root: process.cwd() }]] } }
-      : {},
-  ),
-],
+import * as vite from "vite";
+
+const previewSrc =
+  process.env.PREVIEW_ANNOTATE === "1"
+    ? (await import(process.env.PREVIEW_VITE_PLUGIN)).default
+    : null;
+
+export default defineConfig({
+  vite: {
+    plugins: [previewSrc && previewSrc({ vite, root: process.cwd() })],
+  },
+});
 ```
 
 Then in the build workflow, pass the plugin to the preview build step:
@@ -243,7 +250,7 @@ Then in the build workflow, pass the plugin to the preview build step:
       - if: github.event_name == 'pull_request'
         env:
           PREVIEW_ANNOTATE: "1"
-          PREVIEW_BABEL_PLUGIN: ${{ steps.annotate.outputs.babel-plugin }}
+          PREVIEW_VITE_PLUGIN: ${{ steps.annotate.outputs.vite-plugin }}
         run: npm run build
       - if: github.event_name == 'pull_request'
         uses: apache/infrastructure-actions/website-comment/preview-artifact@<sha>  # preview-artifact/v1.0.0
@@ -342,7 +349,7 @@ publisher; nothing accumulates per commit.
 | The staged site `<site>-pr<N>.staged.apache.org` | While the branch is live | **Never unstaged.** ASF staging keeps serving the last content after its branch is deleted. So retirement is two steps: first a **tombstone** — a one-page "this preview has been retired" notice with `robots.txt: Disallow: /` — is force-pushed over the preview, and only on the **next** run is the branch deleted. The hostname keeps serving the tombstone, never the pull request's code. |
 | Status and how-to comments | The life of the pull request | Never deleted; edited in place, so each PR has at most one of each. |
 | *Preview updated* and dispatch comments | The life of the pull request | Never deleted. One per publish, and one per arming by dispatch. |
-| Your repository's head branches of closed PRs | Until the PR closes | Only with `reap-head-branches: "true"`: deleted once every PR from the branch is closed, and only if nobody pushed to it after. Protected, `main`, `publish`, `preview/*` and `asf-*` branches are never touched. |
+| Your repository's head branches of closed PRs | Until the PR closes | Only with `reap-head-branches: "true"`: deleted once every PR from the branch is closed, and only if nobody pushed to it after — checked atomically by the delete itself. Protected, `main`, `publish`, `preview/*` and `asf-*` branches are never touched. |
 
 Cost and noise:
 
@@ -370,15 +377,17 @@ Cost and noise:
 - **The publisher never reads pull-request content.** Every GitHub response
   passes through a projection in [`lib/github.mjs`](lib/github.mjs) first, so
   it learns only the PR number, label names, head SHA, author login and type,
-  and a comment's body only when that is exactly `/show-preview` or
-  bot-authored — never code, diff, title, description, branch name or commit
+  and a comment's body only when that is exactly `/show-preview`,
+  bot-authored or the publisher's own — never code, diff, title, description, branch name or commit
   messages. The diff-line anchors are computed by the unprivileged build and
   sanitised by the publisher. [`lib/boundary.test.mjs`](lib/boundary.test.mjs)
   enforces this with a full run against responses baited in every forbidden
   field, plus a fixed endpoint allowlist.
 - **The artifact is untrusted input.** Before publishing, the publisher checks
   `preview-meta.json` against the pull request's real number and head commit,
-  refuses archive entries with absolute or `..` paths and symlinks, and strips
+  refuses archive entries with absolute or `..` paths and symlinks, and
+  archives over 200 MiB, expanding past 500 MiB or holding over 100,000 files,
+  and strips
   `.git`, `.gitignore` and `.gitmodules` from the tree.
 - **The publisher writes `.asf.yaml` itself**, after copying the artifact, so
   a pull request can never ship a `publish:` block or another staging profile.
@@ -387,9 +396,9 @@ Cost and noise:
   being a committer); a label with no visible `labeled` event counts as
   unarmed. A `/show-preview` counts only from a commenter with write access,
   and only when the comment is exactly the command.
-- **Bot comments are edited only when authored by a bot and ending in the
-  exact marker**, so nobody can plant a marker in a human comment to have it
-  overwritten.
+- **Status comments are edited only when authored by the publisher's own
+  login and ending in the exact marker**, so nobody can plant a marker in
+  someone else's comment to have it overwritten.
 - **Tokens are redacted** from every git error before it can reach a log.
 
 ## Reference
@@ -404,7 +413,7 @@ Cost and noise:
 
 | Output | Description |
 |---|---|
-| `babel-plugin` | `astro` only: the Babel plugin's path, to pass to the preview build as `PREVIEW_BABEL_PLUGIN` |
+| `vite-plugin` | `astro` only: the Vite plugin's path, to pass to the preview build as `PREVIEW_VITE_PLUGIN` |
 
 ### `preview-artifact`
 
@@ -424,6 +433,7 @@ Cost and noise:
 | `pr` | no | | `workflow_dispatch` only: arm and publish this PR now |
 | `reap-head-branches` | no | `false` | Also delete head branches of closed PRs |
 | `token` | no | `github.token` | Needs `contents`, `pull-requests`, `issues` write and `actions` read |
+| `publisher-login` | no | `github-actions[bot]` | The login `token` acts as: `<app-slug>[bot]` for a GitHub App token, the user's login for a personal token |
 
 ### `preview-main-overlay`
 

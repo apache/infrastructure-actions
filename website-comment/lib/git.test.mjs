@@ -20,7 +20,9 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, readFile, readdir, access } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { prepareTree, redactToken, redactError } from "./git.mjs";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { prepareTree, redactToken, redactError, createGit } from "./git.mjs";
 
 const missing = async (p) => {
   try {
@@ -131,4 +133,39 @@ test("prepareTree writes generated files into nested directories", async () => {
   await prepareTree({ dir, files: { "_preview/review.js": "// hi\n" } });
 
   assert.equal(await readFile(join(dir, "_preview", "review.js"), "utf8"), "// hi\n");
+});
+
+/** A bare remote holding `fix#1` at one commit, and a way to move it on. */
+async function remoteWithBranch() {
+  const sh = (args, cwd) => promisify(execFile)("git", args, { cwd });
+  const root = await mkdtemp(join(tmpdir(), "git-lease-"));
+  const remote = join(root, "remote.git");
+  const work = join(root, "work");
+  await sh(["init", "-q", "--bare", remote]);
+  await sh(["init", "-q", work]);
+  const commit = async (msg) => {
+    await sh(["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", msg], work);
+    await sh(["push", "-q", "-f", remote, "HEAD:refs/heads/fix#1"], work);
+    return (await sh(["rev-parse", "HEAD"], work)).stdout.trim();
+  };
+  const exists = async () =>
+    (await sh(["for-each-ref", "refs/heads/fix#1"], remote)).stdout.trim() !== "";
+  return { remote, commit, exists };
+}
+
+test("deleteBranchAt deletes a branch whose tip is unchanged", async () => {
+  const r = await remoteWithBranch();
+  const tip = await r.commit("one");
+  await createGit({ repo: "x/y", token: "t", remote: r.remote }).deleteBranchAt("fix#1", tip);
+  assert.equal(await r.exists(), false);
+});
+
+test("deleteBranchAt keeps a branch that moved since its tip was read", async () => {
+  const r = await remoteWithBranch();
+  const stale = await r.commit("one");
+  await r.commit("new work");
+  await assert.rejects(
+    createGit({ repo: "x/y", token: "t", remote: r.remote }).deleteBranchAt("fix#1", stale),
+  );
+  assert.equal(await r.exists(), true, "the pushed work must survive");
 });

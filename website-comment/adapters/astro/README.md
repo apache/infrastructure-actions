@@ -18,17 +18,26 @@
 -->
 # Astro adapter
 
-A Babel plugin, wired through `@astrojs/react`, that stamps every JSX host
-element (lowercase tag) with `data-preview-src="<repo-relative path>:<line>"`
-in a preview build.
+A Vite plugin that stamps every JSX host element (lowercase tag) with
+`data-preview-src="<repo-relative path>:<line>"` in a preview build. It parses
+each `.tsx`/`.jsx` file with the site's own Vite parser (`parseSync`, oxc)
+before the JSX transform and inserts the attribute into the opening tag, so
+line mappings still hold.
 
 Enable it with [`preview-annotate`](../../preview-annotate/action.yml) and
-`generator: astro`, whose `babel-plugin` output is this plugin's path. Pass
-it to the preview build as `PREVIEW_BABEL_PLUGIN`, with `PREVIEW_ANNOTATE=1`,
-for `astro.config.mjs` to read — see the [Astro path](../../README.md#astro).
+`generator: astro`, whose `vite-plugin` output is this plugin's path. Pass
+it to the preview build as `PREVIEW_VITE_PLUGIN`, with `PREVIEW_ANNOTATE=1`,
+for `astro.config.mjs` to load — see the [Astro path](../../README.md#astro).
+The config passes the site's `vite` module in: this file is loaded from the
+action's checkout, which has no `node_modules` of its own. It needs Vite 8 or
+later, and neither Babel nor `@astrojs/react` options — since `@astrojs/react`
+7 the React integration no longer runs Babel.
 
-Coverage: `.tsx` and `.jsx` only. `.astro` templates and Markdown content are
-compiled by Astro, not Babel, so a region there falls back to the pull
-request's Conversation tab.
+Left alone: component elements (`<Thing />`), whose host elements are stamped
+in their own file; member-expression tags (`<motion.div>`); an element that
+already carries `data-preview-src`; files under `node_modules`; and a file
+that fails to parse, which passes through unchanged. `.astro` templates and
+Markdown content are compiled by Astro, so a region there falls back to the
+pull request's Conversation tab.
 
 Tests: `npm test` in `website-comment/`.

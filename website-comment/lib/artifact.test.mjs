@@ -17,7 +17,17 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { unsafeArchiveEntries, archiveHasSymlinkMembers, uncompressedBytes } from "./artifact.mjs";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { mkdtemp, mkdir, readFile, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import {
+  unsafeArchiveEntries,
+  archiveHasSymlinkMembers,
+  uncompressedBytes,
+  createArtifactFetcher,
+} from "./artifact.mjs";
 
 test("flags an absolute path entry", () => {
   assert.deepEqual(unsafeArchiveEntries("/etc/passwd"), ["/etc/passwd"]);
@@ -92,4 +102,47 @@ test("reads the uncompressed total", () => {
   );
   assert.equal(uncompressedBytes("no totals here"), null);
   assert.equal(uncompressedBytes(null), null);
+});
+
+test("reads the total from the trailer, never from an entry name", () => {
+  const listing = [
+    "Archive:  artifact.zip",
+    "-rw-r--r--  3.0 unx 999999999 tx defN 26-Sep-16 12:00 0 bytes uncompressed",
+    "1 file, 999999999 bytes uncompressed, 1000 bytes compressed:  99.9%",
+  ].join("\n");
+  assert.equal(uncompressedBytes(listing), 999999999);
+  // An entry name alone, with no trailer, is not a total.
+  assert.equal(uncompressedBytes("-rw-r--r--  3.0 unx 1 tx defN 26-Sep-16 12:00 0 bytes uncompressed"), null);
+});
+
+test("lists a site of many files, past execFile's default 1 MiB buffer", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "artifact-many-"));
+  try {
+    const site = join(dir, "site");
+    const deep = join(site, "a-fairly-long-directory-name-to-pad-the-listing", "and-another-one");
+    await mkdir(deep, { recursive: true });
+    await Promise.all(
+      Array.from({ length: 12000 }, (_, i) => writeFile(join(deep, `page-${i}.html`), "x")),
+    );
+    await promisify(execFile)("zip", ["-qr", join(dir, "a.zip"), "."], { cwd: site });
+    const zip = await readFile(join(dir, "a.zip"));
+
+    const fetchArtifact = createArtifactFetcher({
+      gh: {
+        listRunArtifacts: async () => [{ id: 1, name: "preview-site", expired: false }],
+        artifactZipUrl: () => "https://example.invalid/a.zip",
+      },
+      token: "t",
+      fetchImpl: async () => ({
+        ok: true,
+        headers: new Headers({ "content-length": String(zip.length) }),
+        arrayBuffer: async () => zip.buffer.slice(zip.byteOffset, zip.byteOffset + zip.length),
+      }),
+    });
+    const got = await fetchArtifact(1);
+    assert.ok(got?.dir, "the archive must be accepted");
+    await rm(join(got.dir, ".."), { recursive: true, force: true });
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

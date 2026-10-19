@@ -97,6 +97,20 @@ class PreviewSrcUnitTest < Minitest::Test
     assert_includes out, %({% if x %}<em data-preview-src="f.html:1">{% endif %})
   end
 
+  def test_stamp_template_leaves_markup_in_attribute_values_alone
+    out = PreviewSrc.stamp_template(%(<div title="<b>help</b>" data-x='<i>'>\n<b>bold</b>), "f.html", 1)
+    assert_equal %(<div data-preview-src="f.html:1" title="<b>help</b>" data-x='<i>'>\n) +
+                 %(<b data-preview-src="f.html:2">bold</b>), out
+  end
+
+  def test_stamp_template_follows_a_tag_across_lines_and_liquid
+    src = %(<a\n  title="{{ t }} <i>"\n  href="/">\n<p>x</p>\n)
+    out = PreviewSrc.stamp_template(src, "f.html", 1)
+    assert_includes out, %(title="{{ t }} <i>")
+    assert_includes out, %(<p data-preview-src="f.html:4">)
+    assert_equal 2, out.scan("data-preview-src").length
+  end
+
   def test_front_matter_lines
     Dir.mktmpdir do |dir|
       path = File.join(dir, "p.md")

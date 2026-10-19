@@ -17,18 +17,11 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { transformSync } from "@babel/core";
-import plugin from "./babel-plugin-preview-src.mjs";
+import * as vite from "vite";
+import previewSrc, { stampSource } from "./vite-plugin-preview-src.mjs";
 
 const run = (code, filename = "/repo/src/components/Thing.tsx") =>
-  transformSync(code, {
-    filename,
-    root: "/repo",
-    plugins: [[plugin, { root: "/repo" }]],
-    parserOpts: { plugins: ["jsx", "typescript"] },
-    configFile: false,
-    babelrc: false,
-  }).code;
+  stampSource(code, filename, "/repo", vite);
 
 test("stamps a host element with its repo-relative path and line", () => {
   const out = run("const a = <div>hi</div>;");
@@ -51,4 +44,21 @@ test("records the line each element starts on", () => {
   const out = run("const a = (\n  <div>\n    <span>x</span>\n  </div>\n);");
   assert.match(out, /data-preview-src="src\/components\/Thing\.tsx:2"/);
   assert.match(out, /data-preview-src="src\/components\/Thing\.tsx:3"/);
+});
+
+test("parses TypeScript and inserts at the right place after non-ASCII text", () => {
+  const out = run("const s: string = 'é—✓';\nconst a = <p title={s}>naïve</p>;");
+  assert.ok(out.includes('<p data-preview-src="src/components/Thing.tsx:2" title={s}>'), out);
+});
+
+test("leaves unparsable source untouched", () => {
+  const code = "const a = <div>;";
+  assert.equal(run(code), code);
+});
+
+test("the plugin transforms through the site's Vite, and refuses to run without it", () => {
+  const plugin = previewSrc({ vite, root: "/repo" });
+  const out = plugin.transform.handler("const a = <div />;", "/repo/src/A.jsx?v=1");
+  assert.match(out.code, /data-preview-src="src\/A\.jsx:1"/);
+  assert.throws(() => previewSrc({ root: "/repo" }), /needs \{ vite \}/);
 });

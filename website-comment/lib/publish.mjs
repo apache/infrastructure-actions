@@ -20,6 +20,7 @@ import {
   pendingArmingCommands,
   previewLabel,
   hasLabel,
+  publisherLogin,
   PUBLISHER_LOGIN,
 } from "./armed.mjs";
 import { planActions } from "./plan.mjs";
@@ -44,17 +45,16 @@ const ACK_REACTION = "rocket";
 const TOMBSTONE_TAG = "[tombstone]";
 
 /**
- * A bot-authored comment ending in exactly this tag.
+ * A comment by the publisher's own login ending in exactly this tag.
  *
  * The same predicate github.mjs uses before editing a comment, and for the same
  * reason: a bare substring test lets anyone who can comment plant the marker.
  */
-function hasBotMarker(comments, marker, { login = null } = {}) {
+function hasOwnMarker(comments, marker, publisher) {
   const tag = `<!-- ${marker} -->`;
   return comments.some(
     (c) =>
-      c?.user?.type === "Bot" &&
-      (login === null || c?.user?.login === login) &&
+      c?.user?.login === publisher &&
       typeof c.body === "string" &&
       c.body.trimEnd().endsWith(tag),
   );
@@ -95,6 +95,7 @@ export async function run({
   dispatchedBy = null,
   reapHeads = false,
   label = previewLabel(),
+  publisher = PUBLISHER_LOGIN,
 }) {
   let failures = 0;
 
@@ -129,6 +130,15 @@ export async function run({
   // The label is the arming state. A maintainer's /show-preview comment and a
   // manual dispatch are two ways of putting it there; removing it disarms.
   const armedByPr = new Map();
+  const armedBy = async (pull) =>
+    (await resolveArmed({
+      pull,
+      label,
+      labelEvents: await gh.listLabelEvents(pull.number),
+      hasWriteAccess,
+      publisher,
+    })).armed;
+
   for (const pull of openPulls) {
     try {
       const comments = await gh.listComments(pull.number);
@@ -138,10 +148,17 @@ export async function run({
       const pending = await pendingArmingCommands({
         comments,
         hasWriteAccess,
-        isAcknowledged: (c) => gh.hasReaction(c.id, ACK_REACTION, PUBLISHER_LOGIN),
+        isAcknowledged: (c) => gh.hasReaction(c.id, ACK_REACTION, publisher),
       });
       // A dispatch is itself the authorisation.
       if (pending.length || only === pull.number) {
+        // A label someone without write access put on first does not arm, and
+        // the command is acknowledged below, so it would arm this run only.
+        // Re-adding the label as the publisher makes the arming stick.
+        if (labelled && !(await armedBy(pull))) {
+          await gh.removeLabel(pull.number, label);
+          labelled = false;
+        }
         if (!labelled) {
           await arm(pull.number);
           labelled = true;
@@ -155,12 +172,7 @@ export async function run({
         for (const c of pending) await gh.addReaction(c.id, ACK_REACTION);
       }
 
-      const armed = armedHere || (labelled && (await resolveArmed({
-        pull,
-        label,
-        labelEvents: await gh.listLabelEvents(pull.number),
-        hasWriteAccess,
-      })).armed);
+      const armed = armedHere || (labelled && (await armedBy(pull)));
       armedByPr.set(pull.number, armed);
 
       // Announce to humans only. A dependency-bump bot opens many pull
@@ -168,7 +180,7 @@ export async function run({
       // timeline and on commits@. Arming is deliberately not gated the same
       // way: a maintainer who wants a preview of a bot's PR can still ask for
       // one, and it will publish.
-      if (!isBotAuthored(pull) && !hasBotMarker(comments, HOWTO_MARKER)) {
+      if (!isBotAuthored(pull) && !hasOwnMarker(comments, HOWTO_MARKER, publisher)) {
         await gh.upsertComment(pull.number, HOWTO_MARKER, howtoBody(label));
       }
     } catch (err) {
@@ -261,7 +273,7 @@ export async function run({
 
   // Opt-in: deleting branches other than this system's own preview/* ones is
   // a repository policy decision, not something a preview tool should assume.
-  if (reapHeads) failures += await reapHeadBranches({ gh, repo });
+  if (reapHeads) failures += await reapHeadBranches({ gh, git, repo });
 
   if (failures > 0) {
     console.error(`preview: ${failures} operation(s) failed this run`);
@@ -274,7 +286,7 @@ export async function run({
  * staleHeadBranches holds the rules; this only gathers state and acts on it.
  * Returns the number of operations that failed.
  */
-async function reapHeadBranches({ gh, repo }) {
+async function reapHeadBranches({ gh, git, repo }) {
   let failures = 0;
 
   let branches;
@@ -297,9 +309,13 @@ async function reapHeadBranches({ gh, repo }) {
     }
   }
 
+  // The tips were read before the PR lookups above, and someone may push in
+  // between. The delete is conditional on the tip still being the one judged
+  // stale, so a branch with new work on it survives.
+  const tips = new Map(branches.map((b) => [b.name, b.commit?.sha]));
   for (const name of staleHeadBranches({ branches, pullsByBranch, repo })) {
     try {
-      await gh.deleteBranch(name);
+      await git.deleteBranchAt(name, tips.get(name));
       console.log(`preview: deleted ${name}, whose pull requests are all closed`);
     } catch (err) {
       console.error(`preview: delete failed for ${name}: ${err.message}`);
@@ -480,10 +496,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
 
 
-  const gh = createClient({ repo, token });
+  const publisher = publisherLogin();
+  const gh = createClient({ repo, token, publisher });
   await run({
     gh,
     git: createGit({ repo, token }),
+    publisher,
     repo,
     fetchArtifact: createArtifactFetcher({ gh, token }),
     only,

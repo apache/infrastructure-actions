@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import { PUBLISHER_LOGIN } from "./armed.mjs";
+
 const API = "https://api.github.com";
 
 /**
@@ -45,8 +47,9 @@ export function buildWorkflow(env = process.env) {
  *   head SHA (40-hex)         binds the build artifact to the PR's current head
  *   author login + type       skips the explainer on bot-authored PRs
  *   comment id/author/type    arming commands and the publisher's own markers;
- *   comment body              ONLY when it is exactly the /show-preview command
- *                             or authored by a bot — never human discussion
+ *   comment body              ONLY when it is exactly the /show-preview command,
+ *                             or authored by a bot or the publisher itself —
+ *                             never human discussion
  *   label-event actor         who armed it, to check write access
  *
  * The one thing taken from a pull request beyond this is the built site, which
@@ -81,13 +84,15 @@ export const projectHeadPull = (p) => ({
 });
 
 const COMMAND_RE = /^\s*\/show-preview\s*$/;
-export const projectComment = (c) => {
+export const projectComment = (c, publisher = PUBLISHER_LOGIN) => {
   const type = str(c?.user?.type);
+  const login = str(c?.user?.login);
   const body = str(c?.body);
+  const keep = type === "Bot" || login === publisher || COMMAND_RE.test(body ?? "");
   return {
     id: int(c?.id),
-    user: { login: str(c?.user?.login), type },
-    body: body !== null && (type === "Bot" || COMMAND_RE.test(body)) ? body : null,
+    user: { login, type },
+    body: body !== null && keep ? body : null,
   };
 };
 
@@ -103,7 +108,13 @@ export const projectBranch = (b) => ({
   commit: { sha: str(b?.commit?.sha) },
 });
 
-export function createClient({ repo, token, fetchImpl = fetch, workflow = buildWorkflow() }) {
+export function createClient({
+  repo,
+  token,
+  fetchImpl = fetch,
+  workflow = buildWorkflow(),
+  publisher = PUBLISHER_LOGIN,
+}) {
   async function request(path, { method = "GET", body } = {}) {
     const res = await fetchImpl(`${API}${path}`, {
       method,
@@ -146,7 +157,7 @@ export function createClient({ repo, token, fetchImpl = fetch, workflow = buildW
     listOpenPulls: async () =>
       (await paginate(`/repos/${repo}/pulls?state=open`)).map(projectPull),
     listComments: async (n) =>
-      (await paginate(`/repos/${repo}/issues/${n}/comments`)).map(projectComment),
+      (await paginate(`/repos/${repo}/issues/${n}/comments`)).map((c) => projectComment(c, publisher)),
 
     async hasWriteAccess(login) {
       try {
@@ -161,17 +172,19 @@ export function createClient({ repo, token, fetchImpl = fetch, workflow = buildW
     async upsertComment(n, marker, body) {
       // Two conditions, both required. The marker must be the exact trailing
       // HTML comment — a substring test lets anyone plant it — and the author
-      // must be a Bot, so a human comment can never be PATCHed out from under
-      // its author while still showing their name.
+      // must be the publisher's own login, so no one else's comment can ever
+      // be PATCHed out from under its author while still showing their name.
       const tag = `<!-- ${marker} -->`;
       const withMarker = `${body}\n\n${tag}`;
 
-      const existing = (await paginate(`/repos/${repo}/issues/${n}/comments`)).map(projectComment).find(
-        (c) =>
-          c?.user?.type === "Bot" &&
-          typeof c.body === "string" &&
-          c.body.trimEnd().endsWith(tag),
-      );
+      const existing = (await paginate(`/repos/${repo}/issues/${n}/comments`))
+        .map((c) => projectComment(c, publisher))
+        .find(
+          (c) =>
+            c?.user?.login === publisher &&
+            typeof c.body === "string" &&
+            c.body.trimEnd().endsWith(tag),
+        );
 
       if (existing) {
         return request(`/repos/${repo}/issues/comments/${existing.id}`, {
@@ -208,6 +221,9 @@ export function createClient({ repo, token, fetchImpl = fetch, workflow = buildW
     addLabel: (n, name) =>
       request(`/repos/${repo}/issues/${n}/labels`, { method: "POST", body: { labels: [name] } }),
 
+    removeLabel: (n, name) =>
+      request(`/repos/${repo}/issues/${n}/labels/${encodeURIComponent(name)}`, { method: "DELETE" }),
+
     /** The pull request's labeled / unlabeled events, oldest first. */
     async listLabelEvents(n) {
       const events = await paginate(`/repos/${repo}/issues/${n}/events`);
@@ -235,8 +251,12 @@ export function createClient({ repo, token, fetchImpl = fetch, workflow = buildW
       return refs.map((r) => r.ref.replace("refs/heads/", ""));
     },
 
+    // Each segment is encoded: a raw `#` or `?` in a branch name would cut the
+    // path short, and the DELETE would hit a different ref.
     deleteBranch: (name) =>
-      request(`/repos/${repo}/git/refs/heads/${name}`, { method: "DELETE" }),
+      request(`/repos/${repo}/git/refs/heads/${String(name).split("/").map(encodeURIComponent).join("/")}`, {
+        method: "DELETE",
+      }),
 
     /** Every branch, with its tip SHA and protection flag. */
     listBranches: async () => (await paginate(`/repos/${repo}/branches`)).map(projectBranch),
@@ -250,14 +270,16 @@ export function createClient({ repo, token, fetchImpl = fetch, workflow = buildW
       ).map(projectHeadPull),
 
     /**
-     * The newest successful build of this commit, as { id } only. A workflow
-     * run object also carries the PR's branch name, title and head commit
-     * message, none of which the publisher may see.
+     * The newest successful pull-request build of this commit, as { id } only.
+     * Only pull_request runs upload preview-site, so a later push or dispatch
+     * run of the same commit must not shadow them. A workflow run object also
+     * carries the PR's branch name, title and head commit message, none of
+     * which the publisher may see.
      */
     async latestSuccessfulBuild(headSha) {
       if (!SHA_RE.test(String(headSha))) throw new TypeError(`bad head SHA ${JSON.stringify(headSha)}`);
       const runs = await request(
-        `/repos/${repo}/actions/workflows/${workflow}/runs?head_sha=${headSha}&status=success&per_page=1`,
+        `/repos/${repo}/actions/workflows/${workflow}/runs?head_sha=${headSha}&event=pull_request&status=success&per_page=1`,
       );
       const id = int(runs.workflow_runs?.[0]?.id);
       return id === null ? null : { id };

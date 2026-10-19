@@ -49,6 +49,10 @@ export function addedLineRanges(patch) {
       // anchors comments to the wrong line.
       if (run) ranges.push(run);
       run = null;
+    } else if (text.startsWith("\\")) {
+      // "\ No newline at end of file" annotates the line before it; it is no
+      // line of either file, so it neither advances the cursor nor ends a run.
+      continue;
     } else {
       if (run) ranges.push(run);
       run = null;

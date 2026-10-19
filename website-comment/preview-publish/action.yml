@@ -49,6 +49,14 @@ inputs:
     description: "Token with contents, pull-requests and issues write, and actions read"
     required: false
     default: ${{ github.token }}
+  publisher-login:
+    description: >-
+      The login `token` acts as, which the publisher recognises as its own in
+      reactions, label events and status comments. Change it with the token:
+      "<app-slug>[bot]" for a GitHub App token, the user's login for a
+      personal token.
+    required: false
+    default: "github-actions[bot]"
 runs:
   using: "composite"
   steps:
@@ -85,7 +93,7 @@ runs:
 
     - name: Setup Node
       if: steps.gate.outputs.run == 'true'
-      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: "22"
 
@@ -94,6 +102,7 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
+        PREVIEW_PUBLISHER_LOGIN: ${{ inputs.publisher-login }}
         PREVIEW_SITE_NAME: ${{ inputs.site-name }}
         PREVIEW_BUILD_WORKFLOW: ${{ inputs.build-workflow }}
         PREVIEW_LABEL: ${{ inputs.label }}

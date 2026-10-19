@@ -92,3 +92,12 @@ test("sanitizeAnchors turns anything that is not a manifest into none", async ()
   const { sanitizeAnchors } = await import("./anchors.mjs");
   for (const raw of [null, undefined, "x", 3, [], [["a", {}]]]) assert.deepEqual(sanitizeAnchors(raw), {});
 });
+
+test("a missing final newline marker is not a line", () => {
+  // A one-line file without a trailing newline, replaced.
+  const patch = ["@@ -1 +1 @@", "-old", "\\ No newline at end of file", "+new", "\\ No newline at end of file"].join("\n");
+  assert.deepEqual(addedLineRanges(patch), [[1, 1]]);
+  // Added lines either side of the marker stay one run.
+  const appended = ["@@ -1 +1,2 @@", "-last", "\\ No newline at end of file", "+last", "+more"].join("\n");
+  assert.deepEqual(addedLineRanges(appended), [[1, 2]]);
+});

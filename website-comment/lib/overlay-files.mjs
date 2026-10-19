@@ -57,13 +57,23 @@ const OVERLAY_TAGS =
  * once published — would otherwise silently get no overlay. Injected at the
  * LAST </body>, because an earlier one can appear inside an inline script or a
  * serialised island prop, and injecting there corrupts the page.
+ *
+ * Tags are case-insensitive, and HTML lets a page omit </body> and </html>: such
+ * a page gets the tags before its last </html>, or at its end, where the parser
+ * still places them in the body. Text that is not an HTML document is left
+ * alone.
  */
 export function injectOverlay(html) {
   if (typeof html !== "string") return html;
   if (html.includes(OVERLAY_MARKER)) return html;
 
-  const at = html.lastIndexOf("</body>");
-  if (at === -1) return html;
+  const lower = html.toLowerCase();
+  let at = lower.lastIndexOf("</body>");
+  if (at === -1) at = lower.lastIndexOf("</html>");
+  if (at === -1) {
+    if (!/<(?:!doctype\s+html|html|body)[\s>]/i.test(html)) return html;
+    at = html.length;
+  }
   return html.slice(0, at) + OVERLAY_TAGS + html.slice(at);
 }
 

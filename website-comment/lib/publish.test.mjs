@@ -65,10 +65,13 @@ function fakes({
 } = {}) {
   const pushed = [];
   const deleted = [];
+  const deletedAt = [];
   const posted = [];
   const created = [];
   const labelled = [];
+  const unlabelled = [];
   const reacted = [];
+  const reactionLogins = [];
 
   const gh = {
     listOpenPulls: async () => openPulls,
@@ -87,8 +90,14 @@ function fakes({
     addLabel: async (n, name) => {
       labelled.push({ n, name });
     },
+    removeLabel: async (n, name) => {
+      unlabelled.push({ n, name });
+    },
     listLabelEvents: async (n) => labelEvents[n] ?? [],
-    hasReaction: async (id) => acknowledged.includes(id) || reacted.includes(id),
+    hasReaction: async (id, content, login) => {
+      reactionLogins.push(login);
+      return acknowledged.includes(id) || reacted.includes(id);
+    },
     addReaction: async (id) => {
       reacted.push(id);
     },
@@ -106,9 +115,13 @@ function fakes({
     pushTree: async (branch, files, message, contentDir) => {
       pushed.push({ branch, files, message, contentDir });
     },
+    deleteBranchAt: async (name, sha) => {
+      deleted.push(name);
+      deletedAt.push(sha);
+    },
   };
 
-  return { gh, git, pushed, deleted, posted, created, labelled, reacted };
+  return { gh, git, pushed, deleted, deletedAt, posted, created, labelled, unlabelled, reacted, reactionLogins };
 }
 
 const go = (f, extra = {}) =>
@@ -235,6 +248,56 @@ test("an acknowledged command does not re-add a removed label", async () => {
 
   assert.deepEqual(f.labelled, [], "removing the label must disarm for good");
   assert.ok(f.pushed.some((p) => /tombstone/.test(p.message)), "the preview must be retired");
+});
+
+test("a maintainer's command replaces a label a triager added, so arming sticks", async () => {
+  const dir = await artifactDir();
+  const cmd = armCmd();
+  const f = fakes({
+    openPulls: [pull(5, SHA, ["preview"])],
+    comments: { 5: [cmd] },
+    labelEvents: { 5: [labeledBy("triager")] },
+  });
+
+  await go(f, { fetchArtifact: async () => ({ dir, meta: { pr: 5, headSha: SHA } }) });
+
+  assert.deepEqual(f.unlabelled, [{ n: 5, name: "preview" }]);
+  assert.deepEqual(f.labelled, [{ n: 5, name: "preview" }], "re-added as the publisher");
+  assert.deepEqual(f.reacted, [cmd.id]);
+  assert.equal(f.pushed.length, 1);
+});
+
+test("a command leaves a maintainer's label in place", async () => {
+  const cmd = armCmd();
+  const f = fakes({
+    openPulls: [pull(5, SHA, ["preview"])],
+    comments: { 5: [cmd] },
+    labelEvents: { 5: [labeledBy("maintainer")] },
+  });
+  await go(f);
+  assert.deepEqual(f.unlabelled, []);
+  assert.deepEqual(f.labelled, []);
+});
+
+test("a publisher on another token recognises its own label and acknowledgements", async () => {
+  const dir = await artifactDir();
+  const cmd = armCmd();
+  const f = fakes({
+    openPulls: [pull(5, SHA, ["preview"])],
+    comments: { 5: [cmd, bot("how to <!-- asf-preview-howto -->", "site-app[bot]")] },
+    labelEvents: { 5: [labeledBy("site-app[bot]")] },
+    acknowledged: [cmd.id],
+  });
+
+  await go(f, {
+    publisher: "site-app[bot]",
+    fetchArtifact: async () => ({ dir, meta: { pr: 5, headSha: SHA } }),
+  });
+
+  assert.deepEqual(f.reactionLogins, ["site-app[bot]"]);
+  assert.deepEqual(f.labelled, [], "its acknowledged command is not replayed");
+  assert.equal(f.pushed.length, 1, "its own label arms the PR");
+  assert.ok(!f.posted.some((p) => p.marker === "asf-preview-howto"), "its own explainer is recognised");
 });
 
 test("a drive-by's command neither labels nor publishes", async () => {
@@ -528,6 +591,20 @@ test("injectOverlay leaves a document with no body alone", async () => {
   assert.equal(injectOverlay("no body here"), "no body here");
 });
 
+test("injectOverlay handles an uppercase or omitted </body>", async () => {
+  const { injectOverlay } = await import("./publish.mjs");
+
+  const upper = injectOverlay("<HTML><BODY><h1>x</h1></BODY></HTML>");
+  assert.ok(upper.indexOf("review.js") < upper.indexOf("</BODY>"), upper);
+
+  const noBodyEnd = injectOverlay("<!DOCTYPE html><html><body><h1>x</h1></html>");
+  assert.ok(noBodyEnd.indexOf("review.js") < noBodyEnd.indexOf("</html>"), noBodyEnd);
+
+  const neither = injectOverlay("<!doctype html>\n<title>x</title>\n<p>text");
+  assert.ok(neither.indexOf("review.js") > neither.indexOf("<p>text"), neither);
+  assert.equal(injectOverlay(neither), neither, "injecting twice changes nothing");
+});
+
 test("injectOverlay injects at the last </body> and only once", async () => {
   const { injectOverlay } = await import("./publish.mjs");
 
@@ -558,6 +635,7 @@ test("deletes this repository's head branch once its pull request has closed", a
   await go(f, { reapHeads: true });
 
   assert.deepEqual(f.deleted, ["fix-counts"]);
+  assert.deepEqual(f.deletedAt, [SHA], "deleted only while its tip is the one judged stale");
 });
 
 test("every status comment leads with the preview URL", async () => {
