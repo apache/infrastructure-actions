@@ -130,7 +130,7 @@ function baitedGitHub() {
     [/^GET \/repos\/R\/issues\/\d+\/events\?per_page=100&page=\d+$/, () => []],
     [/^GET \/repos\/R\/labels\/preview$/, () => ({ name: "preview" })],
     [/^GET \/repos\/R\/git\/matching-refs\/heads\/preview\/\?per_page=100&page=\d+$/, () => []],
-    [/^GET \/repos\/R\/actions\/workflows\/build\.yml\/runs\?head_sha=[0-9a-f]{40}&event=pull_request&status=success&per_page=1$/, () => ({
+    [/^GET \/repos\/R\/actions\/workflows\/build\.yml\/runs\?head_sha=[0-9a-f]{40}&event=pull_request&status=success&per_page=5$/, () => ({
       workflow_runs: [{
         id: 77,
         head_branch: `${BAIT}-branch`,

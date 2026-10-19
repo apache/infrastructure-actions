@@ -130,6 +130,7 @@ export async function run({
   // The label is the arming state. A maintainer's /show-preview comment and a
   // manual dispatch are two ways of putting it there; removing it disarms.
   const armedByPr = new Map();
+  const commentsByPr = new Map();
   const armedBy = async (pull) =>
     (await resolveArmed({
       pull,
@@ -142,6 +143,7 @@ export async function run({
   for (const pull of openPulls) {
     try {
       const comments = await gh.listComments(pull.number);
+      commentsByPr.set(pull.number, comments);
       let labelled = hasLabel(pull, label);
       let armedHere = false;
 
@@ -237,6 +239,8 @@ export async function run({
         pr,
         publishedSha: publishedByBranch.get(previewBranch(pr)) ?? null,
         force: only === pr,
+        comments: commentsByPr.get(pr) ?? [],
+        publisher,
       });
     } catch (err) {
       console.error(`preview: publish failed for #${pr}: ${err.message}`);
@@ -336,6 +340,8 @@ async function publishOne({
   pr,
   publishedSha = null,
   force = false,
+  comments = [],
+  publisher = PUBLISHER_LOGIN,
 }) {
   const pull = openPulls.find((p) => p.number === pr);
   if (!pull) return false;
@@ -344,27 +350,76 @@ async function publishOne({
   // Nothing has changed since the last publish. Republishing anyway force-pushes
   // an identical tree on every run — a commits@ mail and a rewritten
   // status comment for a preview nobody touched. A manual dispatch is an
-  // explicit request, so it republishes regardless.
-  if (!force && publishedSha && headSha.startsWith(publishedSha)) return false;
+  // explicit request, so it republishes regardless. The comments are checked
+  // all the same: a run that pushed and then failed to post them would
+  // otherwise leave them missing until the next commit.
+  if (!force && publishedSha && headSha.startsWith(publishedSha)) {
+    await repairComments({ gh, pr, headSha, comments, publisher });
+    return false;
+  }
 
-  const build = await gh.latestSuccessfulBuild(headSha);
-  if (!build) {
+  const builds = await gh.successfulBuilds(headSha);
+  if (!builds.length) {
     await gh.upsertComment(pr, MARKER, waitingBody(pr, headSha));
     return false;
   }
 
-  const artifact = await fetchArtifact(build.id);
+  // Newest first, until one build's artifact is this PR's own.
+  let artifact = null;
+  let refusal = null;
+  for (const build of builds) {
+    const candidate = await fetchArtifact(build.id);
+    if (!candidate) continue;
+    const check = validateMeta(candidate.meta, { number: pr, headSha });
+    if (check.ok) {
+      artifact = candidate;
+      break;
+    }
+    refusal = check.reason;
+    await candidate.cleanup?.();
+  }
   if (!artifact) {
-    await gh.upsertComment(pr, MARKER, waitingBody(pr, headSha));
+    await gh.upsertComment(pr, MARKER, refusal ? refusedBody(pr, refusal) : waitingBody(pr, headSha));
     return false;
   }
 
-  const check = validateMeta(artifact.meta, { number: pr, headSha });
-  if (!check.ok) {
-    await gh.upsertComment(pr, MARKER, refusedBody(pr, check.reason));
-    return false;
+  try {
+    return await publishArtifact({ gh, git, repo, pr, headSha, artifact });
+  } finally {
+    await artifact.cleanup?.();
   }
+}
 
+/** The body of the publisher's own comment ending in this marker, or null. */
+function ownMarked(comments, marker, publisher) {
+  const tag = `<!-- ${marker} -->`;
+  const found = comments.filter(
+    (c) => c?.user?.login === publisher && typeof c.body === "string" && c.body.trimEnd().endsWith(tag),
+  );
+  return found.at(-1)?.body ?? null;
+}
+
+/** Post whichever of a publish's two comments did not make it for `headSha`. */
+async function repairComments({ gh, pr, headSha, comments, publisher }) {
+  const short = headSha.slice(0, 7);
+  const status = ownMarked(comments, MARKER, publisher);
+  if (!status?.includes(`Built from \`${short}\``)) {
+    await gh.upsertComment(pr, MARKER, publishedBody(pr, headSha));
+  }
+  const announced = comments.some(
+    (c) =>
+      c?.user?.login === publisher &&
+      typeof c.body === "string" &&
+      c.body.trimEnd().endsWith(`<!-- ${PUBLISHED_MARKER} -->`) &&
+      c.body.includes(`updated to \`${short}\``),
+  );
+  if (!announced) {
+    await gh.createComment(pr, `${announceBody(pr, headSha)}\n\n<!-- ${PUBLISHED_MARKER} -->`);
+  }
+}
+
+/** Screen and push an artifact already matched to this PR's head. */
+async function publishArtifact({ gh, git, repo, pr, headSha, artifact }) {
   if (!artifact.dir) {
     await gh.upsertComment(pr, MARKER, refusedBody(pr, "artifact had no extracted directory"));
     return false;

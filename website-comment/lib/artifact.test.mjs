@@ -141,7 +141,8 @@ test("lists a site of many files, past execFile's default 1 MiB buffer", async (
     });
     const got = await fetchArtifact(1);
     assert.ok(got?.dir, "the archive must be accepted");
-    await rm(join(got.dir, ".."), { recursive: true, force: true });
+    await got.cleanup();
+    await assert.rejects(readFile(join(got.dir, "a-fairly-long-directory-name-to-pad-the-listing/and-another-one/page-0.html")));
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

@@ -270,24 +270,32 @@ export function createClient({
       ).map(projectHeadPull),
 
     /**
-     * The newest successful pull-request build of this commit, as { id } only.
-     * Only pull_request runs upload preview-site, so a later push or dispatch
-     * run of the same commit must not shadow them. A workflow run object also
-     * carries the PR's branch name, title and head commit message, none of
-     * which the publisher may see.
+     * The newest successful pull-request builds of this commit, newest first,
+     * as [{ id }] only. More than one: two pull requests can share a head
+     * commit (one change proposed to two branches), and each build's artifact
+     * names only its own PR, so the caller tries them in turn. Only
+     * pull_request runs upload preview-site, so push and dispatch runs of the
+     * same commit are left out. A workflow run object also carries the PR's
+     * branch name, title and head commit message, none of which the publisher
+     * may see.
      */
-    async latestSuccessfulBuild(headSha) {
+    async successfulBuilds(headSha, limit = 5) {
       if (!SHA_RE.test(String(headSha))) throw new TypeError(`bad head SHA ${JSON.stringify(headSha)}`);
       const runs = await request(
-        `/repos/${repo}/actions/workflows/${workflow}/runs?head_sha=${headSha}&event=pull_request&status=success&per_page=1`,
+        `/repos/${repo}/actions/workflows/${workflow}/runs?head_sha=${headSha}&event=pull_request&status=success&per_page=${int(limit)}`,
       );
-      const id = int(runs.workflow_runs?.[0]?.id);
-      return id === null ? null : { id };
+      return (runs.workflow_runs ?? []).map((r) => int(r?.id)).filter((id) => id !== null).map((id) => ({ id }));
     },
 
-    /** A build run's artifacts, as { id, name, expired } only. */
-    async listRunArtifacts(runId) {
-      const list = await request(`/repos/${repo}/actions/runs/${int(runId)}/artifacts`);
+    /**
+     * A build run's artifacts called `name`, as { id, name, expired } only.
+     * Filtered by the API rather than searched in one page of results: a
+     * build with many artifacts can put the wanted one past the first page.
+     */
+    async listRunArtifacts(runId, name) {
+      const list = await request(
+        `/repos/${repo}/actions/runs/${int(runId)}/artifacts?name=${encodeURIComponent(name)}&per_page=100`,
+      );
       return (list.artifacts ?? []).map((a) => ({
         id: int(a?.id),
         name: str(a?.name),

@@ -95,7 +95,7 @@ async function listing(args) {
 
 export function createArtifactFetcher({ gh, token, fetchImpl = fetch }) {
   return async function fetchArtifact(runId) {
-    const artifact = (await gh.listRunArtifacts(runId)).find((a) => a.name === "preview-site");
+    const artifact = (await gh.listRunArtifacts(runId, "preview-site")).find((a) => a.name === "preview-site");
     if (!artifact || artifact.expired) return null;
 
     const dir = await mkdtemp(join(tmpdir(), "preview-artifact-"));
@@ -163,7 +163,10 @@ export function createArtifactFetcher({ gh, token, fetchImpl = fetch }) {
       } catch {
         meta = null;
       }
-      return { dir: out, meta };
+      // The caller owns the extracted tree from here and must call cleanup
+      // whatever happens to it: one run fetches artifacts for many PRs, and
+      // leaving each on disk can fill the runner before the last publishes.
+      return { dir: out, meta, cleanup: () => rm(dir, { recursive: true, force: true }) };
     } catch (err) {
       await rm(dir, { recursive: true, force: true });
       throw err;

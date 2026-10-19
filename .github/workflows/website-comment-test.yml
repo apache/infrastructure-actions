@@ -97,6 +97,17 @@ jobs:
           echo "::error::preview-publish accepted a $EVENT_NAME event"
           exit 1
 
+      - name: A production site that documents the attribute
+        run: |
+          mkdir -p "$RUNNER_TEMP/docs-site"
+          echo '<html><body><pre><code>&lt;h1 data-preview-src="index.md:1"&gt;</code></pre><p>Stamp data-preview-src in preview builds.</p></body></html>' > "$RUNNER_TEMP/docs-site/index.html"
+
+      - name: preview-annotate accepts escaped and prose mentions
+        uses: ./website-comment/preview-annotate
+        with:
+          generator: none
+          production-output: ${{ runner.temp }}/docs-site
+
       - name: preview-annotate rejects an unknown generator
         id: unknown
         continue-on-error: true

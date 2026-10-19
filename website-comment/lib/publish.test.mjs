@@ -105,7 +105,7 @@ function fakes({
     deleteBranch: async (name) => {
       deleted.push(name);
     },
-    latestSuccessfulBuild: async () => (hasBuild ? { id: 1 } : null),
+    successfulBuilds: async () => (hasBuild === true ? [{ id: 1 }] : hasBuild || []),
     branchHeadMessage: async (branch) => headMessages[branch] ?? "",
     listBranches: async () => repoBranches,
     listPullsForHead: async (name) => pullsForHead[name] ?? [],
@@ -343,11 +343,17 @@ test("publishedShaFrom reads the published commit, and nothing else", () => {
   assert.equal(publishedShaFrom(null), null);
 });
 
+// What a completed publish of SHA leaves on the PR.
+const publishedComments = () => [
+  bot(`### Preview published\n\nBuilt from \`${SHA.slice(0, 7)}\`.\n\n<!-- asf-preview-status -->`),
+  bot(`### Preview updated to \`${SHA.slice(0, 7)}\`\n\n<!-- asf-preview-published -->`),
+];
+
 test("does not republish a preview that already matches the PR head", async () => {
   const dir = await artifactDir();
   const f = fakes({
     openPulls: [pull(5)],
-    comments: { 5: [armCmd()] },
+    comments: { 5: [armCmd(), ...publishedComments()] },
     branches: ["preview/pr5-staging"],
     headMessages: { "preview/pr5-staging": `Publish preview for #5 (${SHA.slice(0, 7)})` },
   });
@@ -367,6 +373,49 @@ test("does not republish a preview that already matches the PR head", async () =
     0,
     "an unchanged preview must not rewrite its status comment",
   );
+});
+
+test("posts the comments a publish pushed but failed to post, without pushing again", async () => {
+  const f = fakes({
+    openPulls: [pull(5)],
+    comments: { 5: [armCmd(), bot("### Preview waiting on a build\n\n<!-- asf-preview-status -->")] },
+    branches: ["preview/pr5-staging"],
+    headMessages: { "preview/pr5-staging": `Publish preview for #5 (${SHA.slice(0, 7)})` },
+  });
+
+  await go(f);
+
+  assert.equal(f.pushed.length, 0);
+  assert.match(f.posted.find((p) => p.marker === "asf-preview-status").body, /Built from `ccccccc`/);
+  assert.equal(f.created.filter((c) => /asf-preview-published/.test(c.body)).length, 1);
+});
+
+test("finds this PR's own build when another PR shares its head commit", async () => {
+  const dir = await artifactDir();
+  const cleaned = [];
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, hasBuild: [{ id: 2 }, { id: 1 }] });
+
+  await go(f, {
+    fetchArtifact: async (id) => ({
+      dir,
+      meta: { pr: id === 2 ? 6 : 5, headSha: SHA },
+      cleanup: async () => cleaned.push(id),
+    }),
+  });
+
+  assert.equal(f.pushed.length, 1, "the older build is this PR's and publishes");
+  assert.deepEqual(cleaned.sort(), [1, 2], "both extracted artifacts are removed");
+});
+
+test("removes a refused artifact", async () => {
+  const dir = await artifactDir({ withSymlink: true });
+  let cleaned = 0;
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] } });
+  await go(f, {
+    fetchArtifact: async () => ({ dir, meta: { pr: 5, headSha: SHA }, cleanup: async () => (cleaned += 1) }),
+  });
+  assert.equal(f.pushed.length, 0);
+  assert.equal(cleaned, 1);
 });
 
 test("republishes when the PR head has moved on", async () => {

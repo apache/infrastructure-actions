@@ -265,17 +265,18 @@ back to the Conversation tab. See [`adapters/astro/`](adapters/astro/README.md).
 
 There is no Pelican adapter yet, so skip `preview-annotate`. With the
 [ASF Pelican action](../pelican/README.md), build without publishing on pull
-requests and upload its output:
+requests and upload the build. Without publishing, the Pelican action leaves
+the site in its `tempdir` and never fills `output`, so name the `tempdir`:
 
 ```yaml
       - uses: apache/infrastructure-actions/pelican@<sha>  # pelican/vX.Y.Z
         with:
           publish: ${{ github.event_name != 'pull_request' }}
-          output: output
+          tempdir: ${{ runner.temp }}/site
       - if: github.event_name == 'pull_request'
         uses: apache/infrastructure-actions/website-comment/preview-artifact@<sha>  # preview-artifact/v1.0.0
         with:
-          path: output
+          path: ${{ runner.temp }}/site
 ```
 
 ### Any other generator
@@ -409,7 +410,7 @@ Cost and noise:
 |---|---|---|---|
 | `generator` | yes | | `jekyll`, `astro` or `none` |
 | `source` | no | `.` | Jekyll: the site source directory, holding `_config.yml` |
-| `production-output` | no | | Fail if this directory already carries `data-preview-src` |
+| `production-output` | no | | Fail if any page in this directory has an element carrying `data-preview-src`; escaped examples and prose mentions pass |
 
 | Output | Description |
 |---|---|

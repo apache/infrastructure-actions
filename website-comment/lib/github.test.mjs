@@ -215,15 +215,27 @@ test("buildWorkflow refuses paths and non-workflow names", () => {
   }
 });
 
-test("latestSuccessfulBuild queries the configured workflow", async () => {
+test("successfulBuilds queries the configured workflow", async () => {
   const { impl, calls } = fakeFetch({
-    [`GET /repos/apache/x-site/actions/workflows/jekyll.yml/runs?head_sha=${"a".repeat(40)}&event=pull_request&status=success&per_page=1`]:
-      { workflow_runs: [{ id: 7, display_title: "a PR title", head_branch: "b" }] },
+    [`GET /repos/apache/x-site/actions/workflows/jekyll.yml/runs?head_sha=${"a".repeat(40)}&event=pull_request&status=success&per_page=5`]:
+      { workflow_runs: [{ id: 7, display_title: "a PR title", head_branch: "b" }, { id: 6 }] },
   });
   const gh = createClient({ repo: "apache/x-site", token: "t", fetchImpl: impl, workflow: "jekyll.yml" });
-  assert.deepEqual(await gh.latestSuccessfulBuild("a".repeat(40)), { id: 7 },
+  assert.deepEqual(await gh.successfulBuilds("a".repeat(40)), [{ id: 7 }, { id: 6 }],
     "a run's title and branch are PR data and must be dropped");
-  await assert.rejects(gh.latestSuccessfulBuild("abc&x=1"), /bad head SHA/);
+  await assert.rejects(gh.successfulBuilds("abc&x=1"), /bad head SHA/);
+  assert.equal(calls.length, 1);
+});
+
+test("listRunArtifacts asks the API for the named artifact", async () => {
+  const { impl, calls } = fakeFetch({
+    "GET /repos/apache/magpie-site/actions/runs/7/artifacts?name=preview-site&per_page=100": {
+      total_count: 1,
+      artifacts: [{ id: 3, name: "preview-site", expired: false, workflow_run: { head_branch: "b" } }],
+    },
+  });
+  const gh = createClient({ repo: "apache/magpie-site", token: "t", fetchImpl: impl });
+  assert.deepEqual(await gh.listRunArtifacts(7, "preview-site"), [{ id: 3, name: "preview-site", expired: false }]);
   assert.equal(calls.length, 1);
 });
 
