@@ -19,11 +19,9 @@
 # This file was generated from actions.yml by gateway/gateway.py.
 # It will be regenerated and committed as part of various workflows.
 # DO NOT UPDATE MANUALLY. Update /actions.yml instead.
-- 1Password/load-secrets-action@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556
 - 1Password/load-secrets-action@eb2efd0703da22a93c467f2d1ffbb6826c11e19c
 - 1Password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4
 - 1Password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2
-- 1Password/load-secrets-action/configure@3a12b0ab99d9cd590a3e9b5a90ea017210ed9556
 - 1Password/load-secrets-action/configure@eb2efd0703da22a93c467f2d1ffbb6826c11e19c
 - 1Password/load-secrets-action/configure@e544b780808654ba8ceba5fb2fe2897103d92ff4
 - 1Password/load-secrets-action/configure@70062d7a876d3eb6334754fa26efd2fbd90c32f2
@@ -78,9 +76,6 @@
 - carabiner-dev/actions/install/ampel@32587e82f960d49b36101e8c45d1956e511965d3
 - carabiner-dev/actions/install/ampel@d6d91c5c88723021a8798392cb9780c89ff6fdad
 - carabiner-dev/actions/install/ampel@d41fe10fe88deaf493ce026007da73738b9f570c
-- carabiner-dev/actions/install/ampel-bootstrap@be6b4fa42fa3a8432416475d74218b9aa51ea527
-- carabiner-dev/actions/install/ampel-bootstrap@174f1c83779af3d3d7e451b7ead7ba824d0d2aa9
-- carabiner-dev/actions/install/ampel-bootstrap@619a474b2178d06ccf274349397cd67a7802a4fe
 - carabiner-dev/actions/install/ampel-bootstrap@60563b5460a9e4ae9921c0da551b4ddd6059ff45
 - carabiner-dev/actions/install/ampel-bootstrap@4c23ca5801511c2f0e9dd8c8dd011cab26a46be4
 - carabiner-dev/actions/install/ampel-bootstrap@2fec8bd8e1dcfdea26080648070b4827f1fa0584
@@ -97,7 +92,6 @@
 - carabiner-dev/actions/install/bnd@36a39ef667efe7112df8b1a534a4e37f35fad6fd
 - carabiner-dev/actions/install/bnd@32587e82f960d49b36101e8c45d1956e511965d3
 - carabiner-dev/actions/install/bnd@d41fe10fe88deaf493ce026007da73738b9f570c
-- carabiner-dev/actions/install/download-and-verify@be6b4fa42fa3a8432416475d74218b9aa51ea527
 - carabiner-dev/actions/install/download-and-verify@60563b5460a9e4ae9921c0da551b4ddd6059ff45
 - carabiner-dev/actions/install/download-and-verify@4c23ca5801511c2f0e9dd8c8dd011cab26a46be4
 - carabiner-dev/actions/install/download-and-verify@2fec8bd8e1dcfdea26080648070b4827f1fa0584
@@ -325,7 +319,6 @@
 - potiuk/cancel-workflow-runs@*
 - pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
 - PyO3/maturin-action@*
-- pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55
 - pypa/cibuildwheel@4726cd35bb13f7bde50cf2761f2499ac7b3aa32c
 - pypa/cibuildwheel@1828c10ab37f080699c7b81cea34097c684a7074
 - pypa/cibuildwheel@e090b81e30c4d855ea63bf4b6e59204c09a101ae
@@ -354,7 +347,6 @@
 - runs-on/action@17b59092eb37ebfdbb034460892887c09100eaa3
 - rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18
 - rustsec/*@*
-- sbt/setup-sbt@6444f4c8111de4b9059c3975def104b03cfaa5f0
 - sbt/setup-sbt@f6db8ab474efba716fc7f04441ab33714e4825af
 - sbt/setup-sbt@d059c39de700f4cc5cb64f9f56577315e44a984e
 - sbt/setup-sbt@bfea3c5f48abd221b04a6df4798aa5eb8b6a2baf

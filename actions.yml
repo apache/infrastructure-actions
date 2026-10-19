@@ -22,9 +22,6 @@
 # update expiry dates for previous versions.
 # Versions that are known to be problematic should be removed explicitly manually.
 1Password/load-secrets-action:
-  3a12b0ab99d9cd590a3e9b5a90ea017210ed9556:
-    tag: v4.0.1
-    expires_at: 2026-10-19
   eb2efd0703da22a93c467f2d1ffbb6826c11e19c:
     tag: v4.1.1
     expires_at: 2026-10-30
@@ -34,9 +31,6 @@
   70062d7a876d3eb6334754fa26efd2fbd90c32f2:
     tag: v5.0.1
 1Password/load-secrets-action/configure:
-  3a12b0ab99d9cd590a3e9b5a90ea017210ed9556:
-    tag: v4.0.1
-    expires_at: 2026-10-19
   eb2efd0703da22a93c467f2d1ffbb6826c11e19c:
     tag: v4.1.1
     expires_at: 2026-10-28
@@ -211,15 +205,6 @@ carabiner-dev/actions/install/ampel:
   d41fe10fe88deaf493ce026007da73738b9f570c:
     tag: v1.3.0
 carabiner-dev/actions/install/ampel-bootstrap:
-  be6b4fa42fa3a8432416475d74218b9aa51ea527:
-    expires_at: 2026-10-19
-  # transitive: referenced by carabiner-dev/actions v1.2.3 internal refs.
-  # Verified carabiner release-bot commits.
-  174f1c83779af3d3d7e451b7ead7ba824d0d2aa9:
-    tag: v1.2.2
-    expires_at: 2026-10-19
-  619a474b2178d06ccf274349397cd67a7802a4fe:
-    expires_at: 2026-10-19
   60563b5460a9e4ae9921c0da551b4ddd6059ff45:
     expires_at: 2026-10-20
   4c23ca5801511c2f0e9dd8c8dd011cab26a46be4:
@@ -259,8 +244,6 @@ carabiner-dev/actions/install/bnd:
   d41fe10fe88deaf493ce026007da73738b9f570c:
     tag: v1.3.0
 carabiner-dev/actions/install/download-and-verify:
-  be6b4fa42fa3a8432416475d74218b9aa51ea527:
-    expires_at: 2026-10-19
   60563b5460a9e4ae9921c0da551b4ddd6059ff45:
     expires_at: 2026-10-20
   4c23ca5801511c2f0e9dd8c8dd011cab26a46be4:
@@ -935,9 +918,6 @@ PyO3/maturin-action:
   '*':
     keep: true
 pypa/cibuildwheel:
-  294735312765b09d24a2fbec22660ce817587d55:
-    tag: v4.1.0
-    expires_at: 2026-10-19
   4726cd35bb13f7bde50cf2761f2499ac7b3aa32c:
     tag: v4.1.1
     expires_at: 2026-11-01
@@ -1022,9 +1002,6 @@ rustsec/*:
   '*':
     keep: true
 sbt/setup-sbt:
-  6444f4c8111de4b9059c3975def104b03cfaa5f0:
-    tag: v1.5.2
-    expires_at: 2026-10-19
   f6db8ab474efba716fc7f04441ab33714e4825af:
     tag: v1.5.4
     expires_at: 2026-10-20
