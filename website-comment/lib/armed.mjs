@@ -127,6 +127,9 @@ export const ARMED_MARKER = "asf-preview-armed";
  */
 export const armedRecord = (eventId) => `<!-- ${ARMED_MARKER} event=${eventId} -->`;
 
+/** Ends the publisher's explainer comment. */
+export const EXPLAINER_MARKER = "asf-preview-howto";
+
 /**
  * Whether the publisher's own comments carry the arming record for exactly
  * `labelEvent`. Bound to the event's id, not its time: a label that someone
@@ -136,7 +139,14 @@ export const armedRecord = (eventId) => `<!-- ${ARMED_MARKER} event=${eventId} -
 export function publisherVouched({ comments, publisher, labelEvent }) {
   if (!Number.isInteger(labelEvent?.id)) return false;
   const record = armedRecord(labelEvent.id);
+  // Only where the publisher writes it: last in its comment, or last before
+  // the explainer's marker. Anywhere else it could be text that another
+  // workflow on the shared token quoted from the pull request.
+  const placed = [record, `${record}\n\n<!-- ${EXPLAINER_MARKER} -->`];
   return comments.some(
-    (c) => c?.user?.login === publisher && typeof c.body === "string" && c.body.includes(record),
+    (c) =>
+      c?.user?.login === publisher &&
+      typeof c.body === "string" &&
+      placed.some((tail) => c.body.trimEnd().endsWith(tail)),
   );
 }

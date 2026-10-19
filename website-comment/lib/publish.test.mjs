@@ -444,27 +444,83 @@ test("malformed metadata is a refusal: the older build is tried, the bad one rem
   assert.deepEqual(cleaned.sort(), [1, 2]);
 });
 
-test("does not screen again an artifact already refused for this head", async () => {
-  const refused = (sha, ids = "1") =>
-    bot(`### Preview could not be published\n\nx\n\nThe build artifact for \`${sha.slice(0, 7)}\` was refused: 1 symlink entry\n\n<!-- asf-preview-refused-builds: ${ids} -->\n\n<!-- asf-preview-status -->`);
-  let fetched = 0;
-  const fetchArtifact = async () => (fetched += 1, null);
+// A fetcher whose run N carries artifact N*10, honouring the publisher's skip
+// set as the real one does, and counting the downloads it makes.
+function countingFetcher(byRun) {
+  const downloads = [];
+  const fetchArtifact = async (runId, { skip = new Set() } = {}) => {
+    const artifactId = runId * 10;
+    if (skip.has(artifactId)) return { skipped: true, artifactId };
+    downloads.push(artifactId);
+    const result = byRun(runId, artifactId);
+    if (result instanceof Error) throw Object.assign(result, { refused: true, artifactId });
+    return result && { ...result, artifactId };
+  };
+  return { fetchArtifact, downloads };
+}
 
-  const same = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd(), refused(SHA)] } });
-  await go(same, { fetchArtifact });
-  assert.equal(fetched, 0, "no download for a head already refused");
+const refusedStatus = (sha, ids) =>
+  bot(
+    `### Preview could not be published\n\n**Preview:** https://magpie-pr5.staged.apache.org/ (unchanged)\n\n` +
+      `The build artifact for \`${sha.slice(0, 7)}\` was refused: 1 symlink entry\n\n` +
+      `<!-- asf-preview-passed-over ${sha.slice(0, 7)}: ${ids} -->\n\n<!-- asf-preview-status -->`,
+  );
 
-  const moved = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd(), refused("d".repeat(40))] } });
-  await go(moved, { fetchArtifact });
-  assert.equal(fetched, 1, "a new head is screened");
+test("does not download again an artifact already refused for this head", async () => {
+  const refuse = () => new Error("archive contains symlink members");
 
-  const dispatched = fakes({ openPulls: [pull(5)], comments: { 5: [refused(SHA)] } });
-  await go(dispatched, { only: 5, dispatchedBy: "maintainer", fetchArtifact });
-  assert.equal(fetched, 2, "a dispatch screens again");
+  const same = countingFetcher(refuse);
+  const f1 = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd(), refusedStatus(SHA, "10")] } });
+  await go(f1, { fetchArtifact: same.fetchArtifact });
+  assert.deepEqual(same.downloads, [], "no download for an artifact already refused");
+  assert.equal(f1.posted.filter((p) => p.marker === "asf-preview-status").length, 0, "and no status churn");
 
-  const rebuilt = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd(), refused(SHA)] }, hasBuild: [{ id: 2 }, { id: 1 }] });
-  await go(rebuilt, { fetchArtifact });
-  assert.equal(fetched, 4, "a new build of the same head is screened, older ones after it");
+  const moved = countingFetcher(refuse);
+  const f2 = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd(), refusedStatus("d".repeat(40), "10")] } });
+  await go(f2, { fetchArtifact: moved.fetchArtifact });
+  assert.deepEqual(moved.downloads, [10], "a new head is screened");
+
+  const dispatched = countingFetcher(refuse);
+  const f3 = fakes({ openPulls: [pull(5)], comments: { 5: [refusedStatus(SHA, "10")] } });
+  await go(f3, { only: 5, dispatchedBy: "maintainer", fetchArtifact: dispatched.fetchArtifact });
+  assert.deepEqual(dispatched.downloads, [10], "a dispatch screens again");
+});
+
+test("a re-run's new artifact is screened even though its run id was refused before", async () => {
+  const dir = await artifactDir();
+  // Run 1 now carries artifact 10; the status remembers an older artifact 7.
+  const rerun = countingFetcher(() => ({ dir, meta: { pr: 5, headSha: SHA } }));
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd(), refusedStatus(SHA, "7")] } });
+  await go(f, { fetchArtifact: rerun.fetchArtifact });
+  assert.deepEqual(rerun.downloads, [10]);
+  assert.equal(f.pushed.length, 1);
+});
+
+test("a known refusal is skipped on its own while other builds are still looked at", async () => {
+  // Build 3: another PR's artifact; build 2: already refused; build 1: expired.
+  const fetcher = countingFetcher((run) =>
+    run === 3 ? { dir: "/nonexistent", meta: { pr: 6, headSha: SHA }, cleanup: async () => {} } : null,
+  );
+  const f = fakes({
+    openPulls: [pull(5)],
+    comments: { 5: [armCmd(), refusedStatus(SHA, "20")] },
+    hasBuild: [{ id: 3 }, { id: 2 }, { id: 1 }],
+  });
+  await go(f, { fetchArtifact: fetcher.fetchArtifact });
+  assert.deepEqual(fetcher.downloads, [30, 10], "the refused artifact 20 is not downloaded");
+  const status = f.posted.filter((p) => p.marker === "asf-preview-status").at(-1);
+  assert.match(status.body, /was refused: 1 symlink entry/, "the earlier refusal is still reported");
+  assert.match(status.body, /passed-over ccccccc: 30,20 -->/, "and both passed-over artifacts remembered");
+
+  // With both remembered, the next run downloads nothing at all.
+  const next = countingFetcher(() => null);
+  const f2 = fakes({
+    openPulls: [pull(5)],
+    comments: { 5: [armCmd(), bot(`${status.body}\n\n<!-- asf-preview-status -->`)] },
+    hasBuild: [{ id: 3 }, { id: 2 }, { id: 1 }],
+  });
+  await go(f2, { fetchArtifact: next.fetchArtifact });
+  assert.deepEqual(next.downloads, [10], "only the expired build is asked about, which downloads nothing");
 });
 
 test("another PR's build of a shared head commit is not a refusal of this one", async () => {
@@ -661,6 +717,40 @@ test("deletes a branch that already carries a tombstone", async () => {
   assert.deepEqual(f.deleted, ["preview/pr9-staging"]);
 });
 
+test("a tombstone whose retired status never got posted is repaired before its branch goes", async () => {
+  const published = bot("### Preview published\n\nBuilt from `ccccccc`.\n\n<!-- asf-preview-status -->");
+  const f = fakes({
+    openPulls: [],
+    comments: { 9: [published] },
+    branches: ["preview/pr9-staging"],
+    headMessages: { "preview/pr9-staging": "Retire preview for #9 [tombstone]" },
+  });
+  await go(f);
+  const status = f.posted.filter((p) => p.n === 9 && p.marker === "asf-preview-status");
+  assert.match(status.at(-1)?.body ?? "", /Preview retired/);
+  assert.deepEqual(f.deleted, ["preview/pr9-staging"]);
+
+  // If the status cannot be written, the branch stays for a later run.
+  const failing = fakes({
+    openPulls: [],
+    comments: { 9: [published] },
+    branches: ["preview/pr9-staging"],
+    headMessages: { "preview/pr9-staging": "Retire preview for #9 [tombstone]" },
+  });
+  failing.gh.upsertComment = async () => {
+    throw new Error("502");
+  };
+  const error = console.error;
+  console.error = () => {};
+  try {
+    await go(failing);
+  } finally {
+    console.error = error;
+  }
+  assert.deepEqual(failing.deleted, []);
+  process.exitCode = 0;
+});
+
 test("keeps a fresh tombstone up until staging has had time to serve it", async () => {
   const at = Date.parse("2026-01-01T12:00:00Z");
   const fresh = fakes({
@@ -785,6 +875,31 @@ test("the record names the event the publisher just added, waiting out a lagging
     console.error = error;
   }
   assert.deepEqual(stuck.reacted, [], "never acknowledged without a record, so the next run retries");
+  assert.equal(process.exitCode, 1);
+  process.exitCode = 0;
+});
+
+test("a remove and bot re-add during the read-back records nothing", async () => {
+  // A maintainer removes the publisher's new label and a workflow on the
+  // shared token puts it back, all before the publisher reads its event back.
+  const events = { 5: [] };
+  const cmd = armCmd();
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [cmd] }, labelEvents: events });
+  const addLabel = f.gh.addLabel;
+  f.gh.addLabel = async (n, name) => {
+    await addLabel(n, name);
+    events[n].push(unlabeledBy("maintainer"), labeledBy("github-actions[bot]"));
+  };
+  const error = console.error;
+  console.error = () => {};
+  try {
+    await go(f);
+  } finally {
+    console.error = error;
+  }
+  assert.ok(!f.posted.some((p) => /asf-preview-armed/.test(p.body)), "no record in the explainer");
+  assert.ok(!f.created.some((c) => /asf-preview-armed/.test(c.body)), "no record comment");
+  assert.deepEqual(f.reacted, [], "not acknowledged, so the next run starts over");
   assert.equal(process.exitCode, 1);
   process.exitCode = 0;
 });

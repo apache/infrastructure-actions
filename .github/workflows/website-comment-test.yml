@@ -108,6 +108,25 @@ jobs:
           generator: none
           production-output: ${{ runner.temp }}/docs-site
 
+      - name: A production page with the attribute on a tag split across lines
+        run: |
+          mkdir -p "$RUNNER_TEMP/split-site"
+          printf '<html><body><div\n  class="x"\n  data-preview-src="index.md:1">x</div></body></html>\n' > "$RUNNER_TEMP/split-site/index.html"
+
+      - name: preview-annotate rejects it
+        id: split
+        continue-on-error: true
+        uses: ./website-comment/preview-annotate
+        with:
+          generator: none
+          production-output: ${{ runner.temp }}/split-site
+
+      - name: It did not fail
+        if: steps.split.outcome != 'failure'
+        run: |
+          echo "::error::preview-annotate accepted a split-line annotated tag"
+          exit 1
+
       - name: preview-annotate rejects an unknown generator
         id: unknown
         continue-on-error: true

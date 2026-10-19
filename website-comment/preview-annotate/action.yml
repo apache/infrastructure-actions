@@ -54,11 +54,16 @@ runs:
         fi
         # An element carrying the attribute, not the bare word: a page that
         # documents these actions shows it escaped (&lt;p data-preview-src=...)
-        # or in prose, and must still build.
+        # or in prose, and must still build. Each page is matched whole, with
+        # line breaks flattened, so a tag split across lines is caught too
+        # (portably: BSD grep -z does not let a pattern span lines).
         ATTR='<[A-Za-z][^<>]*[[:space:]]data-preview-src='
-        if grep -rlqE --include='*.html' --include='*.htm' -- "$ATTR" "$OUTPUT"; then
+        found="$(find "$OUTPUT" -type f \( -iname '*.html' -o -iname '*.htm' \) -exec sh -c '
+          for f; do tr "\r\n\t" "   " < "$f" | grep -qE -- "$0" && printf "%s\n" "$f"; done
+        ' "$ATTR" {} +)"
+        if [ -n "$found" ]; then
           echo "::error::data-preview-src found in the production build in $OUTPUT; it must never ship"
-          grep -rlE --include='*.html' --include='*.htm' -- "$ATTR" "$OUTPUT" | head -20
+          printf '%s\n' "$found" | head -20
           exit 1
         fi
 

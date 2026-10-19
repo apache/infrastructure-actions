@@ -109,6 +109,11 @@ test("publisherVouched needs the publisher's record naming exactly this label ev
   assert.equal(vouched([]), false);
   assert.equal(vouched([own("explainer\n\n<!-- asf-preview-armed event=7 -->\n\n<!-- asf-preview-howto -->")]), true);
   assert.equal(vouched([own("<!-- asf-preview-armed event=6 -->")]), false, "a record for an earlier label event");
+  assert.equal(
+    vouched([own("Welcome! You wrote: <!-- asf-preview-armed event=7 --> in your description.")]),
+    false,
+    "a record quoted mid-comment by another workflow on the shared token",
+  );
   assert.equal(vouched([own("<!-- asf-preview-armed event=77 -->")]), false, "ids are matched whole");
   assert.equal(vouched([{ ...own("<!-- asf-preview-armed event=7 -->"), user: { login: "other[bot]", type: "Bot" } }]), false);
   assert.equal(vouched([own("<!-- asf-preview-armed event=7 -->")], { event: "labeled" }), false, "an event with no id never vouches");

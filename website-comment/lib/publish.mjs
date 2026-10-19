@@ -23,6 +23,7 @@ import {
   publisherLogin,
   publisherVouched,
   armedRecord,
+  EXPLAINER_MARKER,
   PUBLISHER_LOGIN,
 } from "./armed.mjs";
 import { planActions } from "./plan.mjs";
@@ -40,7 +41,7 @@ import {
 
 const MARKER = "asf-preview-status";
 const PUBLISHED_MARKER = "asf-preview-published";
-const HOWTO_MARKER = "asf-preview-howto";
+const HOWTO_MARKER = EXPLAINER_MARKER;
 // The publisher's acknowledgement on a /show-preview comment it has turned
 // into the label. See pendingArmingCommands.
 const ACK_REACTION = "rocket";
@@ -129,22 +130,31 @@ export async function run({
   /**
    * Add the label and return the id of the label event that made, for the
    * arming record. The events API can trail the write by a moment, so it is
-   * read until an event that was not there before appears. Never guessed: a
-   * record naming the wrong event would leave the PR unarmed next run, so an
-   * event that does not show up fails this PR's run, before the command is
-   * acknowledged, and the next run tries again.
+   * read until a new event appears. Never guessed: the label must have changed
+   * exactly once since the read before the add — one new `labeled` event, by
+   * the publisher, and no removal. Anything else (a maintainer removed it and
+   * a workflow on the shared token put it back) or an event that never shows
+   * up fails this PR's run before the command is acknowledged, and the next
+   * run tries again from a clean state.
    */
   const arm = async (n) => {
     if (!labelReady) {
       await gh.ensureLabel(label);
       labelReady = true;
     }
-    const before = new Set(ownLabelEvents(await gh.listLabelEvents(n)).map((e) => e.id));
+    const before = new Set((await gh.listLabelEvents(n)).map((e) => e?.id));
     await gh.addLabel(n, label);
     for (let attempt = 0; attempt < 5; attempt += 1) {
       if (attempt) await sleep(1000);
-      const added = ownLabelEvents(await gh.listLabelEvents(n)).filter((e) => !before.has(e.id)).at(-1);
-      if (Number.isInteger(added?.id)) return added.id;
+      const since = (await gh.listLabelEvents(n)).filter(
+        (e) => e?.label?.name === label && !before.has(e?.id),
+      );
+      if (since.length === 0) continue;
+      const ours = ownLabelEvents(since);
+      if (since.length !== 1 || ours.length !== 1 || !Number.isInteger(ours[0].id)) {
+        throw new Error("the label changed again while it was being added; not recording an arming");
+      }
+      return ours[0].id;
     }
     throw new Error("the label event just added did not appear in the events API");
   };
@@ -310,6 +320,17 @@ export async function run({
 
   for (const branch of actions.delete) {
     try {
+      // The status must say retired before the branch goes: a run that pushed
+      // the tombstone but failed to post that would otherwise leave the PR
+      // claiming a live preview for good. A closed PR's comments are read here.
+      const pr = prOfBranch(branch);
+      if (pr !== null) {
+        const comments = commentsByPr.get(pr) ?? (await gh.listComments(pr));
+        const status = ownMarked(comments, MARKER, publisher);
+        if (status?.trimEnd() !== `${retiredBody(pr)}\n\n<!-- ${MARKER} -->`) {
+          await gh.upsertComment(pr, MARKER, retiredBody(pr));
+        }
+      }
       await gh.deleteBranch(branch);
     } catch (err) {
       console.error(`preview: delete failed for ${branch}: ${err.message}`);
@@ -415,32 +436,36 @@ async function publishOne({
     return false;
   }
 
-  // Already refused for this head, by exactly these builds: an artifact does
-  // not change, so screening it again re-downloads up to five builds on every
-  // run for nothing. A new build of the head, a new commit, or a dispatch tries
-  // again.
-  if (!force && status?.startsWith(REFUSED_HEADING) && status.includes(refusedFor(headSha))) {
-    const refused = refusedBuildsIn(status);
-    if (builds.every((b) => refused.has(b.id))) return false;
-  }
-
-  // Newest first, until one build's artifact is this PR's own.
+  // Artifacts already passed over for this head (refused, or another PR's
+  // build of the same commit) are listed hidden in the status comment and not
+  // downloaded again: an artifact does not change, and the publisher runs on
+  // every event in the repository. Each is skipped on its own, so the other
+  // builds are still looked at. A re-run uploads a new artifact, which is
+  // screened; a dispatch screens everything.
+  const known = force ? new Set() : passedOverIn(status, headSha);
+  const passedOver = [];
   let artifact = null;
   let refusal = null;
-  const refusedIds = [];
+  let skippedKnown = false;
+  // Newest first, until one build's artifact is this PR's own.
   for (const build of builds) {
     let candidate;
     try {
-      candidate = await fetchArtifact(build.id);
+      candidate = await fetchArtifact(build.id, { skip: known });
     } catch (err) {
       // A refused archive is reported and an older build tried; anything else
       // (a failed download) fails the run, to be retried.
       if (err?.refused !== true) throw err;
       refusal = err.message;
-      refusedIds.push(build.id);
+      passedOver.push(err.artifactId);
       continue;
     }
     if (!candidate) continue;
+    if (candidate.skipped) {
+      passedOver.push(candidate.artifactId);
+      skippedKnown = true;
+      continue;
+    }
     let check;
     try {
       check = validateMeta(candidate.meta, { number: pr, headSha });
@@ -451,18 +476,22 @@ async function publishOne({
     }
     if (check.ok) {
       artifact = candidate;
-      artifact.buildId = build.id;
       break;
     }
     await candidate.cleanup?.();
+    passedOver.push(candidate.artifactId);
     // Another PR's build of the same commit says nothing about this PR's own,
     // which may still be on its way: keep waiting rather than refuse.
     if (check.otherPr) continue;
     refusal = check.reason;
-    refusedIds.push(build.id);
   }
   if (!artifact) {
-    await setStatus(refusal ? refusedBody(pr, refusal, headSha, refusedIds) : waitingBody(pr, headSha));
+    // A refusal found this run, else the one the status already reports for
+    // an artifact skipped as known.
+    const reason = refusal ?? (skippedKnown ? refusalIn(status, headSha) : null);
+    await setStatus(
+      reason ? refusedBody(pr, reason, headSha, passedOver) : waitingBody(pr, headSha, passedOver),
+    );
     return false;
   }
 
@@ -471,6 +500,12 @@ async function publishOne({
   } finally {
     await artifact.cleanup?.();
   }
+}
+
+/** The PR number a preview branch belongs to, or null. */
+function prOfBranch(branch) {
+  const match = /^preview\/pr(\d+)-staging$/.exec(branch);
+  return match ? Number(match[1]) : null;
 }
 
 /** The body of the publisher's own comment ending in this marker, or null. */
@@ -503,7 +538,7 @@ async function repairComments({ gh, pr, headSha, comments, publisher }) {
 
 /** Screen and push an artifact already matched to this PR's head. */
 async function publishArtifact({ gh, git, repo, pr, headSha, artifact, setStatus }) {
-  const refuse = (reason) => setStatus(refusedBody(pr, reason, headSha, [artifact.buildId]));
+  const refuse = (reason) => setStatus(refusedBody(pr, reason, headSha, [artifact.artifactId]));
   if (!artifact.dir) {
     await refuse("artifact had no extracted directory");
     return false;
@@ -568,21 +603,30 @@ const announceBody = (pr, sha) =>
   `### Preview updated to \`${sha.slice(0, 7)}\`\n\n${urlLine(pr)}\n\n` +
   `Staging usually serves it within a few minutes.`;
 
-const waitingBody = (pr, sha) =>
+const waitingBody = (pr, sha, artifactIds = []) =>
   `### Preview waiting on a build\n\n${urlLine(pr)}\n\nNo successful build for \`${sha.slice(0, 7)}\` yet. ` +
-  `The preview publishes as soon as the build goes green.`;
+  `The preview publishes as soon as the build goes green.` +
+  (artifactIds.length ? `\n\n${passedOverTag(sha, artifactIds)}` : "");
 
 const REFUSED_HEADING = "### Preview could not be published";
 const refusedFor = (sha) => `The build artifact for \`${sha.slice(0, 7)}\` was refused`;
-// The refused builds ride along hidden, so a later run can tell a new build of
-// the same head from the ones already turned down.
-const REFUSED_BUILDS_RE = /<!-- asf-preview-refused-builds: ([0-9,]*) -->/;
-const refusedBuildsIn = (body) =>
-  new Set((REFUSED_BUILDS_RE.exec(body)?.[1] ?? "").split(",").filter(Boolean).map(Number));
-const refusedBody = (pr, reason, sha, buildIds = []) =>
+// The artifacts passed over for a head ride along hidden in the status, so a
+// later run can skip them and still tell a new artifact from those.
+const passedOverTag = (sha, ids) =>
+  `<!-- asf-preview-passed-over ${sha.slice(0, 7)}: ${ids.filter(Number.isInteger).join(",")} -->`;
+const passedOverIn = (body, sha) => {
+  const match = new RegExp(`<!-- asf-preview-passed-over ${sha.slice(0, 7)}: ([0-9,]*) -->`).exec(body ?? "");
+  return new Set((match?.[1] ?? "").split(",").filter(Boolean).map(Number));
+};
+/** The reason the status already gives for refusing `sha`, or null. */
+const refusalIn = (body, sha) => {
+  if (!body?.startsWith(REFUSED_HEADING)) return null;
+  const line = (body.split("\n").find((l) => l.startsWith(`${refusedFor(sha)}: `)) ?? "");
+  return line ? line.slice(refusedFor(sha).length + 2) : null;
+};
+const refusedBody = (pr, reason, sha, artifactIds = []) =>
   `${REFUSED_HEADING}\n\n${urlLine(pr)} (unchanged)\n\n` +
-  `${refusedFor(sha)}: ${String(reason).slice(0, 200)}\n\n` +
-  `<!-- asf-preview-refused-builds: ${buildIds.filter(Number.isInteger).join(",")} -->`;
+  `${refusedFor(sha)}: ${String(reason).slice(0, 200)}\n\n${passedOverTag(sha, artifactIds)}`;
 
 const retiredBody = (pr) =>
   `### Preview retired\n\nThe preview for this pull request is no longer published. ` +

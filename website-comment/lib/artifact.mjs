@@ -108,9 +108,19 @@ async function listing(args) {
 }
 
 export function createArtifactFetcher({ gh, token, fetchImpl = fetch }) {
-  return async function fetchArtifact(runId) {
+  /**
+   * The run's preview-site artifact, downloaded, screened and extracted, as
+   * { dir, meta, cleanup, artifactId }; null when the run has none (or it
+   * expired); { skipped: true, artifactId } without a download when its id is
+   * in `skip`. A refusal is thrown with `refused` and `artifactId` set.
+   *
+   * Artifact ids, not run ids, identify what was screened: re-running a
+   * workflow run keeps the run id but uploads a new artifact.
+   */
+  return async function fetchArtifact(runId, { skip = new Set() } = {}) {
     const artifact = (await gh.listRunArtifacts(runId, "preview-site")).find((a) => a.name === "preview-site");
     if (!artifact || artifact.expired) return null;
+    if (skip.has(artifact.id)) return { skipped: true, artifactId: artifact.id };
 
     const dir = await mkdtemp(join(tmpdir(), "preview-artifact-"));
     try {
@@ -186,9 +196,10 @@ export function createArtifactFetcher({ gh, token, fetchImpl = fetch }) {
       // The caller owns the extracted tree from here and must call cleanup
       // whatever happens to it: one run fetches artifacts for many PRs, and
       // leaving each on disk can fill the runner before the last publishes.
-      return { dir: out, meta, cleanup: () => rm(dir, { recursive: true, force: true }) };
+      return { dir: out, meta, cleanup: () => rm(dir, { recursive: true, force: true }), artifactId: artifact.id };
     } catch (err) {
       await rm(dir, { recursive: true, force: true });
+      if (err?.refused === true) err.artifactId = artifact.id;
       throw err;
     }
   };

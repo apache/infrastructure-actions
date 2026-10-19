@@ -365,8 +365,10 @@ Cost and noise:
 
 - The publisher runs on events — a build or signal run completing, a PR
   comment, a dispatch — with no schedule, and exits quickly when nothing
-  changed. An unchanged head is not republished, and an artifact refused for
-  the current head is not downloaded again until a new commit or a dispatch.
+  changed. An unchanged head is not republished, and an artifact already
+  refused for the current head (or built by another PR with the same head) is
+  not downloaded again; a re-run's new artifact, a new commit or a dispatch is
+  screened.
   Every run reconciles every
   open PR, so a run that fails part-way is repaired by the next event, or by a
   dispatch with no PR number.
