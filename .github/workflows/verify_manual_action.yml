@@ -49,18 +49,26 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          # The whole allow list, as check_allowlist_approval.py has it, in
+          # both verify workflows: each job runs for one kind of author, so
+          # the one that runs must watch every allow-list file.
           WATCHED: |
             actions.yml
             approved_patterns.yml
+            .github/actions/for-dependabot-triggered-reviews/action.yml
         run: |
+          # Names compared as JSON strings, one per line, so a file name with
+          # a newline in it can neither hide a match nor fake one. Entries
+          # are counted, not lines, for the same reason.
           files="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/files" --paginate \
-            --jq '.[] | .filename, (.previous_filename // empty)')"
-          listed="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/files" --paginate --jq '.[].filename' | wc -l)"
+            --jq '.[] | (.filename, (.previous_filename // empty)) | @json')"
+          listed="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/files" --paginate --jq '.[] | 1' | wc -l)"
           changed="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq '.changed_files')"
-          if [ "${listed}" -lt "${changed}" ]; then
-            echo "Only ${listed} of ${changed} changed files listed; verifying to be safe."
+          watched="$(printf '%s' "${WATCHED}" | sed '/^$/d' | jq -R '.')"
+          if [ "${listed}" -lt "${changed}" ] || [ "${changed}" -ge 3000 ]; then
+            echo "The file list may be incomplete (${listed} of ${changed}); verifying to be safe."
             echo "run=true" >> "$GITHUB_OUTPUT"
-          elif grep -Fxq -f <(printf '%s' "${WATCHED}" | sed '/^$/d') <<< "${files}"; then
+          elif grep -Fxq -f <(printf '%s\n' "${watched}") <<< "${files}"; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "Not an allow-list PR; nothing to verify."
