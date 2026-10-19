@@ -362,6 +362,7 @@
 - shivammathur/setup-php@*
 - shogo82148/actions-setup-perl@*
 - sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad
+- sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
 - slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d
 - slsa-framework/actions@dea965cdca5e0cb422bf7b2653c9d15f678ad01c
 - snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263
