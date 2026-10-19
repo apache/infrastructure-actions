@@ -45,6 +45,7 @@ that, and both surface as errors that point away from the real cause:
 |---|---|---|
 | `Error: could not fetch diff for PR #<N>`, or `HTTP 401: Requires authentication` from a nested `gh` call, while `gh auth status` reports a healthy login | `gh` stores its token in the OS keyring (`gh auth status` says `Logged in to github.com account <user> (keyring)`). Keyring access can be lost in a child process or under a sandbox, so the nested `gh pr diff` authenticates as nobody | Pass the token explicitly: `GITHUB_TOKEN=$(gh auth token) uv run python -m verify_action_build ...`, or run outside the sandbox |
 | `Error: docker is required but not found in PATH` while Docker Desktop is running | Docker Desktop installs its CLI under `~/.docker/bin`, which may be outside `PATH` or a sandbox-denied read path | Prepend the CLI shipped in the app bundle: `PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"` (macOS) |
+| A `gh` command that worked bare fails once piped or redirected: `deny network-outbound api.github.com:443`, or `tls: failed to verify certificate: x509: OSStatus -26276` when the host is allowed | A sandbox exclusion such as `excludedCommands: ["gh *"]` only matches when the whole command is one `gh` invocation. A pipe, redirect, `;` or `&&` puts the command back in the sandbox | Run `gh` with nothing else in the command and filter with `--jq` / `--template`. Read job logs from `gh`'s own output, not through `\| sed` or `> file`. No sandbox bypass needed |
 
 Confirm the keyring case before chasing it — `bash -c 'gh auth status'`
 failing while a direct `gh auth status` succeeds is the tell.
@@ -76,11 +77,13 @@ rebuild, and is the only option when the local environment can't run one:
 
 ```
 gh pr checks <N> --json name,link --jq '.[] | select(.name=="verify") | .link'
-gh run view <run-id> --log --job <job-id> | sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g'
+gh run view <run-id> --log --job <job-id>
 ```
 
-Strip the ANSI escapes (as above) or the summary table is unreadable. Re-run
-locally only when you need to test a change to `verify-action-build` itself.
+Run each `gh` call on its own, with no pipe or redirect (see the last row of
+the gotchas table). The log keeps its ANSI colour escapes; read past them to
+the summary table rather than piping through `sed`. Re-run locally only when
+you need to test a change to `verify-action-build` itself.
 
 If the count of `Extracted action reference` lines is lower than the
 number of new hashes in the diff, the extractor is buggy → see case **E**
