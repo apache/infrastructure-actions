@@ -26,9 +26,6 @@ name: Verify Manual Allowlist PR
 
 on:
   pull_request:
-    paths:
-      - actions.yml
-      - approved_patterns.yml
 
 permissions:
   contents: read
@@ -39,13 +36,47 @@ jobs:
     if: github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-26.04
     steps:
+      # Required on every PR (.asf.yaml), so it runs on every PR, but only an
+      # allow-list PR is verified: for any other PR this step finds nothing to
+      # do and every step after it is skipped. Deciding here, not in a job
+      # this one needs, keeps it fail-closed: a failed lookup fails `verify`,
+      # where a failed upstream job would only skip it, and a skipped job
+      # passes a required check. A file list the API may have cut short (it
+      # stops at 3000) is verified, not skipped.
+      - name: Does this PR touch the allow list?
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          WATCHED: |
+            actions.yml
+            approved_patterns.yml
+        run: |
+          files="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/files" --paginate \
+            --jq '.[] | .filename, (.previous_filename // empty)')"
+          listed="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/files" --paginate --jq '.[].filename' | wc -l)"
+          changed="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq '.changed_files')"
+          if [ "${listed}" -lt "${changed}" ]; then
+            echo "Only ${listed} of ${changed} changed files listed; verifying to be safe."
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif grep -Fxq -f <(printf '%s' "${WATCHED}" | sed '/^$/d') <<< "${files}"; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Not an allow-list PR; nothing to verify."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        if: steps.scope.outputs.run == 'true'
         with:
           persist-credentials: false
 
       - run: pipx install uv
+        if: steps.scope.outputs.run == 'true'
 
       - name: Verify action build
+        if: steps.scope.outputs.run == 'true'
         run: |
           # Disable workflow command processing so that strings like
           # "##[add-matcher]" or "::error::" in action diffs are not

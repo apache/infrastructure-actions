@@ -29,6 +29,9 @@ github:
           # allowlist_approval.yml: an allow-list PR needs a maintainer's
           # approval or override label; other PRs pass it at once.
           - approval
+          # verify_*_action.yml: rebuilds an allow-list PR's action and
+          # compares it with the published one; other PRs pass it at once.
+          - verify
 
 notifications:
   commits: commits@infra.apache.org
