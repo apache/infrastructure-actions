@@ -694,6 +694,9 @@ jdx/mise-action:
     expires_at: 2027-01-09
   9b200bcecbfd6303e69a4a261b2e09e3757440a7:
     tag: v5.2.0
+    expires_at: 2027-01-11
+  fc42bcc7ddbf51124c30f95a877a0c5168a3bfde:
+    tag: v5.2.1
 JetBrains/qodana-action:
   4861e015da555e86a72b862892aba6c2b93e6891:
     tag: v2026.1.3
