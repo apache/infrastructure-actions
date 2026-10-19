@@ -113,9 +113,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--pr", required=True, type=int, help="pull request number")
     args = parser.parse_args(argv)
 
-    files = _gh_lines(
-        f"repos/{args.repo}/pulls/{args.pr}/files", "--paginate", "--jq", ".[].filename"
+    # A rename lists only the new name, so include the old one too.
+    entries = _gh_lines(
+        f"repos/{args.repo}/pulls/{args.pr}/files",
+        "--paginate",
+        "--jq",
+        ".[] | [.filename, (.previous_filename // empty)] | @json",
     )
+    files = [path for entry in entries for path in json.loads(entry)]
+    # The files API stops at 3000 entries; fail closed if the list is short.
+    changed = int(_gh_lines(f"repos/{args.repo}/pulls/{args.pr}", "--jq", ".changed_files")[0])
+    if len(entries) < changed:
+        print(
+            f"::error::Only {len(entries)} of {changed} changed files could be listed; "
+            "cannot tell whether this is an allow-list PR."
+        )
+        return 1
     if not is_allowlist_pr(files):
         print("Not an allow-list PR; no maintainer approval required.")
         return 0

@@ -43,8 +43,11 @@ jobs:
   approval:
     runs-on: ubuntu-26.04
     steps:
+      # Check out the base, not the PR head: the script is the gate, so a PR
+      # must not be able to rewrite it.  It only reads PR data via the API.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
 
       - name: Check maintainer approval
