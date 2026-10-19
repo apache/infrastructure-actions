@@ -33,6 +33,18 @@ export const MAX_ENTRIES = 100_000;
 const LISTING_MAX_BUFFER = 256 * 1024 * 1024;
 
 /**
+ * An archive the screens below turn down, as opposed to a download that failed.
+ * The publisher reports a refusal on the pull request and tries an older build;
+ * any other error fails the run, to be retried. The message is posted on the
+ * pull request, so it never carries entry names or other archive content.
+ */
+export function refusal(message) {
+  const err = new Error(message);
+  err.refused = true;
+  return err;
+}
+
+/**
  * Archive entry names that must never be extracted.
  *
  * This runs BEFORE extraction on purpose. An entry that escapes the root lands
@@ -87,9 +99,11 @@ async function listing(args) {
     return (await run("unzip", args, { maxBuffer: LISTING_MAX_BUFFER })).stdout;
   } catch (err) {
     if (err?.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
-      throw new Error(`archive listing exceeds ${LISTING_MAX_BUFFER} bytes; too many or too long entry names`);
+      throw refusal(`archive listing exceeds ${LISTING_MAX_BUFFER} bytes; too many or too long entry names`);
     }
-    throw err;
+    // The archive is the pull request's: one unzip cannot read is refused,
+    // not retried on every run.
+    throw refusal("archive could not be read");
   }
 }
 
@@ -120,12 +134,12 @@ export function createArtifactFetcher({ gh, token, fetchImpl = fetch }) {
       // check below still runs too.
       const advertised = Number(res.headers.get("content-length") ?? "0");
       if (advertised > MAX_ZIP_BYTES) {
-        throw new Error(`artifact advertises ${advertised} bytes, over the ${MAX_ZIP_BYTES} cap`);
+        throw refusal(`artifact advertises ${advertised} bytes, over the ${MAX_ZIP_BYTES} cap`);
       }
 
       const body = Buffer.from(await res.arrayBuffer());
       if (body.length > MAX_ZIP_BYTES) {
-        throw new Error(`artifact is ${body.length} bytes, over the ${MAX_ZIP_BYTES} cap`);
+        throw refusal(`artifact is ${body.length} bytes, over the ${MAX_ZIP_BYTES} cap`);
       }
 
       const zip = join(dir, "artifact.zip");
@@ -134,27 +148,33 @@ export function createArtifactFetcher({ gh, token, fetchImpl = fetch }) {
       const names = await listing(["-Z1", zip]);
       const entries = names.split("\n").filter(Boolean).length;
       if (entries > MAX_ENTRIES) {
-        throw new Error(`archive has ${entries} entries, over the ${MAX_ENTRIES} cap`);
+        throw refusal(`archive has ${entries} entries, over the ${MAX_ENTRIES} cap`);
       }
       const unsafe = unsafeArchiveEntries(names);
       if (unsafe.length) {
-        throw new Error(`archive contains unsafe entry names: ${unsafe.slice(0, 5).join(", ")}`);
+        // The names are pull-request content: the log gets them, the PR a count.
+        console.error(`preview: unsafe entry names: ${JSON.stringify(unsafe.slice(0, 20))}`);
+        throw refusal(`archive contains ${unsafe.length} unsafe entry name(s)`);
       }
 
       const longListing = await listing(["-Z", zip]);
       if (archiveHasSymlinkMembers(longListing)) {
-        throw new Error("archive contains symlink members");
+        throw refusal("archive contains symlink members");
       }
       const total = uncompressedBytes(longListing);
       if (total === null) {
-        throw new Error("could not read the archive's uncompressed size");
+        throw refusal("could not read the archive's uncompressed size");
       }
       if (total > MAX_UNCOMPRESSED_BYTES) {
-        throw new Error(`archive expands to ${total} bytes, over the ${MAX_UNCOMPRESSED_BYTES} cap`);
+        throw refusal(`archive expands to ${total} bytes, over the ${MAX_UNCOMPRESSED_BYTES} cap`);
       }
 
       const out = join(dir, "site");
-      await run("unzip", ["-q", "-o", zip, "-d", out]);
+      try {
+        await run("unzip", ["-q", "-o", zip, "-d", out]);
+      } catch {
+        throw refusal("archive could not be extracted");
+      }
       await rm(zip, { force: true });
 
       let meta = null;

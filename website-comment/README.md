@@ -232,10 +232,14 @@ const previewSrc =
 
 export default defineConfig({
   vite: {
-    plugins: [previewSrc && previewSrc({ vite, root: process.cwd() })],
+    plugins: [previewSrc && previewSrc({ vite })],
   },
 });
 ```
+
+Stamped paths are relative to the repository root, found as the nearest
+directory above the build holding `.git`, so a site in a subdirectory works
+too; set `PREVIEW_SRC_ROOT` to override it.
 
 Then in the build workflow, pass the plugin to the preview build step:
 

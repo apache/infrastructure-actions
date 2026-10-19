@@ -15,7 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { relative } from "node:path";
+import { existsSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
+
+/**
+ * The directory stamped paths are relative to, as the Jekyll adapter finds it:
+ * PREVIEW_SRC_ROOT when set, else the nearest ancestor of `start` holding .git
+ * (a directory, or a file in a worktree), else `start`. Paths must match the
+ * repository-relative ones the diff anchors use, also for a site in a
+ * subdirectory.
+ */
+export function repoRoot(start = process.cwd(), env = process.env) {
+  if (env.PREVIEW_SRC_ROOT) return resolve(env.PREVIEW_SRC_ROOT);
+  for (let dir = resolve(start); ; dir = dirname(dir)) {
+    if (existsSync(join(dir, ".git"))) return dir;
+    if (dirname(dir) === dir) return resolve(start);
+  }
+}
 
 /**
  * Stamps every JSX host element with the source file and line it came from, so
@@ -34,7 +50,7 @@ import { relative } from "node:path";
  * file is loaded from the action's checkout, which has no node_modules, so it
  * cannot import Vite itself; it uses the parser the site already builds with.
  */
-export default function previewSrc({ vite, root = process.cwd() } = {}) {
+export default function previewSrc({ vite, root = repoRoot() } = {}) {
   if (typeof vite?.parseSync !== "function" || typeof vite?.Visitor !== "function") {
     throw new TypeError("previewSrc needs { vite }: the site's `import * as vite from \"vite\"` (Vite 8 or later)");
   }

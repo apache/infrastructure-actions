@@ -32,7 +32,8 @@ export function validateMeta(meta, expected) {
 
   const pr = String(meta.pr ?? "");
   if (!/^\d+$/.test(pr)) {
-    return { ok: false, reason: `pr is not a plain number: ${JSON.stringify(meta.pr)}` };
+    // The value is the artifact's, so it is not echoed into the PR's comment.
+    return { ok: false, reason: "pr is not a plain number" };
   }
   if (Number(pr) !== expected.number) {
     return { ok: false, reason: `pr ${pr} does not match the PR being published (${expected.number})` };

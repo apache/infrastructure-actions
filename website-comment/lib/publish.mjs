@@ -368,7 +368,16 @@ async function publishOne({
   let artifact = null;
   let refusal = null;
   for (const build of builds) {
-    const candidate = await fetchArtifact(build.id);
+    let candidate;
+    try {
+      candidate = await fetchArtifact(build.id);
+    } catch (err) {
+      // A refused archive is reported and an older build tried; anything else
+      // (a failed download) fails the run, to be retried.
+      if (err?.refused !== true) throw err;
+      refusal = err.message;
+      continue;
+    }
     if (!candidate) continue;
     const check = validateMeta(candidate.meta, { number: pr, headSha });
     if (check.ok) {
@@ -431,11 +440,15 @@ async function publishArtifact({ gh, git, repo, pr, headSha, artifact }) {
   try {
     unsafe = await findUnsafeEntries(artifact.dir);
   } catch (err) {
-    await gh.upsertComment(pr, MARKER, refusedBody(pr, `could not screen the artifact: ${err.message}`));
+    // The message can carry paths from the artifact; it goes to the log only.
+    console.error(`preview: could not screen the artifact for #${pr}: ${err.message}`);
+    await gh.upsertComment(pr, MARKER, refusedBody(pr, "could not screen the artifact"));
     return false;
   }
   if (unsafe.length) {
-    await gh.upsertComment(pr, MARKER, refusedBody(pr, `unsafe entries: ${unsafe.join(", ")}`));
+    // Entry names are pull-request content: the log gets them, the PR a count.
+    console.error(`preview: unsafe entries for #${pr}: ${JSON.stringify(unsafe.slice(0, 20))}`);
+    await gh.upsertComment(pr, MARKER, refusedBody(pr, `${unsafe.length} symlink entr${unsafe.length === 1 ? "y" : "ies"}`));
     return false;
   }
 

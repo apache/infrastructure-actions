@@ -17,8 +17,11 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { mkdtemp, mkdir } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import * as vite from "vite";
-import previewSrc, { stampSource } from "./vite-plugin-preview-src.mjs";
+import previewSrc, { stampSource, repoRoot } from "./vite-plugin-preview-src.mjs";
 
 const run = (code, filename = "/repo/src/components/Thing.tsx") =>
   stampSource(code, filename, "/repo", vite);
@@ -61,4 +64,15 @@ test("the plugin transforms through the site's Vite, and refuses to run without 
   const out = plugin.transform.handler("const a = <div />;", "/repo/src/A.jsx?v=1");
   assert.match(out.code, /data-preview-src="src\/A\.jsx:1"/);
   assert.throws(() => previewSrc({ root: "/repo" }), /needs \{ vite \}/);
+});
+
+test("paths are relative to the repository, also for a site in a subdirectory", async () => {
+  const repo = await mkdtemp(join(tmpdir(), "astro-root-"));
+  await mkdir(join(repo, ".git"));
+  await mkdir(join(repo, "site", "src"), { recursive: true });
+  assert.equal(repoRoot(join(repo, "site"), {}), repo);
+  assert.equal(repoRoot(join(repo, "site"), { PREVIEW_SRC_ROOT: "/elsewhere" }), "/elsewhere");
+
+  const out = stampSource("const a = <div />;", join(repo, "site", "src", "A.tsx"), repoRoot(join(repo, "site"), {}), vite);
+  assert.match(out, /data-preview-src="site\/src\/A\.tsx:1"/);
 });

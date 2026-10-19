@@ -499,7 +499,53 @@ test("refuses an artifact containing a symlink", async () => {
   await go(f, { fetchArtifact: async () => ({ dir, meta: { pr: 5, headSha: SHA } }) });
 
   assert.equal(f.pushed.length, 0);
-  assert.match(f.posted.at(-1).body, /unsafe entries/i);
+  assert.match(f.posted.at(-1).body, /1 symlink entry/i);
+});
+
+test("a refusal comment never repeats the artifact's own names or values", async () => {
+  const dir = await artifactDir();
+  await symlink("/etc/passwd", join(dir, "@someone [click](evil.example)"));
+  const named = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] } });
+  await go(named, { fetchArtifact: async () => ({ dir, meta: { pr: 5, headSha: SHA } }) });
+  assert.doesNotMatch(named.posted.at(-1).body, /@someone|evil\.example/);
+
+  const bogus = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] } });
+  await go(bogus, { fetchArtifact: async () => ({ dir, meta: { pr: "@someone", headSha: SHA } }) });
+  assert.doesNotMatch(bogus.posted.at(-1).body, /@someone/);
+  assert.match(bogus.posted.at(-1).body, /could not be published/);
+});
+
+test("an archive the fetcher refuses is reported, and an older build is tried", async () => {
+  const dir = await artifactDir();
+  const refused = Object.assign(new Error("archive contains symlink members"), { refused: true });
+
+  const one = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] } });
+  await go(one, { fetchArtifact: async () => { throw refused; } });
+  assert.equal(process.exitCode ?? 0, 0, "a refusal is not a failed run");
+  assert.match(one.posted.at(-1).body, /could not be published[\s\S]*symlink members/);
+
+  const two = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, hasBuild: [{ id: 2 }, { id: 1 }] });
+  await go(two, {
+    fetchArtifact: async (id) => {
+      if (id === 2) throw refused;
+      return { dir, meta: { pr: 5, headSha: SHA } };
+    },
+  });
+  assert.equal(two.pushed.length, 1, "the older, acceptable build publishes");
+});
+
+test("a failed download fails the run instead of being reported as a refusal", async () => {
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] } });
+  const error = console.error;
+  console.error = () => {};
+  try {
+    await go(f, { fetchArtifact: async () => { throw new Error("artifact download failed with 502"); } });
+  } finally {
+    console.error = error;
+  }
+  assert.equal(process.exitCode, 1);
+  assert.ok(!f.posted.some((p) => /could not be published/.test(p.body)));
+  process.exitCode = 0;
 });
 
 test("says it is waiting when there is no successful build", async () => {

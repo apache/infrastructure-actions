@@ -33,6 +33,11 @@ action's checkout, which has no `node_modules` of its own. It needs Vite 8 or
 later, and neither Babel nor `@astrojs/react` options — since `@astrojs/react`
 7 the React integration no longer runs Babel.
 
+Paths are relative to the repository root: `PREVIEW_SRC_ROOT` when set,
+else the nearest directory above the build holding `.git`, as the Jekyll
+adapter does. A site in a subdirectory gets the same paths as the pull
+request's diff.
+
 Left alone: component elements (`<Thing />`), whose host elements are stamped
 in their own file; member-expression tags (`<motion.div>`); an element that
 already carries `data-preview-src`; files under `node_modules`; and a file
