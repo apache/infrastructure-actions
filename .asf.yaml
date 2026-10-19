@@ -25,13 +25,41 @@ github:
       required_status_checks:
         # strict means "Require branches to be up to date before merging".
         strict: false
-        contexts:
-          # allowlist_approval.yml: an allow-list PR needs a maintainer's
-          # approval or override label; other PRs pass it at once.
-          - approval
-          # verify_*_action.yml: rebuilds an allow-list PR's action and
-          # compares it with the published one; other PRs pass it at once.
-          - verify
+  # The checks every PR must pass to merge. A ruleset rather than
+  # protected_branches, because only a ruleset can name who may bypass it.
+  rulesets:
+    - name: "Required checks"
+      target: branch
+      enforcement: active
+      conditions:
+        ref_name:
+          include:
+            - "~DEFAULT_BRANCH"
+          exclude: []
+      bypass_actors:
+        # Repository admins, always: update.yml pushes its sync commit to
+        # main directly as asfgit, which is an admin.
+        - actor_id: 5
+          actor_type: RepositoryRole
+          bypass_mode: always
+        # Write access, on pull requests only: a maintainer can choose to
+        # merge past the checks, never push past them.
+        - actor_id: 4
+          actor_type: RepositoryRole
+          bypass_mode: pull_request
+      rules:
+        - type: required_status_checks
+          parameters:
+            strict_required_status_checks_policy: false
+            required_status_checks:
+              # allowlist_approval.yml: an allow-list PR needs a maintainer's
+              # approval; other PRs pass it at once.
+              - context: approval
+                integration_id: -1
+              # verify_*_action.yml: rebuilds an allow-list PR's action and
+              # compares it with the published one; other PRs pass it at once.
+              - context: verify
+                integration_id: -1
 
 notifications:
   commits: commits@infra.apache.org

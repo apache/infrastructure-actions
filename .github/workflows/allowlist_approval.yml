@@ -18,24 +18,22 @@
 #
 # Fails PRs that touch the allow list (actions.yml, approved_patterns.yml or
 # the generated Dependabot composite action) until at least one maintainer —
-# a reviewer with write access — has approved, or a maintainer has waived
-# that with the allowlist-approval-override label.  Other PRs pass
+# a reviewer with write access — has approved.  Other PRs pass
 # immediately, so the check is required on every PR (.asf.yaml).
 #
-# Re-runs on review and label events so the status flips as soon as an
-# approval or the override lands or goes.
+# Re-runs on review events so the status flips as soon as an approval lands
+# or is dismissed.
 name: Allowlist Maintainer Approval
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    types: [opened, synchronize, reopened]
   pull_request_review:
     types: [submitted, edited, dismissed]
 
 permissions:
   contents: read
   pull-requests: read
-  issues: read  # who added the override label
 
 concurrency:
   group: allowlist-approval-${{ github.event.pull_request.number }}

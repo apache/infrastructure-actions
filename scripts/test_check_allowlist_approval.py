@@ -79,39 +79,3 @@ def test_no_maintainer_approval():
     reviews = [_review("carol", "APPROVED"), _review("alice", "COMMENTED")]
     permissions = {"alice": "admin", "carol": "read"}
     assert caa.maintainer_approvers(reviews, permissions.__getitem__) == []
-
-
-def _labeled(login, label=None, event="labeled"):
-    return {"event": event, "label": label or caa.OVERRIDE_LABEL, "login": login}
-
-
-def _permission(**perms):
-    return lambda login: perms.get(login, "read")
-
-
-def test_override_by_a_maintainer_waives_approval():
-    perms = _permission(alice="write")
-    assert caa.override_by([caa.OVERRIDE_LABEL], [_labeled("alice")], perms) == "alice"
-
-
-def test_override_needs_the_label_on_the_pr():
-    perms = _permission(alice="write")
-    events = [_labeled("alice"), _labeled("alice", event="unlabeled")]
-    assert caa.override_by([], events, perms) is None
-
-
-def test_override_by_a_triager_does_not_count():
-    perms = _permission(alice="write", tri="triage")
-    # A maintainer added it once, but whoever added it last is a triager.
-    events = [_labeled("alice"), _labeled("alice", event="unlabeled"), _labeled("tri")]
-    assert caa.override_by([caa.OVERRIDE_LABEL], events, perms) is None
-
-
-def test_override_with_no_labeled_event_does_not_count():
-    assert caa.override_by([caa.OVERRIDE_LABEL], [], _permission()) is None
-
-
-def test_other_labels_are_not_an_override():
-    perms = _permission(alice="write")
-    assert caa.override_by(["preview"], [_labeled("alice", label="preview")], perms) is None
-
