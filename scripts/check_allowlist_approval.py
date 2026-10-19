@@ -32,6 +32,11 @@ A maintainer is a reviewer with write (or higher) permission on the
 repository.  Only each reviewer's latest decisive review counts, so an
 approval later followed by "changes requested" or a dismissal does not.
 
+A maintainer can waive the approval by adding ``OVERRIDE_LABEL`` -- for an
+allow-list PR they authored themselves, which GitHub does not let them
+approve.  The label counts only while it is on the PR and whoever last added
+it has write access: triagers can add labels too.
+
 The decision logic is kept in pure functions for unit testing; ``main``
 fetches the PR files, reviews and reviewer permissions through ``gh api``.
 
@@ -58,6 +63,8 @@ ALLOWLIST_PATHS = frozenset(
 # Legacy ``permission`` values returned by the collaborator permission API;
 # ``maintain`` is reported as ``write`` there.
 MAINTAINER_PERMISSIONS = frozenset({"admin", "maintain", "write"})
+
+OVERRIDE_LABEL = "allowlist-approval-override"
 
 # Review states that set a reviewer's verdict.  COMMENTED and PENDING do not
 # change it, matching how GitHub itself counts approvals.
@@ -88,6 +95,29 @@ def maintainer_approvers(
         for login in approvers(reviews)
         if permission_of(login) in MAINTAINER_PERMISSIONS
     ]
+
+
+def override_by(
+    labels: Iterable[str],
+    label_events: Iterable[dict],
+    permission_of: Callable[[str], str],
+) -> str | None:
+    """The maintainer whose override label waives the approval, or None.
+
+    ``label_events`` must be in chronological order, as the API returns them.
+    A label with no visible ``labeled`` event counts for nothing: who added it
+    is unknown, and unknown must not be more permissive than a refusal.
+    """
+    if OVERRIDE_LABEL not in labels:
+        return None
+    added = [
+        e["login"]
+        for e in label_events
+        if e["event"] == "labeled" and e["label"] == OVERRIDE_LABEL
+    ]
+    if not added:
+        return None
+    return added[-1] if permission_of(added[-1]) in MAINTAINER_PERMISSIONS else None
 
 
 def _gh_lines(*args: str) -> list[str]:
@@ -148,9 +178,26 @@ def main(argv: list[str] | None = None) -> int:
     if approved_by:
         print(f"Allow-list PR approved by maintainer(s): {', '.join(approved_by)}")
         return 0
+
+    labels = _gh_lines(f"repos/{args.repo}/issues/{args.pr}", "--jq", ".labels[].name")
+    label_events = [
+        json.loads(line)
+        for line in _gh_lines(
+            f"repos/{args.repo}/issues/{args.pr}/events",
+            "--paginate",
+            "--jq",
+            '.[] | select(.event == "labeled" or .event == "unlabeled")'
+            " | {event, label: .label.name, login: .actor.login}",
+        )
+    ]
+    waived_by = override_by(labels, label_events, lambda login: _permission_of(args.repo, login))
+    if waived_by:
+        print(f"Maintainer approval waived by {waived_by} with the {OVERRIDE_LABEL} label.")
+        return 0
     print(
         "::error::Allow-list PR has no approval from a maintainer "
-        "(a reviewer with write access to the repository)."
+        "(a reviewer with write access to the repository). A maintainer can "
+        f"waive it with the {OVERRIDE_LABEL} label."
     )
     return 1
 

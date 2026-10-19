@@ -25,6 +25,10 @@ github:
       required_status_checks:
         # strict means "Require branches to be up to date before merging".
         strict: false
+        contexts:
+          # allowlist_approval.yml: an allow-list PR needs a maintainer's
+          # approval or override label; other PRs pass it at once.
+          - approval
 
 notifications:
   commits: commits@infra.apache.org
