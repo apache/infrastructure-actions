@@ -57,8 +57,11 @@ export const hasLabel = (pull, label) =>
  * The label alone is not enough: on an ASF repository, collaborators with the
  * triage role can add labels without being committers, and arming has always
  * required write access. The publisher itself adds the label only on a
- * maintainer's behalf (a /show-preview comment or a manual dispatch), so its
- * own login (`publisher`) is trusted — that exact login, never any bot.
+ * maintainer's behalf (a /show-preview comment or a manual dispatch), but its
+ * login is not proof of that: the default github-actions[bot] is shared by
+ * every workflow in the repository, an auto-labeller included. So a label
+ * from `publisher` counts only when `vouched` finds the record the publisher
+ * leaves when it arms — see publisherVouched. Any other bot never counts.
  *
  * A label with no matching `labeled` event is treated as unarmed: who added it
  * is unknown, and unknown must not be more permissive than a refusal.
@@ -69,6 +72,7 @@ export async function resolveArmed({
   labelEvents,
   hasWriteAccess,
   publisher = PUBLISHER_LOGIN,
+  vouched = async () => false,
 }) {
   if (!hasLabel(pull, label)) return { armed: false, by: null };
 
@@ -78,7 +82,7 @@ export async function resolveArmed({
   const by = last?.actor?.login;
   if (!by) return { armed: false, by: null };
 
-  if (by === publisher) return { armed: true, by };
+  if (by === publisher) return (await vouched()) ? { armed: true, by } : { armed: false, by: null };
   return (await hasWriteAccess(by)) ? { armed: true, by } : { armed: false, by: null };
 }
 
@@ -109,4 +113,30 @@ export async function pendingArmingCommands({ comments, hasWriteAccess, isAcknow
   }
 
   return out;
+}
+
+/** Ends the publisher's comment announcing a dispatch-armed preview. */
+export const ARMED_MARKER = "asf-preview-armed";
+
+/**
+ * Whether the pull request carries the record the publisher leaves when it
+ * arms on a maintainer's behalf: its own dispatch announcement, or a
+ * /show-preview from someone with write access that it acknowledged. A label
+ * from the publisher's login without either was put there by some other
+ * workflow sharing the token, and arms nothing.
+ */
+export async function publisherVouched({ comments, hasWriteAccess, isAcknowledged, publisher }) {
+  const tag = `<!-- ${ARMED_MARKER} -->`;
+  const announced = comments.some(
+    (c) => c?.user?.login === publisher && typeof c.body === "string" && c.body.trimEnd().endsWith(tag),
+  );
+  if (announced) return true;
+
+  for (const c of comments) {
+    if (!isShowPreviewComment(c?.body)) continue;
+    const login = c?.user?.login;
+    if (!login || !(await hasWriteAccess(login))) continue;
+    if (await isAcknowledged(c)) return true;
+  }
+  return false;
 }

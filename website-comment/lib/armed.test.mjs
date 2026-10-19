@@ -17,7 +17,14 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveArmed, pendingArmingCommands, previewLabel, hasLabel, publisherLogin } from "./armed.mjs";
+import {
+  resolveArmed,
+  pendingArmingCommands,
+  previewLabel,
+  hasLabel,
+  publisherLogin,
+  publisherVouched,
+} from "./armed.mjs";
 
 test("publisherLogin defaults to the workflow token's bot and holds to a login", () => {
   assert.equal(publisherLogin({}), "github-actions[bot]");
@@ -77,16 +84,35 @@ test("judges the LAST time the label was added", async () => {
   assert.equal(r.armed, false);
 });
 
-test("trusts the publisher's own login, and no other bot", async () => {
+test("trusts the publisher's own label only with its arming record, and no other bot", async () => {
   const noone = writers();
+  const base = { pull: labelled, label: "preview", hasWriteAccess: noone };
   const own = await resolveArmed({
-    pull: labelled, label: "preview", labelEvents: [labeledBy("github-actions[bot]")], hasWriteAccess: noone,
+    ...base, labelEvents: [labeledBy("github-actions[bot]")], vouched: async () => true,
   });
+  // Another workflow on the shared token (an auto-labeller) added it.
+  const unvouched = await resolveArmed({ ...base, labelEvents: [labeledBy("github-actions[bot]")] });
   const other = await resolveArmed({
-    pull: labelled, label: "preview", labelEvents: [labeledBy("other-app[bot]")], hasWriteAccess: noone,
+    ...base, labelEvents: [labeledBy("other-app[bot]")], vouched: async () => true,
   });
   assert.equal(own.armed, true);
+  assert.equal(unvouched.armed, false);
   assert.equal(other.armed, false);
+});
+
+test("publisherVouched needs the publisher's dispatch record or an acknowledged writer's command", async () => {
+  const publisher = "github-actions[bot]";
+  const hasWriteAccess = async (login) => login === "maintainer";
+  const cmd = (login, id) => ({ id, user: { login, type: "User" }, body: "/show-preview" });
+  const vouched = (comments, acked = []) =>
+    publisherVouched({ comments, hasWriteAccess, isAcknowledged: async (c) => acked.includes(c.id), publisher });
+
+  assert.equal(await vouched([]), false);
+  assert.equal(await vouched([{ user: { login: publisher, type: "Bot" }, body: "armed\n\n<!-- asf-preview-armed -->" }]), true);
+  assert.equal(await vouched([{ user: { login: "other[bot]", type: "Bot" }, body: "x <!-- asf-preview-armed -->" }]), false);
+  assert.equal(await vouched([cmd("maintainer", 1)], [1]), true);
+  assert.equal(await vouched([cmd("maintainer", 1)], []), false, "not acknowledged");
+  assert.equal(await vouched([cmd("drive-by", 2)], [2]), false, "not a writer");
 });
 
 test("a label with no labeled event is unarmed", async () => {

@@ -42,6 +42,30 @@ if grep -Eq '^[[:space:]]*safe:[[:space:]]*true' "$config"; then
   exit 1
 fi
 
+# The github-pages gem forces safe mode through its own configuration, not
+# _config.yml, so look for it in the Gemfile Bundler would use: BUNDLE_GEMFILE,
+# else the nearest one from the site up to the repository root.
+gemfiles=""
+if [ -n "${BUNDLE_GEMFILE:-}" ]; then
+  gemfiles="$BUNDLE_GEMFILE ${BUNDLE_GEMFILE}.lock"
+else
+  dir="$(cd "$site" && pwd)"
+  while :; do
+    if [ -f "$dir/Gemfile" ] || [ -f "$dir/Gemfile.lock" ]; then
+      gemfiles="$dir/Gemfile $dir/Gemfile.lock"
+      break
+    fi
+    if [ -e "$dir/.git" ] || [ "$dir" = "/" ]; then break; fi
+    dir="$(dirname "$dir")"
+  done
+fi
+for g in $gemfiles; do
+  if [ -f "$g" ] && grep -Eq '(^|[^A-Za-z0-9_-])github-pages([^A-Za-z0-9_-]|$)' "$g"; then
+    echo "prepare.sh: $g uses the github-pages gem, which forces safe mode and ignores _plugins" >&2
+    exit 1
+  fi
+done
+
 plugins_dir="$(sed -n 's/^plugins_dir:[[:space:]]*["'\'']*\([^"'\'' ]*\).*/\1/p' "$config" | head -n 1)"
 plugins_dir="${plugins_dir:-_plugins}"
 

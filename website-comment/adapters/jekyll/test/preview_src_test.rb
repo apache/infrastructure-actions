@@ -143,4 +143,20 @@ class PreviewSrcUnitTest < Minitest::Test
       refute system(PREPARE, dir, out: File::NULL, err: File::NULL)
     end
   end
+
+  def test_prepare_refuses_a_site_on_the_github_pages_gem
+    Dir.mktmpdir do |dir|
+      Dir.mkdir(File.join(dir, ".git"))
+      site = File.join(dir, "docs")
+      Dir.mkdir(site)
+      File.write(File.join(site, "_config.yml"), "title: x\n")
+      env = { "BUNDLE_GEMFILE" => nil }
+
+      File.write(File.join(dir, "Gemfile"), %(gem "jekyll"\n))
+      assert system(env, PREPARE, site, out: File::NULL)
+
+      File.write(File.join(dir, "Gemfile"), %(gem "github-pages", group: :jekyll_plugins\n))
+      refute system(env, PREPARE, site, out: File::NULL, err: File::NULL)
+    end
+  end
 end

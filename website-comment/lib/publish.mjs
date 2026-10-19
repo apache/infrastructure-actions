@@ -21,6 +21,8 @@ import {
   previewLabel,
   hasLabel,
   publisherLogin,
+  publisherVouched,
+  ARMED_MARKER,
   PUBLISHER_LOGIN,
 } from "./armed.mjs";
 import { planActions } from "./plan.mjs";
@@ -131,13 +133,15 @@ export async function run({
   // manual dispatch are two ways of putting it there; removing it disarms.
   const armedByPr = new Map();
   const commentsByPr = new Map();
-  const armedBy = async (pull) =>
+  const isAcknowledged = (c) => gh.hasReaction(c.id, ACK_REACTION, publisher);
+  const armedBy = async (pull, comments) =>
     (await resolveArmed({
       pull,
       label,
       labelEvents: await gh.listLabelEvents(pull.number),
       hasWriteAccess,
       publisher,
+      vouched: () => publisherVouched({ comments, hasWriteAccess, isAcknowledged, publisher }),
     })).armed;
 
   for (const pull of openPulls) {
@@ -150,14 +154,14 @@ export async function run({
       const pending = await pendingArmingCommands({
         comments,
         hasWriteAccess,
-        isAcknowledged: (c) => gh.hasReaction(c.id, ACK_REACTION, publisher),
+        isAcknowledged,
       });
       // A dispatch is itself the authorisation.
       if (pending.length || only === pull.number) {
         // A label someone without write access put on first does not arm, and
         // the command is acknowledged below, so it would arm this run only.
         // Re-adding the label as the publisher makes the arming stick.
-        if (labelled && !(await armedBy(pull))) {
+        if (labelled && !(await armedBy(pull, comments))) {
           await gh.removeLabel(pull.number, label);
           labelled = false;
         }
@@ -165,7 +169,10 @@ export async function run({
           await arm(pull.number);
           labelled = true;
           if (only === pull.number) {
-            await gh.createComment(pull.number, armedBody(pull.number, dispatchedBy, label));
+            await gh.createComment(
+              pull.number,
+              `${armedBody(pull.number, dispatchedBy, label)}\n\n<!-- ${ARMED_MARKER} -->`,
+            );
           }
         }
         armedHere = true;
@@ -174,7 +181,7 @@ export async function run({
         for (const c of pending) await gh.addReaction(c.id, ACK_REACTION);
       }
 
-      const armed = armedHere || (labelled && (await armedBy(pull)));
+      const armed = armedHere || (labelled && (await armedBy(pull, comments)));
       armedByPr.set(pull.number, armed);
 
       // Announce to humans only. A dependency-bump bot opens many pull
@@ -521,8 +528,9 @@ const howtoBody = (label) =>
 import { createClient } from "./github.mjs";
 import { createGit } from "./git.mjs";
 import { createArtifactFetcher } from "./artifact.mjs";
+import { isMain } from "./main.mjs";
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   const repo = process.env.GITHUB_REPOSITORY;
   const token = process.env.GITHUB_TOKEN;
   if (!repo || !token) {

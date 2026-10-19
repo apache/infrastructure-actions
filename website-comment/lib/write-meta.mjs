@@ -17,6 +17,7 @@
 
 import { writeFile } from "node:fs/promises";
 import { buildAnchors } from "./anchors.mjs";
+import { isMain } from "./main.mjs";
 
 /**
  * Write preview-meta.json in the UNPRIVILEGED pull-request build.
@@ -52,7 +53,7 @@ async function listFiles({ repo, pr, token }) {
   return out;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   const { GITHUB_REPOSITORY: repo, GITHUB_TOKEN: token, PR_NUMBER, HEAD_SHA, OUT } = process.env;
   if (!/^\d+$/.test(String(PR_NUMBER)) || !/^[0-9a-f]{40}$/.test(String(HEAD_SHA)) || !OUT) {
     console.error("PR_NUMBER, HEAD_SHA (40-hex) and OUT are required");

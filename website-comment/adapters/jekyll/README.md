@@ -52,9 +52,10 @@ with `generator: jekyll` — see the [Jekyll path](../../README.md#jekyll) and
 the [Quick start](../../README.md#quick-start). The action runs
 `prepare.sh <site source>`, which copies `preview_src.rb` into the site's
 plugins directory (`plugins_dir`, default `_plugins`) for the preview build
-only. It refuses a site with `safe: true` — which the `github-pages` gem
-forces — because safe mode ignores `_plugins` and the build would silently
-stamp nothing.
+only. It refuses a site with `safe: true` in its config, or whose Gemfile or
+Gemfile.lock (`BUNDLE_GEMFILE`, else the nearest one up to the repository
+root) uses the `github-pages` gem, which forces safe mode without it: safe
+mode ignores `_plugins`, and the build would silently stamp nothing.
 
 Running `prepare.sh` by hand works too; delete the copied file afterwards,
 since anything built while it is there is annotated.

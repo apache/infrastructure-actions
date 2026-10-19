@@ -93,6 +93,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          # The PR's head, not the default merge commit: the diff anchors use
+          # the head's line numbers, and a merge would shift the stamped lines
+          # wherever the base branch changed the same file.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       # ... set up Ruby the way you already do ...
       - name: Production build
@@ -212,8 +216,9 @@ Details, limits and the plugin's tests: [`adapters/jekyll/`](adapters/jekyll/REA
 
 - Set `source:` if your site is not at the repository root.
 - **Safe mode is not supported.** The `github-pages` gem forces
-  `safe: true`, which ignores `_plugins`; the action refuses rather than
-  producing a preview with nothing stamped. Use `generator: none` there.
+  `safe: true`, which ignores `_plugins`; the action refuses a site that sets
+  `safe: true` or uses that gem, rather than producing a preview with
+  nothing stamped. Use `generator: none` there.
 
 ### Astro
 
@@ -400,7 +405,13 @@ Cost and noise:
   only when whoever last added it has write access (triage can label without
   being a committer); a label with no visible `labeled` event counts as
   unarmed. A `/show-preview` counts only from a commenter with write access,
-  and only when the comment is exactly the command.
+  and only when the comment is exactly the command. A label from the
+  publisher's own login counts only next to the record it leaves when it arms
+  for a committer (its acknowledgement of a `/show-preview`, or its dispatch
+  comment): the default `github-actions[bot]` is shared by every workflow in
+  the repository, so an auto-labeller adding the label arms nothing. If other
+  workflows post comments or reactions as that login, give the publisher its
+  own GitHub App token and `publisher-login`.
 - **Status comments are edited only when authored by the publisher's own
   login and ending in the exact marker**, so nobody can plant a marker in
   someone else's comment to have it overwritten.

@@ -101,6 +101,18 @@ test("clampRegion yields no region for a drag entirely off-screen", () => {
   assert.equal(clampRegion({ x1: 100, y1: -300, x2: 200, y2: -200 }, viewport), null);
 });
 
+test("sourceUrl encodes the path, so # and ? in a file name stay in it", async () => {
+  const { sourceUrl } = await import("./logic.mjs");
+  assert.equal(
+    sourceUrl({ repo: "a/b", branch: "release/1.x", source: "docs/C#.md:12" }),
+    "https://github.com/a/b/blob/release/1.x/docs/C%23.md#L12",
+  );
+  assert.equal(
+    sourceUrl({ repo: "a/b", branch: "main", source: "docs/what?.md:3" }),
+    "https://github.com/a/b/blob/main/docs/what%3F.md#L3",
+  );
+});
+
 test("sourceUrl links the marked line on the branch", async () => {
   const { sourceUrl } = await import("./logic.mjs");
   assert.equal(

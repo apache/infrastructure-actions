@@ -36,10 +36,14 @@ export async function overlayFiles(config) {
   return {
     "_preview/html2canvas-pro.min.js": vendor,
     // The overlay's pure logic is unit-tested as a module and inlined here; the
-    // browser file has no build step and no imports.
+    // browser file has no build step and no imports. All of it sits in one
+    // function scope: at the top level of a classic script its names would be
+    // page globals, and a page's own `const MIN_SIDE` would stop it loading.
     "_preview/review.js":
+      "(function () {\n" +
       logic.replace(/^export /gm, "") +
-      `\nwindow.__ASF_PREVIEW__ = ${JSON.stringify(config)};\n` + overlay,
+      `\nwindow.__ASF_PREVIEW__ = ${JSON.stringify(config)};\n` + overlay +
+      "\n})();\n",
   };
 }
 
@@ -82,7 +86,7 @@ export async function findHtmlFiles(root) {
   for (const entry of await readdir(root, { withFileTypes: true })) {
     const full = join(root, entry.name);
     if (entry.isDirectory() && !entry.isSymbolicLink()) out.push(...(await findHtmlFiles(full)));
-    else if (entry.isFile() && entry.name.endsWith(".html")) out.push(full);
+    else if (entry.isFile() && /\.html?$/i.test(entry.name)) out.push(full);
   }
   return out;
 }

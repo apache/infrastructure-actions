@@ -294,7 +294,7 @@ test("a publisher on another token recognises its own label and acknowledgements
     fetchArtifact: async () => ({ dir, meta: { pr: 5, headSha: SHA } }),
   });
 
-  assert.deepEqual(f.reactionLogins, ["site-app[bot]"]);
+  assert.ok(f.reactionLogins.length > 0 && f.reactionLogins.every((l) => l === "site-app[bot]"), f.reactionLogins);
   assert.deepEqual(f.labelled, [], "its acknowledged command is not replayed");
   assert.equal(f.pushed.length, 1, "its own label arms the PR");
   assert.ok(!f.posted.some((p) => p.marker === "asf-preview-howto"), "its own explainer is recognised");
@@ -601,6 +601,7 @@ test("a PR the publisher labelled survives a later run", async () => {
   const dir = await artifactDir();
   const f = fakes({
     openPulls: [pull(42, SHA, ["preview"])],
+    comments: { 42: [bot("### Preview armed by manual dispatch\n\n<!-- asf-preview-armed -->")] },
     labelEvents: { 42: [labeledBy("github-actions[bot]")] },
     branches: ["preview/pr42-staging"],
   });
@@ -610,6 +611,25 @@ test("a PR the publisher labelled survives a later run", async () => {
   assert.equal(f.pushed.filter((p) => /tombstone/.test(p.message)).length, 0,
     "a dispatched preview must not be reaped on the next run");
   assert.deepEqual(f.deleted, []);
+});
+
+test("a label another workflow added with the shared token arms nothing", async () => {
+  const f = fakes({
+    openPulls: [pull(42, SHA, ["preview"])],
+    labelEvents: { 42: [labeledBy("github-actions[bot]")] },
+    branches: ["preview/pr42-staging"],
+  });
+  let fetched = 0;
+  await go(f, { fetchArtifact: async () => (fetched += 1, null) });
+  assert.equal(fetched, 0, "nothing is published");
+  assert.ok(f.pushed.some((p) => /tombstone/.test(p.message)), "and an existing preview is retired");
+});
+
+test("a dispatch leaves the record that keeps its label armed", async () => {
+  const dir = await artifactDir();
+  const f = fakes({ openPulls: [pull(5)] });
+  await go(f, { only: 5, dispatchedBy: "maintainer", fetchArtifact: async () => ({ dir, meta: { pr: 5, headSha: SHA } }) });
+  assert.match(f.created[0].body, /<!-- asf-preview-armed -->$/);
 });
 
 test("one PR's failure does not abort the reap", async () => {

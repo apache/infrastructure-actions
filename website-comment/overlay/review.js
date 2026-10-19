@@ -188,6 +188,11 @@
         width: window.innerWidth, height: window.innerHeight,
         scale: Math.min(window.devicePixelRatio || 1, 2),
         useCORS: true, logging: false,
+        // The library preloads every image on the page into an LRU cache of
+        // 100 by default, and an evicted image is not reloaded: on a gallery
+        // the top of the page would capture blank. One slot per element covers
+        // every <img> and background image, capped for very large pages.
+        maxCacheSize: Math.min(10000, Math.max(100, document.getElementsByTagName("*").length + 50)),
       });
 
       var scale = shot.width / window.innerWidth;

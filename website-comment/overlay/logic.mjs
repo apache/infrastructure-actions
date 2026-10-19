@@ -77,7 +77,9 @@ export function sourceUrl({ repo, branch, source, generated = [] }) {
   if (!match) return null;
   const [, file, line] = match;
   if (generated.some((prefix) => file.startsWith(prefix))) return null;
-  return `https://github.com/${repo}/blob/${branch}/${file}#L${line}`;
+  // Segment by segment: a "#" or "?" in a file name would otherwise end the path.
+  const path = (p) => String(p).split("/").map(encodeURIComponent).join("/");
+  return `https://github.com/${repo}/blob/${path(branch)}/${path(file)}#L${line}`;
 }
 
 /**

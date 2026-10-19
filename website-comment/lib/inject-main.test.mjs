@@ -20,7 +20,36 @@ import assert from "node:assert/strict";
 import { mkdtemp, writeFile, readFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import vm from "node:vm";
 import { injectMain, parseGenerated } from "./inject-main.mjs";
+import { overlayFiles, findHtmlFiles } from "./overlay-files.mjs";
+
+test("the overlay script declares no page globals beyond its config", async () => {
+  const files = await overlayFiles({ repo: "a/b", pr: 1, sha: "abc1234", anchors: {} });
+  const script = files["_preview/review.js"];
+  // A page that already has a global of the same name as one of the helpers.
+  const page = {
+    MIN_SIDE: "the page's own",
+    document: { readyState: "loading", addEventListener() {} },
+    addEventListener() {},
+  };
+  page.window = page;
+  const context = vm.createContext(page);
+  vm.runInContext("var MIN_SIDE = 'the page\\'s own';", context);
+  vm.runInContext(script, context);
+  assert.equal(context.MIN_SIDE, "the page's own");
+  for (const name of ["clampRegion", "captionFor", "targetUrl", "sourceUrl", "issueUrl"]) {
+    assert.equal(typeof context[name], "undefined", name);
+  }
+  assert.equal(typeof context.__ASF_PREVIEW__, "object");
+});
+
+test("finds .htm pages and any letter case", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "find-html-"));
+  for (const name of ["a.html", "b.htm", "C.HTML", "d.txt", "e.html.map"]) await writeFile(join(dir, name), "");
+  const found = (await findHtmlFiles(dir)).map((p) => p.slice(dir.length + 1)).sort();
+  assert.deepEqual(found, ["C.HTML", "a.html", "b.htm"]);
+});
 
 test("injects the overlay in main mode into every page", async () => {
   const dir = await mkdtemp(join(tmpdir(), "inject-main-"));

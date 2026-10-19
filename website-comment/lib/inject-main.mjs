@@ -18,6 +18,7 @@
 import { writeFile, mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { overlayFiles, injectIntoTree } from "./overlay-files.mjs";
+import { isMain } from "./main.mjs";
 
 /**
  * Put the review overlay on the published site, built from the default branch.
@@ -51,7 +52,7 @@ export async function injectMain({ dir, repo, branch = "main", sha, generated = 
 export const parseGenerated = (raw) =>
   String(raw ?? "").split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   const dir = process.argv[2];
   const { GITHUB_REPOSITORY: repo, GITHUB_SHA: sha, PREVIEW_BRANCH, PREVIEW_GENERATED } = process.env;
   if (!dir || !repo) {
