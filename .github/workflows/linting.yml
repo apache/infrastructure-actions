@@ -36,7 +36,7 @@ permissions:
 
 jobs:
   lint-pelican:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # GitHub Actions log output is not a TTY, so tools that autodetect
     # colors turn them off in CI. Force colorized output via the common
     # `FORCE_COLOR` convention (honored by pylint, rich, uv, etc.) plus

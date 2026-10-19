@@ -62,11 +62,16 @@ fi
 if [ -d "$EXTRACTED_AS" ]; then rm -r "$EXTRACTED_AS"; fi
 tar xzf "$LOCAL"
 pushd "$EXTRACTED_AS" >/dev/null
+  # CMake 4 (Ubuntu 26.04) can no longer set CMP0048 to OLD. NEW is safe:
+  # CMakeLists.txt sets PROJECT_VERSION itself right after project().
+  sed -i.orig '/cmake_policy(SET CMP0048 OLD)/d' CMakeLists.txt
   mkdir build
   pushd build >/dev/null
     cmake --version >&2
     {
-      cmake -DCMARK_TESTS=OFF -DCMARK_STATIC=OFF ..
+      # cmark-gfm's CMakeLists predates CMake 3.5, which CMake 4 (Ubuntu 26.04)
+      # refuses without this; older CMake ignores the variable.
+      cmake -DCMARK_TESTS=OFF -DCMARK_STATIC=OFF -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ..
       make
     } > build.log
   popd >/dev/null
