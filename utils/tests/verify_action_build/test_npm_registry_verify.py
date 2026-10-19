@@ -231,6 +231,36 @@ class TestHelpers:
         assert normalize_package_json({**base, "dependencies": {"a": "1"}}) != \
             normalize_package_json({**base, "dependencies": {"a": "2"}})
 
+    def test_normalize_package_json_npm6_false_placeholders(self):
+        # tunnel@0.0.6 as vendored by manusa/actions-setup-minikube@001b9f30:
+        # npm v6 wrote bundleDependencies/deprecated: false alongside the
+        # _-prefixed keys; the published tarball carries neither.
+        published = {
+            "name": "tunnel",
+            "version": "0.0.6",
+            "author": "Koichi Kobayashi <koichik@improvement.jp>",
+            "main": "./index.js",
+        }
+        installed = {
+            "_from": "tunnel@0.0.6",
+            "_where": "/home/user/00-MN/projects/manusa/actions-setup-minikube"
+                      "/node_modules/@actions/http-client",
+            "author": {"name": "Koichi Kobayashi", "email": "koichik@improvement.jp"},
+            "bundleDependencies": False,
+            "deprecated": False,
+            "main": "./index.js",
+            "name": "tunnel",
+            "version": "0.0.6",
+        }
+        assert normalize_package_json(installed) == normalize_package_json(published)
+
+    def test_normalize_package_json_keeps_real_bundle_and_deprecation(self):
+        base = {"name": "foo", "version": "1.0.0"}
+        assert normalize_package_json({**base, "bundleDependencies": ["evil"]}) != \
+            normalize_package_json(base)
+        assert normalize_package_json({**base, "deprecated": "use bar"}) != \
+            normalize_package_json(base)
+
     def test_normalize_person_handles_name_only_and_url(self):
         assert normalize_package_json({"author": "Jane Doe"})["author"] == {"name": "Jane Doe"}
         assert normalize_package_json(
