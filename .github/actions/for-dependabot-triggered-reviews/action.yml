@@ -195,7 +195,7 @@ runs:
       if: false
     - uses: jasonetco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5  # v2
       if: false
-    - uses: jdx/mise-action@fc42bcc7ddbf51124c30f95a877a0c5168a3bfde  # v5.2.1
+    - uses: jdx/mise-action@8418fedb1110381a0d3ba51a7a415d7c1b884550  # v5.2.2
       if: false
     - uses: JetBrains/qodana-action@3e8d76ff0e0241618abd808682f426afe84bab3f  # v2026.2.2
       if: false
