@@ -1,0 +1,60 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# When a review makes the `approval` check pass, re-run the PR's earlier
+# failed `approval` run from the `pull_request` event.  The ruleset keeps
+# blocking the merge on that stale failure otherwise, even though the
+# review-triggered run is green.
+#
+# A review on a fork PR only gets a read-only token, so the re-run cannot
+# happen in allowlist_approval.yml itself.  `workflow_run` runs this file
+# from the default branch with the token below; it reads nothing from the
+# PR except the head commit SHA, which the script validates.
+name: Allowlist Maintainer Approval Re-run
+
+on:
+  # Runs default-branch code, reads only the head SHA, and can only re-run
+  # the approval workflow's own failed run.
+  workflow_run:  # zizmor: ignore[dangerous-triggers]
+    workflows: ["Allowlist Maintainer Approval"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  rerun:
+    if: >-
+      github.event.workflow_run.event == 'pull_request_review' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Re-run the stale approval check
+        run: python3 scripts/rerun_allowlist_approval.py --repo "${REPO}" --head-sha "${HEAD_SHA}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
