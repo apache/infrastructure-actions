@@ -1,0 +1,206 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+const run = promisify(execFile);
+
+const MAX_ZIP_BYTES = 200 * 1024 * 1024;
+const MAX_UNCOMPRESSED_BYTES = 500 * 1024 * 1024;
+// A site with more files than this is refused rather than listed: the listings
+// below are read into memory, and the cap keeps them a bounded size.
+export const MAX_ENTRIES = 100_000;
+// Room for MAX_ENTRIES long-listing lines with generous paths. execFile's 1 MiB
+// default rejects an ordinary site of a few thousand files.
+const LISTING_MAX_BUFFER = 256 * 1024 * 1024;
+
+/**
+ * An archive the screens below turn down, as opposed to a download that failed.
+ * The publisher reports a refusal on the pull request and tries an older build;
+ * any other error fails the run, to be retried. The message is posted on the
+ * pull request, so it never carries entry names or other archive content.
+ */
+export function refusal(message) {
+  const err = new Error(message);
+  err.refused = true;
+  return err;
+}
+
+/**
+ * Archive entry names that must never be extracted.
+ *
+ * This runs BEFORE extraction on purpose. An entry that escapes the root lands
+ * outside the extracted tree, where the post-extraction symlink walk can never
+ * see it — so a pre-extraction name screen is the only place this defence can
+ * exist.
+ */
+export function unsafeArchiveEntries(listing) {
+  return String(listing ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter(
+      (name) =>
+        name.startsWith("/") ||
+        name.startsWith("~") ||
+        name.split("/").includes("..") ||
+        name.includes("\\"),
+    );
+}
+
+/**
+ * True when the archive contains a symlink member.
+ *
+ * Name screening alone is not enough: members `a -> ../..` followed by `a/evil`
+ * both have clean names, but unzip creates the link and then writes THROUGH it,
+ * outside the tree — before any post-extraction check can run. Refusing symlink
+ * members outright closes that ordering entirely.
+ */
+export function archiveHasSymlinkMembers(longListing) {
+  return String(longListing ?? "")
+    .split("\n")
+    .some((line) => /^l[rwxsStT-]{9}/.test(line.trim()));
+}
+
+/**
+ * Total uncompressed size from `unzip -Z` output, or null.
+ *
+ * Read from the trailer line only — the last one, "N files, X bytes
+ * uncompressed, ...". Entry names are pull-request-controlled, so a file named
+ * "0 bytes uncompressed" must not be taken for the total.
+ */
+export function uncompressedBytes(longListing) {
+  const last = String(longListing ?? "").trimEnd().split("\n").at(-1) ?? "";
+  const m = /^\s*[0-9]+ files?, ([0-9]+) bytes uncompressed, /.exec(last);
+  return m ? Number(m[1]) : null;
+}
+
+/** `unzip` with a bounded output buffer, and a clear refusal when it overflows. */
+async function listing(args) {
+  try {
+    return (await run("unzip", args, { maxBuffer: LISTING_MAX_BUFFER })).stdout;
+  } catch (err) {
+    if (err?.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
+      throw refusal(`archive listing exceeds ${LISTING_MAX_BUFFER} bytes; too many or too long entry names`);
+    }
+    // The archive is the pull request's: one unzip cannot read is refused,
+    // not retried on every run.
+    throw refusal("archive could not be read");
+  }
+}
+
+export function createArtifactFetcher({ gh, token, fetchImpl = fetch }) {
+  /**
+   * The run's preview-site artifact, downloaded, screened and extracted, as
+   * { dir, meta, cleanup, artifactId }; null when the run has none (or it
+   * expired); { skipped: true, artifactId } without a download when its id is
+   * in `skip`. A refusal is thrown with `refused` and `artifactId` set.
+   *
+   * Artifact ids, not run ids, identify what was screened: re-running a
+   * workflow run keeps the run id but uploads a new artifact.
+   */
+  return async function fetchArtifact(runId, { skip = new Set() } = {}) {
+    const artifact = (await gh.listRunArtifacts(runId, "preview-site")).find((a) => a.name === "preview-site");
+    if (!artifact || artifact.expired) return null;
+    if (skip.has(artifact.id)) return { skipped: true, artifactId: artifact.id };
+
+    const dir = await mkdtemp(join(tmpdir(), "preview-artifact-"));
+    try {
+      // fetch rather than curl: the token never reaches a process argument
+      // list, a non-2xx response is an error instead of a downloaded error
+      // page, and the body size can be capped.
+      const res = await fetchImpl(gh.artifactZipUrl(artifact.id), {
+        headers: {
+          authorization: `Bearer ${token}`,
+          accept: "application/vnd.github+json",
+          "x-github-api-version": "2022-11-28",
+        },
+        signal: AbortSignal.timeout(120_000),
+      });
+      if (!res.ok) throw new Error(`artifact download failed with ${res.status}`);
+
+      // Check the advertised length before allocating: fetch buffers the whole
+      // body in memory (curl -o streamed to disk instead), so the size cap is
+      // only useful if it runs before, not just after, that allocation. The
+      // header is advisory and may be absent or wrong, so the post-buffer
+      // check below still runs too.
+      const advertised = Number(res.headers.get("content-length") ?? "0");
+      if (advertised > MAX_ZIP_BYTES) {
+        throw refusal(`artifact advertises ${advertised} bytes, over the ${MAX_ZIP_BYTES} cap`);
+      }
+
+      const body = Buffer.from(await res.arrayBuffer());
+      if (body.length > MAX_ZIP_BYTES) {
+        throw refusal(`artifact is ${body.length} bytes, over the ${MAX_ZIP_BYTES} cap`);
+      }
+
+      const zip = join(dir, "artifact.zip");
+      await writeFile(zip, body);
+
+      const names = await listing(["-Z1", zip]);
+      const entries = names.split("\n").filter(Boolean).length;
+      if (entries > MAX_ENTRIES) {
+        throw refusal(`archive has ${entries} entries, over the ${MAX_ENTRIES} cap`);
+      }
+      const unsafe = unsafeArchiveEntries(names);
+      if (unsafe.length) {
+        // The names are pull-request content: the log gets them, the PR a count.
+        console.error(`preview: unsafe entry names: ${JSON.stringify(unsafe.slice(0, 20))}`);
+        throw refusal(`archive contains ${unsafe.length} unsafe entry name(s)`);
+      }
+
+      const longListing = await listing(["-Z", zip]);
+      if (archiveHasSymlinkMembers(longListing)) {
+        throw refusal("archive contains symlink members");
+      }
+      const total = uncompressedBytes(longListing);
+      if (total === null) {
+        throw refusal("could not read the archive's uncompressed size");
+      }
+      if (total > MAX_UNCOMPRESSED_BYTES) {
+        throw refusal(`archive expands to ${total} bytes, over the ${MAX_UNCOMPRESSED_BYTES} cap`);
+      }
+
+      const out = join(dir, "site");
+      try {
+        await run("unzip", ["-q", "-o", zip, "-d", out]);
+      } catch {
+        throw refusal("archive could not be extracted");
+      }
+      await rm(zip, { force: true });
+
+      let meta = null;
+      try {
+        meta = JSON.parse(await readFile(join(out, "preview-meta.json"), "utf8"));
+      } catch {
+        meta = null;
+      }
+      // The caller owns the extracted tree from here and must call cleanup
+      // whatever happens to it: one run fetches artifacts for many PRs, and
+      // leaving each on disk can fill the runner before the last publishes.
+      return { dir: out, meta, cleanup: () => rm(dir, { recursive: true, force: true }), artifactId: artifact.id };
+    } catch (err) {
+      await rm(dir, { recursive: true, force: true });
+      if (err?.refused === true) err.artifactId = artifact.id;
+      throw err;
+    }
+  };
+}

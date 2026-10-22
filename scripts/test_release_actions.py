@@ -42,6 +42,28 @@ def _prefixes(actions):
     return sorted(a.tag_prefix for a in actions)
 
 
+def _push_path_globs():
+    """The `paths:` filter of the release workflow's push trigger."""
+    workflow = Path(__file__).parents[1] / ".github/workflows/release-actions.yml"
+    lines = workflow.read_text().splitlines()
+    start = lines.index("    paths:") + 1
+    globs = []
+    for line in lines[start:]:
+        if not line.startswith("      - "):
+            break
+        globs.append(line.split("- ", 1)[1].strip().strip('"'))
+    return globs
+
+
+def test_release_workflow_triggers_on_every_watched_path():
+    # A watched path outside the push filter never triggers the workflow, so
+    # the action it belongs to would never be released automatically.
+    roots = {g.removesuffix("/**") + "/" for g in _push_path_globs()}
+    for action in ra.ACTIONS:
+        for path in action.watch_paths:
+            assert any(path.startswith(root) for root in roots), (action.tag_prefix, path)
+
+
 def test_affected_single_action():
     changed = ["allowlist-check/check_asf_allowlist.py"]
     assert _prefixes(ra.affected_actions(changed)) == ["allowlist-check"]
@@ -60,6 +82,36 @@ def test_shared_stash_change_bumps_both_stash_actions():
 def test_save_only_change_bumps_only_save():
     changed = ["stash/save/action.yml"]
     assert _prefixes(ra.affected_actions(changed)) == ["save"]
+
+
+def test_website_comment_adapter_change_releases_only_the_annotator():
+    changed = ["website-comment/adapters/jekyll/preview_src.rb"]
+    assert _prefixes(ra.affected_actions(changed)) == ["preview-annotate"]
+
+
+def test_website_comment_library_change_releases_every_action_that_runs_it():
+    changed = ["website-comment/lib/anchors.mjs"]
+    assert _prefixes(ra.affected_actions(changed)) == [
+        "preview-artifact",
+        "preview-main-overlay",
+        "preview-publish",
+    ]
+
+
+def test_website_comment_overlay_change_releases_the_actions_that_inject_it():
+    for path in (
+        "website-comment/overlay/review.js",
+        "website-comment/vendor/html2canvas-pro/html2canvas-pro.min.js",
+    ):
+        assert _prefixes(ra.affected_actions([path])) == [
+            "preview-main-overlay",
+            "preview-publish",
+        ], path
+
+
+def test_website_comment_docs_release_nothing():
+    changed = ["website-comment/README.md", "website-comment/package.json"]
+    assert ra.affected_actions(changed) == []
 
 
 def test_multiple_actions_changed_at_once():
