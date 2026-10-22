@@ -630,6 +630,9 @@ italia/publiccode-parser-action:
     expires_at: 2026-11-09
   0deab88c3f094aa12c5826e52ac2c4f176446821:
     tag: v1.6.0
+    expires_at: 2027-01-14
+  f370d239aa3ec57b819909b467ff77679b6dc721:
+    tag: v1.7.0
 j178/prek-action:
   4e14d07f9231acabce116ccfca13b13dd9755ece:
     tag: v3.0.0
@@ -639,6 +642,9 @@ j178/prek-action:
     expires_at: 2027-01-11
   af4d4fcb6922b8e6f65c0426947125fcc38794ce:
     tag: v3.0.2
+    expires_at: 2027-01-14
+  44924fe9ef4a6f88253c4b6b1bf11c689d3ce53d:
+    tag: v3.1.0
 JamesIves/github-pages-deploy-action:
   d92aa235d04922e8f08b40ce78cc5442fcfbfa2f:
     tag: v4.8.0
