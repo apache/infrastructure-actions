@@ -677,6 +677,9 @@ jdx/mise-action:
     expires_at: 2027-01-11
   fc42bcc7ddbf51124c30f95a877a0c5168a3bfde:
     tag: v5.2.1
+    expires_at: 2027-01-14
+  8418fedb1110381a0d3ba51a7a415d7c1b884550:
+    tag: v5.2.2
 JetBrains/qodana-action:
   b588768b6e7e6da579e518bc584f79de0d243692:
     tag: v2026.2.0
@@ -921,6 +924,9 @@ pypa/gh-action-pypi-publish:
     expires_at: 2026-10-25
   dc37677b2e1c63e2034f94d8a5b11f265b73ba33:
     tag: v1.14.2
+    expires_at: 2027-01-14
+  7245906fb61fa33a13554f9d5fb856fe61758086:
+    tag: v1.14.3
 pyTooling/Actions:
   '*':
     keep: true
@@ -978,6 +984,9 @@ runs-on/action:
 rust-lang/crates-io-auth-action:
   c6f97d42243bad5fab37ca0427f495c86d5b1a18:
     tag: v1.0.5
+    expires_at: 2027-01-14
+  3268eb413133e2960fa4ae0e963ca76380c54cd9:
+    tag: v1.0.6
 rustsec/*:
   '*':
     keep: true
