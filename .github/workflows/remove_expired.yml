@@ -31,7 +31,7 @@ permissions: {}
 
 jobs:
   remove_expired:
-    runs-on: ubuntu-26.04
+    runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/tag=infra
     steps:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
