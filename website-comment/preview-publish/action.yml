@@ -45,6 +45,15 @@ inputs:
       all closed. Off by default; preview/* branches are always retired.
     required: false
     default: "false"
+  howto:
+    description: >-
+      When to post the "Preview this pull request" explainer on a pull request
+      not opened by a bot: "always" (the default), or "with-preview-artifact",
+      once a successful build of its head commit has uploaded a preview-site
+      artifact. Use the second with preview-artifact's `paths`, so a pull
+      request that changes nothing on the site gets no explainer.
+    required: false
+    default: "always"
   token:
     description: "Token with contents, pull-requests and issues write, and actions read"
     required: false
@@ -107,6 +116,7 @@ runs:
         PREVIEW_BUILD_WORKFLOW: ${{ inputs.build-workflow }}
         PREVIEW_LABEL: ${{ inputs.label }}
         PREVIEW_REAP_HEAD_BRANCHES: ${{ inputs.reap-head-branches }}
+        PREVIEW_HOWTO: ${{ inputs.howto }}
         PR_INPUT: ${{ inputs.pr }}
         LIB: ${{ github.action_path }}/../lib
       run: |

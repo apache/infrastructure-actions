@@ -28,6 +28,17 @@ inputs:
       published the head commit it was built from; see website-comment/README.md.
     required: false
     default: "30"
+  paths:
+    description: >-
+      The repository paths the site is built from, one per line: a pull
+      request changing none of them gets no preview, since there is nothing
+      new to see. `dir/` matches everything under dir, `*` and `?` match
+      within one path segment and `**` across them; blank lines and `#`
+      comments are ignored. Empty (the default) uploads a preview for every
+      pull request. Pair it with preview-publish's `howto:
+      with-preview-artifact`, so such pull requests get no explainer either.
+    required: false
+    default: ""
   token:
     description: >-
       Token that can read the pull request's changed files (pull-requests:
@@ -65,18 +76,22 @@ runs:
         node-version: "22"
 
     # Includes the anchor manifest, derived from the PR's diff here rather than
-    # in the privileged publisher, which never reads pull-request content.
+    # in the privileged publisher, which never reads pull-request content. The
+    # same diff decides whether the pull request touches the site's `paths`.
     - name: Write preview metadata
+      id: meta
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
         HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         OUT: ${{ inputs.path }}/preview-meta.json
+        PREVIEW_PATHS: ${{ inputs.paths }}
         LIB: ${{ github.action_path }}/../lib
       run: node "$LIB/write-meta.mjs"
 
     - name: Upload the preview site
+      if: steps.meta.outputs.upload == 'true'
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         # The publisher looks for exactly this name.

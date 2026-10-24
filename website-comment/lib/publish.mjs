@@ -93,6 +93,26 @@ export function isBotAuthored(pull) {
   return /\[bot\]$/.test(String(pull?.user?.login ?? ""));
 }
 
+/**
+ * When the explainer is posted: on every pull request ("always"), or only on
+ * one whose head has a successful build carrying a preview-site artifact
+ * ("with-preview-artifact"), for sites whose build uploads a preview only
+ * when a pull request changes the site (preview-artifact's `paths`).
+ */
+export const HOWTO_MODES = ["always", "with-preview-artifact"];
+
+/**
+ * Whether a successful build of `headSha` uploaded a preview-site artifact
+ * that has not expired. Reads run and artifact ids only, as publishOne does.
+ */
+async function hasPreviewArtifact(gh, headSha) {
+  for (const build of await gh.successfulBuilds(headSha)) {
+    const artifacts = await gh.listRunArtifacts(build.id, "preview-site");
+    if (artifacts.some((a) => a.name === "preview-site" && !a.expired)) return true;
+  }
+  return false;
+}
+
 export async function run({
   gh,
   git,
@@ -103,9 +123,13 @@ export async function run({
   reapHeads = false,
   label = previewLabel(),
   publisher = PUBLISHER_LOGIN,
+  howto = "always",
   now = Date.now,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 }) {
+  if (!HOWTO_MODES.includes(howto)) {
+    throw new Error(`howto must be one of ${HOWTO_MODES.join(", ")}, got ${JSON.stringify(howto)}`);
+  }
   let failures = 0;
 
   const openPulls = await gh.listOpenPulls();
@@ -239,7 +263,17 @@ export async function run({
       // timeline and on commits@. Arming is deliberately not gated the same
       // way: a maintainer who wants a preview of a bot's PR can still ask for
       // one, and it will publish.
-      if (!howtoWritten && !isBotAuthored(pull) && !hasOwnMarker(comments, HOWTO_MARKER, publisher)) {
+      //
+      // Where the build uploads a preview only for pull requests that change
+      // the site, the explainer waits for one: a pull request with nothing to
+      // preview is not told how to preview it. Checked last, as it costs API
+      // calls, and only until the explainer is up.
+      if (
+        !howtoWritten &&
+        !isBotAuthored(pull) &&
+        !hasOwnMarker(comments, HOWTO_MARKER, publisher) &&
+        (howto === "always" || (await hasPreviewArtifact(gh, pull.head.sha)))
+      ) {
         await gh.upsertComment(pull.number, HOWTO_MARKER, howtoBody(label));
       }
     } catch (err) {
@@ -720,5 +754,6 @@ if (isMain(import.meta.url)) {
     only,
     dispatchedBy: process.env.GITHUB_ACTOR ?? null,
     reapHeads: process.env.PREVIEW_REAP_HEAD_BRANCHES === "true",
+    howto: process.env.PREVIEW_HOWTO || "always",
   });
 }

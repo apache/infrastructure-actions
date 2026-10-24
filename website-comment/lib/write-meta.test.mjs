@@ -17,7 +17,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { previewMeta } from "./write-meta.mjs";
+import { previewMeta, previewable } from "./write-meta.mjs";
 import { diffAnchor } from "./anchors.mjs";
 
 test("the build's metadata carries the PR, the head SHA and the anchor manifest", async () => {
@@ -31,4 +31,19 @@ test("the build's metadata carries the PR, the head SHA and the anchor manifest"
     headSha: "a".repeat(40),
     anchors: { "src/x.astro": { anchor: diffAnchor("src/x.astro"), ranges: [[2, 2]] } },
   });
+});
+
+test("a pull request is previewable when it touches one of the paths", () => {
+  const files = [{ filename: ".github/workflows/build.yml" }];
+  assert.equal(previewable({ files, listed: true, patterns: ["src/"] }), false);
+  assert.equal(previewable({ files: [...files, { filename: "src/x.astro" }], listed: true, patterns: ["src/"] }), true);
+});
+
+test("with no paths given, every pull request is previewable", () => {
+  assert.equal(previewable({ files: [{ filename: ".asf.yaml" }], listed: true, patterns: [] }), true);
+});
+
+test("a failed file listing still uploads the preview", () => {
+  // Better a preview nobody needed than a site change with none.
+  assert.equal(previewable({ files: [], listed: false, patterns: ["src/"] }), true);
 });

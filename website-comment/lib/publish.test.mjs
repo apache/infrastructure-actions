@@ -60,6 +60,9 @@ function fakes({
   branches = [],
   headMessages = {},
   hasBuild = true,
+  // What a build's preview-site lookup lists: true for a live artifact,
+  // "expired" for an expired one, false for none.
+  previewArtifact = true,
   throwFor = [],
   repoBranches = [],
   pullsForHead = {},
@@ -131,6 +134,8 @@ function fakes({
       deleted.push(name);
     },
     successfulBuilds: async () => (hasBuild === true ? [{ id: 1 }] : hasBuild || []),
+    listRunArtifacts: async (runId, name) =>
+      previewArtifact ? [{ id: 100 + runId, name, expired: previewArtifact === "expired" }] : [],
     // Tombstones default to long ago, so they are past the grace period.
     branchHead: async (branch) => ({ message: headMessages[branch] ?? "", date: headDates[branch] ?? "2020-01-01T00:00:00Z" }),
     listBranches: async () => repoBranches,
@@ -215,6 +220,68 @@ test("still announces when a human plants the explainer marker", async () => {
   await go(f);
 
   assert.equal(f.posted.filter((p) => p.marker === "asf-preview-howto").length, 1);
+});
+
+const howtos = (f) => f.posted.filter((p) => p.marker === "asf-preview-howto");
+
+test("with-preview-artifact announces once a build has uploaded a preview", async () => {
+  const f = fakes({ openPulls: [pull(5)] });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.equal(howtos(f).length, 1);
+});
+
+test("with-preview-artifact does not announce when the build uploaded no preview", async () => {
+  // The build skipped the upload: the PR changes none of the site's paths.
+  const f = fakes({ openPulls: [pull(5)], previewArtifact: false });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.equal(howtos(f).length, 0, "nothing to preview, so no explainer");
+});
+
+test("with-preview-artifact does not announce before any build has succeeded", async () => {
+  const f = fakes({ openPulls: [pull(5)], hasBuild: false });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.equal(howtos(f).length, 0, "it waits for the build to say whether there is a preview");
+});
+
+test("with-preview-artifact ignores an expired preview artifact", async () => {
+  const f = fakes({ openPulls: [pull(5)], previewArtifact: "expired" });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.equal(howtos(f).length, 0);
+});
+
+test("with-preview-artifact looks past a build without a preview to one with it", async () => {
+  const f = fakes({ openPulls: [pull(5)], hasBuild: [{ id: 1 }, { id: 2 }] });
+  f.gh.listRunArtifacts = async (runId, name) => (runId === 2 ? [{ id: 9, name, expired: false }] : []);
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.equal(howtos(f).length, 1);
+});
+
+test("with-preview-artifact still writes the arming record into the explainer", async () => {
+  // A /show-preview arms the PR whatever its build uploaded, and the explainer
+  // is where the record goes.
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, previewArtifact: false });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.equal(howtos(f).length, 1);
+  assert.match(howtos(f)[0].body, /asf-preview-armed/);
+});
+
+test("the default announces whatever the build uploaded", async () => {
+  const f = fakes({ openPulls: [pull(5)], previewArtifact: false, hasBuild: false });
+  await go(f);
+
+  assert.equal(howtos(f).length, 1, "existing sites keep today's behaviour");
+});
+
+test("an unknown howto mode fails the run before touching anything", async () => {
+  const f = fakes({ openPulls: [pull(5)] });
+  await assert.rejects(go(f, { howto: "sometimes" }), /howto must be one of always, with-preview-artifact/);
+  assert.equal(f.posted.length, 0);
 });
 
 test("publishes an armed open PR", async () => {
