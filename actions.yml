@@ -122,6 +122,9 @@ azure/login:
     tag: v3.0.0
   7ddb5af1ef8758cf1353cf3b42f940aee27ba21c:
     tag: v3.0.2
+    expires_at: 2027-01-16
+  a641126d1b8aa4d1fa005f4f92df94a3a4c4c906:
+    tag: v3.1.0
 azure/setup-helm:
   9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310:
     tag: v5.0.1
@@ -378,6 +381,9 @@ dawidd6/action-send-mail:
     expires_at: 2026-12-09
   67ce3558d613188179559c61d3565140cf389968:
     tag: v22
+    expires_at: 2027-01-16
+  47af4a10b540781705f283a2cf1a9650713ac795:
+    tag: v23
 dependabot/fetch-metadata:
   25dd0e34f4fe68f24cc83900b1fe3fe149efef98:
     tag: v3.1.0
@@ -927,6 +933,9 @@ pypa/cibuildwheel:
     expires_at: 2027-01-14
   8c2dcd2e96041a619f5ff03c9638d7941e2553a4:
     tag: v4.3.3
+    expires_at: 2027-01-16
+  b9e566a2b284570af229f6c2a33673410d0389a3:
+    tag: v4.3.4
 pypa/gh-action-pip-audit:
   1220774d901786e6f652ae159f7b6bc8fea6d266:
     tag: v1.1.0
