@@ -28,3 +28,4 @@ plugins:
   - magpie-setup
   - magpie-utilities
   - magpie-agent-guard
+  - magpie-vetted-ops
