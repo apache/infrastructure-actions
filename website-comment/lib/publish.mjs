@@ -93,6 +93,39 @@ export function isBotAuthored(pull) {
   return /\[bot\]$/.test(String(pull?.user?.login ?? ""));
 }
 
+/**
+ * When the explainer is posted: on every pull request ("always"), or only on
+ * one whose head has a successful build carrying a preview-site artifact
+ * ("with-preview-artifact"), for sites whose build uploads a preview only
+ * when a pull request changes the site (preview-artifact's `paths`).
+ */
+export const HOWTO_MODES = ["always", "with-preview-artifact"];
+
+/**
+ * Whether a successful build of `headSha` uploaded a preview-site artifact
+ * that has not expired. Reads run and artifact ids only, as publishOne does.
+ */
+async function hasPreviewArtifact(gh, headSha) {
+  for (const build of await gh.successfulBuilds(headSha)) {
+    const artifacts = await gh.listRunArtifacts(build.id, "preview-site");
+    if (artifacts.some((a) => a.name === "preview-site" && !a.expired)) return true;
+  }
+  return false;
+}
+
+/**
+ * Whether none of these successful builds uploaded a preview-site artifact at
+ * all, expired ones included: an artifact that expired was a preview once,
+ * and its build is re-run, not explained away.
+ */
+async function uploadedNone(gh, builds) {
+  for (const build of builds) {
+    const artifacts = await gh.listRunArtifacts(build.id, "preview-site");
+    if (artifacts.some((a) => a.name === "preview-site")) return false;
+  }
+  return true;
+}
+
 export async function run({
   gh,
   git,
@@ -103,9 +136,13 @@ export async function run({
   reapHeads = false,
   label = previewLabel(),
   publisher = PUBLISHER_LOGIN,
+  howto = "always",
   now = Date.now,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 }) {
+  if (!HOWTO_MODES.includes(howto)) {
+    throw new Error(`howto must be one of ${HOWTO_MODES.join(", ")}, got ${JSON.stringify(howto)}`);
+  }
   let failures = 0;
 
   const openPulls = await gh.listOpenPulls();
@@ -239,7 +276,17 @@ export async function run({
       // timeline and on commits@. Arming is deliberately not gated the same
       // way: a maintainer who wants a preview of a bot's PR can still ask for
       // one, and it will publish.
-      if (!howtoWritten && !isBotAuthored(pull) && !hasOwnMarker(comments, HOWTO_MARKER, publisher)) {
+      //
+      // Where the build uploads a preview only for pull requests that change
+      // the site, the explainer waits for one: a pull request with nothing to
+      // preview is not told how to preview it. Checked last, as it costs API
+      // calls, and only until the explainer is up.
+      if (
+        !howtoWritten &&
+        !isBotAuthored(pull) &&
+        !hasOwnMarker(comments, HOWTO_MARKER, publisher) &&
+        (howto === "always" || (await hasPreviewArtifact(gh, pull.head.sha)))
+      ) {
         await gh.upsertComment(pull.number, HOWTO_MARKER, howtoBody(label));
       }
     } catch (err) {
@@ -305,6 +352,7 @@ export async function run({
         force: only === pr,
         comments: commentsByPr.get(pr) ?? [],
         publisher,
+        howto,
       });
     } catch (err) {
       console.error(`preview: publish failed for #${pr}: ${err.message}`);
@@ -417,6 +465,7 @@ async function publishOne({
   force = false,
   comments = [],
   publisher = PUBLISHER_LOGIN,
+  howto = "always",
 }) {
   const pull = openPulls.find((p) => p.number === pr);
   if (!pull) return false;
@@ -501,9 +550,16 @@ async function publishOne({
     // A refusal found this run, else the one the status already reports for
     // an artifact skipped as known.
     const reason = refusal ?? (skippedKnown ? refusalIn(status, headSha) : null);
-    await setStatus(
-      reason ? refusedBody(pr, reason, headSha, passedOver) : waitingBody(pr, headSha, passedOver),
-    );
+    if (reason) {
+      await setStatus(refusedBody(pr, reason, headSha, passedOver));
+    } else if (howto === "with-preview-artifact" && (await uploadedNone(gh, builds))) {
+      // The builds succeeded and chose not to upload, because the pull request
+      // changes none of the site's paths. "Waiting on a build" would promise a
+      // preview that is not coming.
+      await setStatus(noPreviewBody(pr, headSha, publishedSha));
+    } else {
+      await setStatus(waitingBody(pr, headSha, passedOver));
+    }
     return false;
   }
 
@@ -620,6 +676,15 @@ const waitingBody = (pr, sha, artifactIds = []) =>
   `The preview publishes as soon as the build goes green.` +
   (artifactIds.length ? `\n\n${passedOverTag(sha, artifactIds)}` : "");
 
+// No URL line when nothing was ever published: like the explainer, a link that
+// does not resolve is worse than none.
+const noPreviewBody = (pr, sha, publishedSha) =>
+  `### No preview for this pull request\n\n` +
+  (publishedSha ? `${urlLine(pr)} (still showing \`${publishedSha.slice(0, 7)}\`)\n\n` : "") +
+  `The build of \`${sha.slice(0, 7)}\` succeeded but uploaded no preview: this pull request ` +
+  `changes none of the files the site is built from, so there is nothing new to see. ` +
+  `It stays armed, and publishes on its own if a later push changes the site.`;
+
 const REFUSED_HEADING = "### Preview could not be published";
 const refusedFor = (sha) => `The build artifact for \`${sha.slice(0, 7)}\` was refused`;
 // The artifacts passed over for a head ride along hidden in the status, so a
@@ -720,5 +785,6 @@ if (isMain(import.meta.url)) {
     only,
     dispatchedBy: process.env.GITHUB_ACTOR ?? null,
     reapHeads: process.env.PREVIEW_REAP_HEAD_BRANCHES === "true",
+    howto: process.env.PREVIEW_HOWTO || "always",
   });
 }

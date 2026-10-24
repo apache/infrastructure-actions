@@ -60,6 +60,9 @@ function fakes({
   branches = [],
   headMessages = {},
   hasBuild = true,
+  // What a build's preview-site lookup lists: true for a live artifact,
+  // "expired" for an expired one, false for none.
+  previewArtifact = true,
   throwFor = [],
   repoBranches = [],
   pullsForHead = {},
@@ -131,6 +134,8 @@ function fakes({
       deleted.push(name);
     },
     successfulBuilds: async () => (hasBuild === true ? [{ id: 1 }] : hasBuild || []),
+    listRunArtifacts: async (runId, name) =>
+      previewArtifact ? [{ id: 100 + runId, name, expired: previewArtifact === "expired" }] : [],
     // Tombstones default to long ago, so they are past the grace period.
     branchHead: async (branch) => ({ message: headMessages[branch] ?? "", date: headDates[branch] ?? "2020-01-01T00:00:00Z" }),
     listBranches: async () => repoBranches,
@@ -215,6 +220,121 @@ test("still announces when a human plants the explainer marker", async () => {
   await go(f);
 
   assert.equal(f.posted.filter((p) => p.marker === "asf-preview-howto").length, 1);
+});
+
+const howtos = (f) => f.posted.filter((p) => p.marker === "asf-preview-howto");
+
+test("with-preview-artifact announces once a build has uploaded a preview", async () => {
+  const f = fakes({ openPulls: [pull(5)] });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.equal(howtos(f).length, 1);
+});
+
+test("with-preview-artifact does not announce when the build uploaded no preview", async () => {
+  // The build skipped the upload: the PR changes none of the site's paths.
+  const f = fakes({ openPulls: [pull(5)], previewArtifact: false });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.equal(howtos(f).length, 0, "nothing to preview, so no explainer");
+});
+
+test("with-preview-artifact does not announce before any build has succeeded", async () => {
+  const f = fakes({ openPulls: [pull(5)], hasBuild: false });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.equal(howtos(f).length, 0, "it waits for the build to say whether there is a preview");
+});
+
+test("with-preview-artifact ignores an expired preview artifact", async () => {
+  const f = fakes({ openPulls: [pull(5)], previewArtifact: "expired" });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.equal(howtos(f).length, 0);
+});
+
+test("with-preview-artifact looks past a build without a preview to one with it", async () => {
+  const f = fakes({ openPulls: [pull(5)], hasBuild: [{ id: 1 }, { id: 2 }] });
+  f.gh.listRunArtifacts = async (runId, name) => (runId === 2 ? [{ id: 9, name, expired: false }] : []);
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.equal(howtos(f).length, 1);
+});
+
+test("with-preview-artifact still writes the arming record into the explainer", async () => {
+  // A /show-preview arms the PR whatever its build uploaded, and the explainer
+  // is where the record goes.
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, previewArtifact: false });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.equal(howtos(f).length, 1);
+  assert.match(howtos(f)[0].body, /asf-preview-armed/);
+});
+
+test("the default announces whatever the build uploaded", async () => {
+  const f = fakes({ openPulls: [pull(5)], previewArtifact: false, hasBuild: false });
+  await go(f);
+
+  assert.equal(howtos(f).length, 1, "existing sites keep today's behaviour");
+});
+
+const statusOf = (f) => f.posted.filter((p) => p.marker === "asf-preview-status").at(-1)?.body;
+
+test("an armed PR whose build uploaded no preview is told so, not kept waiting", async () => {
+  // /show-preview on a PR that changes none of the site's paths: its build
+  // succeeded and uploaded nothing, and no build is coming that would.
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, previewArtifact: false });
+  await go(f, { howto: "with-preview-artifact" });
+
+  const status = statusOf(f);
+  assert.match(status, /^### No preview for this pull request/);
+  assert.match(status, /changes none of the files the site is built from/);
+  assert.doesNotMatch(status, /waiting|goes green/, "no promise of a build to come");
+  assert.doesNotMatch(status, /staged\.apache\.org/, "nothing was published, so no link");
+  assert.equal(f.pushed.length, 0);
+});
+
+test("a PR with no preview now still links the one it published before", async () => {
+  // A later push took the site changes back out; the old preview is still up.
+  const f = fakes({
+    openPulls: [pull(5)],
+    comments: { 5: [armCmd()] },
+    previewArtifact: false,
+    branches: ["preview/pr5-staging"],
+    headMessages: { "preview/pr5-staging": "Publish preview for #5 (abcdef1)" },
+  });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.match(statusOf(f), /\*\*Preview:\*\* https:\/\/magpie-pr5\.staged\.apache\.org\/ \(still showing `abcdef1`\)/);
+});
+
+test("an armed PR with no successful build yet is still waiting on one", async () => {
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, hasBuild: false, previewArtifact: false });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.match(statusOf(f), /waiting on a build/);
+});
+
+test("an expired preview artifact is a build to re-run, not a PR without a preview", async () => {
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, previewArtifact: "expired" });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.match(statusOf(f), /waiting on a build/);
+});
+
+test("by default a build without a preview still reads as waiting", async () => {
+  // Without `paths`, every build uploads one; a missing artifact is a build
+  // still to come or to re-run.
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, previewArtifact: false });
+  await go(f);
+
+  assert.match(statusOf(f), /waiting on a build/);
+});
+
+test("an unknown howto mode fails the run before touching anything", async () => {
+  const f = fakes({ openPulls: [pull(5)] });
+  await assert.rejects(go(f, { howto: "sometimes" }), /howto must be one of always, with-preview-artifact/);
+  assert.equal(f.posted.length, 0);
 });
 
 test("publishes an armed open PR", async () => {

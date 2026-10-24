@@ -15,9 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { writeFile } from "node:fs/promises";
+import { appendFile, writeFile } from "node:fs/promises";
 import { buildAnchors } from "./anchors.mjs";
 import { isMain } from "./main.mjs";
+import { parsePatterns, touchesPaths } from "./paths.mjs";
 
 /**
  * Write preview-meta.json in the UNPRIVILEGED pull-request build.
@@ -29,6 +30,15 @@ import { isMain } from "./main.mjs";
  */
 export async function previewMeta({ pr, headSha, files }) {
   return { pr, headSha, anchors: buildAnchors(files) };
+}
+
+/**
+ * Whether this pull request gets a preview: it changes a file under one of
+ * `patterns`, or none were given. A listing that failed counts as a change,
+ * since a preview nobody needed costs less than one that is missing.
+ */
+export function previewable({ files, listed, patterns }) {
+  return !listed || touchesPaths(files, patterns);
 }
 
 async function listFiles({ repo, pr, token }) {
@@ -54,7 +64,8 @@ async function listFiles({ repo, pr, token }) {
 }
 
 if (isMain(import.meta.url)) {
-  const { GITHUB_REPOSITORY: repo, GITHUB_TOKEN: token, PR_NUMBER, HEAD_SHA, OUT } = process.env;
+  const { GITHUB_REPOSITORY: repo, GITHUB_TOKEN: token, PR_NUMBER, HEAD_SHA, OUT, PREVIEW_PATHS, GITHUB_OUTPUT } =
+    process.env;
   if (!/^\d+$/.test(String(PR_NUMBER)) || !/^[0-9a-f]{40}$/.test(String(HEAD_SHA)) || !OUT) {
     console.error("PR_NUMBER, HEAD_SHA (40-hex) and OUT are required");
     process.exit(1);
@@ -63,12 +74,19 @@ if (isMain(import.meta.url)) {
   // The overlay degrades without anchors, so a failed listing must not fail
   // the build.
   let files = [];
+  let listed = false;
   try {
     files = await listFiles({ repo, pr: PR_NUMBER, token });
+    listed = true;
   } catch (err) {
     console.error(`preview: no anchors, ${err.message}`);
   }
 
   const meta = await previewMeta({ pr: Number(PR_NUMBER), headSha: HEAD_SHA, files });
   await writeFile(OUT, `${JSON.stringify(meta)}\n`);
+
+  const patterns = parsePatterns(PREVIEW_PATHS);
+  const upload = previewable({ files, listed, patterns });
+  if (!upload) console.log("preview: this pull request changes none of the site's paths; no preview to upload");
+  if (GITHUB_OUTPUT) await appendFile(GITHUB_OUTPUT, `upload=${upload}\n`);
 }

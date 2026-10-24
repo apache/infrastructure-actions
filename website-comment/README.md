@@ -307,7 +307,8 @@ stamped ancestor of the marked region, so partial coverage is fine.
   adds it and publishes at once. The label is created on first use.
 - **Follow it.** From then on every new head commit is republished the moment
   its build goes green. The bot keeps **one** status comment per pull request
-  up to date (published / waiting on a build / refused / retired), and posts a
+  up to date (published / waiting on a build / refused / retired, and no
+  preview with [`paths`](#previews-for-site-changes-only)), and posts a
   new *Preview updated* comment on each publish, since an edit notifies nobody.
   Every preview comment leads with the preview URL.
 - **Disarm it.** Remove the label. The preview is retired on the next run.
@@ -319,6 +320,45 @@ stamped ancestor of the marked region, so partial coverage is fine.
   resolved, otherwise the Conversation tab. Paste into the comment box. If the
   page has its own `a.suggest-change` edit link, the overlay hides it and
   offers it from the same menu, so there is one button, not two.
+
+### Previews for site changes only
+
+By default every pull request not opened by a bot gets the *Preview this pull
+request* explainer, and every build uploads a preview. In a repository where
+many pull requests change only CI, tooling or repository settings, both are
+noise. To offer previews only when a pull request changes the site, list the
+paths the site is built from in `preview-artifact`, and have the publisher
+wait for an upload before explaining:
+
+```yaml
+# In the build workflow
+- uses: apache/infrastructure-actions/website-comment/preview-artifact@<sha>
+  with:
+    path: dist
+    paths: |
+      src/
+      public/
+      package.json
+      package-lock.json
+      astro.config.*
+
+# In the publish workflow
+- uses: apache/infrastructure-actions/website-comment/preview-publish@<sha>
+  with:
+    site-name: foo
+    howto: with-preview-artifact
+```
+
+The build decides, from the pull request's diff, which the publisher never
+reads: a pull request that changes none of the paths uploads no
+`preview-site` artifact, and the publisher posts the explainer only once a
+successful build of the head commit has uploaded one. A later push that
+changes the site brings the explainer then. A rename counts under both names,
+and a build that cannot list the changed files uploads the preview anyway.
+Arming still works on any pull request. Once the build of an armed pull
+request has succeeded without uploading a preview, its status comment says
+*No preview for this pull request* and why, rather than *waiting on a build*:
+it stays armed, and publishes if a later push changes the site.
 
 ## The overlay on the published site
 
@@ -443,7 +483,8 @@ Cost and noise:
 |---|---|---|---|
 | `path` | yes | | Directory holding the built preview site |
 | `retention-days` | no | `30` | Days to keep the `preview-site` artifact |
-| `token` | no | `github.token` | Reads the PR's changed files for the anchors; needs `pull-requests: read`. Without it the overlay links to the Conversation tab. |
+| `paths` | no | | The paths the site is built from, one per line (`dir/`, `*`, `?`, `**`; `#` comments). A PR changing none of them uploads no preview. Empty: every PR does. See [Previews for site changes only](#previews-for-site-changes-only). |
+| `token` | no | `github.token` | Reads the PR's changed files for the anchors and `paths`; needs `pull-requests: read`. Without it the overlay links to the Conversation tab, and every PR uploads a preview. |
 
 ### `preview-publish`
 
@@ -454,6 +495,7 @@ Cost and noise:
 | `label` | no | `preview` | The label that arms a pull request |
 | `pr` | no | | `workflow_dispatch` only: arm and publish this PR now |
 | `reap-head-branches` | no | `false` | Also delete head branches of closed PRs |
+| `howto` | no | `always` | When to post the *Preview this pull request* explainer: `always`, or `with-preview-artifact`, once a successful build of the head uploaded `preview-site` |
 | `token` | no | `github.token` | Needs `contents`, `pull-requests`, `issues` write and `actions` read |
 | `publisher-login` | no | `github-actions[bot]` | The login `token` acts as: `<app-slug>[bot]` for a GitHub App token, the user's login for a personal token |
 
