@@ -272,6 +272,7 @@
 - korandoru/hawkeye@*
 - leafo/gh-actions-lua@*
 - leafo/gh-actions-luarocks@35d062def313a7699a0d513e996bcf4352f05389
+- leafo/gh-actions-luarocks@1c4a92caecc8f6850f673cbadfd57b3e555417ce
 - lhotari/sandboxed-trivy-action@f01374b6cc3bf7264ab238293e94f6db7ada6dd0
 - loadingalias/cargo-rail-action@e706767c343acb6a2ab1917f243b1616ae9eb05b
 - loadingalias/cargo-rail-action@4a8df181e4f340a164190cf092c9f9239b20edab
