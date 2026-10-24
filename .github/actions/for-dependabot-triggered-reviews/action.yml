@@ -209,7 +209,7 @@ runs:
       if: false
     - uses: Kesin11/actions-timeline@57fc93f20c6da7fbc14063c6d24a2a5627c799ad  # v3.2.0
       if: false
-    - uses: leafo/gh-actions-luarocks@35d062def313a7699a0d513e996bcf4352f05389  # v6.1.0
+    - uses: leafo/gh-actions-luarocks@1c4a92caecc8f6850f673cbadfd57b3e555417ce  # v6.1.1
       if: false
     - uses: lhotari/sandboxed-trivy-action@f01374b6cc3bf7264ab238293e94f6db7ada6dd0  # v1.0.2
       if: false
