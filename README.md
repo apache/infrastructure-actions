@@ -23,6 +23,7 @@ This repository hosts GitHub Actions developed by the ASF community and approved
 - [Checking the Action Usage in an ASF Project](#checking-the-action-usage-in-an-asf-project)
 - [Submitting an Action](#submitting-an-action)
 - [Agent Skills](#agent-skills)
+  - [Agent-assisted contribution (apache-magpie)](#agent-assisted-contribution-apache-magpie)
 - [Available GitHub Actions](#available-github-actions)
 - [Versioning and Pinning Actions](#versioning-and-pinning-actions)
 - [Organization-wide GitHub Actions Allow List](#management-of-organization-wide-github-actions-allow-list)
@@ -115,6 +116,18 @@ Use `sweep-open-prs` to find what needs attention and `analyze-action-pr` to go 
 one PR. For the non-agent equivalent of the sweep, see
 [Batch-Reviewing Dependabot PRs](#batch-reviewing-dependabot-prs), which drives the same
 verification from `verify-action-build` directly.
+
+### Agent-assisted contribution (apache-magpie)
+
+This repository adopts the [Apache Magpie](https://github.com/apache/magpie) skill
+framework through its plugin marketplace. Nothing is vendored: `.claude/settings.json`
+enables the plugins, and the committed `.apache-magpie.lock` records the minimum version
+and the plugin set every contributor should have. In a fresh clone, run
+`/magpie-setup:setup` to install the plugins, or `/magpie-setup:setup verify` to check an
+existing install against the floor.
+
+Project-wide skill configuration lives in `.apache-magpie-overrides/` (committed).
+Personal configuration goes in `.apache-magpie-local/`, which is gitignored.
 
 ## Available GitHub Actions
 
