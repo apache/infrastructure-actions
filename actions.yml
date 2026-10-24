@@ -101,6 +101,9 @@ astral-sh/setup-uv:
     expires_at: 2027-01-03
   1c37ad07a6a961277cf70c0d37d6f313000f5884:
     tag: v10.3.0
+    expires_at: 2027-01-16
+  07a047e608db84b3d8c06cd9a7c7dcc9c355c18e:
+    tag: v10.3.2
 awalsh128/cache-apt-pkgs-action:
   '*':
     keep: true
