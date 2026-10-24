@@ -287,6 +287,9 @@ CodSpeedHQ/action:
     expires_at: 2027-01-09
   821a40cd6c80e3cfe387caf55668287addd808da:
     tag: v5.5.0
+    expires_at: 2027-01-16
+  78102a468f96d8e0ccb92d0ec49425753fc42062:
+    tag: v5.6.0
 commit-check/commit-check-action:
   bbb6580f01838e475563514f115ec7ef41c9ddc7:
     tag: v2.11.1
