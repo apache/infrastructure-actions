@@ -307,7 +307,8 @@ stamped ancestor of the marked region, so partial coverage is fine.
   adds it and publishes at once. The label is created on first use.
 - **Follow it.** From then on every new head commit is republished the moment
   its build goes green. The bot keeps **one** status comment per pull request
-  up to date (published / waiting on a build / refused / retired), and posts a
+  up to date (published / waiting on a build / refused / retired, and no
+  preview with [`paths`](#previews-for-site-changes-only)), and posts a
   new *Preview updated* comment on each publish, since an edit notifies nobody.
   Every preview comment leads with the preview URL.
 - **Disarm it.** Remove the label. The preview is retired on the next run.
@@ -354,8 +355,10 @@ reads: a pull request that changes none of the paths uploads no
 successful build of the head commit has uploaded one. A later push that
 changes the site brings the explainer then. A rename counts under both names,
 and a build that cannot list the changed files uploads the preview anyway.
-Arming still works on any pull request; one without an artifact stays
-*waiting on a build*.
+Arming still works on any pull request. Once the build of an armed pull
+request has succeeded without uploading a preview, its status comment says
+*No preview for this pull request* and why, rather than *waiting on a build*:
+it stays armed, and publishes if a later push changes the site.
 
 ## The overlay on the published site
 

@@ -278,6 +278,59 @@ test("the default announces whatever the build uploaded", async () => {
   assert.equal(howtos(f).length, 1, "existing sites keep today's behaviour");
 });
 
+const statusOf = (f) => f.posted.filter((p) => p.marker === "asf-preview-status").at(-1)?.body;
+
+test("an armed PR whose build uploaded no preview is told so, not kept waiting", async () => {
+  // /show-preview on a PR that changes none of the site's paths: its build
+  // succeeded and uploaded nothing, and no build is coming that would.
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, previewArtifact: false });
+  await go(f, { howto: "with-preview-artifact" });
+
+  const status = statusOf(f);
+  assert.match(status, /^### No preview for this pull request/);
+  assert.match(status, /changes none of the files the site is built from/);
+  assert.doesNotMatch(status, /waiting|goes green/, "no promise of a build to come");
+  assert.doesNotMatch(status, /staged\.apache\.org/, "nothing was published, so no link");
+  assert.equal(f.pushed.length, 0);
+});
+
+test("a PR with no preview now still links the one it published before", async () => {
+  // A later push took the site changes back out; the old preview is still up.
+  const f = fakes({
+    openPulls: [pull(5)],
+    comments: { 5: [armCmd()] },
+    previewArtifact: false,
+    branches: ["preview/pr5-staging"],
+    headMessages: { "preview/pr5-staging": "Publish preview for #5 (abcdef1)" },
+  });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.match(statusOf(f), /\*\*Preview:\*\* https:\/\/magpie-pr5\.staged\.apache\.org\/ \(still showing `abcdef1`\)/);
+});
+
+test("an armed PR with no successful build yet is still waiting on one", async () => {
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, hasBuild: false, previewArtifact: false });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.match(statusOf(f), /waiting on a build/);
+});
+
+test("an expired preview artifact is a build to re-run, not a PR without a preview", async () => {
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, previewArtifact: "expired" });
+  await go(f, { howto: "with-preview-artifact" });
+
+  assert.match(statusOf(f), /waiting on a build/);
+});
+
+test("by default a build without a preview still reads as waiting", async () => {
+  // Without `paths`, every build uploads one; a missing artifact is a build
+  // still to come or to re-run.
+  const f = fakes({ openPulls: [pull(5)], comments: { 5: [armCmd()] }, previewArtifact: false });
+  await go(f);
+
+  assert.match(statusOf(f), /waiting on a build/);
+});
+
 test("an unknown howto mode fails the run before touching anything", async () => {
   const f = fakes({ openPulls: [pull(5)] });
   await assert.rejects(go(f, { howto: "sometimes" }), /howto must be one of always, with-preview-artifact/);

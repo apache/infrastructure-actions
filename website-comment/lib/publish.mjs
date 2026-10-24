@@ -113,6 +113,19 @@ async function hasPreviewArtifact(gh, headSha) {
   return false;
 }
 
+/**
+ * Whether none of these successful builds uploaded a preview-site artifact at
+ * all, expired ones included: an artifact that expired was a preview once,
+ * and its build is re-run, not explained away.
+ */
+async function uploadedNone(gh, builds) {
+  for (const build of builds) {
+    const artifacts = await gh.listRunArtifacts(build.id, "preview-site");
+    if (artifacts.some((a) => a.name === "preview-site")) return false;
+  }
+  return true;
+}
+
 export async function run({
   gh,
   git,
@@ -339,6 +352,7 @@ export async function run({
         force: only === pr,
         comments: commentsByPr.get(pr) ?? [],
         publisher,
+        howto,
       });
     } catch (err) {
       console.error(`preview: publish failed for #${pr}: ${err.message}`);
@@ -451,6 +465,7 @@ async function publishOne({
   force = false,
   comments = [],
   publisher = PUBLISHER_LOGIN,
+  howto = "always",
 }) {
   const pull = openPulls.find((p) => p.number === pr);
   if (!pull) return false;
@@ -535,9 +550,16 @@ async function publishOne({
     // A refusal found this run, else the one the status already reports for
     // an artifact skipped as known.
     const reason = refusal ?? (skippedKnown ? refusalIn(status, headSha) : null);
-    await setStatus(
-      reason ? refusedBody(pr, reason, headSha, passedOver) : waitingBody(pr, headSha, passedOver),
-    );
+    if (reason) {
+      await setStatus(refusedBody(pr, reason, headSha, passedOver));
+    } else if (howto === "with-preview-artifact" && (await uploadedNone(gh, builds))) {
+      // The builds succeeded and chose not to upload, because the pull request
+      // changes none of the site's paths. "Waiting on a build" would promise a
+      // preview that is not coming.
+      await setStatus(noPreviewBody(pr, headSha, publishedSha));
+    } else {
+      await setStatus(waitingBody(pr, headSha, passedOver));
+    }
     return false;
   }
 
@@ -653,6 +675,15 @@ const waitingBody = (pr, sha, artifactIds = []) =>
   `### Preview waiting on a build\n\n${urlLine(pr)}\n\nNo successful build for \`${sha.slice(0, 7)}\` yet. ` +
   `The preview publishes as soon as the build goes green.` +
   (artifactIds.length ? `\n\n${passedOverTag(sha, artifactIds)}` : "");
+
+// No URL line when nothing was ever published: like the explainer, a link that
+// does not resolve is worse than none.
+const noPreviewBody = (pr, sha, publishedSha) =>
+  `### No preview for this pull request\n\n` +
+  (publishedSha ? `${urlLine(pr)} (still showing \`${publishedSha.slice(0, 7)}\`)\n\n` : "") +
+  `The build of \`${sha.slice(0, 7)}\` succeeded but uploaded no preview: this pull request ` +
+  `changes none of the files the site is built from, so there is nothing new to see. ` +
+  `It stays armed, and publishes on its own if a later push changes the site.`;
 
 const REFUSED_HEADING = "### Preview could not be published";
 const refusedFor = (sha) => `The build artifact for \`${sha.slice(0, 7)}\` was refused`;
