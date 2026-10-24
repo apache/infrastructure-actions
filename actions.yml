@@ -408,6 +408,9 @@ docker/build-push-action:
 docker/login-action:
   dbcb813823bdd20940b903addbd779551569679f:
     tag: v4.6.0
+    expires_at: 2027-01-16
+  81c6f93d4bc991e510b342a00b419b3bb4efc5c6:
+    tag: v4.7.0
 docker/metadata-action:
   dc802804100637a589fabce1cb79ff13a1411302:
     tag: v6.2.0
@@ -1162,3 +1165,6 @@ zizmorcore/zizmor-action:
     expires_at: 2027-01-09
   85b2b9fb8e3325e7a23d7d0a9d7ba5ae0f999e3e:
     tag: v0.7.1
+    expires_at: 2027-01-16
+  53290badfa369cb0bf7ad16342cb62c2fa47ac7b:
+    tag: v0.8.0
