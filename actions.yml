@@ -604,9 +604,6 @@ gradle/develocity-actions/setup-python:
   9d8792ab22712b19790c2abce53e9ebb2694c312:
     tag: v2.5
 hadolint/hadolint-action:
-  2332a7b74a6de0dda2e2221d575162eba76ba5e5:
-    tag: v3.3.0
-    expires_at: 2026-10-25
   2a66e89f53d0771bb131a7fa31f3136336094aa6:
     tag: v3.4.0
     expires_at: 2026-11-19
@@ -952,9 +949,6 @@ pypa/gh-action-pip-audit:
   1220774d901786e6f652ae159f7b6bc8fea6d266:
     tag: v1.1.0
 pypa/gh-action-pypi-publish:
-  ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e:
-    tag: v1.13.0
-    expires_at: 2026-10-25
   dc37677b2e1c63e2034f94d8a5b11f265b73ba33:
     tag: v1.14.2
     expires_at: 2027-01-14
