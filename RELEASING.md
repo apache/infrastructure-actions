@@ -32,6 +32,7 @@ prefix a consumer repeats in the `@ref`:
 | Action (consumed path)                          | Tag prefix       | Example tag              |
 | ----------------------------------------------- | ---------------- | ------------------------ |
 | `allowlist-check`                               | `allowlist-check`| `allowlist-check/v1.2.3` |
+| `fork-ci`                                       | `fork-ci`        | `fork-ci/v1.0.0`         |
 | `pelican`                                       | `pelican`        | `pelican/v1.2.3`         |
 | `stash/save`                                    | `save`           | `save/v1.2.3`            |
 | `stash/restore`                                 | `restore`        | `restore/v1.2.3`         |

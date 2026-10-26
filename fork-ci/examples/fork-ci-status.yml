@@ -1,0 +1,53 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Copy to .github/workflows/fork-ci-status.yml in the adopting repository.
+# Replace apache/example and the unreleased action ref before adoption.
+name: Fork CI status
+on:
+  # API metadata only: no checkout, artifacts, caches, or PR code execution.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
+    workflows: [Fork CI signal]
+    types: [completed]
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+permissions:
+  actions: read
+  checks: write
+  pull-requests: read
+# Serialize every invocation of this bridge to prevent duplicate checks and
+# older observations overwriting newer ones. Keep the same group for all events.
+concurrency:
+  group: fork-ci-status
+  cancel-in-progress: false
+jobs:
+  bridge:
+    if: github.repository == 'apache/example'
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      # Pin to a reviewed commit after this action is published.
+      # Adoption template: no published commit exists yet. Replace this ref.
+      - uses: apache/infrastructure-actions/fork-ci@main # zizmor: ignore[unpinned-uses]
+        with:
+          workflow: ci.yml
+          check-name: CI (fork)
+          base-branches: main
+          sweep-minutes: '15'

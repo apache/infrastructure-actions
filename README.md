@@ -132,6 +132,7 @@ Personal configuration goes in `.apache-magpie-local/`, which is gitignored.
 ## Available GitHub Actions
 
   - [ASF Infrastructure Pelican Action](/pelican/README.md): Generate and publish project websites with GitHub Actions
+  - [Fork CI](/fork-ci/README.md): Mirror public fork workflow results as informational PR checks, with adoption examples and tests
   - [Stash Action](/stash/README.md): Manage large build caches
   - [ASF Allowlist Check](/allowlist-check/README.md): Verify workflow action refs are on the ASF allowlist
   - [Website Comment](/website-comment/README.md): Publish per-pull-request website previews on ASF staging, with a review overlay that links a marked region to its diff line
@@ -146,6 +147,7 @@ which you repeat after the `@`:
 | Action                | Pin it like this                                                              |
 | --------------------- | ----------------------------------------------------------------------------- |
 | `allowlist-check`     | `apache/infrastructure-actions/allowlist-check@<sha>  # allowlist-check/v1.2.3`|
+| `fork-ci`             | `apache/infrastructure-actions/fork-ci@<sha>          # fork-ci/v1.0.0`        |
 | `pelican`             | `apache/infrastructure-actions/pelican@<sha>          # pelican/v1.2.3`        |
 | `stash/save`          | `apache/infrastructure-actions/stash/save@<sha>       # save/v1.2.3`           |
 | `stash/restore`       | `apache/infrastructure-actions/stash/restore@<sha>    # restore/v1.2.3`        |

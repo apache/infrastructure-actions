@@ -112,6 +112,7 @@ ACTIONS: tuple[Action, ...] = (
             "website-comment/vendor/",
         ),
     ),
+    Action("fork-ci", "fork-ci", ("fork-ci/",)),
 )
 
 VALID_BUMPS = ("major", "minor", "patch")

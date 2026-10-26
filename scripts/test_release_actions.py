@@ -69,6 +69,11 @@ def test_affected_single_action():
     assert _prefixes(ra.affected_actions(changed)) == ["allowlist-check"]
 
 
+def test_fork_ci_changes_release_the_shared_action():
+    for path in ("fork-ci/action.yml", "fork-ci/bridge.cjs", "fork-ci/README.md"):
+        assert _prefixes(ra.affected_actions([path])) == ["fork-ci"], path
+
+
 def test_affected_ignores_unrelated_paths():
     changed = ["README.md", "actions.yml", ".github/workflows/pytest.yml"]
     assert ra.affected_actions(changed) == []
