@@ -105,7 +105,7 @@ runs:
       if: false
     - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d  # v1.8.1
       if: false
-    - uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff  # v24.2.0
+    - uses: DavidAnson/markdownlint-cli2-action@696eb3f2509270d7b882d2aa68347bc676e7af34  # v25.0.0
       if: false
     - uses: dawidd6/action-send-mail@47af4a10b540781705f283a2cf1a9650713ac795  # v23
       if: false
