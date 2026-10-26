@@ -138,6 +138,7 @@
 - dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
 - DavidAnson/markdownlint-cli2-action@6bf21b07787794f89a243495939cd651942aeabe
 - DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff
+- DavidAnson/markdownlint-cli2-action@696eb3f2509270d7b882d2aa68347bc676e7af34
 - dawidd6/action-download-artifact@*
 - dawidd6/action-send-mail@94de994a9f6fffee200243214e17002e2920bb59
 - dawidd6/action-send-mail@67ce3558d613188179559c61d3565140cf389968

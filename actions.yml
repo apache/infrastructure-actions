@@ -375,6 +375,9 @@ DavidAnson/markdownlint-cli2-action:
     expires_at: 2026-11-01
   21c1be1b93ad9ed58fa840aacc3f279cde2a72ff:
     tag: v24.2.0
+    expires_at: 2027-01-18
+  696eb3f2509270d7b882d2aa68347bc676e7af34:
+    tag: v25.0.0
 dawidd6/action-download-artifact:
   '*':
     keep: true
