@@ -94,6 +94,7 @@ def test_signal_and_bridge_share_a_name_and_do_not_checkout_pr_code():
                 assert "${{" not in step.get("run", "")
 
 
+@pytest.mark.parametrize("force_color", ["0", "1"])
 @pytest.mark.parametrize("event,external,base,repository,expected", [
     ("pull_request", True, "main", "apache/example", False),
     ("pull_request", False, "main", "apache/example", True),
@@ -103,7 +104,10 @@ def test_signal_and_bridge_share_a_name_and_do_not_checkout_pr_code():
     ("merge_group", False, "", "apache/example", True),
     ("pull_request", True, "main", "contributor/example", True),
 ])
-def test_ci_example_keeps_trusted_validation(event, external, base, repository, expected):
+def test_ci_example_keeps_trusted_validation(
+    monkeypatch, force_color, event, external, base, repository, expected,
+):
+    monkeypatch.setenv("FORCE_COLOR", force_color)
     workflow = load(ROOT / "examples/ci.yml")
     expression = workflow["jobs"]["test"]["if"].strip().removeprefix("${{").removesuffix("}}")
     github = {
@@ -111,12 +115,13 @@ def test_ci_example_keeps_trusted_validation(event, external, base, repository, 
         "event": {"pull_request": {"head": {"repo": {"full_name": "other/example" if external else repository}}}},
     }
     # This example only uses JS-compatible comparisons and boolean operators.
+    # Serialize the result so FORCE_COLOR cannot add ANSI codes to a boolean.
     result = subprocess.run(
         ["node", "-e", "const github = JSON.parse(process.argv[1]); "
-         f"console.log(Boolean({expression}));", json.dumps(github)],
+         f"process.stdout.write(JSON.stringify(Boolean({expression})));", json.dumps(github)],
         capture_output=True, text=True, check=True,
     )
-    assert (result.stdout.strip() == "true") == expected
+    assert json.loads(result.stdout) is expected
     assert "merge_group" in workflow["on"]
 
 
