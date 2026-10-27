@@ -74,8 +74,8 @@ function checkMetadata(check) {
 
 /** Synchronize eligible PRs using the client and context from github-script. */
 async function bridge({ github, context, core, config = configuration(), now = Date.now() }) {
-  if (!["schedule", "workflow_dispatch", "workflow_run", "pull_request_target"].includes(context.eventName)) {
-    throw new Error("fork-ci requires schedule, workflow_dispatch, workflow_run, or pull_request_target");
+  if (!["schedule", "workflow_dispatch", "workflow_run"].includes(context.eventName)) {
+    throw new Error("fork-ci requires schedule, workflow_dispatch, or workflow_run");
   }
   const upstream = context.repo;
   const upstreamName = `${upstream.owner}/${upstream.repo}`;
@@ -221,11 +221,7 @@ async function bridge({ github, context, core, config = configuration(), now = D
 
   let candidates;
   let sweepNumbers;
-  if (context.eventName === "pull_request_target") {
-    const number = context.payload.pull_request?.number;
-    if (!Number.isInteger(number)) throw new Error("Missing pull request number");
-    candidates = [(await github.rest.pulls.get({ ...upstream, pull_number: number })).data];
-  } else if (context.eventName === "workflow_run") {
+  if (context.eventName === "workflow_run") {
     const run = context.payload.workflow_run;
     // The signal is an upstream pull_request workflow, not the fork CI run.
     // Never trust its conclusion, artifacts, or its often-empty PR array.

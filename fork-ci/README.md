@@ -168,9 +168,32 @@ Match `sweep-minutes` to a regularly spaced schedule. Irregular schedules can
 revisit some groups and miss others. If API usage is too high, reduce
 `recent-hours` or `sweep-size`. Smaller values increase the refresh delay.
 
-Each polled PR normally needs a check lookup and two run lookups. A missing run
-also needs a workflow-state lookup. Before each write, the bridge reads the
-current PR. An unchanged result needs neither that read nor a write.
+Budget for these REST API calls per invocation:
+
+| Operation | Approximate calls |
+|---|---|
+| List open PRs | One per 100 open PRs, with at least one page |
+| Inspect each selected PR's checks | One per page of 100 matching checks |
+| Poll a fork workflow | Two per PR, for push and manual runs |
+| Inspect workflow state when no run exists | One extra per polled PR |
+| Publish a changed result | Two extra: re-read the PR, then write the check |
+
+With one check page per PR, budget list pages plus three calls per polled PR.
+Recent PRs with completed runs outside the rotating group still need a check lookup.
+Add one call for each of those PRs. Unchanged results need no write or PR re-read.
+
+For example, 500 open PRs need about five list calls. Polling 25 rotating PRs and
+50 additional recent active PRs needs about 230 calls per invocation.
+At four invocations per hour, that is about 920 calls before missing-run lookups,
+changed results, other recent PRs, or notification runs.
+
+GitHub's [`GITHUB_TOKEN` rate limit](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#primary-rate-limit-for-github_token-in-github-actions)
+is normally 1,000 requests per hour per repository. Requests to resources owned
+by a GitHub Enterprise Cloud account have a 15,000-request limit instead.
+Allow room for other workflows and notification runs; `sweep-size` does not cap
+the recent PR window. Use the response's `x-ratelimit-*` headers to check the
+effective limit and remaining budget. Secondary limits also apply, including to
+check writes.
 
 ### Results and troubleshooting
 
@@ -202,11 +225,9 @@ The bridge only reads API metadata and writes checks. It does not run PR code,
 read artifacts, approve workflows, or edit PRs. It identifies its checks by name,
 PR/workflow identifier, and the `github-actions` app identity.
 
-Supported caller events are `workflow_run`, `schedule`, `workflow_dispatch`, and
-`pull_request_target`. An existing `pull_request_target` caller can use the action
-without the signal workflow. It reads the current PR through the API before
-polling. Keep both privileged caller types free of PR checkouts, artifact
-execution, and caches from untrusted jobs.
+Supported caller events are `workflow_run`, `schedule`, and `workflow_dispatch`.
+Use the signal workflow for PR notifications. Keep privileged callers free of
+PR checkouts, artifact execution, and caches from untrusted jobs.
 
 Use one concurrency group with `cancel-in-progress: false` for notifications and
 sweeps. Concurrent callers can create duplicate checks or overwrite newer results.

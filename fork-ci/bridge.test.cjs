@@ -32,6 +32,7 @@ const run = (id = 10, overrides = {}) => ({
   head_sha: sha, head_branch: "feature", head_repository: fork, ...overrides,
 });
 const failure = (status) => Object.assign(new Error("untrusted response text"), { status });
+const signal = { workflow_run: { event: "pull_request", head_repository: fork, head_branch: "feature", head_sha: sha, pull_requests: [] } };
 
 function harness(options = {}) {
   const prs = options.prs || [pull()];
@@ -101,8 +102,8 @@ function harness(options = {}) {
   };
   const context = {
     repo: { owner: "apache", repo: "example" }, runId: 123,
-    eventName: options.event || "pull_request_target",
-    payload: options.payload || { pull_request: { number: prs[0]?.number } },
+    eventName: options.event || "workflow_run",
+    payload: options.payload || signal,
   };
   const core = { info() {}, error: (s) => errors.push(s), setFailed: (s) => failures.push(s) };
   return {
@@ -298,20 +299,18 @@ for (const override of [
     const h = harness({ prs: [pull(1, override)] });
     await h.execute();
     assert.deepEqual(h.writes, []);
-    assert.equal(h.calls.length, 1); // Only the authoritative PR read.
+    assert.deepEqual(h.calls.map((c) => c.name), ["pulls.list"]);
   });
 }
 
 for (const override of [{ state: "closed" }, { head: { sha: "b".repeat(40), ref: "feature", repo: fork } }, { base: { ref: "release", repo: upstream } }]) {
   test(`does not publish after concurrent PR change ${JSON.stringify(override)}`, async () => {
-    let reads = 0;
-    const h = harness({ current: () => ++reads === 1 ? pull() : pull(1, override) });
+    const h = harness({ current: () => pull(1, override) });
     await h.execute();
     assert.deepEqual(h.writes, []);
+    assert.equal(h.calls.filter((c) => c.name === "pulls.get").length, 1);
   });
 }
-
-const signal = { workflow_run: { event: "pull_request", head_repository: fork, head_branch: "feature", head_sha: sha, pull_requests: [] } };
 
 test("workflow_run matches every eligible PR at the exact repository, branch and SHA", async () => {
   const h = harness({ event: "workflow_run", payload: signal, prs: [pull(), pull(2),
@@ -330,10 +329,20 @@ test("ignores notifications for push workflows", async () => {
   assert.deepEqual(h.calls, []);
 });
 
-test("rejects unprivileged or unrelated event types", async () => {
-  const h = harness({ event: "pull_request" });
-  await assert.rejects(h.execute, /requires schedule/);
-  assert.deepEqual(h.calls, []);
+for (const event of ["pull_request", "pull_request_target", "push"]) {
+  test(`rejects unsupported caller event ${event} before any API calls`, async () => {
+    const h = harness({ event });
+    await assert.rejects(h.execute, /requires schedule, workflow_dispatch, or workflow_run/);
+    assert.deepEqual(h.calls, []);
+  });
+}
+
+test("manual dispatch performs the same sweep as the schedule", async () => {
+  const scheduled = harness({ event: "schedule" });
+  const manual = harness({ event: "workflow_dispatch" });
+  assert.deepEqual(await manual.execute(), await scheduled.execute());
+  assert.deepEqual(manual.calls, scheduled.calls);
+  assert.deepEqual(manual.writes, scheduled.writes);
 });
 
 test("sweep visits more than 500 old PRs across all pages and rotating slices", async () => {
@@ -404,10 +413,10 @@ test("an active check becomes neutral if its run disappears", async () => {
   assert.equal(h.writes[0].conclusion, "neutral");
 });
 
-test("a stale PR event uses the current head and leaves old-head checks alone", async () => {
+test("a scheduled sweep finds the current head and leaves old-head checks alone", async () => {
   const currentSha = "b".repeat(40);
   const prs = [pull(1, { head: { sha: currentSha, ref: "feature", repo: fork } })];
-  const h = harness({ payload: { pull_request: pull() }, prs, checks: await existing(),
+  const h = harness({ event: "schedule", prs, checks: await existing(),
     runs: [run(11, { head_sha: currentSha })] });
   await h.execute();
   assert.equal(h.writes[0].method, "create");
