@@ -1,0 +1,52 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Copy the event, concurrency, and job conditions into your existing CI.
+# Replace apache/example and the test command. This file is a template.
+name: CI
+on:
+  push:
+    branches-ignore: ['gh-readonly-queue/**']
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  # PR numbers separate contributors who use the same branch name.
+  # Fork pushes share a branch group; upstream merge queue runs use their SHA.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.repository }}-${{ github.event.pull_request.number || (github.repository == 'apache/example' && github.sha || github.ref) }}
+  cancel-in-progress: true
+jobs:
+  test:
+    # Skip only external PRs to a branch protected by the full merge queue CI.
+    # Same-repository PRs and release-branch PRs retain their upstream tests.
+    if: >-
+      ${{ !(github.repository == 'apache/example' &&
+            github.event_name == 'pull_request' &&
+            github.event.pull_request.head.repo.full_name != github.repository &&
+            github.base_ref == 'main') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Replace this placeholder with your complete test command.
+      - run: echo 'Replace this step with your complete test suite'; exit 1
