@@ -31,9 +31,6 @@
   70062d7a876d3eb6334754fa26efd2fbd90c32f2:
     tag: v5.0.1
 1Password/load-secrets-action/configure:
-  eb2efd0703da22a93c467f2d1ffbb6826c11e19c:
-    tag: v4.1.1
-    expires_at: 2026-10-28
   e544b780808654ba8ceba5fb2fe2897103d92ff4:
     tag: v5.0.0
     expires_at: 2026-11-19
@@ -294,9 +291,6 @@ CodSpeedHQ/action:
   78102a468f96d8e0ccb92d0ec49425753fc42062:
     tag: v5.6.0
 commit-check/commit-check-action:
-  bbb6580f01838e475563514f115ec7ef41c9ddc7:
-    tag: v2.11.1
-    expires_at: 2026-10-28
   d109324148a73dc758891d1d85924c912dbfd38b:
     tag: v2.12.0
     expires_at: 2026-11-04
@@ -770,9 +764,6 @@ jwgmeligmeyling/spotbugs-github-action:
   '*':
     keep: true
 Kesin11/actions-timeline:
-  7bf79990b7c09f5dfb570ac30b814ca597bd538e:
-    tag: v3.1.1
-    expires_at: 2026-10-28
   57fc93f20c6da7fbc14063c6d24a2a5627c799ad:
     tag: v3.2.0
     expires_at: 2027-01-16
@@ -826,18 +817,12 @@ manusa/actions-setup-minikube:
   001b9f30165b2a875b835ec5183ced75b94bc269:
     tag: v2.19.0
 matlab-actions/run-tests:
-  ae0e80cb44fdec28d35d0831d8acf38ee4fdf91a:
-    tag: v3.2.0
-    expires_at: 2026-10-28
   83e368e0b18d9c0c7d510fd911d546e16b73bbdb:
     tag: v3.2.1
     expires_at: 2026-11-09
   214a16e600ef2c705a4b2dd6c0794dc6957682a9:
     tag: v3.3.0
 matlab-actions/setup-matlab:
-  a0180c939fb1a28de13f44f7b778b912384ced1f:
-    tag: v3.0.1
-    expires_at: 2026-10-28
   2323adb8243827ea460b0def4c413545aaec46a9:
     tag: v3.0.2
     expires_at: 2026-11-29
