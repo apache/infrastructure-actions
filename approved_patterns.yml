@@ -44,6 +44,7 @@
 - astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7
 - astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884
 - astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e
+- astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2
 - awalsh128/cache-apt-pkgs-action@*
 - aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c
 - aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
@@ -206,13 +207,16 @@
 - gradle/develocity-actions/maven-publish-build-scan@4b276bd81fb55e2fcbae724c48699de57e2156eb
 - gradle/develocity-actions/maven-publish-build-scan@f852d93dada312948b1ba533226c28e05d756866
 - gradle/develocity-actions/maven-publish-build-scan@9d8792ab22712b19790c2abce53e9ebb2694c312
+- gradle/develocity-actions/maven-publish-build-scan@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
 - gradle/develocity-actions/setup-docker@f852d93dada312948b1ba533226c28e05d756866
 - gradle/develocity-actions/setup-docker@9d8792ab22712b19790c2abce53e9ebb2694c312
+- gradle/develocity-actions/setup-docker@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
 - gradle/develocity-actions/setup-maven@0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642
 - gradle/develocity-actions/setup-maven@4b276bd81fb55e2fcbae724c48699de57e2156eb
 - gradle/develocity-actions/setup-maven@f852d93dada312948b1ba533226c28e05d756866
 - gradle/develocity-actions/setup-maven@9d8792ab22712b19790c2abce53e9ebb2694c312
 - gradle/develocity-actions/setup-npm@9d8792ab22712b19790c2abce53e9ebb2694c312
+- gradle/develocity-actions/setup-npm@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
 - gradle/develocity-actions/setup-python@9d8792ab22712b19790c2abce53e9ebb2694c312
 - gradle/develocity-actions/setup-python@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
 - hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6
