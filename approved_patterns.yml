@@ -121,6 +121,7 @@
 - container-tools/kind-action@*
 - coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d
 - coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc
+- coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465
 - coursier/setup-action@*
 - coursier/setup-action@fd1707a76b027efdfb66ca79318b4d29b72e5a02
 - coursier/setup-action@63a23764316528a1b627103472030d5a16fc6133
