@@ -227,6 +227,7 @@
 - hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387
 - hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
 - helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f
+- helm/chart-releaser-action@df287104677278f869ca5480bd260358397cc3f9
 - helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f
 - helm/chart-testing-action@720270857a28afd41e2426521a7801db09e9b510
 - helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc
