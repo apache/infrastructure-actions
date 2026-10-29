@@ -606,6 +606,9 @@ gradle/develocity-actions/setup-npm:
 gradle/develocity-actions/setup-python:
   9d8792ab22712b19790c2abce53e9ebb2694c312:
     tag: v2.5
+    expires_at: 2027-01-21
+  b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17:
+    tag: v2.6
 hadolint/hadolint-action:
   2a66e89f53d0771bb131a7fa31f3136336094aa6:
     tag: v3.4.0
