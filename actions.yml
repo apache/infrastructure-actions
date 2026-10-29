@@ -567,6 +567,9 @@ gradle/actions/setup-gradle:
     expires_at: 2026-12-26
   3f5f9adaf7d9fecd50b5935e54106014257a94e6:
     tag: v6.4.0
+    expires_at: 2027-01-21
+  8da46b539cd8fe6ab27ca75128919a18d757604c:
+    tag: v6.4.1
 gradle/actions/wrapper-validation:
   3f131e8634966bd73d06cc69884922b02e6faf92:
     tag: v6.2.0
@@ -576,6 +579,9 @@ gradle/actions/wrapper-validation:
     expires_at: 2026-12-27
   3f5f9adaf7d9fecd50b5935e54106014257a94e6:
     tag: v6.4.0
+    expires_at: 2027-01-21
+  8da46b539cd8fe6ab27ca75128919a18d757604c:
+    tag: v6.4.1
 gradle/develocity-actions/maven-publish-build-scan:
   0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642:
     tag: v2.2
@@ -612,6 +618,9 @@ gradle/develocity-actions/setup-maven:
     expires_at: 2027-01-12
   9d8792ab22712b19790c2abce53e9ebb2694c312:
     tag: v2.5
+    expires_at: 2027-01-21
+  b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17:
+    tag: v2.6
 gradle/develocity-actions/setup-npm:
   9d8792ab22712b19790c2abce53e9ebb2694c312:
     tag: v2.5
@@ -960,6 +969,9 @@ pypa/cibuildwheel:
     expires_at: 2027-01-16
   b9e566a2b284570af229f6c2a33673410d0389a3:
     tag: v4.3.4
+    expires_at: 2027-01-21
+  f9b966cfadf4109556cadc5bb39ddb72d0ce664e:
+    tag: v4.3.5
 pypa/gh-action-pip-audit:
   1220774d901786e6f652ae159f7b6bc8fea6d266:
     tag: v1.1.0
@@ -1053,6 +1065,9 @@ sbt/setup-sbt:
     expires_at: 2027-01-09
   ecad189dd245444b9ae0a0cd5922fd938b88906f:
     tag: v1.5.12
+    expires_at: 2027-01-21
+  b113b960ba361e87e08ce02a390d51871b7ee459:
+    tag: v1.5.13
 scalacenter/sbt-dependency-submission:
   d84eef4c09e633bcf5f113bcad7fd5e9af1baee9:
     tag: v3.2.3

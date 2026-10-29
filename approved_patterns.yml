@@ -200,9 +200,11 @@
 - gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
 - gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb
 - gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6
+- gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c
 - gradle/actions/wrapper-validation@3f131e8634966bd73d06cc69884922b02e6faf92
 - gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb
 - gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6
+- gradle/actions/wrapper-validation@8da46b539cd8fe6ab27ca75128919a18d757604c
 - gradle/develocity-actions/maven-publish-build-scan@0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642
 - gradle/develocity-actions/maven-publish-build-scan@4b276bd81fb55e2fcbae724c48699de57e2156eb
 - gradle/develocity-actions/maven-publish-build-scan@f852d93dada312948b1ba533226c28e05d756866
@@ -215,6 +217,7 @@
 - gradle/develocity-actions/setup-maven@4b276bd81fb55e2fcbae724c48699de57e2156eb
 - gradle/develocity-actions/setup-maven@f852d93dada312948b1ba533226c28e05d756866
 - gradle/develocity-actions/setup-maven@9d8792ab22712b19790c2abce53e9ebb2694c312
+- gradle/develocity-actions/setup-maven@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
 - gradle/develocity-actions/setup-npm@9d8792ab22712b19790c2abce53e9ebb2694c312
 - gradle/develocity-actions/setup-npm@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
 - gradle/develocity-actions/setup-python@9d8792ab22712b19790c2abce53e9ebb2694c312
@@ -332,6 +335,7 @@
 - pypa/cibuildwheel@b3395e271a35f73dad77f21802abe9b986dfe299
 - pypa/cibuildwheel@8c2dcd2e96041a619f5ff03c9638d7941e2553a4
 - pypa/cibuildwheel@b9e566a2b284570af229f6c2a33673410d0389a3
+- pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e
 - pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266
 - pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
 - pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086
@@ -363,6 +367,7 @@
 - sbt/setup-sbt@ce95da69b39609ea153bad087708da5f37366897
 - sbt/setup-sbt@6158cb0903b8ceeae04f830055f3155e1b6a5ad7
 - sbt/setup-sbt@ecad189dd245444b9ae0a0cd5922fd938b88906f
+- sbt/setup-sbt@b113b960ba361e87e08ce02a390d51871b7ee459
 - scalacenter/sbt-dependency-submission@d84eef4c09e633bcf5f113bcad7fd5e9af1baee9
 - scottbrenner/puppet-lint-action@*
 - securego/gosec@*
