@@ -196,6 +196,7 @@
 - gradle/actions/dependency-submission@3f131e8634966bd73d06cc69884922b02e6faf92
 - gradle/actions/dependency-submission@9c971963bec38e04b3d30dcc455b5382be2fdbfb
 - gradle/actions/dependency-submission@3f5f9adaf7d9fecd50b5935e54106014257a94e6
+- gradle/actions/dependency-submission@8da46b539cd8fe6ab27ca75128919a18d757604c
 - gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
 - gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
 - gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb
@@ -357,6 +358,7 @@
 - runs-on/action@46910bf61b41721b0579f237e186afb35477007a
 - runs-on/action@efac073ea2507ec18797de3a81704201ade11d9d
 - runs-on/action@17b59092eb37ebfdbb034460892887c09100eaa3
+- runs-on/action@284bff869d4a825f778ac7c38e50f1e31ef198fd
 - rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18
 - rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9
 - rustsec/*@*
@@ -385,6 +387,7 @@
 - SonarSource/sonarqube-scan-action/install-build-wrapper@22918119ff8e1ca75a623e15c8296b6ea4fbe28f
 - SonarSource/sonarqube-scan-action/install-build-wrapper@ba9859eae8dd6bd29e412f25ddbbef3d032000f4
 - SonarSource/sonarqube-scan-action/install-build-wrapper@d209202bc7d53ff1cc128f7f907dac145c9d6ae9
+- SonarSource/sonarqube-scan-action/install-build-wrapper@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304
 - stCarolas/setup-maven@*
 - subosito/flutter-action@*
 - Swatinem/rust-cache@*
