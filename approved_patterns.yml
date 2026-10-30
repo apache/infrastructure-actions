@@ -19,7 +19,6 @@
 # This file was generated from actions.yml by gateway/gateway.py.
 # It will be regenerated and committed as part of various workflows.
 # DO NOT UPDATE MANUALLY. Update /actions.yml instead.
-- 1Password/load-secrets-action@eb2efd0703da22a93c467f2d1ffbb6826c11e19c
 - 1Password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4
 - 1Password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2
 - 1Password/load-secrets-action/configure@e544b780808654ba8ceba5fb2fe2897103d92ff4
@@ -124,7 +123,6 @@
 - coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc
 - coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465
 - coursier/setup-action@*
-- coursier/setup-action@fd1707a76b027efdfb66ca79318b4d29b72e5a02
 - coursier/setup-action@63a23764316528a1b627103472030d5a16fc6133
 - coursier/setup-action@9b7939bf01fd1185ce2babe16135168361bf2c62
 - coursier/setup-action@3174df5c784a0c8724f06b7924b849551c40c39e
@@ -198,11 +196,9 @@
 - gradle/actions/dependency-submission@3f5f9adaf7d9fecd50b5935e54106014257a94e6
 - gradle/actions/dependency-submission@8da46b539cd8fe6ab27ca75128919a18d757604c
 - gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
-- gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
 - gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb
 - gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6
 - gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c
-- gradle/actions/wrapper-validation@3f131e8634966bd73d06cc69884922b02e6faf92
 - gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb
 - gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6
 - gradle/actions/wrapper-validation@8da46b539cd8fe6ab27ca75128919a18d757604c

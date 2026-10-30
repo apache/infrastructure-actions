@@ -22,9 +22,6 @@
 # update expiry dates for previous versions.
 # Versions that are known to be problematic should be removed explicitly manually.
 1Password/load-secrets-action:
-  eb2efd0703da22a93c467f2d1ffbb6826c11e19c:
-    tag: v4.1.1
-    expires_at: 2026-10-30
   e544b780808654ba8ceba5fb2fe2897103d92ff4:
     tag: v5.0.0
     expires_at: 2026-11-30
@@ -335,9 +332,6 @@ coursier/cache-action:
 coursier/setup-action:
   '*':
     keep: true
-  fd1707a76b027efdfb66ca79318b4d29b72e5a02:
-    tag: v3.0.0
-    expires_at: 2026-10-30
   63a23764316528a1b627103472030d5a16fc6133:
     tag: v3.0.1
     expires_at: 2026-11-01
@@ -562,9 +556,6 @@ gradle/actions/setup-gradle:
     # Projects have deliberately chosen to not use v6 of the setup-gradle action due to licensing model changes.
     # See https://github.com/apache/infrastructure-actions/pull/953
     keep: true
-  3f131e8634966bd73d06cc69884922b02e6faf92:
-    tag: v6.2.0
-    expires_at: 2026-10-30
   9c971963bec38e04b3d30dcc455b5382be2fdbfb:
     tag: v6.3.0
     expires_at: 2026-12-26
@@ -574,9 +565,6 @@ gradle/actions/setup-gradle:
   8da46b539cd8fe6ab27ca75128919a18d757604c:
     tag: v6.4.1
 gradle/actions/wrapper-validation:
-  3f131e8634966bd73d06cc69884922b02e6faf92:
-    tag: v6.2.0
-    expires_at: 2026-10-30
   9c971963bec38e04b3d30dcc455b5382be2fdbfb:
     tag: v6.3.0
     expires_at: 2026-12-27
