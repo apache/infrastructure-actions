@@ -89,7 +89,7 @@ runs:
       if: false
     - uses: carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3  # v1.0.10
       if: false
-    - uses: CodSpeedHQ/action@78102a468f96d8e0ccb92d0ec49425753fc42062  # v5.6.0
+    - uses: CodSpeedHQ/action@61efe07e57e55bedeab750c434504de272a56e8c  # v5.6.1
       if: false
     - uses: commit-check/commit-check-action@b6819c7bfd40f576d670a78712646a67f2659ff3  # v2.18.2
       if: false
