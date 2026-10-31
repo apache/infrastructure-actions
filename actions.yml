@@ -290,6 +290,9 @@ CodSpeedHQ/action:
     expires_at: 2027-01-16
   78102a468f96d8e0ccb92d0ec49425753fc42062:
     tag: v5.6.0
+    expires_at: 2027-01-23
+  61efe07e57e55bedeab750c434504de272a56e8c:
+    tag: v5.6.1
 commit-check/commit-check-action:
   d109324148a73dc758891d1d85924c912dbfd38b:
     tag: v2.12.0
@@ -725,6 +728,9 @@ jdx/mise-action:
     expires_at: 2027-01-20
   6be3c7ed4c21d4f76b208d351d95aac273ebb76d:
     tag: v5.2.4
+    expires_at: 2027-01-23
+  6612f0ef07ed2a736cd1e00a94a065522dd41195:
+    tag: v5.2.5
 JetBrains/qodana-action:
   b588768b6e7e6da579e518bc584f79de0d243692:
     tag: v2026.2.0
