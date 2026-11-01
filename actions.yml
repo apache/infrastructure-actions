@@ -335,9 +335,6 @@ coursier/cache-action:
 coursier/setup-action:
   '*':
     keep: true
-  63a23764316528a1b627103472030d5a16fc6133:
-    tag: v3.0.1
-    expires_at: 2026-11-01
   9b7939bf01fd1185ce2babe16135168361bf2c62:
     tag: v3.0.2
     expires_at: 2026-12-11
@@ -358,18 +355,12 @@ crazy-max/ghaction-import-gpg:
 damccorm/tag-ur-it:
   6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5:
 dart-lang/setup-dart:
-  65eb853c7ba17dde3be364c3d2858773e7144260:
-    tag: v1.7.2
-    expires_at: 2026-11-01
   7654d458321ee25acccccfdb86cd48bd95768ff1:
     tag: v1.8.0
     expires_at: 2026-11-30
   6afc89df92d6eb3834022f73cd65adc8cdfcb92d:
     tag: v1.8.1
 DavidAnson/markdownlint-cli2-action:
-  6bf21b07787794f89a243495939cd651942aeabe:
-    tag: v24.1.0
-    expires_at: 2026-11-01
   21c1be1b93ad9ed58fa840aacc3f279cde2a72ff:
     tag: v24.2.0
     expires_at: 2027-01-18
@@ -441,9 +432,6 @@ docker://pandoc/core:
   sha256:48e15e83db0df6fb39b24adb0210ecbde85003a3a8139d526e29c98f95ac0a93:
     tag: 3.7.0.2
 dorny/paths-filter:
-  7b450fff21473bca461d4b92ce414b9d0420d706:
-    tag: v4.0.2
-    expires_at: 2026-11-01
   ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d:
     tag: v4.0.3
 dorny/test-reporter:
@@ -542,9 +530,6 @@ graalvm/setup-graalvm:
   f70bc8032f90a104502824a54bcb94b6f01715bc:
     tag: v1.6.8
 gradle/actions/dependency-submission:
-  3f131e8634966bd73d06cc69884922b02e6faf92:
-    tag: v6.2.0
-    expires_at: 2026-11-01
   9c971963bec38e04b3d30dcc455b5382be2fdbfb:
     tag: v6.3.0
     expires_at: 2026-12-26
@@ -744,9 +729,6 @@ jidicula/clang-format-action:
   '*':
     keep: true
 Jimver/cuda-toolkit:
-  3d45d157f327c09c04b50ee6ccdea2d9d017ec76:
-    tag: v0.2.35
-    expires_at: 2026-11-01
   b8bf9c6c28f8a92fbb04dcfcaee872e60c57462d:
     tag: v0.2.36
 jlumbroso/free-disk-space:
@@ -949,9 +931,6 @@ PyO3/maturin-action:
   '*':
     keep: true
 pypa/cibuildwheel:
-  4726cd35bb13f7bde50cf2761f2499ac7b3aa32c:
-    tag: v4.1.1
-    expires_at: 2026-11-01
   1828c10ab37f080699c7b81cea34097c684a7074:
     tag: v4.2.0
     expires_at: 2026-12-01
@@ -1024,9 +1003,6 @@ rubygems/release-gem:
   7f9650160c1a4e7989fdc9855807bdbd421d8b6b:
     tag: v1.4.1
 runs-on/action:
-  4e5f72399b6b17f2e79c511c1b38a315a64d22dc:
-    tag: v2.2.0
-    expires_at: 2026-11-01
   46910bf61b41721b0579f237e186afb35477007a:
     tag: v2.3.0
     expires_at: 2026-11-30
