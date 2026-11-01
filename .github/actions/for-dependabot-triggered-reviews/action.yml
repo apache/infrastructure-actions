@@ -179,7 +179,7 @@ runs:
       if: false
     - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e  # v4.0.1
       if: false
-    - uses: helm/chart-releaser-action@df287104677278f869ca5480bd260358397cc3f9  # v1.8.0
+    - uses: helm/chart-releaser-action@92c6b97fa9f664492a2592e0d1d80bc6bf378957  # v1.9.0
       if: false
     - uses: helm/chart-testing-action@720270857a28afd41e2426521a7801db09e9b510  # v2.9.0
       if: false
