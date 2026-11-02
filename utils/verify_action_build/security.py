@@ -1668,8 +1668,45 @@ def _print_attestation_note(path: str) -> None:
     )
 
 
+# Ampel run directly from a binary bootstrapped by
+# carabiner-dev/actions/install/ampel-bootstrap rather than through the
+# ampel/verify action.  install/download-and-verify v1.3.1 does this: the
+# bootstrap step pins ampel by hash, and a later run block calls the
+# bootstrapped binary (via the step's ``ampel-path`` output) as
+# ``"$AMPEL" "${args[@]}"`` with ``args=(verify --subject=...)``, looping over
+# candidate organizations.  No ``ampel verify`` text ever appears on one line,
+# so the plain-text patterns above cannot see it.
+_AMPEL_BOOTSTRAP_USES = re.compile(
+    r"\buses:\s*[\"']?(?:carabiner-dev/actions/|\$/|\./)install/ampel-bootstrap\b",
+    re.IGNORECASE,
+)
+_AMPEL_PATH_OUTPUT = re.compile(r"\bsteps\.[\w-]+\.outputs\.ampel-path\b")
+_AMPEL_VERIFY_ARGS = re.compile(r"(?:\(\s*verify\b|\bverify\s+--subject\b)")
+_AMPEL_SUBJECT_ARG = re.compile(r"--subject[=\s]")
+
+
+def _uses_bootstrapped_ampel_verify(action_yml: str) -> bool:
+    """True when the action bootstraps ampel and runs ``verify --subject`` with it.
+
+    All three must hold: a ``uses:`` of the ampel-bootstrap installer, a
+    reference to its ``ampel-path`` output, and a run block that builds a
+    ``verify`` invocation with a ``--subject``.  The bootstrap alone proves
+    nothing about the download; it has to be used to verify something.
+    """
+    if not _AMPEL_BOOTSTRAP_USES.search(action_yml):
+        return False
+    if not _AMPEL_PATH_OUTPUT.search(action_yml):
+        return False
+    return any(
+        _AMPEL_VERIFY_ARGS.search(block) and _AMPEL_SUBJECT_ARG.search(block)
+        for block in _extract_run_blocks(action_yml)
+    )
+
+
 def _action_yml_uses_external_verification(action_yml: str) -> bool:
-    return any(p.search(action_yml) for p in _VERIFICATION_USES_PATTERNS)
+    return any(
+        p.search(action_yml) for p in _VERIFICATION_USES_PATTERNS
+    ) or _uses_bootstrapped_ampel_verify(action_yml)
 
 
 def _extract_run_blocks(action_yml: str) -> list[str]:
