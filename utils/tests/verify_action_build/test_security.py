@@ -739,6 +739,91 @@ runs:
                 warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
         assert len(failures) >= 1
 
+    # Faithful trim of carabiner-dev/actions install/download-and-verify
+    # action.yml at 63d43b5 (v1.3.1), apache/infrastructure-actions#1480.
+    # The download loops over organizations; verification runs the ampel
+    # binary bootstrapped by install/ampel-bootstrap, through an args array.
+    _BOOTSTRAPPED_AMPEL_ACTION_YML = """\
+name: Download and verify Carabiner binary
+runs:
+  using: "composite"
+  steps:
+      - name: Bootstrap trusted ampel
+        if: inputs.verify == 'true'
+        uses: $/install/ampel-bootstrap
+        id: bootstrap
+
+      - name: Install ${{ inputs.tool }}
+        id: install
+        shell: bash
+        run: |
+          mkdir -p "${INSTALL_DIR}/bin" || :
+          BINARY="${INSTALL_DIR}/bin/${INPUTS_TOOL}${STEPS_PLATFORM_OUTPUTS_EXT}"
+          set -f
+          source_org=""
+          for org in $INPUTS_ORGS; do
+            if curl -sSfL --retry 3 --retry-delay 2 -o "${BINARY}" \\
+              "https://github.com/${org}/${STEPS_PLATFORM_OUTPUTS_REPO}/releases/download/${INPUTS_VERSION}/${STEPS_PLATFORM_OUTPUTS_FILENAME}"; then
+              source_org="$org"
+              break
+            fi
+          done
+          echo "org=${source_org}" >> "$GITHUB_OUTPUT"
+          chmod 0755 "${BINARY}"
+
+      - name: Verify ${{ inputs.tool }} binary
+        if: inputs.verify == 'true'
+        shell: bash
+        env:
+          SOURCE_ORG: ${{ steps.install.outputs.org }}
+          STEPS_BOOTSTRAP_OUTPUTS_AMPEL_PATH: ${{ steps.bootstrap.outputs.ampel-path }}
+        run: |
+          set -f
+          release="https://github.com/${SOURCE_ORG}/${STEPS_PLATFORM_OUTPUTS_REPO}/releases/download/${INPUTS_VERSION}"
+          base=(verify)
+          base+=(--subject="${INSTALL_DIR}/bin/${INPUTS_TOOL}${STEPS_PLATFORM_OUTPUTS_EXT}")
+          base+=(--collector="${release}/${attestation_file}")
+          base+=(--policy="${INPUTS_POLICY}")
+          verified=""
+          for org in $INPUTS_ORGS; do
+            args=("${base[@]}")
+            args+=(-x "buildPoint:git+ssh://github.com/${org}/${STEPS_PLATFORM_OUTPUTS_REPO}")
+            args+=(--signer "sigstore(regexp)::https://token\\.actions\\.githubusercontent\\.com::https://github\\.com/${org}/${STEPS_PLATFORM_OUTPUTS_REPO}/\\.github/workflows/release\\.yaml@refs/tags/[^/]+")
+            if output=$("${STEPS_BOOTSTRAP_OUTPUTS_AMPEL_PATH}" "${args[@]}" 2>&1); then
+              verified="$org"
+              break
+            fi
+          done
+          [ -n "$verified" ] || exit 1
+"""
+
+    def test_bootstrapped_ampel_verify_multi_org_passes(self):
+        action_yml = self._BOOTSTRAPPED_AMPEL_ACTION_YML
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+
+    def test_ampel_bootstrap_without_verify_call_still_fails(self):
+        # Bootstrapping ampel proves nothing unless it is then used to verify
+        # the download: drop the verify step and the curl must be flagged.
+        action_yml = self._BOOTSTRAPPED_AMPEL_ACTION_YML.split("      - name: Verify")[0]
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) >= 1
+
+    def test_ampel_verify_args_without_bootstrap_still_fails(self):
+        # The same verify block with no ampel-bootstrap step runs a binary of
+        # unknown origin, so it must not count as verification.
+        action_yml = self._BOOTSTRAPPED_AMPEL_ACTION_YML.replace(
+            "uses: $/install/ampel-bootstrap", "uses: actions/cache@" + "c" * 40
+        )
+        with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            with mock.patch("verify_action_build.security.fetch_file_from_github", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert len(failures) >= 1
+
     def test_releases_download_path_flagged(self):
         # URL without a binary extension but under /releases/download/ still
         # looks like a binary artefact — flag it.
