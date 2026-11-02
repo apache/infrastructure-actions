@@ -630,6 +630,9 @@ helm/chart-releaser-action:
     expires_at: 2027-01-21
   df287104677278f869ca5480bd260358397cc3f9:
     tag: v1.8.0
+    expires_at: 2027-01-25
+  92c6b97fa9f664492a2592e0d1d80bc6bf378957:
+    tag: v1.9.0
 helm/chart-testing-action:
   6ec842c01de15ebb84c8627d2744a0c2f2755c9f:
     tag: v2.8.0
