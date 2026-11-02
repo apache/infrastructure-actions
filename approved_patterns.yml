@@ -102,6 +102,7 @@
 - carabiner-dev/actions/install/download-and-verify@b7c2f0562b2dd69f0d9db12c2eff7cc6bac653d0
 - carabiner-dev/actions/install/download-and-verify@1de052702eb39872464f14270b996785a039a48a
 - carabiner-dev/actions/install/download-and-verify@d41fe10fe88deaf493ce026007da73738b9f570c
+- carabiner-dev/actions/install/download-and-verify@63d43b57262e65927864c8f7ca0a6a8efe06acc0
 - carloscastrojumo/github-cherry-pick-action@503773289f4a459069c832dc628826685b75b4b3
 - carlosperate/arm-none-eabi-gcc-action@*
 - chromaui/action@*
