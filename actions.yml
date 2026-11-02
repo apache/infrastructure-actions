@@ -204,6 +204,9 @@ carabiner-dev/actions/install/ampel:
     expires_at: 2026-12-09
   d41fe10fe88deaf493ce026007da73738b9f570c:
     tag: v1.3.0
+    expires_at: 2027-01-25
+  63d43b57262e65927864c8f7ca0a6a8efe06acc0:
+    tag: v1.3.1
 carabiner-dev/actions/install/ampel-bootstrap:
   4c23ca5801511c2f0e9dd8c8dd011cab26a46be4:
     expires_at: 2026-11-09
