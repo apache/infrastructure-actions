@@ -71,6 +71,7 @@
 - carabiner-dev/actions/ampel/verify@36a39ef667efe7112df8b1a534a4e37f35fad6fd
 - carabiner-dev/actions/ampel/verify@32587e82f960d49b36101e8c45d1956e511965d3
 - carabiner-dev/actions/ampel/verify@d41fe10fe88deaf493ce026007da73738b9f570c
+- carabiner-dev/actions/ampel/verify@63d43b57262e65927864c8f7ca0a6a8efe06acc0
 - carabiner-dev/actions/install/ampel@36a39ef667efe7112df8b1a534a4e37f35fad6fd
 - carabiner-dev/actions/install/ampel@32587e82f960d49b36101e8c45d1956e511965d3
 - carabiner-dev/actions/install/ampel@d6d91c5c88723021a8798392cb9780c89ff6fdad
@@ -85,6 +86,7 @@
 - carabiner-dev/actions/install/ampel-bootstrap@b7c2f0562b2dd69f0d9db12c2eff7cc6bac653d0
 - carabiner-dev/actions/install/ampel-bootstrap@1de052702eb39872464f14270b996785a039a48a
 - carabiner-dev/actions/install/ampel-bootstrap@d41fe10fe88deaf493ce026007da73738b9f570c
+- carabiner-dev/actions/install/ampel-bootstrap@63d43b57262e65927864c8f7ca0a6a8efe06acc0
 - carabiner-dev/actions/install/bnd@36a39ef667efe7112df8b1a534a4e37f35fad6fd
 - carabiner-dev/actions/install/bnd@32587e82f960d49b36101e8c45d1956e511965d3
 - carabiner-dev/actions/install/bnd@d41fe10fe88deaf493ce026007da73738b9f570c
