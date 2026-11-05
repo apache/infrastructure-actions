@@ -737,6 +737,9 @@ jdx/mise-action:
     expires_at: 2027-01-23
   6612f0ef07ed2a736cd1e00a94a065522dd41195:
     tag: v5.2.5
+    expires_at: 2027-01-28
+  f5be966e4a917d54244728e6a5fdcd1d93a35e6c:
+    tag: v5.2.6
 JetBrains/qodana-action:
   b588768b6e7e6da579e518bc584f79de0d243692:
     tag: v2026.2.0
@@ -1111,6 +1114,9 @@ SonarSource/sonarqube-scan-action:
     expires_at: 2027-01-21
   4d1dc0c91ee400dcf8a6dddf2f705ac36542e304:
     tag: v8.4.0
+    expires_at: 2027-01-28
+  e805d875275f728fac1885b413934be6d7c63f65:
+    tag: v8.4.1
 SonarSource/sonarqube-scan-action/install-build-wrapper:
   22918119ff8e1ca75a623e15c8296b6ea4fbe28f:
     tag: v8.2.1
@@ -1123,6 +1129,9 @@ SonarSource/sonarqube-scan-action/install-build-wrapper:
     expires_at: 2027-01-21
   4d1dc0c91ee400dcf8a6dddf2f705ac36542e304:
     tag: v8.4.0
+    expires_at: 2027-01-28
+  e805d875275f728fac1885b413934be6d7c63f65:
+    tag: v8.4.1
 stCarolas/setup-maven:
   '*':
     keep: true
@@ -1198,3 +1207,6 @@ zizmorcore/zizmor-action:
     expires_at: 2027-01-16
   53290badfa369cb0bf7ad16342cb62c2fa47ac7b:
     tag: v0.8.0
+    expires_at: 2027-01-28
+  45d7276c9ca790aabd705e31ca99c6185c3e76dd:
+    tag: v0.8.1
