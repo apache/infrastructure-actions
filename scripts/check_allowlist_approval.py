@@ -43,8 +43,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
+import time
 from collections.abc import Callable, Iterable
 
 ALLOWLIST_PATHS = frozenset(
@@ -62,6 +64,14 @@ MAINTAINER_PERMISSIONS = frozenset({"admin", "maintain", "write"})
 # Review states that set a reviewer's verdict.  COMMENTED and PENDING do not
 # change it, matching how GitHub itself counts approvals.
 DECISIVE_STATES = frozenset({"APPROVED", "CHANGES_REQUESTED", "DISMISSED"})
+
+# A GitHub API outage must not leave an approved PR red until someone re-runs
+# it by hand, so transient failures are retried.  Every other failure, and one
+# that outlasts the retries, still fails the check.
+RETRY_DELAYS = (5, 15, 45)
+TRANSIENT_ERROR = re.compile(
+    r"HTTP (5\d\d|429)|timeout|connection (reset|refused)|EOF", re.IGNORECASE
+)
 
 
 def is_allowlist_pr(files: Iterable[str]) -> bool:
@@ -91,10 +101,19 @@ def maintainer_approvers(
 
 
 def _gh_lines(*args: str) -> list[str]:
-    out = subprocess.run(
-        ["gh", "api", *args], check=True, capture_output=True, text=True
-    ).stdout
-    return [line for line in out.splitlines() if line]
+    cmd = ["gh", "api", *args]
+    for delay in (*RETRY_DELAYS, None):
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode == 0:
+            return [line for line in result.stdout.splitlines() if line]
+        if delay is None or not TRANSIENT_ERROR.search(result.stderr):
+            sys.stderr.write(result.stderr)
+            raise subprocess.CalledProcessError(
+                result.returncode, cmd, result.stdout, result.stderr
+            )
+        print(f"::warning::{' '.join(cmd)} failed; retrying in {delay}s")
+        time.sleep(delay)
+    raise AssertionError("unreachable")
 
 
 def _permission_of(repo: str, login: str) -> str:
