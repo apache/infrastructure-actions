@@ -183,7 +183,7 @@ runs:
       if: false
     - uses: helm/chart-testing-action@720270857a28afd41e2426521a7801db09e9b510  # v2.9.0
       if: false
-    - uses: helm/kind-action@1544676c07bb3570fcb70166beaa07c4528fd4aa  # v1.15.1
+    - uses: helm/kind-action@ea822c7bf1874f08e5a491df991c228edffc3376  # v1.15.2
       if: false
     - uses: ilammy/setup-nasm@72793074d3c8cdda771dba85f6deafe00623038b  # v1.5.2
       if: false
