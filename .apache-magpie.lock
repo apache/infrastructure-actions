@@ -31,14 +31,14 @@ plugins:
   - magpie-vetted-ops
 
 reconciled:
-  version: 0.9.0.dev202610250024
-  at:      2026-10-25
+  version: 0.9.0.dev202611041445
+  at:      2026-11-04
   skills:
     activity-sweep:             sha256:a39919af92a37e2d
     announce-draft:             sha256:edffafcd9d9948ab
     archive-sweep:              sha256:1665af8aae9c2b58
     audit-report:               sha256:ecab5c5c3e52d580
-    code-review:                sha256:0e09164d15647a70
+    code-review:                sha256:97ef701d93960492
     dependency-audit:           sha256:19ba62ec34a55604
     flaky-test-triage:          sha256:eda3c3891897f08d
     identity-map:               sha256:78eccfcead182fca
