@@ -115,6 +115,7 @@
 - CodSpeedHQ/action@821a40cd6c80e3cfe387caf55668287addd808da
 - CodSpeedHQ/action@78102a468f96d8e0ccb92d0ec49425753fc42062
 - CodSpeedHQ/action@61efe07e57e55bedeab750c434504de272a56e8c
+- CodSpeedHQ/action@af75f77f17a054769abefaa42fe8dc2975469b5f
 - commit-check/commit-check-action@562a184b2b8e583e757b17eb385bc48370f44547
 - commit-check/commit-check-action@f803083a5bf0867b60d77189bc3810fce2f0e314
 - commit-check/commit-check-action@fd3d923eab0876650f261d2a75572e8161a9a58e
@@ -232,6 +233,7 @@
 - helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc
 - helm/kind-action@06c1ae10762d3b9c1644e7fe69596ae519e015a2
 - helm/kind-action@1544676c07bb3570fcb70166beaa07c4528fd4aa
+- helm/kind-action@ea822c7bf1874f08e5a491df991c228edffc3376
 - houseabsolute/actions-rust-cross@*
 - ilammy/msvc-dev-cmd@*
 - ilammy/setup-nasm@72793074d3c8cdda771dba85f6deafe00623038b
@@ -326,6 +328,7 @@
 - phoenix-actions/test-reporting@7317eea6e13c47348dd0bb318669485157c518d6
 - pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
 - pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+- pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115
 - posit-dev/setup-air@cf390573ff4fe0f198f35df3a642b1409328d859
 - potiuk/cancel-workflow-runs@*
 - pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
@@ -358,6 +361,7 @@
 - runs-on/action@efac073ea2507ec18797de3a81704201ade11d9d
 - runs-on/action@17b59092eb37ebfdbb034460892887c09100eaa3
 - runs-on/action@284bff869d4a825f778ac7c38e50f1e31ef198fd
+- runs-on/action@13fbb6a39310a0dac9ab4716da2c4e74a3326dfc
 - rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18
 - rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9
 - rustsec/*@*
