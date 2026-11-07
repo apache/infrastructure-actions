@@ -170,6 +170,9 @@ burnett01/rsync-deployments:
     expires_at: 2027-01-09
   2cbb5ed94b73d111d07a40b071b1c7d3c0272435:
     tag: 9.0.2
+    expires_at: 2027-01-30
+  c8300118e5f66a3fe187f35763d7e65848ae205a:
+    tag: 9.0.3
 burrunan/gradle-cache-action:
   '*':
     keep: true
