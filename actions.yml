@@ -81,9 +81,6 @@ astral-sh/setup-uv:
   eb1897b8dc4b5d5bfe39a428a8f2304605e0983c:
     tag: v7.0.0
     expires_at: 2026-12-14
-  c771a70e6277c0a99b617c7a806ffedaca235ff9:
-    tag: v9.0.0
-    expires_at: 2026-11-09
   20cfd1bf945f4377ade1205e4dbc17946fc9a30d:
     tag: v10.0.1
     expires_at: 2026-12-08
@@ -211,10 +208,6 @@ carabiner-dev/actions/install/ampel:
   63d43b57262e65927864c8f7ca0a6a8efe06acc0:
     tag: v1.3.1
 carabiner-dev/actions/install/ampel-bootstrap:
-  4c23ca5801511c2f0e9dd8c8dd011cab26a46be4:
-    expires_at: 2026-11-09
-  # transitive: install/download-and-verify @ 4c23ca58 pins this ref, and
-  # @ 2fec8bd8 in turn pins 16009dca. Verified carabiner release-bot commits.
   16009dca48ac369882d4333f1d15d7cd3a4ded31:
     expires_at: 2026-12-09
   ade14d87ee05bd60ec9028e3f5f430ee571ac8df:
@@ -249,11 +242,6 @@ carabiner-dev/actions/install/bnd:
   63d43b57262e65927864c8f7ca0a6a8efe06acc0:
     tag: v1.3.1
 carabiner-dev/actions/install/download-and-verify:
-  4c23ca5801511c2f0e9dd8c8dd011cab26a46be4:
-    expires_at: 2026-11-09
-  # transitive: install/{ampel,bnd} @ v1.2.6 (36a39ef6) pin this ref, and
-  # install/ampel @ 2fec8bd8 in turn pins 16009dca. Verified carabiner
-  # release-bot commits.
   2fec8bd8e1dcfdea26080648070b4827f1fa0584:
     expires_at: 2026-12-09
   ade14d87ee05bd60ec9028e3f5f430ee571ac8df:
@@ -315,9 +303,6 @@ CodSpeedHQ/action:
   af75f77f17a054769abefaa42fe8dc2975469b5f:
     tag: v5.6.3
 commit-check/commit-check-action:
-  562a184b2b8e583e757b17eb385bc48370f44547:
-    tag: v2.13.1
-    expires_at: 2026-11-09
   f803083a5bf0867b60d77189bc3810fce2f0e314:
     tag: v2.15.0
     expires_at: 2026-12-05
@@ -685,9 +670,6 @@ ilammy/setup-nasm:
   72793074d3c8cdda771dba85f6deafe00623038b:
     tag: v1.5.2
 italia/publiccode-parser-action:
-  21086c73ec0563e14c6748787efa1b34b025ad8c:
-    tag: v1.5.1
-    expires_at: 2026-11-09
   0deab88c3f094aa12c5826e52ac2c4f176446821:
     tag: v1.6.0
     expires_at: 2027-01-14
@@ -865,9 +847,6 @@ manusa/actions-setup-minikube:
   001b9f30165b2a875b835ec5183ced75b94bc269:
     tag: v2.19.0
 matlab-actions/run-tests:
-  83e368e0b18d9c0c7d510fd911d546e16b73bbdb:
-    tag: v3.2.1
-    expires_at: 2026-11-09
   214a16e600ef2c705a4b2dd6c0794dc6957682a9:
     tag: v3.3.0
 matlab-actions/setup-matlab:
@@ -1042,9 +1021,6 @@ rubygems/configure-rubygems-credentials:
   dc5a8d8553e6ee01fc26761a49e99e733d17954a:
     tag: v2.1.0
 rubygems/release-gem:
-  052cc82692552de3ef2b81fd670e41d13cba8092:
-    tag: v1.4.0
-    expires_at: 2026-11-09
   7f9650160c1a4e7989fdc9855807bdbd421d8b6b:
     tag: v1.4.1
 runs-on/action:
@@ -1211,9 +1187,6 @@ uraimo/run-on-arch-action:
   fa1f3e7de95534497266c7265950b5188355fbfb:
     tag: v3.2.1
 vapier/coverity-scan-action:
-  1b6fd4eaba6651aa354c9ea7f48caa1710b4e12e:
-    tag: v1.9.0
-    expires_at: 2026-11-09
   8fe7b0af23cbbd4eced5f63dcd2384640eaa5d49:
     tag: v1.10.0
 vimtor/action-zip:
