@@ -37,7 +37,6 @@
 - anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439
 - arduino/setup-protoc@*
 - astral-sh/setup-uv@eb1897b8dc4b5d5bfe39a428a8f2304605e0983c
-- astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
 - astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
 - astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4
 - astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7
@@ -78,7 +77,6 @@
 - carabiner-dev/actions/install/ampel@d6d91c5c88723021a8798392cb9780c89ff6fdad
 - carabiner-dev/actions/install/ampel@d41fe10fe88deaf493ce026007da73738b9f570c
 - carabiner-dev/actions/install/ampel@63d43b57262e65927864c8f7ca0a6a8efe06acc0
-- carabiner-dev/actions/install/ampel-bootstrap@4c23ca5801511c2f0e9dd8c8dd011cab26a46be4
 - carabiner-dev/actions/install/ampel-bootstrap@16009dca48ac369882d4333f1d15d7cd3a4ded31
 - carabiner-dev/actions/install/ampel-bootstrap@ade14d87ee05bd60ec9028e3f5f430ee571ac8df
 - carabiner-dev/actions/install/ampel-bootstrap@833eed5876a6db1dbfd60289611ee40fc12f4fe2
@@ -93,7 +91,6 @@
 - carabiner-dev/actions/install/bnd@32587e82f960d49b36101e8c45d1956e511965d3
 - carabiner-dev/actions/install/bnd@d41fe10fe88deaf493ce026007da73738b9f570c
 - carabiner-dev/actions/install/bnd@63d43b57262e65927864c8f7ca0a6a8efe06acc0
-- carabiner-dev/actions/install/download-and-verify@4c23ca5801511c2f0e9dd8c8dd011cab26a46be4
 - carabiner-dev/actions/install/download-and-verify@2fec8bd8e1dcfdea26080648070b4827f1fa0584
 - carabiner-dev/actions/install/download-and-verify@ade14d87ee05bd60ec9028e3f5f430ee571ac8df
 - carabiner-dev/actions/install/download-and-verify@833eed5876a6db1dbfd60289611ee40fc12f4fe2
@@ -117,7 +114,6 @@
 - CodSpeedHQ/action@78102a468f96d8e0ccb92d0ec49425753fc42062
 - CodSpeedHQ/action@61efe07e57e55bedeab750c434504de272a56e8c
 - CodSpeedHQ/action@af75f77f17a054769abefaa42fe8dc2975469b5f
-- commit-check/commit-check-action@562a184b2b8e583e757b17eb385bc48370f44547
 - commit-check/commit-check-action@f803083a5bf0867b60d77189bc3810fce2f0e314
 - commit-check/commit-check-action@fd3d923eab0876650f261d2a75572e8161a9a58e
 - commit-check/commit-check-action@a61779784a953fd9047c001c102cfeac5cf26964
@@ -239,7 +235,6 @@
 - houseabsolute/actions-rust-cross@*
 - ilammy/msvc-dev-cmd@*
 - ilammy/setup-nasm@72793074d3c8cdda771dba85f6deafe00623038b
-- italia/publiccode-parser-action@21086c73ec0563e14c6748787efa1b34b025ad8c
 - italia/publiccode-parser-action@0deab88c3f094aa12c5826e52ac2c4f176446821
 - italia/publiccode-parser-action@f370d239aa3ec57b819909b467ff77679b6dc721
 - j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece
@@ -262,6 +257,7 @@
 - jdx/mise-action@6be3c7ed4c21d4f76b208d351d95aac273ebb76d
 - jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195
 - jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c
+- jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b
 - JetBrains/qodana-action@b588768b6e7e6da579e518bc584f79de0d243692
 - JetBrains/qodana-action@10be11607eb323a180e2b76b26c9c5cdceac3e77
 - JetBrains/qodana-action@3e8d76ff0e0241618abd808682f426afe84bab3f
@@ -299,7 +295,6 @@
 - manusa/actions-setup-minikube@*
 - manusa/actions-setup-minikube@b65276017fdec6f1e6498129fb740e34e260dc55
 - manusa/actions-setup-minikube@001b9f30165b2a875b835ec5183ced75b94bc269
-- matlab-actions/run-tests@83e368e0b18d9c0c7d510fd911d546e16b73bbdb
 - matlab-actions/run-tests@214a16e600ef2c705a4b2dd6c0794dc6957682a9
 - matlab-actions/setup-matlab@2323adb8243827ea460b0def4c413545aaec46a9
 - matlab-actions/setup-matlab@f9e43010f1ae678f7cfa0542fe2a4f60f7d1ad8d
@@ -358,7 +353,6 @@
 - release-drafter/release-drafter@*
 - ruby/setup-ruby@*
 - rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a
-- rubygems/release-gem@052cc82692552de3ef2b81fd670e41d13cba8092
 - rubygems/release-gem@7f9650160c1a4e7989fdc9855807bdbd421d8b6b
 - runs-on/action@46910bf61b41721b0579f237e186afb35477007a
 - runs-on/action@efac073ea2507ec18797de3a81704201ade11d9d
@@ -414,7 +408,6 @@
 - uraimo/run-on-arch-action@f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9
 - uraimo/run-on-arch-action@460cb8e6d9f726a588fc9b5e681c8a6cab09ae41
 - uraimo/run-on-arch-action@fa1f3e7de95534497266c7265950b5188355fbfb
-- vapier/coverity-scan-action@1b6fd4eaba6651aa354c9ea7f48caa1710b4e12e
 - vapier/coverity-scan-action@8fe7b0af23cbbd4eced5f63dcd2384640eaa5d49
 - vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
 - vishalsinha21/dynamic-checklist@*
