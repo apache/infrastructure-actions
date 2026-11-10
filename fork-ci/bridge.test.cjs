@@ -61,7 +61,10 @@ function harness(options = {}) {
         record("checks.create", p);
         if (options.writeError?.(p)) throw failure(403);
         writes.push({ method: "create", ...p });
-        const check = { ...p, id: 1000 + checks.length, app: { slug: "github-actions" } };
+        const id = 1000 + checks.length;
+        // Like GitHub for GITHUB_TOKEN writes, keep the check page, not the requested details_url.
+        const page = `https://github.com/apache/example/runs/${id}`;
+        const check = { ...p, id, app: { slug: "github-actions" }, html_url: page, details_url: page };
         checks.push(check);
         return { data: check };
       },
@@ -69,7 +72,8 @@ function harness(options = {}) {
         record("checks.update", p);
         if (options.writeError?.(p)) throw failure(403);
         writes.push({ method: "update", ...p });
-        Object.assign(checks.find((c) => c.id === p.check_run_id), p);
+        const check = checks.find((c) => c.id === p.check_run_id);
+        Object.assign(check, p, { details_url: check.html_url });
       },
     },
     actions: {

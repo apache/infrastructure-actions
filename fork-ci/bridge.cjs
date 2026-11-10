@@ -162,10 +162,11 @@ async function bridge({ github, context, core, config = configuration(), now = D
   }
 
   async function publish(pr, check, payload) {
+    // GitHub keeps the check page as details_url for GITHUB_TOKEN writes, so a
+    // stored check never matches the requested link. The summary carries it.
     if (
       check && check.status === payload.status &&
       (check.conclusion ?? null) === (payload.conclusion ?? null) &&
-      check.details_url === payload.details_url &&
       ["title", "summary", "text"].every((key) => check.output?.[key] === payload.output[key])
     ) {
       return;
