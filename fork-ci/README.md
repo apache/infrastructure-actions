@@ -210,8 +210,9 @@ check writes.
 | No matching run, or workflow endpoint returns 404 | Neutral, with setup and filter guidance and a link to the fork workflow |
 | Permission error, rate limit, or other API error | Action required, linking the bridge run, when a check can be written, and bridge failure |
 
-For each listed job, the summary shows its result, failed step, and first failure
-annotation. The first five jobs get an annotation. The bridge lists jobs once per
+For each listed job, the summary shows its result, failed step, and one failure
+annotation, preferring the job's own error over the generic exit-code message.
+Only the first five jobs get an annotation. The bridge lists jobs once per
 run attempt and keeps the result for later sweeps. If the jobs API fails, the check
 shows only the run link, and the next poll of that PR tries again.
 

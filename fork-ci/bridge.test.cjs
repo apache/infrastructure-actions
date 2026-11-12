@@ -483,15 +483,18 @@ test("lists jobs that did not succeed with their failed step and first failure a
     job(3, { name: "compile `x` | y\n@team", conclusion: "failure", steps: [{ name: "Build", conclusion: "failure" }] }),
     job(4, { name: "macos", conclusion: "cancelled", steps: [] }),
   ], annotations: {
-    3: [{ annotation_level: "notice", message: "ignore me" }, { annotation_level: "failure", message: "Process completed with exit code 1." }],
+    3: [{ annotation_level: "warning", message: "ignore me" }, { annotation_level: "failure", message: "Process completed with exit code 1." },
+      { annotation_level: "failure", message: "TestExample failed" }],
+    4: [{ annotation_level: "notice", message: "capacity notice" }],
   } });
   await h.execute();
   const { title, summary, text } = h.writes[0].output;
   assert.equal(title, "Fork run failure: compile `x` | y @team and 1 more");
-  assert.ok(summary.includes("| [`compile 'x' \\| y @team`](https://github.com/contributor/example/actions/runs/10/job/3) | `failure` | `Build` | `Process completed with exit code 1.` |"));
+  assert.ok(summary.includes("| [`compile 'x' \\| y @team`](https://github.com/contributor/example/actions/runs/10/job/3) | `failure` | `Build` | `TestExample failed` |"));
   assert.ok(summary.includes("| [`macos`](https://github.com/contributor/example/actions/runs/10/job/4) | `cancelled` |  |  |"));
   assert.ok(!summary.includes("test (1)") && !summary.includes("test (2)"));
   assert.equal(JSON.parse(text).jobs, 2);
+  assert.ok(!summary.includes("capacity notice"));
   assert.deepEqual(named(h, "actions.listJobsForWorkflowRunAttempt")[0].params.attempt_number, 1);
 });
 

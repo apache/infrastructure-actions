@@ -68,6 +68,7 @@ function eligible(pr, upstream, config) {
 const MAX_JOBS = 20;
 const MAX_ANNOTATED_JOBS = 5;
 const PASSED = new Set(["success", "skipped", "neutral"]);
+const GENERIC = /^Process completed with exit code \d+\.?$/;
 
 // Fork-supplied text: one line, bounded, and inert inside a table code span.
 function code(value, max) {
@@ -130,7 +131,9 @@ async function bridge({ github, context, core, config = configuration(), now = D
         let message;
         if (i < MAX_ANNOTATED_JOBS) {
           const { data } = await github.rest.checks.listAnnotations({ ...fork, check_run_id: job.id, per_page: 50 });
-          message = (data.find((a) => a.annotation_level === "failure") || data[0])?.message;
+          // Prefer the job's own error over the runner's generic exit message.
+          const errors = data.filter((a) => a.annotation_level === "failure");
+          message = (errors.find((a) => !GENERIC.test(a.message)) || errors[0])?.message;
         }
         const link = `${root}/actions/runs/${run.id}/job/${job.id}`;
         rows.push(`| [${code(job.name, 100)}](${link}) | ${code(job.conclusion || "unknown", 20)} | ` +
@@ -198,7 +201,7 @@ async function bridge({ github, context, core, config = configuration(), now = D
           title: `Fork run ${conclusion}: ${String(jobs.first).replace(/\s+/g, " ").slice(0, 100)}` +
             (jobs.count > 1 ? ` and ${jobs.count - 1} more` : ""),
           summary: `[Open the fork workflow run](${details}).\n\n` +
-            "| Job | Result | Failed step | First annotation |\n|---|---|---|---|\n" + jobs.rows.join("\n") +
+            "| Job | Result | Failed step | Error |\n|---|---|---|---|\n" + jobs.rows.join("\n") +
             (more ? `\n\n${more} more job(s) did not succeed.` : "") + `\n\n${explanation}`,
           text: metadata(pr, run, jobs.count),
         },
