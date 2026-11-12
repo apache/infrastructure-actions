@@ -39,6 +39,7 @@ function harness(options = {}) {
   const writes = [], calls = [], errors = [], failures = [];
   const checks = structuredClone(options.checks || []);
   const runs = options.runs || [run()];
+  const jobs = options.jobs || [];
   const record = (name, params) => calls.push({ name, params });
   const rest = {
     pulls: {
@@ -68,6 +69,10 @@ function harness(options = {}) {
         checks.push(check);
         return { data: check };
       },
+      listAnnotations: async (p) => {
+        record("checks.listAnnotations", p);
+        return { data: options.annotations?.[p.check_run_id] || [] };
+      },
       update: async (p) => {
         record("checks.update", p);
         if (options.writeError?.(p)) throw failure(403);
@@ -85,6 +90,11 @@ function harness(options = {}) {
         // mismatches to test defensive response validation.
         return { data: { workflow_runs: runs.filter((r) => r.event === p.event).sort((a, b) => b.id - a.id).slice(0, p.per_page) } };
       },
+      listJobsForWorkflowRunAttempt: async (p) => {
+        record("actions.listJobsForWorkflowRunAttempt", p);
+        if (options.jobsError) throw failure(options.jobsError);
+        return { data: { total_count: jobs.length, jobs: jobs.slice((p.page - 1) * p.per_page, p.page * p.per_page) } };
+      },
       getWorkflow: async (p) => {
         record("actions.getWorkflow", p);
         if (options.stateError) throw failure(options.stateError);
@@ -98,7 +108,7 @@ function harness(options = {}) {
       const result = [];
       for (let page = 1; ; page++) {
         const { data } = await method({ ...params, page });
-        const items = Array.isArray(data) ? data : data.check_runs;
+        const items = Array.isArray(data) ? data : data.check_runs || data.jobs;
         result.push(...items);
         if (items.length < params.per_page) return result;
       }
@@ -459,4 +469,91 @@ test("a stale signal cannot publish a result for a newer PR head", async () => {
     prs: [pull(1, { head: { sha: "b".repeat(40), ref: "feature", repo: fork } })] });
   assert.equal((await h.execute()).processed, 0);
   assert.deepEqual(h.writes, []);
+});
+
+const job = (id, overrides = {}) => ({
+  id, name: `test (${id})`, conclusion: "success", steps: [{ name: "Test", conclusion: "success" }], ...overrides,
+});
+const failedRun = (overrides = {}) => [run(10, { conclusion: "failure", ...overrides })];
+const named = (h, name) => h.calls.filter((c) => c.name === name);
+
+test("lists jobs that did not succeed with their failed step and first failure annotation", async () => {
+  const h = harness({ runs: failedRun(), jobs: [
+    job(1), job(2, { conclusion: "skipped" }),
+    job(3, { name: "compile `x` | y\n@team", conclusion: "failure", steps: [{ name: "Build", conclusion: "failure" }] }),
+    job(4, { name: "macos", conclusion: "cancelled", steps: [] }),
+  ], annotations: {
+    3: [{ annotation_level: "notice", message: "ignore me" }, { annotation_level: "failure", message: "Process completed with exit code 1." }],
+  } });
+  await h.execute();
+  const { title, summary, text } = h.writes[0].output;
+  assert.equal(title, "Fork run failure: compile `x` | y @team and 1 more");
+  assert.ok(summary.includes("| [`compile 'x' \\| y @team`](https://github.com/contributor/example/actions/runs/10/job/3) | `failure` | `Build` | `Process completed with exit code 1.` |"));
+  assert.ok(summary.includes("| [`macos`](https://github.com/contributor/example/actions/runs/10/job/4) | `cancelled` |  |  |"));
+  assert.ok(!summary.includes("test (1)") && !summary.includes("test (2)"));
+  assert.equal(JSON.parse(text).jobs, 2);
+  assert.deepEqual(named(h, "actions.listJobsForWorkflowRunAttempt")[0].params.attempt_number, 1);
+});
+
+test("lists jobs once per run attempt and reuses them on later sweeps", async () => {
+  const jobs = [job(3, { conclusion: "failure" })];
+  const first = harness({ runs: failedRun(), jobs });
+  await first.execute();
+  const again = harness({ event: "schedule", checks: first.checks, runs: failedRun(), jobs });
+  await again.execute();
+  assert.deepEqual(again.writes, []);
+  assert.equal(named(again, "actions.listJobsForWorkflowRunAttempt").length, 0);
+  assert.equal(named(again, "checks.listAnnotations").length, 0);
+  const rerun = harness({ checks: first.checks, runs: failedRun({ run_attempt: 2 }), jobs });
+  await rerun.execute();
+  assert.equal(named(rerun, "actions.listJobsForWorkflowRunAttempt")[0].params.attempt_number, 2);
+  assert.equal(rerun.writes[0].method, "create");
+});
+
+test("a failed run without failed jobs is not listed again", async () => {
+  const first = harness({ runs: failedRun(), jobs: [job(1)] });
+  await first.execute();
+  assert.equal(first.writes[0].output.title, "Fork run failure");
+  const again = harness({ checks: first.checks, runs: failedRun(), jobs: [job(1)] });
+  await again.execute();
+  assert.deepEqual(again.writes, []);
+  assert.equal(named(again, "actions.listJobsForWorkflowRunAttempt").length, 0);
+});
+
+test("caps listed and annotated jobs", async () => {
+  const jobs = Array.from({ length: 130 }, (_, i) => job(i + 1, { conclusion: "failure" }));
+  const h = harness({ runs: failedRun(), jobs });
+  await h.execute();
+  const { title, summary } = h.writes[0].output;
+  assert.equal(title, "Fork run failure: test (1) and 129 more");
+  assert.equal(summary.split("\n").filter((l) => l.startsWith("| [")).length, 20);
+  assert.ok(summary.includes("110 more job(s) did not succeed."));
+  assert.equal(named(h, "checks.listAnnotations").length, 5);
+  assert.equal(named(h, "actions.listJobsForWorkflowRunAttempt").length, 2);
+});
+
+test("a jobs API error keeps the run link and does not fail the sweep", async () => {
+  const h = harness({ runs: failedRun(), jobsError: 403 });
+  assert.equal((await h.execute()).failed, 0);
+  assert.equal(h.writes[0].output.title, "Fork run failure");
+  assert.equal(JSON.parse(h.writes[0].output.text).jobs, undefined);
+});
+
+for (const [name, options] of [
+  ["successful runs", { runs: [run()] }],
+  ["active runs", { runs: failedRun({ status: "in_progress", conclusion: null }) }],
+  ["job-details: false", { runs: failedRun(), config: { jobDetails: false } }],
+]) {
+  test(`${name} do not list jobs`, async () => {
+    const h = harness({ ...options, jobs: [job(3, { conclusion: "failure" })] });
+    await h.execute();
+    assert.equal(named(h, "actions.listJobsForWorkflowRunAttempt").length, 0);
+    assert.equal(JSON.parse(h.writes[0].output.text).jobs, undefined);
+  });
+}
+
+test("job-details accepts only true or false", () => {
+  assert.equal(configuration({ FORK_CI_WORKFLOW: "ci.yml" }).jobDetails, true);
+  assert.equal(configuration({ FORK_CI_WORKFLOW: "ci.yml", FORK_CI_JOB_DETAILS: "false" }).jobDetails, false);
+  assert.throws(() => configuration({ FORK_CI_WORKFLOW: "ci.yml", FORK_CI_JOB_DETAILS: "yes" }));
 });

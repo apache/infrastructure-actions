@@ -120,6 +120,7 @@ this action for additional feedback.
 | `recent-hours` | No | `6` | Recent PR update window, from 1 to 168 hours. |
 | `sweep-size` | No | `25` | Number of eligible PRs per rotating sweep, from 1 to 100. |
 | `sweep-minutes` | No | `15` | Schedule interval used for sweep rotation, from 5 to 1440 minutes. |
+| `job-details` | No | `true` | List jobs that did not succeed in the check. Set to `false` to show only the run link. |
 
 To mirror multiple workflows, call the action once per workflow with distinct
 check names. Keep each workflow's calls in one serialized bridge workflow.
@@ -177,6 +178,7 @@ Budget for these REST API calls per invocation:
 | Poll a fork workflow | Two per PR, for push and manual runs |
 | Inspect workflow state when no run exists | One extra per polled PR |
 | Publish a changed result | Two extra: re-read the PR, then write the check |
+| List jobs of an unsuccessful run attempt | One per 100 jobs, plus one per annotated job (at most five), once per attempt |
 
 With one check page per PR, budget list pages plus three calls per polled PR.
 Recent PRs with completed runs outside the rotating group still need a check lookup.
@@ -202,10 +204,16 @@ check writes.
 | Queued, waiting, pending, or requested run | Queued |
 | Running workflow | In progress |
 | Completed workflow | Its supported conclusion |
+| Completed workflow that did not succeed | Also lists up to 20 jobs that did not succeed, when `job-details` is on |
 | Reserved `stale`, unknown, or absent conclusion on a completed run | Failure |
 | Disabled workflow with no matching run | Action required, with setup instructions and a link to the fork workflow |
 | No matching run, or workflow endpoint returns 404 | Neutral, with setup and filter guidance and a link to the fork workflow |
 | Permission error, rate limit, or other API error | Action required, linking the bridge run, when a check can be written, and bridge failure |
+
+For each listed job, the summary shows its result, failed step, and first failure
+annotation. The first five jobs get an annotation. The bridge lists jobs once per
+run attempt and keeps the result for later sweeps. If the jobs API fails, the check
+shows only the run link, and the next poll of that PR tries again.
 
 An absent run does not establish that tests passed or that a path filter skipped
 them. If no run appears, check the fork's Actions setup and workflow filters.
