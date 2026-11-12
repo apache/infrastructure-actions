@@ -105,7 +105,7 @@ function harness(options = {}) {
     },
   };
   const context = {
-    repo: { owner: "apache", repo: "example" }, runId: 123,
+    repo: { owner: "apache", repo: "example" }, runId: options.runId ?? 123,
     eventName: options.event || "workflow_run",
     payload: options.payload || signal,
   };
@@ -181,6 +181,7 @@ for (const [state, conclusion] of [["active", "neutral"], ["disabled_fork", "act
     const h = harness({ runs: [], state });
     await h.execute();
     assert.equal(h.writes[0].conclusion, conclusion);
+    assert.ok(h.checks[0].output.summary.includes("https://github.com/contributor/example/actions/workflows/ci.yml"));
   });
 }
 
@@ -200,6 +201,7 @@ for (const status of [403, 429, 500]) {
     assert.equal(result.failed, 1);
     assert.equal(result.processed, 2);
     assert.equal(h.writes[0].conclusion, "action_required");
+    assert.ok(h.checks[0].output.summary.includes("https://github.com/apache/example/actions/runs/123"));
     assert.equal(h.writes.length, 2);
     assert.equal(h.failures.length, 1);
     assert.ok(!h.errors.join().includes("untrusted response"));
@@ -244,6 +246,21 @@ test("deleted fork run clears a previous success and its link", async () => {
   assert.equal(h.writes[0].method, "update");
   assert.equal(h.writes[0].conclusion, "neutral");
   assert.ok(h.writes[0].details_url.endsWith("/actions/workflows/ci.yml"));
+  // GitHub drops the requested link, so check what the stored check shows.
+  assert.ok(!h.checks[0].output.summary.includes("/actions/runs/10"));
+  assert.ok(h.checks[0].output.summary.includes("https://github.com/contributor/example/actions/workflows/ci.yml"));
+});
+
+test("repeated API errors link the newest bridge run, and a retry of that run does not write", async () => {
+  const first = harness({ readError: () => 503 });
+  await first.execute();
+  const retry = harness({ checks: first.checks, readError: () => 503 });
+  await retry.execute();
+  assert.deepEqual(retry.writes, []);
+  const next = harness({ checks: first.checks, readError: () => 503, runId: 124 });
+  await next.execute();
+  assert.equal(next.writes.length, 1);
+  assert.ok(next.checks[0].output.summary.includes("https://github.com/apache/example/actions/runs/124"));
 });
 
 test("reruns create a fresh active check and later update it", async () => {
