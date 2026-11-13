@@ -1,0 +1,68 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+github:
+  del_branch_on_merge: true
+  features:
+    issues: true
+  protected_branches:
+    main:
+      required_status_checks:
+        # strict means "Require branches to be up to date before merging".
+        strict: false
+  # The checks every PR must pass to merge. A ruleset rather than
+  # protected_branches, because only a ruleset can name who may bypass it.
+  rulesets:
+    - name: "Required checks"
+      target: branch
+      enforcement: active
+      conditions:
+        ref_name:
+          include:
+            - "~DEFAULT_BRANCH"
+          exclude: []
+      bypass_actors:
+        # Repository admins, always: update.yml pushes its sync commit to
+        # main directly as asfgit, which is an admin.
+        - actor_id: 5
+          actor_type: RepositoryRole
+          bypass_mode: always
+        # Write access, on pull requests only: a maintainer can choose to
+        # merge past the checks, never push past them.
+        - actor_id: 4
+          actor_type: RepositoryRole
+          bypass_mode: pull_request
+      rules:
+        - type: required_status_checks
+          parameters:
+            strict_required_status_checks_policy: false
+            # No integration_id: leaving it out means any source. .asf.yaml
+            # passes raw ruleset values to the API as strings except for a
+            # fixed set of keys, and a string integration_id is rejected.
+            required_status_checks:
+              # allowlist_approval.yml: an allow-list PR needs a maintainer's
+              # approval; other PRs pass it at once.
+              - context: approval
+              # verify_*_action.yml: rebuilds an allow-list PR's action and
+              # compares it with the published one; other PRs pass it at once.
+              - context: verify
+
+notifications:
+  commits: commits@infra.apache.org
+  issues: issues@infra.apache.org
+  pullrequests: commits@infra.apache.org
