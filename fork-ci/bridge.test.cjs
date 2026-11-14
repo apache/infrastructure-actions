@@ -71,6 +71,7 @@ function harness(options = {}) {
       },
       listAnnotations: async (p) => {
         record("checks.listAnnotations", p);
+        if (options.annotationsError) throw failure(options.annotationsError);
         return { data: options.annotations?.[p.check_run_id] || [] };
       },
       update: async (p) => {
@@ -540,6 +541,24 @@ test("a jobs API error keeps the run link and does not fail the sweep", async ()
   assert.equal((await h.execute()).failed, 0);
   assert.equal(h.writes[0].output.title, "Fork run failure");
   assert.equal(JSON.parse(h.writes[0].output.text).jobs, undefined);
+});
+
+test("an annotations API error keeps the job row", async () => {
+  const h = harness({ runs: failedRun(), jobs: [job(3, { name: "unit", conclusion: "failure" })], annotationsError: 403 });
+  assert.equal((await h.execute()).failed, 0);
+  const { title, summary, text } = h.writes[0].output;
+  assert.equal(title, "Fork run failure: unit");
+  assert.ok(summary.includes("| [`unit`](https://github.com/contributor/example/actions/runs/10/job/3) | `failure` |  |  |"));
+  assert.equal(JSON.parse(text).jobs, 1);
+});
+
+test("fork text drops control characters and does not split a character", async () => {
+  const title = "a\u0001b" + "x".repeat(96) + "\u{1F600}", row = "c" + "x".repeat(97) + "\u{1F600}z";
+  const h = harness({ runs: failedRun(), jobs: [job(3, { name: title, conclusion: "failure" }), job(4, { name: row, conclusion: "failure" })] });
+  await h.execute();
+  const { output } = h.writes[0];
+  assert.equal(output.title, `Fork run failure: a b${"x".repeat(96)}\u{1F600} and 1 more`);
+  assert.ok(output.summary.includes(`[\`${row}\`]`));
 });
 
 for (const [name, options] of [

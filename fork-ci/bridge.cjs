@@ -70,10 +70,15 @@ const MAX_ANNOTATED_JOBS = 5;
 const PASSED = new Set(["success", "skipped", "neutral"]);
 const GENERIC = /^Process completed with exit code \d+\.?$/;
 
-// Fork-supplied text: one line, bounded, and inert inside a table code span.
+// Fork-supplied text: one line, bounded by code point.
+function line(value, max) {
+  const chars = Array.from(String(value ?? "").replace(/[\u0000-\u001f\u007f]+/g, " ").trim());
+  return chars.length > max ? `${chars.slice(0, max - 1).join("")}…` : chars.join("");
+}
+
+// Fork-supplied text, inert inside a table code span.
 function code(value, max) {
-  let s = String(value ?? "").replace(/[\u0000-\u001f\u007f]+/g, " ").trim();
-  if (s.length > max) s = `${s.slice(0, max - 1)}…`;
+  const s = line(value, max);
   return s ? `\`${s.replace(/`/g, "'").replace(/\|/g, "\\|")}\`` : "";
 }
 
@@ -120,20 +125,23 @@ async function bridge({ github, context, core, config = configuration(), now = D
   // be read, so the check falls back to the run link alone.
   async function failedJobs(fork, run, root) {
     try {
-      const params = { ...fork, run_id: run.id, per_page: 100 };
-      const jobs = Number.isSafeInteger(run.run_attempt)
-        ? await github.paginate(github.rest.actions.listJobsForWorkflowRunAttempt, { ...params, attempt_number: run.run_attempt })
-        : await github.paginate(github.rest.actions.listJobsForWorkflowRun, { ...params, filter: "latest" });
+      if (!Number.isSafeInteger(run.run_attempt)) return null;
+      const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRunAttempt,
+        { ...fork, run_id: run.id, attempt_number: run.run_attempt, per_page: 100 });
       const failed = jobs.filter((j) => Number.isSafeInteger(j.id) && !PASSED.has(j.conclusion));
       const rows = [];
       for (const [i, job] of failed.slice(0, MAX_JOBS).entries()) {
         const step = (job.steps || []).find((s) => s.conclusion === "failure")?.name;
         let message;
         if (i < MAX_ANNOTATED_JOBS) {
-          const { data } = await github.rest.checks.listAnnotations({ ...fork, check_run_id: job.id, per_page: 50 });
-          // Prefer the job's own error over the runner's generic exit message.
-          const errors = data.filter((a) => a.annotation_level === "failure");
-          message = (errors.find((a) => !GENERIC.test(a.message)) || errors[0])?.message;
+          try {
+            const { data } = await github.rest.checks.listAnnotations({ ...fork, check_run_id: job.id, per_page: 50 });
+            // Prefer the job's own error over the runner's generic exit message.
+            const errors = data.filter((a) => a.annotation_level === "failure");
+            message = (errors.find((a) => !GENERIC.test(a.message)) || errors[0])?.message;
+          } catch {
+            // Keep the row without its error message.
+          }
         }
         const link = `${root}/actions/runs/${run.id}/job/${job.id}`;
         rows.push(`| [${code(job.name, 100)}](${link}) | ${code(job.conclusion || "unknown", 20)} | ` +
@@ -198,7 +206,7 @@ async function bridge({ github, context, core, config = configuration(), now = D
       return {
         ...result,
         output: {
-          title: `Fork run ${conclusion}: ${String(jobs.first).replace(/\s+/g, " ").slice(0, 100)}` +
+          title: `Fork run ${conclusion}: ${line(jobs.first, 100)}` +
             (jobs.count > 1 ? ` and ${jobs.count - 1} more` : ""),
           summary: `[Open the fork workflow run](${details}).\n\n` +
             "| Job | Result | Failed step | Error |\n|---|---|---|---|\n" + jobs.rows.join("\n") +

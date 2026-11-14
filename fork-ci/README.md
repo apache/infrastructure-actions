@@ -212,9 +212,10 @@ check writes.
 
 For each listed job, the summary shows its result, failed step, and one failure
 annotation, preferring the job's own error over the generic exit-code message.
-Only the first five jobs get an annotation. The bridge lists jobs once per
-run attempt and keeps the result for later sweeps. If the jobs API fails, the check
-shows only the run link, and the next poll of that PR tries again.
+Only the first five jobs get an annotation, and an unreadable annotation leaves
+its cell empty. The bridge lists jobs once per run attempt and keeps the result
+for later sweeps. If the jobs API fails, the check shows only the run link, and
+the next poll of that PR tries again.
 
 An absent run does not establish that tests passed or that a path filter skipped
 them. If no run appears, check the fork's Actions setup and workflow filters.
