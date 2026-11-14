@@ -56,6 +56,7 @@
 - azure/setup-kubectl@bda439f5f36b99b262ebdcd3613869bddb064c8e
 - bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86
 - bazel-contrib/setup-bazel@104e3eea9447cdaa4b00d0fb46191a3985d26ab3
+- bazel-contrib/setup-bazel@f34d6a05eae3c24acab7fa54587492daeaeffdab
 - benchmark-action/github-action-benchmark@52576c92bccf6ac60c8223ec7eb2565637cae9ba
 - benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc
 - betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619
@@ -411,6 +412,7 @@
 - uraimo/run-on-arch-action@f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9
 - uraimo/run-on-arch-action@460cb8e6d9f726a588fc9b5e681c8a6cab09ae41
 - uraimo/run-on-arch-action@fa1f3e7de95534497266c7265950b5188355fbfb
+- uraimo/run-on-arch-action@9893a0f995e5148dcc313ba661820f3992cffcc1
 - vapier/coverity-scan-action@8fe7b0af23cbbd4eced5f63dcd2384640eaa5d49
 - vimtor/action-zip@5f1c4aa587ea41db1110df6a99981dbe19cee310
 - vishalsinha21/dynamic-checklist@*
