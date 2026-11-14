@@ -335,6 +335,9 @@ commit-check/commit-check-action:
     expires_at: 2027-02-02
   0264f70feca84c2c7236a4c0d81a002f3eea37d0:
     tag: v2.20.0
+    expires_at: 2027-02-06
+  d68e05baf9511853193e2749f8a64bf2a221619a:
+    tag: v2.22.0
 conda-incubator/setup-miniconda:
   '*':
     keep: true
@@ -381,6 +384,9 @@ dart-lang/setup-dart:
     expires_at: 2026-11-30
   6afc89df92d6eb3834022f73cd65adc8cdfcb92d:
     tag: v1.8.1
+    expires_at: 2027-02-06
+  2286a0c042b44434fe26d292bbce8d34f7ec662b:
+    tag: v1.8.2
 DavidAnson/markdownlint-cli2-action:
   21c1be1b93ad9ed58fa840aacc3f279cde2a72ff:
     tag: v24.2.0
@@ -553,6 +559,9 @@ graalvm/setup-graalvm:
     expires_at: 2027-01-20
   f70bc8032f90a104502824a54bcb94b6f01715bc:
     tag: v1.6.8
+    expires_at: 2027-02-06
+  d6eca2595046623d69d636041513c80abf745406:
+    tag: v1.6.9
 gradle/actions/dependency-submission:
   9c971963bec38e04b3d30dcc455b5382be2fdbfb:
     tag: v6.3.0

@@ -125,6 +125,7 @@
 - commit-check/commit-check-action@b6819c7bfd40f576d670a78712646a67f2659ff3
 - commit-check/commit-check-action@382788bc42fde36f387a6b62210c8a4a29c24f07
 - commit-check/commit-check-action@0264f70feca84c2c7236a4c0d81a002f3eea37d0
+- commit-check/commit-check-action@d68e05baf9511853193e2749f8a64bf2a221619a
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d
@@ -141,6 +142,7 @@
 - damccorm/tag-ur-it@6fa72bbf1a2ea157b533d7e7abeafdb5855dbea5
 - dart-lang/setup-dart@7654d458321ee25acccccfdb86cd48bd95768ff1
 - dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
+- dart-lang/setup-dart@2286a0c042b44434fe26d292bbce8d34f7ec662b
 - DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff
 - DavidAnson/markdownlint-cli2-action@696eb3f2509270d7b882d2aa68347bc676e7af34
 - dawidd6/action-download-artifact@*
@@ -197,6 +199,7 @@
 - graalvm/setup-graalvm@0426e2e191540e8514dff98dc52a5f5146a2a276
 - graalvm/setup-graalvm@27b360dbb857524eaf0b4c4cef364d38e5b4f173
 - graalvm/setup-graalvm@f70bc8032f90a104502824a54bcb94b6f01715bc
+- graalvm/setup-graalvm@d6eca2595046623d69d636041513c80abf745406
 - gradle/actions/dependency-submission@9c971963bec38e04b3d30dcc455b5382be2fdbfb
 - gradle/actions/dependency-submission@3f5f9adaf7d9fecd50b5935e54106014257a94e6
 - gradle/actions/dependency-submission@8da46b539cd8fe6ab27ca75128919a18d757604c
