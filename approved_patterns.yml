@@ -51,6 +51,7 @@
 - azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c
 - azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906
 - azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
+- azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e
 - azure/setup-kubectl@829323503d1be3d00ca8346e5391ca0b07a9ab0d
 - azure/setup-kubectl@bda439f5f36b99b262ebdcd3613869bddb064c8e
 - bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86
