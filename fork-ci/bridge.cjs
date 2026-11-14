@@ -154,7 +154,7 @@ async function bridge({ github, context, core, config = configuration(), now = D
       details_url: workflowUrl,
       output: {
         title: disabled ? "Workflows are disabled on the fork" : "No fork run for this commit",
-        summary: `${advice}\n\nThe scheduled sweep will look again.\n\n${explanation}` +
+        summary: `[Open the fork workflow](${workflowUrl}).\n\n${advice}\n\nThe scheduled sweep will look again.\n\n${explanation}` +
           (config.guide ? `\n\nContributor guide: <${config.guide}>` : ""),
         text: metadata(pr, null),
       },
@@ -162,10 +162,11 @@ async function bridge({ github, context, core, config = configuration(), now = D
   }
 
   async function publish(pr, check, payload) {
+    // GitHub keeps the check page as details_url for GITHUB_TOKEN writes, so a
+    // stored check never matches the requested link. Each summary carries its link.
     if (
       check && check.status === payload.status &&
       (check.conclusion ?? null) === (payload.conclusion ?? null) &&
-      check.details_url === payload.details_url &&
       ["title", "summary", "text"].every((key) => check.output?.[key] === payload.output[key])
     ) {
       return;
@@ -205,12 +206,14 @@ async function bridge({ github, context, core, config = configuration(), now = D
     } catch (error) {
       // Do not turn permission errors, rate limits, or outages into a missing
       // run or leave an old green result as the latest observation.
+      const bridgeRun = `${server}/${upstreamName}/actions/runs/${context.runId}`;
       await publish(pr, check, {
         status: "completed", conclusion: "action_required",
-        details_url: `${server}/${upstreamName}/actions/runs/${context.runId}`,
+        details_url: bridgeRun,
         output: {
           title: "Cannot read fork CI",
-          summary: "The bridge could not read the fork API. Inspect the bridge workflow permissions and logs, then retry.\n\n" + explanation,
+          summary: `[Open the bridge run](${bridgeRun}).\n\n` +
+            "The bridge could not read the fork API. Inspect the bridge workflow permissions and logs, then retry.\n\n" + explanation,
           text: metadata(pr, null),
         },
       });

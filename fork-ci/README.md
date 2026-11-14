@@ -203,9 +203,9 @@ check writes.
 | Running workflow | In progress |
 | Completed workflow | Its supported conclusion |
 | Reserved `stale`, unknown, or absent conclusion on a completed run | Failure |
-| Disabled workflow with no matching run | Action required, with setup instructions |
-| No matching run, or workflow endpoint returns 404 | Neutral, with setup and filter guidance |
-| Permission error, rate limit, or other API error | Action required when a check can be written, and bridge failure |
+| Disabled workflow with no matching run | Action required, with setup instructions and a link to the fork workflow |
+| No matching run, or workflow endpoint returns 404 | Neutral, with setup and filter guidance and a link to the fork workflow |
+| Permission error, rate limit, or other API error | Action required, linking the bridge run, when a check can be written, and bridge failure |
 
 An absent run does not establish that tests passed or that a path filter skipped
 them. If no run appears, check the fork's Actions setup and workflow filters.
