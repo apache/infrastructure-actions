@@ -17,7 +17,12 @@
 # under the License.
 #
 github:
-  del_branch_on_merge: true
+  pull_requests:
+    # Lets a maintainer approve and queue a PR in one step instead of
+    # waiting for the approval re-run to go green before merging.
+    allow_auto_merge: true
+    # Moved here from the deprecated top-level github.del_branch_on_merge.
+    del_branch_on_merge: true
   features:
     issues: true
   protected_branches:
