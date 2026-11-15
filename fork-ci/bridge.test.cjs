@@ -478,25 +478,28 @@ const job = (id, overrides = {}) => ({
 const failedRun = (overrides = {}) => [run(10, { conclusion: "failure", ...overrides })];
 const named = (h, name) => h.calls.filter((c) => c.name === name);
 
-test("lists jobs that did not succeed with their failed step and first failure annotation", async () => {
+test("lists jobs that did not succeed with their failed step and own failure annotation", async () => {
   const h = harness({ runs: failedRun(), jobs: [
-    job(1), job(2, { conclusion: "skipped" }),
+    job(1), job(2, { conclusion: "skipped" }), job(5, { conclusion: "neutral" }),
     job(3, { name: "compile `x` | y\n@team", conclusion: "failure", steps: [{ name: "Build", conclusion: "failure" }] }),
     job(4, { name: "macos", conclusion: "cancelled", steps: [] }),
   ], annotations: {
     3: [{ annotation_level: "warning", message: "ignore me" }, { annotation_level: "failure", message: "Process completed with exit code 1." },
       { annotation_level: "failure", message: "TestExample failed" }],
-    4: [{ annotation_level: "notice", message: "capacity notice" }],
+    4: [{ annotation_level: "notice", message: "capacity notice" }, { annotation_level: "failure", message: "Process completed with exit code 2." }],
   } });
   await h.execute();
   const { title, summary, text } = h.writes[0].output;
   assert.equal(title, "Fork run failure: compile `x` | y @team and 1 more");
   assert.ok(summary.includes("| [`compile 'x' \\| y @team`](https://github.com/contributor/example/actions/runs/10/job/3) | `failure` | `Build` | `TestExample failed` |"));
-  assert.ok(summary.includes("| [`macos`](https://github.com/contributor/example/actions/runs/10/job/4) | `cancelled` |  |  |"));
-  assert.ok(!summary.includes("test (1)") && !summary.includes("test (2)"));
+  assert.ok(summary.includes("| [`macos`](https://github.com/contributor/example/actions/runs/10/job/4) | `cancelled` |  | `Process completed with exit code 2.` |"));
+  assert.ok(!summary.includes("test (1)") && !summary.includes("test (2)") && !summary.includes("test (5)"));
   assert.equal(JSON.parse(text).jobs, 2);
   assert.ok(!summary.includes("capacity notice"));
-  assert.deepEqual(named(h, "actions.listJobsForWorkflowRunAttempt")[0].params.attempt_number, 1);
+  const { owner, repo, run_id, attempt_number } = named(h, "actions.listJobsForWorkflowRunAttempt")[0].params;
+  assert.deepEqual({ owner, repo, run_id, attempt_number }, { owner: "contributor", repo: "example", run_id: 10, attempt_number: 1 });
+  assert.deepEqual(named(h, "checks.listAnnotations").map(({ params: p }) => [p.owner, p.repo, p.check_run_id]),
+    [["contributor", "example", 3], ["contributor", "example", 4]]);
 });
 
 test("lists jobs once per run attempt and reuses them on later sweeps", async () => {
@@ -572,13 +575,13 @@ for (const [name, runs] of [
   });
 }
 
-test("fork text drops control characters and does not split a character", async () => {
-  const title = "a\u0001b" + "x".repeat(96) + "\u{1F600}", row = "c" + "x".repeat(97) + "\u{1F600}z";
+test("fork text drops control characters and is truncated without splitting a character", async () => {
+  const title = "a\u0001b" + "x".repeat(96) + "\u{1F600}", row = "c" + "x".repeat(97) + "\u{1F600}zz";
   const h = harness({ runs: failedRun(), jobs: [job(3, { name: title, conclusion: "failure" }), job(4, { name: row, conclusion: "failure" })] });
   await h.execute();
   const { output } = h.writes[0];
   assert.equal(output.title, `Fork run failure: a b${"x".repeat(96)}\u{1F600} and 1 more`);
-  assert.ok(output.summary.includes(`[\`${row}\`]`));
+  assert.ok(output.summary.includes(`[\`c${"x".repeat(97)}\u{1F600}…\`]`));
 });
 
 for (const [name, options] of [

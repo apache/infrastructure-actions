@@ -125,35 +125,37 @@ async function bridge({ github, context, core, config = configuration(), now = D
   // be read, so the check falls back to the run link alone.
   async function failedJobs(pr, run, runUrl) {
     const fork = { owner: pr.head.repo.owner.login, repo: pr.head.repo.name };
+    let jobs;
     try {
-      const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRunAttempt,
+      jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRunAttempt,
         { ...fork, run_id: run.id, attempt_number: run.run_attempt, per_page: 100 });
-      const failed = jobs.filter((j) => Number.isSafeInteger(j.id) && !PASSED.has(j.conclusion));
-      const rows = [];
-      for (const [i, job] of failed.slice(0, MAX_JOBS).entries()) {
-        const step = (job.steps || []).find((s) => s.conclusion === "failure")?.name;
-        let message;
-        if (i < MAX_ANNOTATED_JOBS) {
-          try {
-            const { data } = await github.rest.checks.listAnnotations({ ...fork, check_run_id: job.id, per_page: 50 });
-            // Prefer the job's own error over the runner's generic exit message.
-            const errors = data.filter((a) => a.annotation_level === "failure");
-            message = (errors.find((a) => !GENERIC.test(a.message)) || errors[0])?.message;
-          } catch (error) {
-            // Keep the row without its error message.
-            core.warning(`PR #${pr.number}: cannot read annotations of fork job ${job.id} ` +
-              `(HTTP ${Number(error.status) || "unknown"}).`);
-          }
-        }
-        const link = `${runUrl}/job/${job.id}`;
-        rows.push(`| [${code(job.name, 100)}](${link}) | ${code(job.conclusion || "unknown", 20)} | ` +
-          `${code(step, 100)} | ${code(message, 150)} |`);
-      }
-      return { count: failed.length, first: failed[0]?.name, rows };
     } catch (error) {
       core.warning(`PR #${pr.number}: cannot list fork jobs (HTTP ${Number(error.status) || "unknown"}).`);
       return null;
     }
+    const failed = jobs.filter((j) => !PASSED.has(j.conclusion));
+    const rows = [];
+    for (const [i, job] of failed.slice(0, MAX_JOBS).entries()) {
+      const step = (job.steps || []).find((s) => s.conclusion === "failure")?.name;
+      let message;
+      if (i < MAX_ANNOTATED_JOBS) {
+        let annotations = [];
+        try {
+          annotations = (await github.rest.checks.listAnnotations({ ...fork, check_run_id: job.id, per_page: 50 })).data;
+        } catch (error) {
+          // Keep the row without its error message.
+          core.warning(`PR #${pr.number}: cannot read annotations of fork job ${job.id} ` +
+            `(HTTP ${Number(error.status) || "unknown"}).`);
+        }
+        // Prefer the job's own error over the runner's generic exit message.
+        const errors = annotations.filter((a) => a.annotation_level === "failure");
+        message = (errors.find((a) => !GENERIC.test(a.message)) || errors[0])?.message;
+      }
+      const link = `${runUrl}/job/${job.id}`;
+      rows.push(`| [${code(job.name, 100)}](${link}) | ${code(job.conclusion || "unknown", 20)} | ` +
+        `${code(step, 100)} | ${code(message, 150)} |`);
+    }
+    return { count: failed.length, first: failed[0]?.name, rows };
   }
 
   // Add the jobs that did not succeed to a completed run's result.

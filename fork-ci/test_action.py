@@ -182,6 +182,7 @@ def test_composite_publishes_results_and_failure_outputs(tmp_path, action, mode,
         "sweep-minutes": "5",
         "job-details": "false",
     })
+    assert env["FORK_CI_JOB_DETAILS"] == "false"
     wrapper = tmp_path / "publish.cjs"
     wrapper.write_text(
         f"const script = {json.dumps(step['with']['script'])};\n"

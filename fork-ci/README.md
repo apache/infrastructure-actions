@@ -212,8 +212,9 @@ check writes.
 
 For each listed job, the summary shows its result, failed step, and one failure
 annotation, preferring the job's own error over the generic exit-code message.
+Skipped and neutral jobs count as passed and are not listed.
 Only the first five jobs get an annotation, and an unreadable annotation leaves
-its cell empty. The bridge lists jobs once per run attempt and keeps the result
+its cell empty for that run attempt. The bridge lists jobs once per run attempt and keeps the result
 for later sweeps. If the jobs API fails, the check shows only the run link, and
 the next poll of that PR tries again.
 
@@ -236,8 +237,8 @@ read artifacts, approve workflows, or edit PRs. It identifies its checks by name
 PR/workflow identifier, and the `github-actions` app identity.
 
 With `job-details` on, checks also show fork job names, step names, and
-annotation messages. The bridge strips control characters, bounds their length,
-and renders them in code spans in the summary.
+annotation messages. The bridge replaces control characters with spaces, bounds
+their length, and renders them in code spans in the summary.
 
 Supported caller events are `workflow_run`, `schedule`, and `workflow_dispatch`.
 Use the signal workflow for PR notifications. Keep privileged callers free of
