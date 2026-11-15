@@ -45,6 +45,9 @@ inputs:
   sweep-minutes:
     description: Schedule interval in minutes, used to rotate the sweep (5-1440)
     default: '15'
+  job-details:
+    description: List jobs that did not succeed in the check summary (true or false)
+    default: 'true'
 outputs:
   processed:
     description: Number of eligible PRs considered in this invocation
@@ -70,6 +73,7 @@ runs:
         FORK_CI_RECENT_HOURS: ${{ inputs.recent-hours }}
         FORK_CI_SWEEP_SIZE: ${{ inputs.sweep-size }}
         FORK_CI_SWEEP_MINUTES: ${{ inputs.sweep-minutes }}
+        FORK_CI_JOB_DETAILS: ${{ inputs.job-details }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |

@@ -120,6 +120,7 @@ this action for additional feedback.
 | `recent-hours` | No | `6` | Recent PR update window, from 1 to 168 hours. |
 | `sweep-size` | No | `25` | Number of eligible PRs per rotating sweep, from 1 to 100. |
 | `sweep-minutes` | No | `15` | Schedule interval used for sweep rotation, from 5 to 1440 minutes. |
+| `job-details` | No | `true` | List jobs that did not succeed in the check. Set to `false` to show only the run link. |
 
 To mirror multiple workflows, call the action once per workflow with distinct
 check names. Keep each workflow's calls in one serialized bridge workflow.
@@ -177,6 +178,7 @@ Budget for these REST API calls per invocation:
 | Poll a fork workflow | Two per PR, for push and manual runs |
 | Inspect workflow state when no run exists | One extra per polled PR |
 | Publish a changed result | Two extra: re-read the PR, then write the check |
+| List jobs of an unsuccessful run attempt | One per 100 jobs, plus one per annotated job (at most five), once per attempt |
 
 With one check page per PR, budget list pages plus three calls per polled PR.
 Recent PRs with completed runs outside the rotating group still need a check lookup.
@@ -202,11 +204,20 @@ check writes.
 | Queued, waiting, pending, or requested run | Queued |
 | Running workflow | In progress |
 | Completed workflow | Its supported conclusion |
+| Completed workflow that did not succeed | Also lists up to 20 jobs that did not succeed, when `job-details` is on |
 | Reserved `stale`, unknown, or absent conclusion on a completed run | Failure |
 | Disabled workflow with no matching run | Action required, with setup instructions and a link to the fork workflow |
 | Workflow endpoint returns 404 (Actions never enabled on the fork, or the workflow file is missing) | Action required, with setup instructions and a link to the fork workflow |
 | Active workflow with no matching run | Neutral, with filter guidance and a link to the fork workflow |
 | Permission error, rate limit, or other API error | Action required, linking the bridge run, when a check can be written, and bridge failure |
+
+For each listed job, the summary shows its result, failed step, and one failure
+annotation, preferring the job's own error over the generic exit-code message.
+Skipped and neutral jobs count as passed and are not listed.
+Only the first five jobs get an annotation, and an unreadable annotation leaves
+its cell empty for that run attempt. The bridge lists jobs once per run attempt and keeps the result
+for later sweeps. If the jobs API fails, the check shows only the run link, and
+the next poll of that PR tries again.
 
 An absent run does not establish that tests passed or that a path filter skipped
 them. If no run appears, check the fork's Actions setup and workflow filters.
@@ -225,6 +236,10 @@ Private forks are outside the action's supported scope.
 The bridge only reads API metadata and writes checks. It does not run PR code,
 read artifacts, approve workflows, or edit PRs. It identifies its checks by name,
 PR/workflow identifier, and the `github-actions` app identity.
+
+With `job-details` on, checks also show fork job names, step names, and
+annotation messages. The bridge replaces control characters with spaces, bounds
+their length, and renders them in code spans in the summary.
 
 Supported caller events are `workflow_run`, `schedule`, and `workflow_dispatch`.
 Use the signal workflow for PR notifications. Keep privileged callers free of
