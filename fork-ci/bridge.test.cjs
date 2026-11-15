@@ -36,7 +36,7 @@ const signal = { workflow_run: { event: "pull_request", head_repository: fork, h
 
 function harness(options = {}) {
   const prs = options.prs || [pull()];
-  const writes = [], calls = [], errors = [], failures = [];
+  const writes = [], calls = [], errors = [], warnings = [], failures = [];
   const checks = structuredClone(options.checks || []);
   const runs = options.runs || [run()];
   const jobs = options.jobs || [];
@@ -120,9 +120,9 @@ function harness(options = {}) {
     eventName: options.event || "workflow_run",
     payload: options.payload || signal,
   };
-  const core = { info() {}, error: (s) => errors.push(s), setFailed: (s) => failures.push(s) };
+  const core = { info() {}, warning: (s) => warnings.push(s), error: (s) => errors.push(s), setFailed: (s) => failures.push(s) };
   return {
-    writes, calls, checks, errors, failures,
+    writes, calls, checks, errors, warnings, failures,
     execute: () => bridge({ github, context, core, config: { ...config, ...options.config }, now: options.now ?? now }),
   };
 }
@@ -541,6 +541,11 @@ test("a jobs API error keeps the run link and does not fail the sweep", async ()
   assert.equal((await h.execute()).failed, 0);
   assert.equal(h.writes[0].output.title, "Fork run failure");
   assert.equal(JSON.parse(h.writes[0].output.text).jobs, undefined);
+  assert.deepEqual(h.warnings, ["PR #1: cannot list fork jobs (HTTP 403)."]);
+  const retry = harness({ checks: h.checks, runs: failedRun(), jobs: [job(3, { conclusion: "failure" })] });
+  await retry.execute();
+  assert.equal(retry.writes[0].method, "update");
+  assert.equal(retry.writes[0].output.title, "Fork run failure: test (3)");
 });
 
 test("an annotations API error keeps the job row", async () => {
@@ -550,7 +555,22 @@ test("an annotations API error keeps the job row", async () => {
   assert.equal(title, "Fork run failure: unit");
   assert.ok(summary.includes("| [`unit`](https://github.com/contributor/example/actions/runs/10/job/3) | `failure` |  |  |"));
   assert.equal(JSON.parse(text).jobs, 1);
+  assert.deepEqual(h.warnings, ["PR #1: cannot read annotations of fork job 3 (HTTP 403)."]);
 });
+
+for (const [name, runs] of [
+  ["a new run of the same commit", failedRun({ id: 11 })],
+  ["a changed conclusion", failedRun({ conclusion: "timed_out" })],
+]) {
+  test(`${name} lists jobs again`, async () => {
+    const first = harness({ runs: failedRun(), jobs: [job(3, { conclusion: "failure" })] });
+    await first.execute();
+    const again = harness({ checks: first.checks, runs, jobs: [job(4, { conclusion: "failure" })] });
+    await again.execute();
+    assert.equal(named(again, "actions.listJobsForWorkflowRunAttempt").length, 1);
+    assert.match(again.writes[0].output.title, /: test \(4\)$/);
+  });
+}
 
 test("fork text drops control characters and does not split a character", async () => {
   const title = "a\u0001b" + "x".repeat(96) + "\u{1F600}", row = "c" + "x".repeat(97) + "\u{1F600}z";

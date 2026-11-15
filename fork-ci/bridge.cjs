@@ -126,7 +126,6 @@ async function bridge({ github, context, core, config = configuration(), now = D
   async function failedJobs(pr, run, runUrl) {
     const fork = { owner: pr.head.repo.owner.login, repo: pr.head.repo.name };
     try {
-      if (!Number.isSafeInteger(run.run_attempt)) return null;
       const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRunAttempt,
         { ...fork, run_id: run.id, attempt_number: run.run_attempt, per_page: 100 });
       const failed = jobs.filter((j) => Number.isSafeInteger(j.id) && !PASSED.has(j.conclusion));
@@ -140,8 +139,10 @@ async function bridge({ github, context, core, config = configuration(), now = D
             // Prefer the job's own error over the runner's generic exit message.
             const errors = data.filter((a) => a.annotation_level === "failure");
             message = (errors.find((a) => !GENERIC.test(a.message)) || errors[0])?.message;
-          } catch {
+          } catch (error) {
             // Keep the row without its error message.
+            core.warning(`PR #${pr.number}: cannot read annotations of fork job ${job.id} ` +
+              `(HTTP ${Number(error.status) || "unknown"}).`);
           }
         }
         const link = `${runUrl}/job/${job.id}`;
@@ -149,7 +150,8 @@ async function bridge({ github, context, core, config = configuration(), now = D
           `${code(step, 100)} | ${code(message, 150)} |`);
       }
       return { count: failed.length, first: failed[0]?.name, rows };
-    } catch {
+    } catch (error) {
+      core.warning(`PR #${pr.number}: cannot list fork jobs (HTTP ${Number(error.status) || "unknown"}).`);
       return null;
     }
   }

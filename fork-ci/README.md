@@ -235,6 +235,10 @@ The bridge only reads API metadata and writes checks. It does not run PR code,
 read artifacts, approve workflows, or edit PRs. It identifies its checks by name,
 PR/workflow identifier, and the `github-actions` app identity.
 
+With `job-details` on, checks also show fork job names, step names, and
+annotation messages. The bridge strips control characters, bounds their length,
+and renders them in code spans in the summary.
+
 Supported caller events are `workflow_run`, `schedule`, and `workflow_dispatch`.
 Use the signal workflow for PR notifications. Keep privileged callers free of
 PR checkouts, artifact execution, and caches from untrusted jobs.
