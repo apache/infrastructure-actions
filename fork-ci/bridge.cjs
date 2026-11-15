@@ -221,8 +221,8 @@ async function bridge({ github, context, core, config = configuration(), now = D
           text: metadata(pr, run),
         },
       };
-      return config.jobDetails && status === "completed" && conclusion !== "success" ?
-        withJobs(pr, run, check, result) : result;
+      if (!config.jobDetails || status !== "completed" || conclusion === "success") return result;
+      return withJobs(pr, run, check, result);
     }
     let state;
     try {
