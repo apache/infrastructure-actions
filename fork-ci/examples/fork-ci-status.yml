@@ -19,6 +19,7 @@
 
 # Copy to .github/workflows/fork-ci-status.yml in the adopting repository.
 # Replace apache/example and the unreleased action ref before adoption.
+# For reporting: commit-status, use fork-ci-commit-status.yml instead.
 name: Fork CI status
 on:
   # API metadata only: no checkout, artifacts, caches, or PR code execution.

@@ -18,18 +18,21 @@
 #
 
 name: Fork CI
-description: Mirror a public fork workflow as an informational check on the upstream pull request
+description: Mirror a public fork workflow as an informational check or commit status on the upstream pull request
 inputs:
   github-token:
-    description: Upstream GITHUB_TOKEN with checks write, actions read, and pull-requests read
+    description: Upstream GITHUB_TOKEN with actions read, pull-requests read, and checks write or statuses write for the selected reporting mode
     required: false
     default: ${{ github.token }}
   workflow:
     description: Workflow file name on the fork, such as ci.yml
     required: true
   check-name:
-    description: Unique informational check name for this workflow
+    description: Unique check name or commit status context prefix for this workflow
     default: CI (fork)
+  reporting:
+    description: Report using check-run or commit-status (independent of signal workflow suites and attempts)
+    default: check-run
   base-branches:
     description: Newline-separated exact base branch names eligible for fork CI
     default: main
@@ -50,7 +53,7 @@ outputs:
     description: Number of eligible PRs considered in this invocation
     value: ${{ steps.bridge.outputs.processed }}
   written:
-    description: Number of checks created or updated
+    description: Number of checks created or updated, or commit statuses published
     value: ${{ steps.bridge.outputs.written }}
   failed:
     description: Number of PRs whose synchronization failed
@@ -65,6 +68,7 @@ runs:
         FORK_CI_ACTION_PATH: ${{ github.action_path }}
         FORK_CI_WORKFLOW: ${{ inputs.workflow }}
         FORK_CI_CHECK_NAME: ${{ inputs.check-name }}
+        FORK_CI_REPORTING: ${{ inputs.reporting }}
         FORK_CI_BASE_BRANCHES: ${{ inputs.base-branches }}
         FORK_CI_GUIDE_URL: ${{ inputs.guide-url }}
         FORK_CI_RECENT_HOURS: ${{ inputs.recent-hours }}

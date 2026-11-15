@@ -19,9 +19,9 @@
 # Fork CI
 
 A composite GitHub Action that mirrors a public fork workflow as an informational
-check on an upstream pull request. The check links to the contributor's run for
-the current PR branch and commit. This helps projects reduce duplicate CI work
-on shared runners.
+check or commit status on an upstream pull request. The report links to the
+contributor's run for the current PR branch and commit. This helps projects reduce
+duplicate CI work on shared runners. Existing callers keep check-run reporting.
 
 **Keep the fork check informational.** Contributors control their fork workflows.
 Require full upstream validation before merge, such as a merge queue that tests
@@ -29,6 +29,7 @@ the merged result. This action reports fork results. Each project controls which
 upstream jobs to skip.
 
 - [Usage](#usage)
+- [Commit status reporting](#commit-status-reporting)
 - [Inputs](#inputs)
 - [Outputs](#outputs)
 - [How it works](#how-it-works)
@@ -87,6 +88,69 @@ adoption comments. The bridge needs no checkout. Use the exact signal workflow
 name in its `workflows` list. Merge both workflows into the default branch, then
 test a fork PR before changing upstream CI.
 
+### Commit status reporting
+
+Set `reporting: commit-status` when mirrored checks disappear after the signal
+workflow needs approval, is rerun, or runs again for the same commit
+([#1519](https://github.com/apache/infrastructure-actions/issues/1519),
+[#1518](https://github.com/apache/infrastructure-actions/issues/1518)).
+GitHub can attach a check written with `GITHUB_TOKEN` to an older signal suite or
+attempt. Commit statuses attach directly to the PR head commit and avoid that
+association. The default `reporting: check-run` remains available for compatibility.
+
+Copy [fork-ci-commit-status.yml](examples/fork-ci-commit-status.yml) instead of the
+check-run bridge example. It uses the same signal, schedule, serialization, and
+fork run matching. The caller grants `statuses: write` instead of `checks: write`:
+
+```yaml
+permissions:
+  actions: read
+  pull-requests: read
+  statuses: write
+```
+
+Select the mode in the action step:
+
+```yaml
+with:
+  workflow: post-commit.yml
+  reporting: commit-status
+  check-name: build-branch (fork)
+  base-branches: master
+```
+
+The status context is `<check-name> (PR #<number>)`, for example
+`build-branch (fork) (PR #10762)`. The PR number keeps reports for different fork
+branches at the same commit from overwriting each other. Use distinct check names
+for different mirrored workflows, and reserve these contexts for this bridge.
+Like checks, statuses are commit-level results: GitHub can display them on every
+PR sharing that commit. Keep them informational rather than required for merge.
+
+Commit statuses have a short description and a target link, without the check's
+rich summary or JSON metadata. Found runs link to the exact fork attempt. Missing
+runs link to the fork workflow, and API errors link to the failing bridge run.
+The optional `guide-url` appears only in check-run summaries.
+
+| Observation | Commit status |
+|---|---|
+| Queued, waiting, pending, requested, or running fork run | `pending` |
+| Completed successful fork run | `success` |
+| Failed or timed-out fork run | `failure` |
+| Completed cancelled, action-required, neutral, or skipped fork run | `error` |
+| Reserved `stale`, unknown, or absent conclusion on a completed run | `failure` |
+| Active workflow with no matching run, including a deleted run | `pending` |
+| Disabled or unavailable fork workflow (404) | `error` |
+| Fork API permission error, rate limit, or outage | `error` and bridge failure |
+
+Only a completed successful fork run produces `success`. An API failure does not
+establish a build failure; its `error` status directs the reader to the bridge
+logs. If the status API itself fails, the bridge fails and cannot replace the
+previous report.
+
+Switch the existing serialized bridge rather than running both reporting modes.
+Switching modes or renaming a report retains its earlier check/status history.
+Existing check-run consumers must opt in to obtain this visibility workaround.
+
 ### Reduce duplicate upstream jobs
 
 The [CI example](examples/ci.yml) shows the job condition and concurrency setup.
@@ -114,9 +178,10 @@ this action for additional feedback.
 |---|---|---|---|
 | `workflow` | Yes | — | Workflow file name, such as `ci.yml`. No directory or URL. |
 | `github-token` | No | `${{ github.token }}` | Upstream `GITHUB_TOKEN`. Custom GitHub App identities are not supported. |
-| `check-name` | No | `CI (fork)` | Check name, at most 100 characters. Use a distinct name for each workflow. |
+| `check-name` | No | `CI (fork)` | Check name or commit status context prefix, at most 100 characters. Use a distinct name for each workflow. |
+| `reporting` | No | `check-run` | `check-run` or `commit-status`. Status mode needs `statuses: write`. |
 | `base-branches` | No | `main` | Newline-separated exact base branch names. No glob matching. |
-| `guide-url` | No | Empty | HTTPS URL for your contributor instructions. |
+| `guide-url` | No | Empty | HTTPS URL for your contributor instructions in check-run summaries. |
 | `recent-hours` | No | `6` | Recent PR update window, from 1 to 168 hours. |
 | `sweep-size` | No | `25` | Number of eligible PRs per rotating sweep, from 1 to 100. |
 | `sweep-minutes` | No | `15` | Schedule interval used for sweep rotation, from 5 to 1440 minutes. |
@@ -129,8 +194,8 @@ A renamed check creates a new check. The action retains the old one.
 
 | Output | Description |
 |---|---|
-| `processed` | Number of eligible PRs considered, including recent completed checks that wait for their sweep. |
-| `written` | Number of checks created or updated. |
+| `processed` | Number of eligible PRs considered, including recent completed reports that wait for their sweep. |
+| `written` | Number of checks created or updated, or commit statuses published. |
 | `failed` | Number of PRs whose synchronization failed. |
 
 The outputs contain numeric counts. A per-PR API error marks the action as failed
@@ -157,7 +222,9 @@ signals that need first-time contributor approval.
 Each scheduled or manual invocation lists every page of open PRs. It polls active
 or missing runs on recently updated PRs, plus a rotating group of all eligible PRs.
 Completed runs and older PRs wait for their turn in the rotation to discover reruns
-or deleted runs. Unchanged observations produce no writes.
+or deleted runs. Unchanged observations produce no writes. In status mode, the
+bridge compares the latest context's state, description, and target URL. A new
+fork run or attempt changes the description and link even if its outcome matches.
 
 With 500 eligible PRs, a group of 25, and a 15-minute schedule, one rotation takes
 about five hours. This estimate assumes a stable PR list and on-time execution.
@@ -178,6 +245,14 @@ Budget for these REST API calls per invocation:
 | Inspect workflow state when no run exists | One extra per polled PR |
 | Publish a changed result | Two extra: re-read the PR, then write the check |
 
+Commit status mode uses the same budget, replacing check lookups with paginated
+status-history lookups. Statuses are returned newest first; the bridge stops at
+the first matching context. Large histories with many other contexts can require
+more pages. A new status is appended only when its visible result changes.
+GitHub limits each SHA/context pair to 1,000 statuses, so unchanged polls must not
+append statuses. A continued API outage still changes the bridge-run link once
+per failing bridge run in either mode.
+
 With one check page per PR, budget list pages plus three calls per polled PR.
 Recent PRs with completed runs outside the rotating group still need a check lookup.
 Add one call for each of those PRs. Unchanged results need no write or PR re-read.
@@ -197,6 +272,9 @@ check writes.
 
 ### Results and troubleshooting
 
+The following table describes the default check-run mode. Commit status mappings
+are listed under [Commit status reporting](#commit-status-reporting).
+
 | Observation | Mirrored result |
 |---|---|
 | Queued, waiting, pending, or requested run | Queued |
@@ -215,16 +293,20 @@ When a previous run disappears, the next poll replaces its result and link.
 When a new run or attempt replaces a completed check, the bridge creates a new
 check. If the Checks API fails, the bridge cannot clear the previous result.
 Check the bridge workflow's logs for permission errors, rate limits, or outages.
+Per-PR logs include the PR number, abbreviated head SHA, fork run and attempt when
+known, and the published state. Skipped writes say whether the report is unchanged,
+the PR changed before publishing, or a completed result is waiting for its sweep.
 
 ## Security and permissions
 
-Use the upstream `GITHUB_TOKEN` with `actions: read`, `checks: write`, and
-`pull-requests: read`, as shown in [Usage](#usage). Fork reads use public resources.
-Private forks are outside the action's supported scope.
+Use the upstream `GITHUB_TOKEN` with `actions: read`, `pull-requests: read`, and
+`checks: write` for check-run mode or `statuses: write` for commit-status mode.
+The latter does not call the Checks API. Fork reads use public resources. Private
+forks are outside the action's supported scope.
 
-The bridge only reads API metadata and writes checks. It does not run PR code,
-read artifacts, approve workflows, or edit PRs. It identifies its checks by name,
-PR/workflow identifier, and the `github-actions` app identity.
+The bridge only reads API metadata and writes checks or commit statuses. It does
+not run PR code, read artifacts, approve workflows, or edit PRs. It identifies
+its checks by name, PR/workflow identifier, and the `github-actions` app identity.
 
 Supported caller events are `workflow_run`, `schedule`, and `workflow_dispatch`.
 Use the signal workflow for PR notifications. Keep privileged callers free of
@@ -273,12 +355,16 @@ prek run --all-files
 composite-entry tests. Coverage includes result transitions, API errors, check
 ownership, stale notifications, pagination beyond 500 PRs, and the example job
 conditions. The composite tests run `action.yml` with fixture APIs and nondefault
-inputs.
+inputs in both reporting modes. Status tests cover hidden legacy checks, new
+signal suites/attempts, result mappings, no-op polling, pagination, and stale PRs.
 
 Before production adoption, test a fork with Actions enabled and disabled.
 Exercise a failed run, a rerun, a second push, a filtered push, and a retargeted PR.
-Check that the full required suite still runs in the merge queue. Local tests
-use fixture APIs and do not test hosted check writes or repository rules.
+Check that the full required suite still runs in the merge queue. For status mode,
+also approve/rerun the signal workflow and trigger another signal on the same
+commit; verify the fork result remains visible in the PR summary and `gh pr checks`.
+Local tests use fixture APIs and do not test hosted writes, UI visibility, or
+repository rules.
 
 The implementation derives from DataFusion's
 [fork CI bridge at `350ca765`](https://github.com/apache/datafusion/blob/350ca76505c9513d16e7dd9910bcd9bde2c911ed/.github/workflows/fork_ci_status.yml).

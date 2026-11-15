@@ -132,7 +132,7 @@ Personal configuration goes in `.apache-magpie-local/`, which is gitignored.
 ## Available GitHub Actions
 
   - [ASF Infrastructure Pelican Action](/pelican/README.md): Generate and publish project websites with GitHub Actions
-  - [Fork CI](/fork-ci/README.md): Mirror public fork workflow results as informational PR checks, with adoption examples and tests
+  - [Fork CI](/fork-ci/README.md): Mirror public fork workflow results as informational PR checks or commit statuses. [Commit status reporting](/fork-ci/README.md#commit-status-reporting) avoids signal workflow suite/attempt visibility issues and uses `statuses: write`.
   - [Stash Action](/stash/README.md): Manage large build caches
   - [ASF Allowlist Check](/allowlist-check/README.md): Verify workflow action refs are on the ASF allowlist
   - [Website Comment](/website-comment/README.md): Publish per-pull-request website previews on ASF staging, with a review overlay that links a marked region to its diff line

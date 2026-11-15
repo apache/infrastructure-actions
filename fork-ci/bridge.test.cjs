@@ -36,11 +36,28 @@ const signal = { workflow_run: { event: "pull_request", head_repository: fork, h
 
 function harness(options = {}) {
   const prs = options.prs || [pull()];
-  const writes = [], calls = [], errors = [], failures = [];
+  const writes = [], calls = [], errors = [], failures = [], logs = [];
   const checks = structuredClone(options.checks || []);
+  const statuses = structuredClone(options.statuses || []);
   const runs = options.runs || [run()];
   const record = (name, params) => calls.push({ name, params });
   const rest = {
+    repos: {
+      listCommitStatusesForRef: async (p) => {
+        record("repos.listCommitStatusesForRef", p);
+        if (options.statusReadError) throw failure(options.statusReadError);
+        const matching = statuses.filter((s) => s.sha === p.ref);
+        return { data: matching.slice((p.page - 1) * p.per_page, p.page * p.per_page) };
+      },
+      createCommitStatus: async (p) => {
+        record("repos.createCommitStatus", p);
+        if (options.writeError?.(p)) throw failure(403);
+        const status = { ...p, id: 2000 + statuses.length };
+        writes.push({ method: "status", ...p });
+        statuses.unshift(status);
+        return { data: status };
+      },
+    },
     pulls: {
       list: async (p) => {
         record("pulls.list", p);
@@ -94,13 +111,14 @@ function harness(options = {}) {
   };
   const github = {
     rest,
-    paginate: async (method, params) => {
+    paginate: async (method, params, map) => {
       const result = [];
+      let done = false;
       for (let page = 1; ; page++) {
         const { data } = await method({ ...params, page });
         const items = Array.isArray(data) ? data : data.check_runs;
-        result.push(...items);
-        if (items.length < params.per_page) return result;
+        result.push(...(map ? map({ data }, () => { done = true; }) : items));
+        if (done || items.length < params.per_page) return result;
       }
     },
   };
@@ -109,9 +127,9 @@ function harness(options = {}) {
     eventName: options.event || "workflow_run",
     payload: options.payload || signal,
   };
-  const core = { info() {}, error: (s) => errors.push(s), setFailed: (s) => failures.push(s) };
+  const core = { info: (s) => logs.push(s), error: (s) => errors.push(s), setFailed: (s) => failures.push(s) };
   return {
-    writes, calls, checks, errors, failures,
+    writes, calls, checks, statuses, logs, errors, failures,
     execute: () => bridge({ github, context, core, config: { ...config, ...options.config }, now: options.now ?? now }),
   };
 }
@@ -469,4 +487,222 @@ test("a stale signal cannot publish a result for a newer PR head", async () => {
     prs: [pull(1, { head: { sha: "b".repeat(40), ref: "feature", repo: fork } })] });
   assert.equal((await h.execute()).processed, 0);
   assert.deepEqual(h.writes, []);
+});
+
+const statusConfig = { reporting: "commit-status" };
+async function existingStatus(overrides = {}) {
+  const h = harness({ config: statusConfig, runs: [run(10, overrides)] });
+  await h.execute();
+  return h.statuses;
+}
+
+test("check-run remains the default and unknown reporting modes are rejected", () => {
+  assert.equal(config.reporting, "check-run");
+  assert.throws(() => configuration({ FORK_CI_WORKFLOW: "ci.yml", FORK_CI_REPORTING: "status" }), /reporting/);
+});
+
+for (const [status, conclusion, state] of [
+  ["queued", null, "pending"], ["waiting", null, "pending"],
+  ["pending", null, "pending"], ["requested", null, "pending"],
+  ["in_progress", null, "pending"], ["completed", "success", "success"],
+  ["completed", "failure", "failure"], ["completed", "timed_out", "failure"],
+  ["completed", "cancelled", "error"], ["completed", "action_required", "error"],
+  ["completed", "neutral", "error"], ["completed", "skipped", "error"],
+  ["completed", "stale", "failure"], ["completed", "unknown", "failure"],
+  ["completed", null, "failure"],
+]) {
+  test(`commit status maps ${status}/${conclusion} to ${state}`, async () => {
+    const h = harness({ config: statusConfig, runs: [run(10, { status, conclusion })] });
+    assert.deepEqual(await h.execute(), { processed: 1, written: 1, failed: 0 });
+    const [report] = h.statuses;
+    assert.equal(report.state, state);
+    assert.equal(report.context, "CI (fork) (PR #1)");
+    assert.equal(report.sha, sha);
+    assert.equal(report.target_url, "https://github.com/contributor/example/actions/runs/10/attempts/1");
+    assert.ok(report.description.length <= 140);
+    assert.ok(!h.calls.some((c) => c.name.startsWith("checks.")));
+  });
+}
+
+for (const [state, stateError, expected] of [
+  ["active", null, "pending"], ["disabled_fork", null, "error"],
+  ["disabled_manually", null, "error"], ["active", 404, "error"],
+]) {
+  test(`missing fork run with workflow ${state}/${stateError} reports ${expected}`, async () => {
+    const h = harness({ config: statusConfig, runs: [], state, stateError });
+    await h.execute();
+    assert.equal(h.statuses[0].state, expected);
+    assert.equal(h.statuses[0].target_url, "https://github.com/contributor/example/actions/workflows/ci.yml");
+    assert.deepEqual(h.failures, []);
+  });
+}
+
+test("#1519 reports failure independently of a hidden check and the ping attempt", async () => {
+  const checks = await existing({ conclusion: "failure" });
+  Object.assign(checks[0], { id: 128996054771, check_suite: { id: 115296339110 } });
+  const h = harness({ checks, config: statusConfig, runs: [run(42567062495, { conclusion: "failure" })],
+    payload: { workflow_run: { ...signal.workflow_run, run_attempt: 2, check_suite_id: 115296339110 } } });
+  await h.execute();
+  assert.equal(h.statuses[0].state, "failure");
+  assert.ok(h.statuses[0].target_url.includes("42567062495/attempts/1"));
+  assert.ok(!h.calls.some((c) => c.name.startsWith("checks.")));
+  const retry = harness({ checks, statuses: h.statuses, config: statusConfig,
+    runs: [run(42567062495, { conclusion: "failure" })],
+    payload: { workflow_run: { ...signal.workflow_run, run_attempt: 3 } } });
+  await retry.execute();
+  assert.deepEqual(retry.writes, []);
+  assert.ok(!retry.calls.some((c) => c.name === "pulls.get"));
+});
+
+test("#1518 a new ping suite on the same commit preserves the commit status", async () => {
+  const statuses = await existingStatus();
+  const h = harness({ statuses, config: statusConfig,
+    payload: { workflow_run: { ...signal.workflow_run, id: 43172771181, check_suite_id: 116909014253 } } });
+  await h.execute();
+  assert.equal(h.statuses[0].state, "success");
+  assert.deepEqual(h.writes, []);
+});
+
+test("a status lookup finds the newest context across pages and stops reading history", async () => {
+  const [owned] = await existingStatus();
+  const statuses = [
+    ...Array.from({ length: 100 }, (_, i) => ({ ...owned, context: `unrelated-${i}` })),
+    { ...owned, context: owned.context.toUpperCase() },
+    ...Array.from({ length: 150 }, () => ({ ...owned, state: "failure" })),
+  ];
+  const h = harness({ statuses, config: statusConfig });
+  await h.execute();
+  assert.deepEqual(h.writes, []);
+  assert.deepEqual(h.calls.filter((c) => c.name === "repos.listCommitStatusesForRef").map((c) => c.params.page), [1, 2]);
+});
+
+test("different PRs at the same commit have independent status contexts", async () => {
+  const h = harness({ config: statusConfig, prs: [pull(), pull(2)], statuses: await existingStatus() });
+  await h.execute();
+  assert.equal(h.writes.length, 1);
+  assert.equal(h.writes[0].context, "CI (fork) (PR #2)");
+});
+
+test("different workflows with distinct check names do not reuse a status", async () => {
+  const h = harness({ config: { ...statusConfig, checkName: "Other fork workflow" }, statuses: await existingStatus() });
+  await h.execute();
+  assert.equal(h.writes[0].context, "Other fork workflow (PR #1)");
+});
+
+test("fork reruns publish pending then completion, and completed attempts remain distinguishable", async () => {
+  const statuses = await existingStatus();
+  const active = harness({ config: statusConfig, statuses,
+    runs: [run(10, { run_attempt: 2, status: "in_progress", conclusion: null })] });
+  await active.execute();
+  assert.equal(active.statuses[0].state, "pending");
+  assert.ok(active.statuses[0].target_url.endsWith("/attempts/2"));
+  const done = harness({ config: statusConfig, statuses: active.statuses, runs: [run(10, { run_attempt: 2 })] });
+  await done.execute();
+  assert.equal(done.statuses[0].state, "success");
+  const missed = harness({ config: statusConfig, statuses, runs: [run(10, { run_attempt: 2 })] });
+  await missed.execute();
+  assert.equal(missed.writes.length, 1);
+  assert.ok(missed.statuses[0].description.includes("attempt 2"));
+});
+
+test("a new fork run with the same conclusion updates the status link", async () => {
+  const h = harness({ config: statusConfig, statuses: await existingStatus(), runs: [run(11)] });
+  await h.execute();
+  assert.ok(h.statuses[0].target_url.endsWith("/11/attempts/1"));
+});
+
+test("missing and deleted runs clear stale success, and late runs replace pending", async () => {
+  const missing = harness({ config: statusConfig, statuses: await existingStatus(), runs: [] });
+  await missing.execute();
+  assert.equal(missing.statuses[0].state, "pending");
+  assert.ok(missing.statuses[0].target_url.endsWith("/workflows/ci.yml"));
+  const late = harness({ config: statusConfig, statuses: missing.statuses });
+  await late.execute();
+  assert.equal(late.statuses[0].state, "success");
+  const unchanged = harness({ config: statusConfig, statuses: missing.statuses, runs: [] });
+  await unchanged.execute();
+  assert.deepEqual(unchanged.writes, []);
+});
+
+for (const current of [
+  () => pull(1, { state: "closed" }),
+  () => pull(1, { base: { ref: "release", repo: upstream } }),
+  () => pull(1, { head: { sha: "b".repeat(40), ref: "feature", repo: fork } }),
+  () => pull(1, { head: { sha, ref: "renamed", repo: fork } }),
+  () => pull(1, { head: { sha, ref: "feature", repo: null } }),
+]) {
+  test(`commit status rejects a stale PR snapshot ${JSON.stringify(current())}`, async () => {
+    const h = harness({ config: statusConfig, current });
+    await h.execute();
+    assert.deepEqual(h.writes, []);
+    assert.ok(h.logs.some((s) => s.includes("skipped write") && s.includes(sha.slice(0, 12))));
+  });
+}
+
+test("status mode finds a new PR head without writing to the old commit", async () => {
+  const nextSha = "b".repeat(40);
+  const h = harness({ config: statusConfig, event: "schedule", statuses: await existingStatus(),
+    prs: [pull(1, { head: { sha: nextSha, ref: "feature", repo: fork } })],
+    runs: [run(11, { head_sha: nextSha })] });
+  await h.execute();
+  assert.equal(h.writes[0].sha, nextSha);
+  assert.equal(h.statuses[1].sha, sha);
+});
+
+test("commit status permission failures do not stop other PRs", async () => {
+  const h = harness({ config: statusConfig, prs: [pull(), pull(2)],
+    writeError: (p) => p.context.endsWith("#1)") });
+  assert.equal((await h.execute()).failed, 1);
+  assert.equal(h.statuses.length, 1);
+  assert.equal(h.statuses[0].context, "CI (fork) (PR #2)");
+  assert.ok(!h.errors.join().includes("untrusted response"));
+});
+
+test("an unreadable status history fails without publishing a duplicate", async () => {
+  const h = harness({ config: statusConfig, statuses: await existingStatus(), statusReadError: 403 });
+  assert.equal((await h.execute()).failed, 1);
+  assert.deepEqual(h.writes, []);
+});
+
+test("fork API errors replace green statuses and link the newest failing bridge run", async () => {
+  const first = harness({ config: statusConfig, statuses: await existingStatus(), readError: () => 503 });
+  assert.equal((await first.execute()).failed, 1);
+  assert.equal(first.statuses[0].state, "error");
+  assert.ok(first.statuses[0].target_url.endsWith("/actions/runs/123"));
+  const retry = harness({ config: statusConfig, statuses: first.statuses, readError: () => 503 });
+  assert.equal((await retry.execute()).failed, 1);
+  assert.deepEqual(retry.writes, []);
+  const next = harness({ config: statusConfig, statuses: first.statuses, readError: () => 503, runId: 124 });
+  await next.execute();
+  assert.ok(next.statuses[0].target_url.endsWith("/actions/runs/124"));
+});
+
+test("recent completed statuses wait for the rotating sweep but pending and API errors do not", async () => {
+  const prs = [pull(), pull(2)];
+  const opts = { config: { ...statusConfig, sweepSize: 1 }, prs, event: "schedule", now: 15 * 60_000 };
+  const completed = harness({ ...opts, statuses: await existingStatus() });
+  await completed.execute();
+  assert.equal(completed.calls.filter((c) => c.name === "actions.listWorkflowRuns").length, 2);
+  assert.ok(completed.logs.some((s) => s.includes("skipped completed") && s.includes("fork run 10 attempt 1")));
+  const statuses = await existingStatus();
+  const pending = harness({ ...opts, statuses: [{ ...statuses[0], state: "pending" }] });
+  await pending.execute();
+  assert.equal(pending.calls.filter((c) => c.name === "actions.listWorkflowRuns").length, 4);
+  const error = harness({ ...opts, statuses: [{ ...statuses[0], state: "error", target_url: "https://github.com/apache/example/actions/runs/123" }] });
+  await error.execute();
+  assert.equal(error.calls.filter((c) => c.name === "actions.listWorkflowRuns").length, 4);
+});
+
+test("logs explain unchanged and published results with PR, SHA, fork run and state", async () => {
+  for (const reporting of ["check-run", "commit-status"]) {
+    const first = harness({ config: { reporting } });
+    await first.execute();
+    const next = harness({ config: { reporting }, checks: first.checks, statuses: first.statuses });
+    await next.execute();
+    for (const h of [first, next]) {
+      assert.ok(h.logs.some((s) => s.includes("PR #1") && s.includes(sha.slice(0, 12)) &&
+        s.includes("fork run 10 attempt 1") && s.includes("success")));
+    }
+    assert.ok(next.logs.some((s) => s.includes("skipped unchanged")));
+  }
 });
