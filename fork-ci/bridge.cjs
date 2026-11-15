@@ -123,7 +123,8 @@ async function bridge({ github, context, core, config = configuration(), now = D
 
   // List the jobs that did not pass. Returns null when the fork API cannot
   // be read, so the check falls back to the run link alone.
-  async function failedJobs(fork, run, root) {
+  async function failedJobs(pr, run, runUrl) {
+    const fork = { owner: pr.head.repo.owner.login, repo: pr.head.repo.name };
     try {
       if (!Number.isSafeInteger(run.run_attempt)) return null;
       const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRunAttempt,
@@ -143,7 +144,7 @@ async function bridge({ github, context, core, config = configuration(), now = D
             // Keep the row without its error message.
           }
         }
-        const link = `${root}/actions/runs/${run.id}/job/${job.id}`;
+        const link = `${runUrl}/job/${job.id}`;
         rows.push(`| [${code(job.name, 100)}](${link}) | ${code(job.conclusion || "unknown", 20)} | ` +
           `${code(step, 100)} | ${code(message, 150)} |`);
       }
@@ -151,6 +152,35 @@ async function bridge({ github, context, core, config = configuration(), now = D
     } catch {
       return null;
     }
+  }
+
+  // Add the jobs that did not succeed to a completed run's result.
+  async function withJobs(pr, run, check, result) {
+    const { conclusion, details_url: runUrl } = result;
+    // Jobs of a completed attempt do not change: list them once, then
+    // reuse the stored output so unchanged sweeps make no extra calls.
+    const previous = checkMetadata(check);
+    if (check?.status === "completed" && check.conclusion === conclusion &&
+      previous?.run_id === run.id && previous?.run_attempt === run.run_attempt &&
+      Number.isSafeInteger(previous?.jobs)) {
+      const { title, summary } = check.output;
+      return { ...result, output: { title, summary, text: metadata(pr, run, previous.jobs) } };
+    }
+    const jobs = await failedJobs(pr, run, runUrl);
+    if (!jobs) return result;
+    if (!jobs.count) return { ...result, output: { ...result.output, text: metadata(pr, run, 0) } };
+    const more = jobs.count - jobs.rows.length;
+    return {
+      ...result,
+      output: {
+        title: `Fork run ${conclusion}: ${line(jobs.first, 100)}` +
+          (jobs.count > 1 ? ` and ${jobs.count - 1} more` : ""),
+        summary: `[Open the fork workflow run](${runUrl}).\n\n` +
+          "| Job | Result | Failed step | Error |\n|---|---|---|---|\n" + jobs.rows.join("\n") +
+          (more ? `\n\n${more} more job(s) did not succeed.` : "") + `\n\n${explanation}`,
+        text: metadata(pr, run, jobs.count),
+      },
+    };
   }
 
   async function forkResult(pr, check) {
@@ -189,31 +219,8 @@ async function bridge({ github, context, core, config = configuration(), now = D
           text: metadata(pr, run),
         },
       };
-      if (!config.jobDetails || status !== "completed" || conclusion === "success") return result;
-      // Jobs of a completed attempt do not change: list them once, then
-      // reuse the stored output so unchanged sweeps make no extra calls.
-      const previous = checkMetadata(check);
-      if (check?.status === "completed" && check.conclusion === conclusion &&
-        previous?.run_id === run.id && previous?.run_attempt === run.run_attempt &&
-        Number.isSafeInteger(previous?.jobs)) {
-        const { title, summary } = check.output;
-        return { ...result, output: { title, summary, text: metadata(pr, run, previous.jobs) } };
-      }
-      const jobs = await failedJobs(fork, run, root);
-      if (!jobs) return result;
-      if (!jobs.count) return { ...result, output: { ...result.output, text: metadata(pr, run, 0) } };
-      const more = jobs.count - jobs.rows.length;
-      return {
-        ...result,
-        output: {
-          title: `Fork run ${conclusion}: ${line(jobs.first, 100)}` +
-            (jobs.count > 1 ? ` and ${jobs.count - 1} more` : ""),
-          summary: `[Open the fork workflow run](${details}).\n\n` +
-            "| Job | Result | Failed step | Error |\n|---|---|---|---|\n" + jobs.rows.join("\n") +
-            (more ? `\n\n${more} more job(s) did not succeed.` : "") + `\n\n${explanation}`,
-          text: metadata(pr, run, jobs.count),
-        },
-      };
+      return config.jobDetails && status === "completed" && conclusion !== "success" ?
+        withJobs(pr, run, check, result) : result;
     }
     let state;
     try {
