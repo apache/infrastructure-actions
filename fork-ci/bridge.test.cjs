@@ -185,10 +185,20 @@ for (const [state, conclusion] of [["active", "neutral"], ["disabled_fork", "act
   });
 }
 
-test("404 is missing workflow, not a failed sweep", async () => {
+test("404 asks the contributor to enable the fork workflow, not a failed sweep", async () => {
   const h = harness({ readError: () => 404, stateError: 404 });
   await h.execute();
-  assert.equal(h.writes[0].conclusion, "neutral");
+  assert.equal(h.writes[0].conclusion, "action_required");
+  assert.equal(h.checks[0].output.title, "Workflow not available on the fork");
+  assert.ok(h.checks[0].output.summary.includes("Actions tab"));
+  assert.ok(h.checks[0].output.summary.includes("https://github.com/contributor/example/actions/workflows/ci.yml"));
+  assert.deepEqual(h.failures, []);
+});
+
+test("a 404 workflow lookup after an empty run list also asks the contributor to act", async () => {
+  const h = harness({ runs: [], stateError: 404 });
+  await h.execute();
+  assert.equal(h.writes[0].conclusion, "action_required");
   assert.deepEqual(h.failures, []);
 });
 

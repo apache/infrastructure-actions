@@ -144,16 +144,23 @@ async function bridge({ github, context, core, config = configuration(), now = D
     } catch (error) {
       if (error.status !== 404) throw error;
     }
+    // A fork that never enabled Actions, or lacks the workflow file, returns 404.
+    // Either way the contributor has to act, so it is not a neutral result.
+    const missing = state === undefined;
     const disabled = typeof state === "string" && state.startsWith("disabled");
-    const advice = disabled
-      ? "Enable workflows in the fork's Actions tab, then push again or dispatch the workflow on the PR branch."
-      : "No matching run is visible. Check that the workflow exists and is enabled on the fork. " +
-        "Branch or path filters can prevent a run. A new run can also take time to appear.";
+    const advice = missing
+      ? "The fork has no visible workflow. Enable workflows in the fork's Actions tab, and sync the fork " +
+        "if its default branch lacks the workflow file. Then push again or dispatch the workflow on the PR branch."
+      : disabled
+        ? "Enable workflows in the fork's Actions tab, then push again or dispatch the workflow on the PR branch."
+        : "No matching run is visible. Branch or path filters can prevent a run. " +
+          "A new run can also take time to appear.";
     return {
-      status: "completed", conclusion: disabled ? "action_required" : "neutral",
+      status: "completed", conclusion: missing || disabled ? "action_required" : "neutral",
       details_url: workflowUrl,
       output: {
-        title: disabled ? "Workflows are disabled on the fork" : "No fork run for this commit",
+        title: missing ? "Workflow not available on the fork" :
+          disabled ? "Workflows are disabled on the fork" : "No fork run for this commit",
         summary: `[Open the fork workflow](${workflowUrl}).\n\n${advice}\n\nThe scheduled sweep will look again.\n\n${explanation}` +
           (config.guide ? `\n\nContributor guide: <${config.guide}>` : ""),
         text: metadata(pr, null),
