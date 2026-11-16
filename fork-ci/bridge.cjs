@@ -141,7 +141,7 @@ async function bridge({ github, context, core, config = configuration(), now = D
       if (i < MAX_ANNOTATED_JOBS) {
         let annotations = [];
         try {
-          annotations = (await github.rest.checks.listAnnotations({ ...fork, check_run_id: job.id, per_page: 50 })).data;
+          annotations = (await github.rest.checks.listAnnotations({ ...fork, check_run_id: job.id, per_page: 100 })).data;
         } catch (error) {
           // Keep the row without its error message.
           core.warning(`PR #${pr.number}: cannot read annotations of fork job ${job.id} ` +
