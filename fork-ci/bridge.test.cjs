@@ -36,10 +36,11 @@ const signal = { workflow_run: { event: "pull_request", head_repository: fork, h
 
 function harness(options = {}) {
   const prs = options.prs || [pull()];
-  const writes = [], calls = [], errors = [], failures = [], logs = [];
+  const writes = [], calls = [], errors = [], warnings = [], failures = [], logs = [];
   const checks = structuredClone(options.checks || []);
   const statuses = structuredClone(options.statuses || []);
   const runs = options.runs || [run()];
+  const jobs = options.jobs || [];
   const record = (name, params) => calls.push({ name, params });
   const rest = {
     repos: {
@@ -52,7 +53,7 @@ function harness(options = {}) {
       createCommitStatus: async (p) => {
         record("repos.createCommitStatus", p);
         if (options.writeError?.(p)) throw failure(403);
-        const status = { ...p, id: 2000 + statuses.length };
+        const status = { ...p, id: 2000 + statuses.length, creator: { login: "github-actions[bot]" } };
         writes.push({ method: "status", ...p });
         statuses.unshift(status);
         return { data: status };
@@ -85,6 +86,11 @@ function harness(options = {}) {
         checks.push(check);
         return { data: check };
       },
+      listAnnotations: async (p) => {
+        record("checks.listAnnotations", p);
+        if (options.annotationsError) throw failure(options.annotationsError);
+        return { data: options.annotations?.[p.check_run_id] || [] };
+      },
       update: async (p) => {
         record("checks.update", p);
         if (options.writeError?.(p)) throw failure(403);
@@ -102,6 +108,11 @@ function harness(options = {}) {
         // mismatches to test defensive response validation.
         return { data: { workflow_runs: runs.filter((r) => r.event === p.event).sort((a, b) => b.id - a.id).slice(0, p.per_page) } };
       },
+      listJobsForWorkflowRunAttempt: async (p) => {
+        record("actions.listJobsForWorkflowRunAttempt", p);
+        if (options.jobsError) throw failure(options.jobsError);
+        return { data: { total_count: jobs.length, jobs: jobs.slice((p.page - 1) * p.per_page, p.page * p.per_page) } };
+      },
       getWorkflow: async (p) => {
         record("actions.getWorkflow", p);
         if (options.stateError) throw failure(options.stateError);
@@ -116,7 +127,7 @@ function harness(options = {}) {
       let done = false;
       for (let page = 1; ; page++) {
         const { data } = await method({ ...params, page });
-        const items = Array.isArray(data) ? data : data.check_runs;
+        const items = Array.isArray(data) ? data : data.check_runs || data.jobs;
         result.push(...(map ? map({ data }, () => { done = true; }) : items));
         if (done || items.length < params.per_page) return result;
       }
@@ -127,9 +138,9 @@ function harness(options = {}) {
     eventName: options.event || "workflow_run",
     payload: options.payload || signal,
   };
-  const core = { info: (s) => logs.push(s), error: (s) => errors.push(s), setFailed: (s) => failures.push(s) };
+  const core = { info: (s) => logs.push(s), warning: (s) => warnings.push(s), error: (s) => errors.push(s), setFailed: (s) => failures.push(s) };
   return {
-    writes, calls, checks, statuses, logs, errors, failures,
+    writes, calls, checks, statuses, logs, errors, warnings, failures,
     execute: () => bridge({ github, context, core, config: { ...config, ...options.config }, now: options.now ?? now }),
   };
 }
@@ -576,6 +587,25 @@ test("a status lookup finds the newest context across pages and stops reading hi
   assert.deepEqual(h.calls.filter((c) => c.name === "repos.listCommitStatusesForRef").map((c) => c.params.page), [1, 2]);
 });
 
+test("a status from another writer is not reused even when its visible fields match", async () => {
+  const [owned] = await existingStatus();
+  const h = harness({ config: statusConfig,
+    statuses: [{ ...owned, creator: { login: "another-bot[bot]" } }] });
+  await h.execute();
+  assert.equal(h.writes.length, 1);
+  assert.equal(h.statuses[0].creator.login, "github-actions[bot]");
+});
+
+test("a newer foreign status does not let an older owned status suppress a write", async () => {
+  const [owned] = await existingStatus({ conclusion: "failure" });
+  const h = harness({ config: statusConfig, runs: [run(10, { conclusion: "failure" })], statuses: [
+    { ...owned, state: "success", creator: { login: "another-bot[bot]" } }, owned,
+  ] });
+  await h.execute();
+  assert.equal(h.writes.length, 1);
+  assert.equal(h.statuses[0].state, "failure");
+});
+
 test("different PRs at the same commit have independent status contexts", async () => {
   const h = harness({ config: statusConfig, prs: [pull(), pull(2)], statuses: await existingStatus() });
   await h.execute();
@@ -664,7 +694,7 @@ test("an unreadable status history fails without publishing a duplicate", async 
   assert.deepEqual(h.writes, []);
 });
 
-test("fork API errors replace green statuses and link the newest failing bridge run", async () => {
+test("fork API errors replace green statuses without appending repeated errors", async () => {
   const first = harness({ config: statusConfig, statuses: await existingStatus(), readError: () => 503 });
   assert.equal((await first.execute()).failed, 1);
   assert.equal(first.statuses[0].state, "error");
@@ -673,8 +703,28 @@ test("fork API errors replace green statuses and link the newest failing bridge 
   assert.equal((await retry.execute()).failed, 1);
   assert.deepEqual(retry.writes, []);
   const next = harness({ config: statusConfig, statuses: first.statuses, readError: () => 503, runId: 124 });
+  assert.equal((await next.execute()).failed, 1);
+  assert.deepEqual(next.writes, []);
+  assert.ok(!next.calls.some((c) => c.name === "pulls.get"));
+  assert.ok(next.statuses[0].target_url.endsWith("/actions/runs/123"));
+  const recovered = harness({ config: statusConfig, statuses: next.statuses });
+  await recovered.execute();
+  assert.equal(recovered.writes.length, 1);
+  assert.equal(recovered.statuses[0].state, "success");
+});
+
+test("unsuccessful commit statuses never read jobs or annotations with job-details enabled", async () => {
+  const first = harness({ config: { ...statusConfig, jobDetails: true }, runs: [run(10, { conclusion: "failure" })],
+    jobs: [{ id: 7, name: "failed job", conclusion: "failure", steps: [] }] });
+  await first.execute();
+  const next = harness({ config: { ...statusConfig, jobDetails: true }, statuses: first.statuses,
+    runs: [run(10, { conclusion: "failure" })] });
   await next.execute();
-  assert.ok(next.statuses[0].target_url.endsWith("/actions/runs/124"));
+  for (const h of [first, next]) {
+    assert.equal(h.statuses[0].state, "failure");
+    assert.ok(!h.calls.some((c) => c.name === "actions.listJobsForWorkflowRunAttempt" || c.name.startsWith("checks.")));
+  }
+  assert.deepEqual(next.writes, []);
 });
 
 test("recent completed statuses wait for the rotating sweep but pending and API errors do not", async () => {
@@ -705,4 +755,135 @@ test("logs explain unchanged and published results with PR, SHA, fork run and st
     }
     assert.ok(next.logs.some((s) => s.includes("skipped unchanged")));
   }
+});
+
+const job = (id, overrides = {}) => ({
+  id, name: `test (${id})`, conclusion: "success", steps: [{ name: "Test", conclusion: "success" }], ...overrides,
+});
+const failedRun = (overrides = {}) => [run(10, { conclusion: "failure", ...overrides })];
+const named = (h, name) => h.calls.filter((c) => c.name === name);
+
+test("lists jobs that did not succeed with their failed step and own failure annotation", async () => {
+  const h = harness({ runs: failedRun(), jobs: [
+    job(1), job(2, { conclusion: "skipped" }), job(5, { conclusion: "neutral" }),
+    job(3, { name: "compile `x` | y\n@team", conclusion: "failure", steps: [{ name: "Build", conclusion: "failure" }] }),
+    job(4, { name: "macos", conclusion: "cancelled", steps: [] }),
+  ], annotations: {
+    3: [{ annotation_level: "warning", message: "ignore me" }, { annotation_level: "failure", message: "Process completed with exit code 1." },
+      { annotation_level: "failure", message: "TestExample failed" }],
+    4: [{ annotation_level: "notice", message: "capacity notice" }, { annotation_level: "failure", message: "Process completed with exit code 2." }],
+  } });
+  await h.execute();
+  const { title, summary, text } = h.writes[0].output;
+  assert.equal(title, "Fork run failure: compile `x` | y @team and 1 more");
+  assert.ok(summary.includes("| [`compile 'x' \\| y @team`](https://github.com/contributor/example/actions/runs/10/job/3) | `failure` | `Build` | `TestExample failed` |"));
+  assert.ok(summary.includes("| [`macos`](https://github.com/contributor/example/actions/runs/10/job/4) | `cancelled` |  | `Process completed with exit code 2.` |"));
+  assert.ok(!summary.includes("test (1)") && !summary.includes("test (2)") && !summary.includes("test (5)"));
+  assert.equal(JSON.parse(text).jobs, 2);
+  assert.ok(!summary.includes("capacity notice"));
+  const { owner, repo, run_id, attempt_number } = named(h, "actions.listJobsForWorkflowRunAttempt")[0].params;
+  assert.deepEqual({ owner, repo, run_id, attempt_number }, { owner: "contributor", repo: "example", run_id: 10, attempt_number: 1 });
+  assert.deepEqual(named(h, "checks.listAnnotations").map(({ params: p }) => [p.owner, p.repo, p.check_run_id]),
+    [["contributor", "example", 3], ["contributor", "example", 4]]);
+});
+
+test("lists jobs once per run attempt and reuses them on later sweeps", async () => {
+  const jobs = [job(3, { conclusion: "failure" })];
+  const first = harness({ runs: failedRun(), jobs });
+  await first.execute();
+  const again = harness({ event: "schedule", checks: first.checks, runs: failedRun(), jobs });
+  await again.execute();
+  assert.deepEqual(again.writes, []);
+  assert.equal(named(again, "actions.listJobsForWorkflowRunAttempt").length, 0);
+  assert.equal(named(again, "checks.listAnnotations").length, 0);
+  const rerun = harness({ checks: first.checks, runs: failedRun({ run_attempt: 2 }), jobs });
+  await rerun.execute();
+  assert.equal(named(rerun, "actions.listJobsForWorkflowRunAttempt")[0].params.attempt_number, 2);
+  assert.equal(rerun.writes[0].method, "create");
+});
+
+test("a failed run without failed jobs is not listed again", async () => {
+  const first = harness({ runs: failedRun(), jobs: [job(1)] });
+  await first.execute();
+  assert.equal(first.writes[0].output.title, "Fork run failure");
+  const again = harness({ checks: first.checks, runs: failedRun(), jobs: [job(1)] });
+  await again.execute();
+  assert.deepEqual(again.writes, []);
+  assert.equal(named(again, "actions.listJobsForWorkflowRunAttempt").length, 0);
+});
+
+test("caps listed and annotated jobs", async () => {
+  const jobs = Array.from({ length: 130 }, (_, i) => job(i + 1, { conclusion: "failure" }));
+  const h = harness({ runs: failedRun(), jobs });
+  await h.execute();
+  const { title, summary } = h.writes[0].output;
+  assert.equal(title, "Fork run failure: test (1) and 129 more");
+  assert.equal(summary.split("\n").filter((l) => l.startsWith("| [")).length, 20);
+  assert.ok(summary.includes("110 more job(s) did not succeed."));
+  assert.equal(named(h, "checks.listAnnotations").length, 5);
+  assert.equal(named(h, "actions.listJobsForWorkflowRunAttempt").length, 2);
+});
+
+test("a jobs API error keeps the run link and does not fail the sweep", async () => {
+  const h = harness({ runs: failedRun(), jobsError: 403 });
+  assert.equal((await h.execute()).failed, 0);
+  assert.equal(h.writes[0].output.title, "Fork run failure");
+  assert.equal(JSON.parse(h.writes[0].output.text).jobs, undefined);
+  assert.deepEqual(h.warnings, ["PR #1: cannot list fork jobs (HTTP 403)."]);
+  const retry = harness({ checks: h.checks, runs: failedRun(), jobs: [job(3, { conclusion: "failure" })] });
+  await retry.execute();
+  assert.equal(retry.writes[0].method, "update");
+  assert.equal(retry.writes[0].output.title, "Fork run failure: test (3)");
+});
+
+test("an annotations API error keeps the job row", async () => {
+  const h = harness({ runs: failedRun(), jobs: [job(3, { name: "unit", conclusion: "failure" })], annotationsError: 403 });
+  assert.equal((await h.execute()).failed, 0);
+  const { title, summary, text } = h.writes[0].output;
+  assert.equal(title, "Fork run failure: unit");
+  assert.ok(summary.includes("| [`unit`](https://github.com/contributor/example/actions/runs/10/job/3) | `failure` |  |  |"));
+  assert.equal(JSON.parse(text).jobs, 1);
+  assert.deepEqual(h.warnings, ["PR #1: cannot read annotations of fork job 3 (HTTP 403)."]);
+});
+
+for (const [name, runs] of [
+  ["a new run of the same commit", failedRun({ id: 11 })],
+  ["a changed conclusion", failedRun({ conclusion: "timed_out" })],
+]) {
+  test(`${name} lists jobs again`, async () => {
+    const first = harness({ runs: failedRun(), jobs: [job(3, { conclusion: "failure" })] });
+    await first.execute();
+    const again = harness({ checks: first.checks, runs, jobs: [job(4, { conclusion: "failure" })] });
+    await again.execute();
+    assert.equal(named(again, "actions.listJobsForWorkflowRunAttempt").length, 1);
+    assert.match(again.writes[0].output.title, /: test \(4\)$/);
+  });
+}
+
+test("fork text drops control characters and is truncated without splitting a character", async () => {
+  const title = "a\u0001b" + "x".repeat(96) + "\u{1F600}", row = "c" + "x".repeat(97) + "\u{1F600}zz";
+  const h = harness({ runs: failedRun(), jobs: [job(3, { name: title, conclusion: "failure" }), job(4, { name: row, conclusion: "failure" })] });
+  await h.execute();
+  const { output } = h.writes[0];
+  assert.equal(output.title, `Fork run failure: a b${"x".repeat(96)}\u{1F600} and 1 more`);
+  assert.ok(output.summary.includes(`[\`c${"x".repeat(97)}\u{1F600}…\`]`));
+});
+
+for (const [name, options] of [
+  ["successful runs", { runs: [run()] }],
+  ["active runs", { runs: failedRun({ status: "in_progress", conclusion: null }) }],
+  ["job-details: false", { runs: failedRun(), config: { jobDetails: false } }],
+]) {
+  test(`${name} do not list jobs`, async () => {
+    const h = harness({ ...options, jobs: [job(3, { conclusion: "failure" })] });
+    await h.execute();
+    assert.equal(named(h, "actions.listJobsForWorkflowRunAttempt").length, 0);
+    assert.equal(JSON.parse(h.writes[0].output.text).jobs, undefined);
+  });
+}
+
+test("job-details accepts only true or false", () => {
+  assert.equal(configuration({ FORK_CI_WORKFLOW: "ci.yml" }).jobDetails, true);
+  assert.equal(configuration({ FORK_CI_WORKFLOW: "ci.yml", FORK_CI_JOB_DETAILS: "false" }).jobDetails, false);
+  assert.throws(() => configuration({ FORK_CI_WORKFLOW: "ci.yml", FORK_CI_JOB_DETAILS: "yes" }));
 });

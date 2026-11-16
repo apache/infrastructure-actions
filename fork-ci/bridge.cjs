@@ -52,8 +52,10 @@ function configuration(env = process.env) {
   if (guide && (new URL(guide).protocol !== "https:" || /[\s<>]/.test(guide))) {
     throw new Error("guide-url must be an HTTPS URL without whitespace");
   }
+  const jobDetails = env.FORK_CI_JOB_DETAILS || "true";
+  if (!["true", "false"].includes(jobDetails)) throw new Error("job-details must be true or false");
   return {
-    workflow, checkName, reporting, baseBranches, guide,
+    workflow, checkName, reporting, baseBranches, guide, jobDetails: jobDetails === "true",
     recentHours: number("FORK_CI_RECENT_HOURS", 6, 1, 168),
     sweepSize: number("FORK_CI_SWEEP_SIZE", 25, 1, 100),
     sweepMinutes: number("FORK_CI_SWEEP_MINUTES", 15, 5, 1440),
@@ -65,6 +67,23 @@ function eligible(pr, upstream, config) {
     equalRepo(pr.base?.repo?.full_name, upstream) &&
     !equalRepo(pr.head.repo.full_name, upstream) &&
     config.baseBranches.includes(pr.base.ref);
+}
+
+const MAX_JOBS = 20;
+const MAX_ANNOTATED_JOBS = 5;
+const PASSED = new Set(["success", "skipped", "neutral"]);
+const GENERIC = /^Process completed with exit code \d+\.?$/;
+
+// Fork-supplied text: one line, bounded by code point.
+function line(value, max) {
+  const chars = Array.from(String(value ?? "").replace(/[\u0000-\u001f\u007f]+/g, " ").trim());
+  return chars.length > max ? `${chars.slice(0, max - 1).join("")}…` : chars.join("");
+}
+
+// Fork-supplied text, inert inside a table code span.
+function code(value, max) {
+  const s = line(value, max);
+  return s ? `\`${s.replace(/`/g, "'").replace(/\|/g, "\\|")}\`` : "";
 }
 
 // Missing or malformed metadata must trigger a refresh of an owned check.
@@ -91,10 +110,11 @@ async function bridge({ github, context, core, config = configuration(), now = D
   // A commit can be the head of several PRs with different fork/branch runs.
   const statusContext = (pr) => `${config.checkName} (PR #${pr.number})`;
   const forkRoot = (pr) => `${server}/${encodeURIComponent(pr.head.repo.owner.login)}/${encodeURIComponent(pr.head.repo.name)}`;
-  const metadata = (pr, run) => JSON.stringify({
+  const metadata = (pr, run, jobs) => JSON.stringify({
     version: 1, pr: pr.number, repository: pr.head.repo.full_name,
     workflow: config.workflow, head_sha: pr.head.sha,
     run_id: run?.id ?? null, run_attempt: run?.run_attempt ?? null,
+    ...(jobs === undefined ? {} : { jobs }),
   });
   const explanation = "This check reports contributor-controlled CI for the PR head. " +
     "It does not verify the merge result and must not replace trusted required checks.";
@@ -120,7 +140,9 @@ async function bridge({ github, context, core, config = configuration(), now = D
     }, ({ data }, done) => {
       const status = data.find((s) => s.context.toLowerCase() === statusContext(pr).toLowerCase());
       if (status) done();
-      return status ? [status] : [];
+      // An older owned status is not the latest result if another writer used
+      // this context. Publish our observation instead of reusing that history.
+      return status?.creator?.login === "github-actions[bot]" ? [status] : [];
     });
     return statuses[0];
   }
@@ -154,7 +176,73 @@ async function bridge({ github, context, core, config = configuration(), now = D
       .sort((a, b) => b.id - a.id)[0];
   }
 
-  async function forkResult(pr) {
+  // List the jobs that did not pass. Returns null when the fork API cannot
+  // be read, so the check falls back to the run link alone.
+  async function failedJobs(pr, run, runUrl) {
+    const fork = { owner: pr.head.repo.owner.login, repo: pr.head.repo.name };
+    let jobs;
+    try {
+      jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRunAttempt,
+        { ...fork, run_id: run.id, attempt_number: run.run_attempt, per_page: 100 });
+    } catch (error) {
+      core.warning(`PR #${pr.number}: cannot list fork jobs (HTTP ${Number(error.status) || "unknown"}).`);
+      return null;
+    }
+    const failed = jobs.filter((j) => !PASSED.has(j.conclusion));
+    const rows = [];
+    for (const [i, job] of failed.slice(0, MAX_JOBS).entries()) {
+      const step = (job.steps || []).find((s) => s.conclusion === "failure")?.name;
+      let message;
+      if (i < MAX_ANNOTATED_JOBS) {
+        let annotations = [];
+        try {
+          annotations = (await github.rest.checks.listAnnotations({ ...fork, check_run_id: job.id, per_page: 50 })).data;
+        } catch (error) {
+          // Keep the row without its error message.
+          core.warning(`PR #${pr.number}: cannot read annotations of fork job ${job.id} ` +
+            `(HTTP ${Number(error.status) || "unknown"}).`);
+        }
+        // Prefer the job's own error over the runner's generic exit message.
+        const errors = annotations.filter((a) => a.annotation_level === "failure");
+        message = (errors.find((a) => !GENERIC.test(a.message)) || errors[0])?.message;
+      }
+      const link = `${runUrl}/job/${job.id}`;
+      rows.push(`| [${code(job.name, 100)}](${link}) | ${code(job.conclusion || "unknown", 20)} | ` +
+        `${code(step, 100)} | ${code(message, 150)} |`);
+    }
+    return { count: failed.length, first: failed[0]?.name, rows };
+  }
+
+  // Add the jobs that did not succeed to a completed run's result.
+  async function withJobs(pr, run, check, result) {
+    const { conclusion, details_url: runUrl } = result;
+    // Jobs of a completed attempt do not change: list them once, then
+    // reuse the stored output so unchanged sweeps make no extra calls.
+    const previous = checkMetadata(check);
+    if (check?.status === "completed" && check.conclusion === conclusion &&
+      previous?.run_id === run.id && previous?.run_attempt === run.run_attempt &&
+      Number.isSafeInteger(previous?.jobs)) {
+      const { title, summary } = check.output;
+      return { ...result, output: { title, summary, text: metadata(pr, run, previous.jobs) } };
+    }
+    const jobs = await failedJobs(pr, run, runUrl);
+    if (!jobs) return result;
+    if (!jobs.count) return { ...result, output: { ...result.output, text: metadata(pr, run, 0) } };
+    const more = jobs.count - jobs.rows.length;
+    return {
+      ...result,
+      output: {
+        title: `Fork run ${conclusion}: ${line(jobs.first, 100)}` +
+          (jobs.count > 1 ? ` and ${jobs.count - 1} more` : ""),
+        summary: `[Open the fork workflow run](${runUrl}).\n\n` +
+          "| Job | Result | Failed step | Error |\n|---|---|---|---|\n" + jobs.rows.join("\n") +
+          (more ? `\n\n${more} more job(s) did not succeed.` : "") + `\n\n${explanation}`,
+        text: metadata(pr, run, jobs.count),
+      },
+    };
+  }
+
+  async function forkResult(pr, check) {
     const fork = { owner: pr.head.repo.owner.login, repo: pr.head.repo.name };
     const root = forkRoot(pr);
     const workflowUrl = `${root}/actions/workflows/${encodeURIComponent(config.workflow)}`;
@@ -182,7 +270,7 @@ async function bridge({ github, context, core, config = configuration(), now = D
         run.status === "in_progress" ? "in_progress" : "queued";
       const conclusion = CONCLUSIONS.has(run.conclusion) ? run.conclusion : "failure";
       const details = `${root}/actions/runs/${run.id}`;
-      return {
+      const result = {
         status, ...(status === "completed" ? { conclusion } : {}), details_url: details,
         output: {
           title: `Fork run ${status === "completed" ? conclusion : status}`,
@@ -190,6 +278,8 @@ async function bridge({ github, context, core, config = configuration(), now = D
           text: metadata(pr, run),
         },
       };
+      if (useStatus || !config.jobDetails || status !== "completed" || conclusion === "success") return result;
+      return withJobs(pr, run, check, result);
     }
     let state;
     try {
@@ -224,10 +314,14 @@ async function bridge({ github, context, core, config = configuration(), now = D
   async function publish(pr, check, payload) {
     const recorded = checkMetadata(payload);
     const status = useStatus ? commitStatus(pr, payload) : null;
+    // Keep the first bridge-error link: a new bridge invocation is not a new
+    // result. Appending identical errors can exhaust the status history limit.
+    const statusFields = recorded.run_id === null ? ["state", "description"] :
+      ["state", "description", "target_url"];
     // GitHub keeps the check page as details_url for GITHUB_TOKEN writes, so a
     // stored check never matches the requested link. Each summary carries its link.
     const unchanged = useStatus
-      ? check && ["state", "description", "target_url"].every((key) => check[key] === status[key]) :
+      ? check && statusFields.every((key) => check[key] === status[key]) :
       check && check.status === payload.status &&
       (check.conclusion ?? null) === (payload.conclusion ?? null) &&
       ["title", "summary", "text"].every((key) => check.output?.[key] === payload.output[key]);
@@ -280,7 +374,7 @@ async function bridge({ github, context, core, config = configuration(), now = D
     }
     let payload;
     try {
-      payload = await forkResult(pr);
+      payload = await forkResult(pr, check);
     } catch (error) {
       // Do not turn permission errors, rate limits, or outages into a missing
       // run or leave an old green result as the latest observation.
