@@ -183,9 +183,6 @@ burrunan/gradle-cache-action:
   '*':
     keep: true
 carabiner-dev/actions/ampel/verify:
-  36a39ef667efe7112df8b1a534a4e37f35fad6fd:
-    tag: v1.2.6
-    expires_at: 2026-11-17
   32587e82f960d49b36101e8c45d1956e511965d3:
     tag: v1.2.9
     expires_at: 2026-12-09
@@ -195,12 +192,6 @@ carabiner-dev/actions/ampel/verify:
   63d43b57262e65927864c8f7ca0a6a8efe06acc0:
     tag: v1.3.1
 carabiner-dev/actions/install/ampel:
-  36a39ef667efe7112df8b1a534a4e37f35fad6fd:
-    tag: v1.2.6
-  # transitive: ampel/verify @ v1.2.6 (36a39ef6) pins its internal action refs
-  # to this untagged commit. Verified carabiner release-bot commit, ancestor of
-  # 36a39ef6.
-    expires_at: 2026-11-17
   32587e82f960d49b36101e8c45d1956e511965d3:
     tag: v1.2.9
     expires_at: 2026-12-09
@@ -219,8 +210,6 @@ carabiner-dev/actions/install/ampel:
 carabiner-dev/actions/install/ampel-bootstrap:
   16009dca48ac369882d4333f1d15d7cd3a4ded31:
     expires_at: 2026-12-09
-  ade14d87ee05bd60ec9028e3f5f430ee571ac8df:
-    expires_at: 2026-11-17
   833eed5876a6db1dbfd60289611ee40fc12f4fe2:
     expires_at: 2026-11-26
   3fd22ad1abdd61a2337535c255a04eab3d4b23f1:
@@ -239,9 +228,6 @@ carabiner-dev/actions/install/ampel-bootstrap:
   63d43b57262e65927864c8f7ca0a6a8efe06acc0:
     tag: v1.3.1
 carabiner-dev/actions/install/bnd:
-  36a39ef667efe7112df8b1a534a4e37f35fad6fd:
-    tag: v1.2.6
-    expires_at: 2026-11-17
   32587e82f960d49b36101e8c45d1956e511965d3:
     tag: v1.2.9
     expires_at: 2026-12-09
@@ -253,8 +239,6 @@ carabiner-dev/actions/install/bnd:
 carabiner-dev/actions/install/download-and-verify:
   2fec8bd8e1dcfdea26080648070b4827f1fa0584:
     expires_at: 2026-12-09
-  ade14d87ee05bd60ec9028e3f5f430ee571ac8df:
-    expires_at: 2026-11-17
   833eed5876a6db1dbfd60289611ee40fc12f4fe2:
     expires_at: 2026-11-29
   3fd22ad1abdd61a2337535c255a04eab3d4b23f1:
@@ -1075,9 +1059,6 @@ rustsec/*:
   '*':
     keep: true
 sbt/setup-sbt:
-  8feba82adc7f01ddcf8165b86f778bdb5b82cebc:
-    tag: v1.5.7
-    expires_at: 2026-11-17
   c7d2d6258b4bd0d3ec5129e6b3453199d3c79729:
     tag: v1.5.8
     expires_at: 2026-12-05
