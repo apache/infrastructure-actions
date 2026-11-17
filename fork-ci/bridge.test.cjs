@@ -783,8 +783,8 @@ test("lists jobs that did not succeed with their failed step and own failure ann
   assert.ok(!summary.includes("capacity notice"));
   const { owner, repo, run_id, attempt_number } = named(h, "actions.listJobsForWorkflowRunAttempt")[0].params;
   assert.deepEqual({ owner, repo, run_id, attempt_number }, { owner: "contributor", repo: "example", run_id: 10, attempt_number: 1 });
-  assert.deepEqual(named(h, "checks.listAnnotations").map(({ params: p }) => [p.owner, p.repo, p.check_run_id]),
-    [["contributor", "example", 3], ["contributor", "example", 4]]);
+  assert.deepEqual(named(h, "checks.listAnnotations").map(({ params: p }) => [p.owner, p.repo, p.check_run_id, p.per_page]),
+    [["contributor", "example", 3, 100], ["contributor", "example", 4, 100]]);
 });
 
 test("lists jobs once per run attempt and reuses them on later sweeps", async () => {
