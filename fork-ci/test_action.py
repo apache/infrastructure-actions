@@ -63,7 +63,7 @@ def test_composite_entry_point(tmp_path, action):
         "const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;\n"
         f"const script = {json.dumps(step['with']['script'])};\n"
         "const outputs = {};\n"
-        "const core = {setOutput: (k,v) => outputs[k] = v};\n"
+        "const core = {info() {}, setOutput: (k,v) => outputs[k] = v};\n"
         "const context = {repo: {owner:'apache',repo:'example'}, "
         "eventName:'workflow_run',payload:{workflow_run:{event:'push'}}};\n"
         "new AsyncFunction('require','github','context','core',script)"
@@ -79,13 +79,18 @@ def test_composite_entry_point(tmp_path, action):
     assert "${{" not in step["with"]["script"]
 
 
-def test_signal_and_bridge_share_a_name_and_do_not_checkout_pr_code():
+@pytest.mark.parametrize("reporting", ["check-run", "commit-status"])
+def test_signal_and_bridge_share_a_name_and_do_not_checkout_pr_code(reporting):
     signal = load(ROOT / "examples/fork-ci-signal.yml")
-    bridge = load(ROOT / "examples/fork-ci-status.yml")
+    filename = "fork-ci-status.yml" if reporting == "check-run" else "fork-ci-commit-status.yml"
+    bridge = load(ROOT / "examples" / filename)
     assert bridge["on"]["workflow_run"]["workflows"] == [signal["name"]]
     assert signal["permissions"] == {}
     assert bridge["concurrency"]["cancel-in-progress"] == "false"
-    assert bridge["permissions"] == {"actions": "read", "checks": "write", "pull-requests": "read"}
+    permission = "checks" if reporting == "check-run" else "statuses"
+    assert bridge["permissions"] == {"actions": "read", permission: "write", "pull-requests": "read"}
+    selected = bridge["jobs"]["bridge"]["steps"][0]["with"].get("reporting", "check-run")
+    assert selected == reporting
     for workflow in (signal, bridge):
         assert "pull_request_target" not in workflow["on"]
         for job in workflow["jobs"].values():
@@ -170,11 +175,13 @@ def test_ci_concurrency_cancels_only_superseded_fork_pushes():
 @pytest.mark.parametrize("mode,conclusion", [
     ("success", "success"), ("disabled", "action_required"), ("error", "action_required"),
 ])
-def test_composite_publishes_results_and_failure_outputs(tmp_path, action, mode, conclusion):
+@pytest.mark.parametrize("reporting", ["check-run", "commit-status"])
+def test_composite_publishes_results_and_failure_outputs(tmp_path, action, mode, conclusion, reporting):
     step = action["runs"]["steps"][0]
     env = action_environment(action, {
         "workflow": "build.yaml",
         "check-name": "Build on fork",
+        "reporting": reporting,
         "base-branches": "stable",
         "guide-url": "https://example.org/contributing",
         "recent-hours": "1",
@@ -197,6 +204,10 @@ def test_composite_publishes_results_and_failure_outputs(tmp_path, action, mode,
         const github = {rest: {
           pulls: {list() {}, get: async () => ({data: pr})},
           checks: {listForRef() {}, create: async payload => {writes.push(payload);}},
+          repos: {
+            listCommitStatusesForRef: async () => ({data: []}),
+            createCommitStatus: async payload => {writes.push(payload);},
+          },
           actions: {
             listWorkflowRuns: async p => {
               assert.equal(p.workflow_id, 'build.yaml');
@@ -211,8 +222,11 @@ def test_composite_publishes_results_and_failure_outputs(tmp_path, action, mode,
             getWorkflow: async () => ({data: {state: 'disabled_fork'}}),
           },
         }};
-        github.paginate = async method => {
+        github.paginate = async (method, params, map) => {
           if (method === github.rest.pulls.list) return [pr];
+          if (method === github.rest.repos.listCommitStatusesForRef) {
+            return map(await method(params), () => {});
+          }
           assert.equal(method, github.rest.checks.listForRef);
           return [];
         };
@@ -231,11 +245,22 @@ def test_composite_publishes_results_and_failure_outputs(tmp_path, action, mode,
     assert response["outputs"] == {"processed": 1, "written": 1, "failed": int(mode == "error")}
     assert len(response["writes"]) == 1
     check = response["writes"][0]
-    assert check["name"] == "Build on fork"
-    assert check["external_id"] == "fork-ci:build.yaml:pr:7"
-    assert check["head_sha"] == "a" * 40
-    assert check["conclusion"] == conclusion
-    if mode == "disabled":
-        assert "https://example.org/contributing" in check["output"]["summary"]
+    if reporting == "check-run":
+        assert check["name"] == "Build on fork"
+        assert check["external_id"] == "fork-ci:build.yaml:pr:7"
+        assert check["head_sha"] == "a" * 40
+        assert check["conclusion"] == conclusion
+        if mode == "disabled":
+            assert "https://example.org/contributing" in check["output"]["summary"]
+    else:
+        assert check["context"] == "Build on fork (PR #7)"
+        assert check["sha"] == "a" * 40
+        assert check["state"] == ("success" if mode == "success" else "error")
+        expected_url = {
+            "success": "https://github.com/contributor/example/actions/runs/99/attempts/1",
+            "disabled": "https://github.com/contributor/example/actions/workflows/build.yaml",
+            "error": "https://github.com/apache/example/actions/runs/123",
+        }
+        assert check["target_url"] == expected_url[mode]
     if mode == "error":
         assert len(response["errors"]) == 1

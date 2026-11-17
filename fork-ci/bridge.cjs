@@ -34,6 +34,10 @@ function configuration(env = process.env) {
   if (checkName.length > 100 || /[\r\n]/.test(checkName)) {
     throw new Error("check-name must be one line of at most 100 characters");
   }
+  const reporting = env.FORK_CI_REPORTING || "check-run";
+  if (!["check-run", "commit-status"].includes(reporting)) {
+    throw new Error("reporting must be check-run or commit-status");
+  }
   const baseBranches = (env.FORK_CI_BASE_BRANCHES || "main")
     .split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
   if (!baseBranches.length) throw new Error("base-branches must contain an exact branch name");
@@ -51,7 +55,7 @@ function configuration(env = process.env) {
   const jobDetails = env.FORK_CI_JOB_DETAILS || "true";
   if (!["true", "false"].includes(jobDetails)) throw new Error("job-details must be true or false");
   return {
-    workflow, checkName, baseBranches, guide, jobDetails: jobDetails === "true",
+    workflow, checkName, reporting, baseBranches, guide, jobDetails: jobDetails === "true",
     recentHours: number("FORK_CI_RECENT_HOURS", 6, 1, 168),
     sweepSize: number("FORK_CI_SWEEP_SIZE", 25, 1, 100),
     sweepMinutes: number("FORK_CI_SWEEP_MINUTES", 15, 5, 1440),
@@ -101,7 +105,11 @@ async function bridge({ github, context, core, config = configuration(), now = D
   const server = context.serverUrl || "https://github.com";
   const listing = { ...upstream, state: "open", per_page: 100 };
   const counts = { processed: 0, written: 0, failed: 0 };
+  const useStatus = config.reporting === "commit-status";
   const identity = (pr) => `fork-ci:${config.workflow}:pr:${pr.number}`;
+  // A commit can be the head of several PRs with different fork/branch runs.
+  const statusContext = (pr) => `${config.checkName} (PR #${pr.number})`;
+  const forkRoot = (pr) => `${server}/${encodeURIComponent(pr.head.repo.owner.login)}/${encodeURIComponent(pr.head.repo.name)}`;
   const metadata = (pr, run, jobs) => JSON.stringify({
     version: 1, pr: pr.number, repository: pr.head.repo.full_name,
     workflow: config.workflow, head_sha: pr.head.sha,
@@ -110,6 +118,53 @@ async function bridge({ github, context, core, config = configuration(), now = D
   });
   const explanation = "This check reports contributor-controlled CI for the PR head. " +
     "It does not verify the merge result and must not replace trusted required checks.";
+
+  function log(pr, message, recorded) {
+    const run = recorded?.run_id == null ? "fork run none" :
+      `fork run ${recorded.run_id} attempt ${recorded.run_attempt ?? "unknown"}`;
+    core.info(`PR #${pr.number} (${pr.head?.sha?.slice(0, 12) || "unknown"}): ${run}; ${message}.`);
+  }
+
+  function statusMetadata(pr, report) {
+    const prefix = `${forkRoot(pr)}/actions/runs/`;
+    if (!report?.target_url?.startsWith(prefix)) return null;
+    const match = report.target_url.slice(prefix.length).match(/^(\d+)\/attempts\/(\d+)$/);
+    return match ? { run_id: match[1], run_attempt: match[2] } : null;
+  }
+
+  async function latestStatus(pr) {
+    // The statuses endpoint is newest-first. Stop at the first matching
+    // context instead of reading its entire append-only history.
+    const statuses = await github.paginate(github.rest.repos.listCommitStatusesForRef, {
+      ...upstream, ref: pr.head.sha, per_page: 100,
+    }, ({ data }, done) => {
+      const status = data.find((s) => s.context.toLowerCase() === statusContext(pr).toLowerCase());
+      if (status) done();
+      // An older owned status is not the latest result if another writer used
+      // this context. Publish our observation instead of reusing that history.
+      return status?.creator?.login === "github-actions[bot]" ? [status] : [];
+    });
+    return statuses[0];
+  }
+
+  function commitStatus(pr, payload) {
+    const recorded = checkMetadata(payload);
+    const found = recorded.run_id !== null;
+    let state = "pending";
+    if (payload.status === "completed") {
+      if (!found) state = payload.conclusion === "neutral" ? "pending" : "error";
+      else if (payload.conclusion === "success") state = "success";
+      else state = ["failure", "timed_out"].includes(payload.conclusion) ? "failure" : "error";
+    }
+    const attempt = recorded.run_attempt ?? 1;
+    return {
+      context: statusContext(pr), state,
+      description: found
+        ? `Fork run ${recorded.run_id} attempt ${attempt}: ${payload.status === "completed" ? payload.conclusion : payload.status}`
+        : payload.output.title,
+      target_url: found ? `${payload.details_url}/attempts/${attempt}` : payload.details_url,
+    };
+  }
 
   async function latestCheck(pr) {
     const checks = await github.paginate(github.rest.checks.listForRef, {
@@ -189,7 +244,7 @@ async function bridge({ github, context, core, config = configuration(), now = D
 
   async function forkResult(pr, check) {
     const fork = { owner: pr.head.repo.owner.login, repo: pr.head.repo.name };
-    const root = `${server}/${encodeURIComponent(fork.owner)}/${encodeURIComponent(fork.repo)}`;
+    const root = forkRoot(pr);
     const workflowUrl = `${root}/actions/workflows/${encodeURIComponent(config.workflow)}`;
     // Query each accepted event separately: unrelated events cannot hide a
     // matching push behind the API's 1,000-result filtered-search limit.
@@ -223,7 +278,7 @@ async function bridge({ github, context, core, config = configuration(), now = D
           text: metadata(pr, run),
         },
       };
-      if (!config.jobDetails || status !== "completed" || conclusion === "success") return result;
+      if (useStatus || !config.jobDetails || status !== "completed" || conclusion === "success") return result;
       return withJobs(pr, run, check, result);
     }
     let state;
@@ -257,13 +312,22 @@ async function bridge({ github, context, core, config = configuration(), now = D
   }
 
   async function publish(pr, check, payload) {
+    const recorded = checkMetadata(payload);
+    const status = useStatus ? commitStatus(pr, payload) : null;
+    // Keep the first bridge-error link: a new bridge invocation is not a new
+    // result. Appending identical errors can exhaust the status history limit.
+    const statusFields = recorded.run_id === null ? ["state", "description"] :
+      ["state", "description", "target_url"];
     // GitHub keeps the check page as details_url for GITHUB_TOKEN writes, so a
     // stored check never matches the requested link. Each summary carries its link.
-    if (
+    const unchanged = useStatus
+      ? check && statusFields.every((key) => check[key] === status[key]) :
       check && check.status === payload.status &&
       (check.conclusion ?? null) === (payload.conclusion ?? null) &&
-      ["title", "summary", "text"].every((key) => check.output?.[key] === payload.output[key])
-    ) {
+      ["title", "summary", "text"].every((key) => check.output?.[key] === payload.output[key]);
+    if (unchanged) {
+      const state = useStatus ? `commit status ${status.state}` : `check ${payload.status}/${payload.conclusion || "none"}`;
+      log(pr, `skipped unchanged ${state}`, recorded);
       return;
     }
     // Re-read before writing: list results and notification payloads can be
@@ -273,6 +337,13 @@ async function bridge({ github, context, core, config = configuration(), now = D
       !eligible(current, upstreamName, config) || current.head.sha !== pr.head.sha ||
       current.head.ref !== pr.head.ref || !equalRepo(current.head.repo.full_name, pr.head.repo.full_name)
     ) {
+      log(pr, "skipped write because the PR state, branch, or head changed", recorded);
+      return;
+    }
+    if (useStatus) {
+      await github.rest.repos.createCommitStatus({ ...upstream, sha: pr.head.sha, ...status });
+      counts.written++;
+      log(pr, `published commit status ${status.state}`, recorded);
       return;
     }
     // A new check for a new attempt avoids carrying a terminal conclusion
@@ -281,7 +352,8 @@ async function bridge({ github, context, core, config = configuration(), now = D
     const previous = checkMetadata(check);
     const newAttempt = next.run_id !== null &&
       (next.run_id !== previous?.run_id || next.run_attempt !== previous?.run_attempt);
-    if (!check || (check.status === "completed" && (newAttempt || payload.status !== "completed"))) {
+    const create = !check || (check.status === "completed" && (newAttempt || payload.status !== "completed"));
+    if (create) {
       await github.rest.checks.create({
         ...upstream, name: config.checkName, head_sha: pr.head.sha, external_id: identity(pr), ...payload,
       });
@@ -289,12 +361,17 @@ async function bridge({ github, context, core, config = configuration(), now = D
       await github.rest.checks.update({ ...upstream, check_run_id: check.id, ...payload });
     }
     counts.written++;
+    log(pr, `${create ? "created" : "updated"} check ${payload.status}/${payload.conclusion || "none"}`, recorded);
   }
 
   async function sync(pr, includeCompleted) {
-    const check = await latestCheck(pr);
-    const recorded = checkMetadata(check);
-    if (!includeCompleted && check?.status === "completed" && recorded?.run_id) return;
+    const check = await (useStatus ? latestStatus(pr) : latestCheck(pr));
+    const recorded = useStatus ? statusMetadata(pr, check) : checkMetadata(check);
+    const completed = useStatus ? check && check.state !== "pending" : check?.status === "completed";
+    if (!includeCompleted && completed && recorded?.run_id) {
+      log(pr, "skipped completed fork result until its rotating sweep", recorded);
+      return;
+    }
     let payload;
     try {
       payload = await forkResult(pr, check);
@@ -323,7 +400,10 @@ async function bridge({ github, context, core, config = configuration(), now = D
     const run = context.payload.workflow_run;
     // The signal is an upstream pull_request workflow, not the fork CI run.
     // Never trust its conclusion, artifacts, or its often-empty PR array.
-    if (run?.event !== "pull_request" || !run.head_repository?.owner?.login || !run.head_branch) return counts;
+    if (run?.event !== "pull_request" || !run.head_repository?.owner?.login || !run.head_branch) {
+      core.info("Fork CI: skipped signal without pull_request fork/branch metadata.");
+      return counts;
+    }
     candidates = (await github.paginate(github.rest.pulls.list, {
       ...listing, head: `${run.head_repository.owner.login}:${run.head_branch}`,
     })).filter((pr) => equalRepo(pr.head?.repo?.full_name, run.head_repository.full_name) &&
@@ -347,11 +427,11 @@ async function bridge({ github, context, core, config = configuration(), now = D
     } catch (error) {
       counts.failed++;
       // API response bodies can contain untrusted text. Log only status and PR.
-      core.error(`PR #${pr.number}: fork CI sync failed (HTTP ${Number(error.status) || "unknown"}).`);
+      core.error(`PR #${pr.number} (${pr.head.sha.slice(0, 12)}): fork CI sync failed (HTTP ${Number(error.status) || "unknown"}).`);
     }
   }
   if (counts.failed) core.setFailed(`Could not synchronize ${counts.failed} pull request(s). Other pull requests were processed.`);
-  core.info(`Fork CI: ${counts.processed} processed, ${counts.written} checks written, ${counts.failed} failed.`);
+  core.info(`Fork CI: ${counts.processed} processed, ${counts.written} ${useStatus ? "statuses" : "checks"} written, ${counts.failed} failed.`);
   return counts;
 }
 
