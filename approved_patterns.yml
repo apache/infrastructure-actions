@@ -360,6 +360,7 @@
 - ruby/setup-ruby@*
 - rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a
 - rubygems/release-gem@7f9650160c1a4e7989fdc9855807bdbd421d8b6b
+- rubygems/release-gem@5c53f5308233b7c0f47411f0471b3faae6fa57b2
 - runs-on/action@46910bf61b41721b0579f237e186afb35477007a
 - runs-on/action@efac073ea2507ec18797de3a81704201ade11d9d
 - runs-on/action@17b59092eb37ebfdbb034460892887c09100eaa3

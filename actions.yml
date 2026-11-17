@@ -1040,6 +1040,9 @@ rubygems/configure-rubygems-credentials:
 rubygems/release-gem:
   7f9650160c1a4e7989fdc9855807bdbd421d8b6b:
     tag: v1.4.1
+    expires_at: 2027-02-09
+  5c53f5308233b7c0f47411f0471b3faae6fa57b2:
+    tag: v1.4.2
 runs-on/action:
   46910bf61b41721b0579f237e186afb35477007a:
     tag: v2.3.0
