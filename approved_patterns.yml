@@ -21,7 +21,6 @@
 # DO NOT UPDATE MANUALLY. Update /actions.yml instead.
 - 1Password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4
 - 1Password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2
-- 1Password/load-secrets-action/configure@e544b780808654ba8ceba5fb2fe2897103d92ff4
 - 1Password/load-secrets-action/configure@70062d7a876d3eb6334754fa26efd2fbd90c32f2
 - actions-cool/check-user-permission@c21884f3dda18dafc2f8b402fe807ccc9ec1aa5e
 - addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185
@@ -157,7 +156,6 @@
 - docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6
 - docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550
 - docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302
-- docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
 - docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e
 - docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
 - docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8
@@ -224,7 +222,6 @@
 - gradle/develocity-actions/setup-npm@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
 - gradle/develocity-actions/setup-python@9d8792ab22712b19790c2abce53e9ebb2694c312
 - gradle/develocity-actions/setup-python@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
-- hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6
 - hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387
 - hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
 - helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f
