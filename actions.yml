@@ -227,6 +227,9 @@ carabiner-dev/actions/install/ampel-bootstrap:
     expires_at: 2027-01-25
   63d43b57262e65927864c8f7ca0a6a8efe06acc0:
     tag: v1.3.1
+    expires_at: 2027-02-11
+  2f56fd66c5ef961f72bca3dbacbbfbd9acc717ee:
+    tag: v1.3.2
 carabiner-dev/actions/install/bnd:
   32587e82f960d49b36101e8c45d1956e511965d3:
     tag: v1.2.9
@@ -236,6 +239,9 @@ carabiner-dev/actions/install/bnd:
     expires_at: 2027-01-25
   63d43b57262e65927864c8f7ca0a6a8efe06acc0:
     tag: v1.3.1
+    expires_at: 2027-02-11
+  2f56fd66c5ef961f72bca3dbacbbfbd9acc717ee:
+    tag: v1.3.2
 carabiner-dev/actions/install/download-and-verify:
   2fec8bd8e1dcfdea26080648070b4827f1fa0584:
     expires_at: 2026-12-09
@@ -256,6 +262,9 @@ carabiner-dev/actions/install/download-and-verify:
     expires_at: 2027-01-25
   63d43b57262e65927864c8f7ca0a6a8efe06acc0:
     tag: v1.3.1
+    expires_at: 2027-02-11
+  2f56fd66c5ef961f72bca3dbacbbfbd9acc717ee:
+    tag: v1.3.2
 carloscastrojumo/github-cherry-pick-action:
   503773289f4a459069c832dc628826685b75b4b3:
     tag: v1.0.10
@@ -325,6 +334,9 @@ commit-check/commit-check-action:
     expires_at: 2027-02-09
   c535fd72e270c2eba22da6ef9860eebda7ec6ebe:
     tag: v2.23.0
+    expires_at: 2027-02-11
+  82856b070249ac36d5a0f88c47cacf0c70f82fa8:
+    tag: v2.24.0
 conda-incubator/setup-miniconda:
   '*':
     keep: true
@@ -751,6 +763,9 @@ jdx/mise-action:
     expires_at: 2027-02-09
   236a21c3b91f5db6d4e174b348674a0f0caac06d:
     tag: v5.2.9
+    expires_at: 2027-02-11
+  90f833d396d0cc3674b631d2d225e306476c303a:
+    tag: v5.2.10
 JetBrains/qodana-action:
   b588768b6e7e6da579e518bc584f79de0d243692:
     tag: v2026.2.0
@@ -760,6 +775,9 @@ JetBrains/qodana-action:
     expires_at: 2026-12-27
   3e8d76ff0e0241618abd808682f426afe84bab3f:
     tag: v2026.2.2
+    expires_at: 2027-02-11
+  13e3acbbaeb2cbfc37893b98e74594985edf42eb:
+    tag: v2026.2.4
 jidicula/clang-format-action:
   '*':
     keep: true
