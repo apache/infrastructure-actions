@@ -188,6 +188,9 @@ carabiner-dev/actions/ampel/verify:
     expires_at: 2027-01-25
   63d43b57262e65927864c8f7ca0a6a8efe06acc0:
     tag: v1.3.1
+    expires_at: 2027-02-11
+  2f56fd66c5ef961f72bca3dbacbbfbd9acc717ee:
+    tag: v1.3.2
 carabiner-dev/actions/install/ampel:
   32587e82f960d49b36101e8c45d1956e511965d3:
     tag: v1.2.9
@@ -561,6 +564,9 @@ graalvm/setup-graalvm:
     expires_at: 2027-02-06
   d6eca2595046623d69d636041513c80abf745406:
     tag: v1.6.9
+    expires_at: 2027-02-11
+  60e76998d25690099182b796e99b8804da582d90:
+    tag: v1.6.10
 gradle/actions/dependency-submission:
   9c971963bec38e04b3d30dcc455b5382be2fdbfb:
     tag: v6.3.0

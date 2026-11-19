@@ -73,6 +73,7 @@
 - carabiner-dev/actions/ampel/verify@32587e82f960d49b36101e8c45d1956e511965d3
 - carabiner-dev/actions/ampel/verify@d41fe10fe88deaf493ce026007da73738b9f570c
 - carabiner-dev/actions/ampel/verify@63d43b57262e65927864c8f7ca0a6a8efe06acc0
+- carabiner-dev/actions/ampel/verify@2f56fd66c5ef961f72bca3dbacbbfbd9acc717ee
 - carabiner-dev/actions/install/ampel@32587e82f960d49b36101e8c45d1956e511965d3
 - carabiner-dev/actions/install/ampel@d6d91c5c88723021a8798392cb9780c89ff6fdad
 - carabiner-dev/actions/install/ampel@d41fe10fe88deaf493ce026007da73738b9f570c
@@ -200,6 +201,7 @@
 - graalvm/setup-graalvm@27b360dbb857524eaf0b4c4cef364d38e5b4f173
 - graalvm/setup-graalvm@f70bc8032f90a104502824a54bcb94b6f01715bc
 - graalvm/setup-graalvm@d6eca2595046623d69d636041513c80abf745406
+- graalvm/setup-graalvm@60e76998d25690099182b796e99b8804da582d90
 - gradle/actions/dependency-submission@9c971963bec38e04b3d30dcc455b5382be2fdbfb
 - gradle/actions/dependency-submission@3f5f9adaf7d9fecd50b5935e54106014257a94e6
 - gradle/actions/dependency-submission@8da46b539cd8fe6ab27ca75128919a18d757604c
