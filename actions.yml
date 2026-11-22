@@ -310,6 +310,9 @@ CodSpeedHQ/action:
     expires_at: 2027-01-28
   af75f77f17a054769abefaa42fe8dc2975469b5f:
     tag: v5.6.3
+    expires_at: 2027-02-14
+  b1f28b5eccf7cb5bfe6a2a89cb3053eb67f1150c:
+    tag: v5.8.0
 commit-check/commit-check-action:
   f803083a5bf0867b60d77189bc3810fce2f0e314:
     tag: v2.15.0
@@ -802,6 +805,9 @@ JetBrains/qodana-action:
     expires_at: 2027-02-11
   13e3acbbaeb2cbfc37893b98e74594985edf42eb:
     tag: v2026.2.4
+    expires_at: 2027-02-14
+  aa698739cd4b8204ad53291bea7e16cd75da3c9f:
+    tag: v2026.3.1
 jidicula/clang-format-action:
   '*':
     keep: true

@@ -117,6 +117,7 @@
 - CodSpeedHQ/action@78102a468f96d8e0ccb92d0ec49425753fc42062
 - CodSpeedHQ/action@61efe07e57e55bedeab750c434504de272a56e8c
 - CodSpeedHQ/action@af75f77f17a054769abefaa42fe8dc2975469b5f
+- CodSpeedHQ/action@b1f28b5eccf7cb5bfe6a2a89cb3053eb67f1150c
 - commit-check/commit-check-action@f803083a5bf0867b60d77189bc3810fce2f0e314
 - commit-check/commit-check-action@fd3d923eab0876650f261d2a75572e8161a9a58e
 - commit-check/commit-check-action@a61779784a953fd9047c001c102cfeac5cf26964
@@ -280,6 +281,7 @@
 - JetBrains/qodana-action@10be11607eb323a180e2b76b26c9c5cdceac3e77
 - JetBrains/qodana-action@3e8d76ff0e0241618abd808682f426afe84bab3f
 - JetBrains/qodana-action@13e3acbbaeb2cbfc37893b98e74594985edf42eb
+- JetBrains/qodana-action@aa698739cd4b8204ad53291bea7e16cd75da3c9f
 - jidicula/clang-format-action@*
 - Jimver/cuda-toolkit@b8bf9c6c28f8a92fbb04dcfcaee872e60c57462d
 - jlumbroso/free-disk-space@*
