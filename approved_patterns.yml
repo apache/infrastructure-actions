@@ -42,6 +42,7 @@
 - astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884
 - astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e
 - astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2
+- astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d
 - awalsh128/cache-apt-pkgs-action@*
 - aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c
 - aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
@@ -217,6 +218,7 @@
 - gradle/develocity-actions/maven-publish-build-scan@f852d93dada312948b1ba533226c28e05d756866
 - gradle/develocity-actions/maven-publish-build-scan@9d8792ab22712b19790c2abce53e9ebb2694c312
 - gradle/develocity-actions/maven-publish-build-scan@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
+- gradle/develocity-actions/maven-publish-build-scan@943a479a212bba581c53489a13a2dfe02973ece0
 - gradle/develocity-actions/setup-docker@f852d93dada312948b1ba533226c28e05d756866
 - gradle/develocity-actions/setup-docker@9d8792ab22712b19790c2abce53e9ebb2694c312
 - gradle/develocity-actions/setup-docker@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
@@ -225,6 +227,7 @@
 - gradle/develocity-actions/setup-maven@f852d93dada312948b1ba533226c28e05d756866
 - gradle/develocity-actions/setup-maven@9d8792ab22712b19790c2abce53e9ebb2694c312
 - gradle/develocity-actions/setup-maven@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
+- gradle/develocity-actions/setup-maven@943a479a212bba581c53489a13a2dfe02973ece0
 - gradle/develocity-actions/setup-npm@9d8792ab22712b19790c2abce53e9ebb2694c312
 - gradle/develocity-actions/setup-npm@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
 - gradle/develocity-actions/setup-python@9d8792ab22712b19790c2abce53e9ebb2694c312
@@ -394,6 +397,7 @@
 - sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
 - sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532
 - slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d
+- slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa
 - slsa-framework/actions@dea965cdca5e0cb422bf7b2653c9d15f678ad01c
 - snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263
 - softprops/action-gh-release@*

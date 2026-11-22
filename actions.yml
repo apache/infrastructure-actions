@@ -95,6 +95,9 @@ astral-sh/setup-uv:
     expires_at: 2027-01-21
   68559e99cc807c1eb7e9238fd43a15bba460eec2:
     tag: v10.3.3
+    expires_at: 2027-02-14
+  1db35dd8eee11c5894872e0b383ae6c406cf738d:
+    tag: v10.4.0
 awalsh128/cache-apt-pkgs-action:
   '*':
     keep: true
@@ -614,6 +617,9 @@ gradle/develocity-actions/maven-publish-build-scan:
     expires_at: 2027-01-21
   b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17:
     tag: v2.6
+    expires_at: 2027-02-14
+  943a479a212bba581c53489a13a2dfe02973ece0:
+    tag: v2.7
 gradle/develocity-actions/setup-docker:
   f852d93dada312948b1ba533226c28e05d756866:
     tag: v2.4
@@ -638,6 +644,9 @@ gradle/develocity-actions/setup-maven:
     expires_at: 2027-01-21
   b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17:
     tag: v2.6
+    expires_at: 2027-02-14
+  943a479a212bba581c53489a13a2dfe02973ece0:
+    tag: v2.7
 gradle/develocity-actions/setup-npm:
   9d8792ab22712b19790c2abce53e9ebb2694c312:
     tag: v2.5
@@ -1142,6 +1151,9 @@ sigstore/cosign-installer:
 slackapi/slack-github-action:
   dcb1066f776dd043e64d0e8ba94ca15cc7e1875d:
     tag: v4.0.0
+    expires_at: 2027-02-14
+  0bc3581177d9a0f8d555e07689384b376528e8fa:
+    tag: v4.1.0
 slsa-framework/actions:
   dea965cdca5e0cb422bf7b2653c9d15f678ad01c:
     expires_at: 2026-12-31
