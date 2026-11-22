@@ -128,6 +128,7 @@
 - commit-check/commit-check-action@d68e05baf9511853193e2749f8a64bf2a221619a
 - commit-check/commit-check-action@c535fd72e270c2eba22da6ef9860eebda7ec6ebe
 - commit-check/commit-check-action@82856b070249ac36d5a0f88c47cacf0c70f82fa8
+- commit-check/commit-check-action@3d46238970102271c989e85c58f22748a923384c
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d
@@ -138,6 +139,7 @@
 - coursier/setup-action@3174df5c784a0c8724f06b7924b849551c40c39e
 - coursier/setup-action@648df969f41ef15fda2baba8b37f9fa3d16390a3
 - coursier/setup-action@d5a17f9aaeb260f9ba336a5b582fb49f79c64ac4
+- coursier/setup-action@6eefb29fad2c9de9f52a5f2cef1154195c9d4609
 - cpp-linter/cpp-linter-action@0f6d1b8d7e38b584cbee606eb23d850c217d54f8
 - crate-ci/typos@*
 - crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd
@@ -232,6 +234,7 @@
 - gradle/develocity-actions/setup-npm@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
 - gradle/develocity-actions/setup-python@9d8792ab22712b19790c2abce53e9ebb2694c312
 - gradle/develocity-actions/setup-python@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17
+- gradle/develocity-actions/setup-python@943a479a212bba581c53489a13a2dfe02973ece0
 - hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387
 - hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
 - helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f
