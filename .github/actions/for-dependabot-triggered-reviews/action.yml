@@ -173,7 +173,7 @@ runs:
       if: false
     - uses: gradle/develocity-actions/setup-npm@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17  # v2.6
       if: false
-    - uses: gradle/develocity-actions/setup-python@b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17  # v2.6
+    - uses: gradle/develocity-actions/setup-python@943a479a212bba581c53489a13a2dfe02973ece0  # v2.7
       if: false
     - uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
       if: false
