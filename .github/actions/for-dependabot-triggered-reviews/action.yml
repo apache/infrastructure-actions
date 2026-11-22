@@ -269,7 +269,7 @@ runs:
       if: false
     - uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532  # v4.1.3
       if: false
-    - uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d  # v4.0.0
+    - uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa  # v4.1.0
       if: false
     - uses: snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263  # v1
       if: false
