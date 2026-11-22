@@ -638,6 +638,9 @@ gradle/develocity-actions/setup-docker:
     expires_at: 2027-01-21
   b8f7a85ff7bd4e08e804f3e5331e5c48b2e6eb17:
     tag: v2.6
+    expires_at: 2027-02-14
+  943a479a212bba581c53489a13a2dfe02973ece0:
+    tag: v2.7
 gradle/develocity-actions/setup-maven:
   0e1f30c14ab56d0c1ecf229a0ffc3eb3e40e4642:
     tag: v2.2
