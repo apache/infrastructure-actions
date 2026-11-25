@@ -64,6 +64,8 @@ jobs:
           publish: 'false'
 ```
 
+> Does not run on `ubuntu-slim` since `cmake` is required.
+
 ## Project layout
 
 | Path              | Purpose                                                                      |
