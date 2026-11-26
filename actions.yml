@@ -216,8 +216,6 @@ carabiner-dev/actions/install/ampel:
 carabiner-dev/actions/install/ampel-bootstrap:
   16009dca48ac369882d4333f1d15d7cd3a4ded31:
     expires_at: 2026-12-09
-  833eed5876a6db1dbfd60289611ee40fc12f4fe2:
-    expires_at: 2026-11-26
   3fd22ad1abdd61a2337535c255a04eab3d4b23f1:
     expires_at: 2026-12-01
   7e009ddcb93ec994a0d078e8ceabc590c65f5e2f:
@@ -1282,9 +1280,6 @@ vishalsinha21/dynamic-checklist:
   '*':
     keep: true
 zizmorcore/zizmor-action:
-  3dc1ecc9bcb9e94e9b2c709687979e1298497054:
-    tag: v0.6.2
-    expires_at: 2026-11-26
   70fb788f84895a7701f5643d103d587e460b5c99:
     tag: v0.6.3
     expires_at: 2026-12-05
