@@ -1379,6 +1379,12 @@ _JS_VERIFICATION_PATTERNS = [
         r"\bvalidate(?:Checksum|Hash|Digest|SHA\d*|FileChecksum)\b",
         re.IGNORECASE,
     ),
+    # Same idea under the ``verify*`` prefix (``verifyChecksum`` / ``verifyHash``
+    # are matched above).  biomejs/setup-biome's ``src/setup.ts`` downloads via
+    # ``downloadTool(asset.url)`` and then calls ``verifyDigest(cliPath,
+    # asset.digest)``, whose SHA-256 body lives in the sibling ``./digest.ts``
+    # (biomejs/setup-biome#509, after the #1571 bypass merge).
+    re.compile(r"\bverify(?:Digest|SHA\d*)\b", re.IGNORECASE),
     # Helper call whose name denotes hashing a file with an explicit SHA
     # algorithm — e.g. ``fileSHA256(path)``, ``getSHA512(...)``.  As with the
     # ``validate*`` helpers above, the ``createHash`` implementation often
