@@ -689,6 +689,14 @@ class TestAnalyzeBinaryDownloads:
         assert all(f.startswith("bin/install.sh") for f in failures)
         assert not any("tests/fetch.sh" in w for w in warnings)
 
+    def test_markup_in_script_path_is_printed_literally(self, capsys):
+        action_yml = "runs:\n  using: composite\n  steps:\n    - shell: bash\n      run: echo hi\n"
+        name = "scripts/[/x][green]ok[/green].sh"
+        files = {name: self._ASPEN_DOWNLOAD + self._ASPEN_EXTRACT}
+        warnings, failures = self._run(action_yml, files, [name])
+        assert warnings
+        assert name in " ".join(capsys.readouterr().err.split())
+
     def test_unreferenced_script_with_verification_is_review_coverage(self):
         action_yml = "runs:\n  using: composite\n  steps:\n    - shell: bash\n      run: echo hi\n"
         files = {"scripts/fetch-tool.sh": self._ASPEN_DOWNLOAD + self._ASPEN_VERIFY + self._ASPEN_EXTRACT}

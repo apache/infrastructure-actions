@@ -1723,7 +1723,7 @@ def _print_attestation_note(path: str) -> None:
     the static scan did (and did not) confirm by detecting it."""
     console.print(
         f"    [green]✓ GitHub build attestation verification detected "
-        f"(`gh attestation verify`) in {path}[/green]"
+        f"(`gh attestation verify`) in {escape(path)}[/green]"
     )
     console.print(
         "    [dim]Assumptions: this is a static text match. It confirms an "
@@ -1929,7 +1929,7 @@ def analyze_binary_downloads(
                 else "verification present in sibling step of action.yml"
             )
             console.print(
-                f"  [green]✓[/green] {path}: {len(downloads)} download(s), {note}"
+                f"  [green]✓[/green] {escape(path)}: {len(downloads)} download(s), {note}"
             )
             if _has_attestation_verification(content):
                 _print_attestation_note(path)
@@ -1943,7 +1943,7 @@ def analyze_binary_downloads(
                 )
         elif path in unreferenced_paths:
             console.print(
-                f"  [yellow]![/yellow] {path}: {len(downloads)} unverified download(s) "
+                f"  [yellow]![/yellow] {escape(path)}: {len(downloads)} unverified download(s) "
                 f"[yellow](script not referenced from action.yml; check whether "
                 f"the action runs it)[/yellow]"
             )
@@ -1957,7 +1957,7 @@ def analyze_binary_downloads(
                 )
         else:
             console.print(
-                f"  [red]✗[/red] {path}: {len(downloads)} unverified download(s) "
+                f"  [red]✗[/red] {escape(path)}: {len(downloads)} unverified download(s) "
                 f"[red bold](no checksum/signature check in file)[/red bold]"
             )
             for line_num, snippet in downloads[:5]:
@@ -1977,7 +1977,7 @@ def analyze_binary_downloads(
         has_verify = any(p.search(content) for p in _JS_VERIFICATION_PATTERNS)
         if has_verify:
             console.print(
-                f"  [green]✓[/green] {path}: {len(downloads)} JS download(s), "
+                f"  [green]✓[/green] {escape(path)}: {len(downloads)} JS download(s), "
                 f"verification present in file"
             )
             for line_num, snippet in downloads[:3]:
@@ -1990,7 +1990,7 @@ def analyze_binary_downloads(
                 )
         else:
             console.print(
-                f"  [red]✗[/red] {path}: {len(downloads)} unverified JS download(s) "
+                f"  [red]✗[/red] {escape(path)}: {len(downloads)} unverified JS download(s) "
                 f"[red bold](no checksum/signature check in file)[/red bold]"
             )
             for line_num, snippet in downloads[:5]:
