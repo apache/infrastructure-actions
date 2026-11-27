@@ -688,6 +688,42 @@ runs:
         assert "Assumptions" in out
         assert "fail-open" in out
 
+    # Snippets are action source, so they must reach Rich as text, not
+    # markup.  A continued curl line ends in "\", which escaped the closing
+    # tag and printed a literal "[/red]" (DigitalPebble/aspen, #1585).
+    def test_snippet_ending_in_backslash_renders_cleanly(self, capsys):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                'RUN curl -fsSL --retry 3 -o /usr/bin/tool "$URL/tool" \\\n'
+                "    && chmod +x /usr/bin/tool\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures
+        out = " ".join(capsys.readouterr().err.split())
+        assert '"$URL/tool" \\' in out
+        assert "[/red]" not in out
+        assert "[/dim]" not in out
+
+    def test_markup_in_snippet_is_printed_literally(self, capsys):
+        files = {
+            "Dockerfile": (
+                "FROM alpine@sha256:abc\n"
+                "RUN curl -fsSLO https://example.com/tool.tar.gz "
+                "# [/red][green]verified[/green] [/x]\n"
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
+                # An unbalanced "[/x]" used to raise rich.errors.MarkupError.
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures
+        out = " ".join(capsys.readouterr().err.split())
+        assert "[/red][green]verified[/green] [/x]" in out
+
     def test_apk_add_not_flagged(self):
         files = {
             "Dockerfile": (

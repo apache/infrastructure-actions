@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Iterator
 
 import requests
+from rich.markup import escape
 
 from .console import console
 from .github_client import GitHubClient
@@ -280,7 +281,7 @@ def analyze_nested_actions(
 
         if visit.action_type == "local":
             console.print(
-                f"{indent}[dim]line {line}:[/dim] [cyan]{raw}[/cyan] [dim](local action)[/dim]"
+                f"{indent}[dim]line {line}:[/dim] [cyan]{escape(raw)}[/cyan] [dim](local action)[/dim]"
             )
             checked.append({
                 "action": raw, "type": "local", "pinned": True,
@@ -290,7 +291,7 @@ def analyze_nested_actions(
 
         if visit.action_type == "docker-ref":
             console.print(
-                f"{indent}[dim]line {line}:[/dim] [cyan]{raw}[/cyan] [dim](docker reference)[/dim]"
+                f"{indent}[dim]line {line}:[/dim] [cyan]{escape(raw)}[/cyan] [dim](docker reference)[/dim]"
             )
             checked.append({
                 "action": raw, "type": "docker-ref", "pinned": True,
@@ -314,7 +315,7 @@ def analyze_nested_actions(
         if not ref_info.get("is_hash_pinned"):
             console.print(
                 f"{indent}[dim]line {line}:[/dim] [red]✗[/red] "
-                f"{display_name}@{ref_str} [red bold](NOT hash-pinned — uses tag/branch!)[/red bold]"
+                f"{escape(display_name)}@{escape(ref_str)} [red bold](NOT hash-pinned — uses tag/branch!)[/red bold]"
             )
             warnings.append(
                 f"Nested action {display_name}@{ref_str} is NOT pinned to a commit hash"
@@ -334,14 +335,14 @@ def analyze_nested_actions(
         if visit.approved:
             console.print(
                 f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
-                f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{display_name}@{ref_str[:12]}[/link] "
+                f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{escape(display_name)}@{ref_str[:12]}[/link] "
                 f"[green](hash-pinned, in our approved list)[/green]"
             )
         else:
             tag_display = f" [dim]# {tag_comment}[/dim]" if tag_comment else ""
             console.print(
                 f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
-                f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{display_name}@{ref_str[:12]}[/link]"
+                f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{escape(display_name)}@{ref_str[:12]}[/link]"
                 f"{tag_display} [yellow](hash-pinned, NOT in our approved list)[/yellow]"
             )
             warnings.append(
@@ -407,7 +408,7 @@ def analyze_nested_actions(
                         elif "@sha256:" in image:
                             console.print(f"{indent}  [dim]↳ docker action, image digest-pinned[/dim]")
                         else:
-                            console.print(f"{indent}  [dim]↳ docker action, image: {image}[/dim]")
+                            console.print(f"{indent}  [dim]↳ docker action, image: {escape(image)}[/dim]")
                         break
         else:
             entry["type"] = visit.action_type
@@ -506,24 +507,24 @@ def analyze_dockerfile(
                 from_lines.append((i, image))
                 if image in stage_names:
                     console.print(
-                        f"  [green]✓[/green] [dim]line {i}:[/dim] FROM {image} "
+                        f"  [green]✓[/green] [dim]line {i}:[/dim] FROM {escape(image)} "
                         f"[green](multi-stage reference)[/green]"
                     )
                 elif "@sha256:" in image:
                     console.print(
-                        f"  [green]✓[/green] [dim]line {i}:[/dim] FROM {image} "
+                        f"  [green]✓[/green] [dim]line {i}:[/dim] FROM {escape(image)} "
                         f"[green](digest-pinned)[/green]"
                     )
                 elif ":" in image and not image.endswith(":latest"):
                     tag = image.split(":")[-1]
                     console.print(
-                        f"  [yellow]~[/yellow] [dim]line {i}:[/dim] FROM {image} "
+                        f"  [yellow]~[/yellow] [dim]line {i}:[/dim] FROM {escape(image)} "
                         f"[yellow](tag-pinned to '{tag}', but not digest-pinned)[/yellow]"
                     )
                     warnings.append(f"Dockerfile FROM {image} is tag-pinned, not digest-pinned")
                 else:
                     console.print(
-                        f"  [red]✗[/red] [dim]line {i}:[/dim] FROM {image} "
+                        f"  [red]✗[/red] [dim]line {i}:[/dim] FROM {escape(image)} "
                         f"[red bold](unpinned or :latest!)[/red bold]"
                     )
                     warnings.append(f"Dockerfile FROM {image} is not pinned")
@@ -544,7 +545,7 @@ def analyze_dockerfile(
             console.print()
             console.print("  [yellow]Potentially suspicious commands:[/yellow]")
             for line_num, cmd in suspicious_cmds:
-                console.print(f"    [dim]line {line_num}:[/dim] [yellow]{cmd}[/yellow]")
+                console.print(f"    [dim]line {line_num}:[/dim] [yellow]{escape(cmd)}[/yellow]")
                 warnings.append(f"Dockerfile line {line_num}: {cmd[:80]}")
         elif from_lines:
             console.print(f"  [green]✓[/green] No suspicious commands detected")
@@ -558,7 +559,7 @@ def analyze_dockerfile(
                     console.print()
                     console.rule("[bold]Docker Image Analysis[/bold]")
                     image = m.group(1)
-                    console.print(f"  [dim]Docker image reference:[/dim] {image}")
+                    console.print(f"  [dim]Docker image reference:[/dim] {escape(image)}")
                     if "@sha256:" in image:
                         console.print(f"  [green]✓[/green] Image is digest-pinned")
                     else:
@@ -714,7 +715,7 @@ def analyze_scripts(
                         f"    [yellow]![/yellow] [dim]line {line_num}:[/dim] "
                         f"[yellow]{desc}[/yellow]"
                     )
-                    console.print(f"      [dim]{snippet}[/dim]")
+                    console.print(f"      [dim]{escape(snippet)}[/dim]")
             if len(findings) > len(seen_patterns):
                 console.print(
                     f"    [dim]({len(findings)} total findings, "
@@ -1058,7 +1059,7 @@ def analyze_action_metadata(
                     f"  [yellow]![/yellow] [dim]line {i}:[/dim] "
                     f"[yellow]{desc}[/yellow]"
                 )
-                console.print(f"    [dim]{line.strip()[:100]}[/dim]")
+                console.print(f"    [dim]{escape(line.strip()[:100])}[/dim]")
                 warnings.append(f"action.yml line {i}: {desc}")
 
     dangerous_shell_patterns = [
@@ -1124,7 +1125,7 @@ def analyze_action_metadata(
                     f"  [yellow]![/yellow] [dim]line {line_num}:[/dim] "
                     f"[yellow]{desc}[/yellow]"
                 )
-                console.print(f"    [dim]{snippet}[/dim]")
+                console.print(f"    [dim]{escape(snippet)}[/dim]")
                 if "high risk" in desc or "injection" in desc:
                     warnings.append(f"action.yml line {line_num}: {desc}")
                 shown += 1
@@ -1143,7 +1144,7 @@ def analyze_action_metadata(
     if env_secrets:
         console.print(f"  [dim]ℹ[/dim] Secrets referenced in {len(env_secrets)} place(s):")
         for line_num, snippet in env_secrets[:5]:
-            console.print(f"    [dim]line {line_num}: {snippet}[/dim]")
+            console.print(f"    [dim]line {line_num}: {escape(snippet)}[/dim]")
     else:
         console.print("  [green]✓[/green] No secrets referenced")
 
@@ -1866,7 +1867,7 @@ def analyze_binary_downloads(
             if _has_attestation_verification(content):
                 _print_attestation_note(path)
             for line_num, snippet in downloads[:3]:
-                console.print(f"    [dim]line {line_num}:[/dim] [dim]{snippet}[/dim]")
+                console.print(f"    [dim]line {line_num}:[/dim] [dim]{escape(snippet)}[/dim]")
             if len(downloads) > 3:
                 console.print(f"    [dim]... and {len(downloads) - 3} more[/dim]")
             for line_num, snippet in downloads:
@@ -1879,7 +1880,7 @@ def analyze_binary_downloads(
                 f"[red bold](no checksum/signature check in file)[/red bold]"
             )
             for line_num, snippet in downloads[:5]:
-                console.print(f"    [dim]line {line_num}:[/dim] [red]{snippet}[/red]")
+                console.print(f"    [dim]line {line_num}:[/dim] [red]{escape(snippet)}[/red]")
             if len(downloads) > 5:
                 console.print(f"    [dim]... and {len(downloads) - 5} more[/dim]")
             for line_num, snippet in downloads:
@@ -1899,7 +1900,7 @@ def analyze_binary_downloads(
                 f"verification present in file"
             )
             for line_num, snippet in downloads[:3]:
-                console.print(f"    [dim]line {line_num}:[/dim] [dim]{snippet}[/dim]")
+                console.print(f"    [dim]line {line_num}:[/dim] [dim]{escape(snippet)}[/dim]")
             if len(downloads) > 3:
                 console.print(f"    [dim]... and {len(downloads) - 3} more[/dim]")
             for line_num, snippet in downloads:
@@ -1912,7 +1913,7 @@ def analyze_binary_downloads(
                 f"[red bold](no checksum/signature check in file)[/red bold]"
             )
             for line_num, snippet in downloads[:5]:
-                console.print(f"    [dim]line {line_num}:[/dim] [red]{snippet}[/red]")
+                console.print(f"    [dim]line {line_num}:[/dim] [red]{escape(snippet)}[/red]")
             if len(downloads) > 5:
                 console.print(f"    [dim]... and {len(downloads) - 5} more[/dim]")
             for line_num, snippet in downloads:

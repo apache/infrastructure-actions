@@ -22,6 +22,7 @@ import tempfile
 import webbrowser
 from pathlib import Path
 
+from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
@@ -472,7 +473,8 @@ def verify_single_action(
                 console.print()
                 console.print(
                     Panel(
-                        "\n".join(f"  [yellow]![/yellow] {w}" for w in non_js_warnings),
+                        # Warnings quote action source; keep it from being read as markup.
+                        "\n".join(f"  [yellow]![/yellow] {escape(w)}" for w in non_js_warnings),
                         title=f"[yellow bold]{len(non_js_warnings)} Warning(s)[/yellow bold]",
                         border_style="yellow",
                         padding=(0, 1),
