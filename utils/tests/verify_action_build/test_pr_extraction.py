@@ -16,7 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-from verify_action_build.pr_extraction import extract_action_refs_from_diff
+from verify_action_build.pr_extraction import (
+    extract_action_refs_from_diff,
+    extract_pattern_entries_from_diff,
+)
 
 
 class TestExtractActionRefsFromDiff:
@@ -238,3 +241,54 @@ diff --git a/actions.yml b/actions.yml
         # line is unattributable and dropped.  No ref returned.
         refs = extract_action_refs_from_diff(diff)
         assert refs == []
+
+
+# apache/infrastructure-actions#1585, verbatim: a new action added straight to
+# the generated approved_patterns.yml, pinned to a moving tag.  `verify`
+# reported "No added action references ... nothing to verify" and passed.
+PR_1585_DIFF = """\
+diff --git a/approved_patterns.yml b/approved_patterns.yml
+index fe5631903..e473d8a57 100644
+--- a/approved_patterns.yml
++++ b/approved_patterns.yml
+@@ -155,6 +155,7 @@
+ - dawidd6/action-send-mail@47af4a10b540781705f283a2cf1a9650713ac795
+ - dawidd6/action-send-mail@27bf7a883db6de205849f760badd38a1a3ce0dd0
+ - dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98
++- DigitalPebble/aspen@v1
+ - dlang-community/setup-dlang@*
+ - docker/bake-action@d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b
+ - docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f
+"""
+
+_EMPTY = {"sha": [], "wildcard": [], "unpinned": []}
+
+
+class TestExtractPatternEntriesFromDiff:
+    def test_pr_1585_tag_pin_is_unpinned(self):
+        found = extract_pattern_entries_from_diff(PR_1585_DIFF)
+        assert found == {**_EMPTY, "unpinned": ["DigitalPebble/aspen@v1"]}
+        # Context lines (existing entries) are never reported.
+        assert extract_action_refs_from_diff(PR_1585_DIFF) == []
+
+    def test_sha_entry_is_verified_like_any_ref(self):
+        sha = "933c530e9d91f5e6a43c893678d08abc248f399d"
+        diff = PR_1585_DIFF.replace("+- DigitalPebble/aspen@v1", f"+- DigitalPebble/aspen@{sha}")
+        assert extract_pattern_entries_from_diff(diff)["sha"] == [f"DigitalPebble/aspen@{sha}"]
+        assert extract_action_refs_from_diff(diff) == [f"DigitalPebble/aspen@{sha}"]
+
+    def test_wildcard_and_branch_are_told_apart(self):
+        diff = PR_1585_DIFF.replace(
+            "+- DigitalPebble/aspen@v1", "+- some-org/tool@*\n+- other-org/tool/sub@main"
+        )
+        found = extract_pattern_entries_from_diff(diff)
+        assert found["wildcard"] == ["some-org/tool@*"]
+        assert found["unpinned"] == ["other-org/tool/sub@main"]
+
+    def test_same_shape_in_another_file_is_ignored(self):
+        diff = PR_1585_DIFF.replace("approved_patterns.yml", "docs/example.yml")
+        assert extract_pattern_entries_from_diff(diff) == _EMPTY
+
+    def test_removed_entry_is_ignored(self):
+        diff = PR_1585_DIFF.replace("+- DigitalPebble/aspen@v1", "-- DigitalPebble/aspen@v1")
+        assert extract_pattern_entries_from_diff(diff) == _EMPTY

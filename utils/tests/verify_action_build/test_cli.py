@@ -23,6 +23,8 @@ import pytest
 
 from verify_action_build.cli import main
 
+from .test_pr_extraction import PR_1585_DIFF
+
 
 class TestMain:
     def test_no_args_shows_help_and_exits(self):
@@ -107,6 +109,30 @@ class TestMain:
                     with pytest.raises(SystemExit) as exc_info:
                         main()
                     assert exc_info.value.code == 0
+
+    def _run_from_pr(self, diff):
+        with mock.patch("sys.argv", ["verify-action-build", "--from-pr", "1585"]):
+            with mock.patch("shutil.which", return_value="/usr/bin/docker"):
+                with mock.patch(
+                    "verify_action_build.cli.GitHubClient"
+                ) as gh_cls:
+                    gh_cls.return_value.get_pr_diff.return_value = diff
+                    with pytest.raises(SystemExit) as exc_info:
+                        main()
+        return exc_info.value.code
+
+    def test_from_pr_tag_pinned_pattern_entry_fails(self, capsys):
+        assert self._run_from_pr(PR_1585_DIFF) == 1
+        # The console writes to stderr and wraps long lines.
+        out = " ".join(capsys.readouterr().err.split())
+        assert "DigitalPebble/aspen@v1" in out
+        assert "actions.yml instead" in out
+        assert "nothing to verify" not in out
+
+    def test_from_pr_wildcard_pattern_entry_is_a_note(self, capsys):
+        diff = PR_1585_DIFF.replace("+- DigitalPebble/aspen@v1", "+- some-org/tool@*")
+        assert self._run_from_pr(diff) == 0
+        assert "some-org/tool@*" in " ".join(capsys.readouterr().err.split())
 
     def test_from_pr_when_diff_fetch_fails_errors(self):
         with mock.patch("sys.argv", ["verify-action-build", "--from-pr", "999"]):
