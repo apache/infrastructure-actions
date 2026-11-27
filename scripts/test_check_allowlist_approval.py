@@ -250,3 +250,36 @@ def test_main_single_pr_exit_code_follows_the_verdict(monkeypatch, capsys):
     _api_router(monkeypatch, ["actions.yml"], [], {}, [])
     assert caa.main(["--repo", "o/r", "--pr", "7"]) == 1
     assert capsys.readouterr().out.startswith("pending:")
+
+
+def test_strictest_prefers_error_then_pending():
+    assert caa.strictest([("success", "a"), ("pending", "b")])[0] == "pending"
+    assert caa.strictest([("pending", "b"), ("error", "c"), ("success", "a")])[0] == "error"
+
+
+def test_shared_head_commit_posts_the_strictest_verdict_once(monkeypatch):
+    """A second PR from the same commit must not overwrite a pending status."""
+    import json
+
+    sha = "a" * 40
+    files = {7: ["actions.yml"], 8: ["README.md"]}
+    posted = []
+
+    def gh_lines(*args):
+        if args[0] == "-X":
+            fields = dict(a.split("=", 1) for a in args[3:] if "=" in a)
+            posted.append((args[2].rsplit("/", 1)[1], fields["state"]))
+            return []
+        path = args[0]
+        if path.startswith("repos/o/r/pulls?state=open"):
+            return [json.dumps({"number": n, "sha": sha}) for n in (7, 8)]
+        number = int(path.split("/")[4])
+        if path.endswith("/files"):
+            return [json.dumps([f]) for f in files[number]]
+        if path.endswith("/reviews"):
+            return []
+        return [str(len(files[number]))]
+
+    monkeypatch.setattr(caa, "_gh_lines", gh_lines)
+    assert caa.main(["--repo", "o/r", "--head-sha", sha, "--post-status"]) == 0
+    assert posted == [(sha, "pending")]

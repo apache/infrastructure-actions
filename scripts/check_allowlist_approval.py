@@ -128,6 +128,16 @@ def verdict(
     return "pending", "Waiting for approval from a maintainer (a reviewer with write access)."
 
 
+# A commit status belongs to the commit, not to a PR, so when several open PRs
+# share a head commit the strictest verdict must win; otherwise a second PR
+# from the same commit against another base could overwrite a pending status.
+STRICTNESS = {"success": 0, "pending": 1, "error": 2}
+
+
+def strictest(verdicts: Iterable[tuple[str, str]]) -> tuple[str, str]:
+    return max(verdicts, key=lambda v: STRICTNESS[v[0]])
+
+
 def open_prs_with_head(prs: Iterable[dict], head_sha: str) -> list[int]:
     """Numbers of the open PRs, from ``{number, sha}`` entries, whose head is ``head_sha``."""
     return sorted(pr["number"] for pr in prs if pr["sha"] == head_sha)
@@ -237,24 +247,24 @@ def main(argv: list[str] | None = None) -> int:
         print(f"::error::Not a commit SHA: {args.head_sha!r}")
         return 1
     prs = _open_prs(args.repo)
-    if args.head_sha is not None:
-        targets = [(n, args.head_sha) for n in open_prs_with_head(prs, args.head_sha)]
-    else:
-        targets = sorted((pr["number"], pr["sha"]) for pr in prs)
-    if not targets:
+    shas = [args.head_sha] if args.head_sha is not None else sorted({pr["sha"] for pr in prs})
+    if not any(open_prs_with_head(prs, sha) for sha in shas):
         print("No open PR to judge.")
         return 0
 
     failed = False
-    for number, sha in targets:
-        try:
-            state, description = evaluate(args.repo, number)
-        except (subprocess.CalledProcessError, ValueError, IndexError) as exc:
-            failed = True
-            state, description = "error", f"Could not evaluate the PR: {type(exc).__name__}"
-        print(f"#{number} {sha[:12]}: {state}: {description}")
-        if args.post_status:
-            _post_status(args.repo, sha, state, description, args.target_url)
+    for sha in shas:
+        verdicts = []
+        for number in open_prs_with_head(prs, sha):
+            try:
+                state, description = evaluate(args.repo, number)
+            except (subprocess.CalledProcessError, ValueError, IndexError) as exc:
+                failed = True
+                state, description = "error", f"Could not evaluate the PR: {type(exc).__name__}"
+            print(f"#{number} {sha[:12]}: {state}: {description}")
+            verdicts.append((state, description))
+        if verdicts and args.post_status:
+            _post_status(args.repo, sha, *strictest(verdicts), args.target_url)
     return 1 if failed else 0
 
 
