@@ -1,0 +1,83 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# Posts the required `approval` commit status (.asf.yaml) on a PR's head
+# commit.  A PR that touches the allow list (actions.yml,
+# approved_patterns.yml or the generated Dependabot composite action) stays
+# `pending` until at least one maintainer, a reviewer with write access, has
+# approved; it is never marked failed just for waiting.  Other PRs get
+# `success` at once.  A PR that cannot be judged gets `error`.
+#
+# Runs after every allowlist_approval.yml run, which fires on each PR event
+# and review, so the status follows approvals and dismissals.  A review on a
+# fork PR only gets a read-only token, so the status cannot be posted from
+# there.  `workflow_run` runs this file from the default branch with the
+# token below; it takes nothing from the PR except the head commit SHA,
+# which the script validates and matches against the open PRs.
+#
+# Run it by hand (workflow_dispatch) to re-post the status on every open PR.
+name: Allowlist Maintainer Approval Status
+
+on:
+  # Runs default-branch code, reads only the head SHA, and can only post the
+  # `approval` status.
+  workflow_run:  # zizmor: ignore[dangerous-triggers]
+    workflows: ["Allowlist Maintainer Approval"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: allowlist-approval-status-${{ github.event.workflow_run.head_sha || 'all-open' }}
+  cancel-in-progress: true
+
+jobs:
+  status:
+    runs-on: ubuntu-slim
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Post the approval status for the PR
+        if: github.event_name == 'workflow_run'
+        run: >-
+          python3 scripts/check_allowlist_approval.py --repo "${REPO}"
+          --head-sha "${HEAD_SHA}" --post-status --target-url "${RUN_URL}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Post the approval status for every open PR
+        if: github.event_name == 'workflow_dispatch'
+        run: >-
+          python3 scripts/check_allowlist_approval.py --repo "${REPO}"
+          --all-open --post-status --target-url "${RUN_URL}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

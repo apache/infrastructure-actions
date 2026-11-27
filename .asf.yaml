@@ -60,8 +60,9 @@ github:
             # passes raw ruleset values to the API as strings except for a
             # fixed set of keys, and a string integration_id is rejected.
             required_status_checks:
-              # allowlist_approval.yml: an allow-list PR needs a maintainer's
-              # approval; other PRs pass it at once.
+              # The commit status allowlist_approval_status.yml posts: pending
+              # until a maintainer approves an allow-list PR; other PRs pass
+              # it at once.
               - context: approval
               # verify_*_action.yml: rebuilds an allow-list PR's action and
               # compares it with the published one; other PRs pass it at once.

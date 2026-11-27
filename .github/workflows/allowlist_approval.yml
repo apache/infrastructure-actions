@@ -16,13 +16,15 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# Fails PRs that touch the allow list (actions.yml, approved_patterns.yml or
-# the generated Dependabot composite action) until at least one maintainer —
-# a reviewer with write access — has approved.  Other PRs pass
-# immediately, so the check is required on every PR (.asf.yaml).
+# Trigger for the allow-list approval gate.  It decides nothing and always
+# passes: on every PR event and every review it only wakes up
+# allowlist_approval_status.yml, which judges the PR and posts the required
+# `approval` commit status (pending while an allow-list PR waits for a
+# maintainer, success once approved).
 #
-# Re-runs on review events so the status flips as soon as an approval lands
-# or is dismissed.
+# The verdict is not reached here because a fork PR's token is read-only, so
+# this run could not post a status, and because this file runs as the PR has
+# it, while the status workflow runs from the default branch.
 name: Allowlist Maintainer Approval
 
 on:
@@ -31,28 +33,16 @@ on:
   pull_request_review:
     types: [submitted, edited, dismissed]
 
-permissions:
-  contents: read
-  pull-requests: read
+permissions: {}
 
 concurrency:
   group: allowlist-approval-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
-  approval:
-    runs-on: ubuntu-26.04
+  approval-trigger:
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
     steps:
-      # Check out the base, not the PR head: the script is the gate, so a PR
-      # must not be able to rewrite it.  It only reads PR data via the API.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          ref: ${{ github.event.pull_request.base.sha }}
-          persist-credentials: false
-
-      - name: Check maintainer approval
-        run: python3 scripts/check_allowlist_approval.py --repo "${REPO}" --pr "${PR_NUMBER}"
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+      - name: Hand over to the approval status workflow
+        run: echo "allowlist_approval_status.yml posts the 'approval' status for this PR."

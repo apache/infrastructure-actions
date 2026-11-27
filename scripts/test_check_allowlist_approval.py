@@ -134,3 +134,152 @@ def test_gh_lines_fails_closed_and_reports_when_retries_run_out(monkeypatch, cap
         caa._gh_lines("repos/o/r/pulls/1")
     assert delays == list(caa.RETRY_DELAYS)
     assert error in capsys.readouterr().err
+
+
+def test_verdict_non_allowlist_pr_passes():
+    assert caa.verdict(True, False, [])[0] == "success"
+
+
+def test_verdict_unapproved_allowlist_pr_is_pending_not_failed():
+    state, description = caa.verdict(True, True, [])
+    assert state == "pending"
+    assert "maintainer" in description
+
+
+def test_verdict_approved_allowlist_pr_passes():
+    state, description = caa.verdict(True, True, ["alice"])
+    assert state == "success"
+    assert "alice" in description
+
+
+def test_verdict_incomplete_file_list_is_an_error():
+    assert caa.verdict(False, False, [])[0] == "error"
+
+
+def test_verdict_descriptions_fit_the_status_limit():
+    many = [f"maintainer{i}" for i in range(40)]
+    for args in [(True, True, many), (True, True, []), (False, False, []), (True, False, [])]:
+        assert len(caa.verdict(*args)[1]) <= 140
+
+
+def test_open_prs_with_head_matches_only_that_commit():
+    prs = [
+        {"number": 3, "sha": "a" * 40},
+        {"number": 1, "sha": "a" * 40},
+        {"number": 2, "sha": "b" * 40},
+    ]
+    assert caa.open_prs_with_head(prs, "a" * 40) == [1, 3]
+    assert caa.open_prs_with_head(prs, "c" * 40) == []
+
+
+def test_main_rejects_a_non_sha(capsys):
+    assert caa.main(["--repo", "o/r", "--head-sha", "main"]) == 1
+    assert "Not a commit SHA" in capsys.readouterr().out
+
+
+def test_main_refuses_post_status_for_a_single_pr():
+    with pytest.raises(SystemExit):
+        caa.main(["--repo", "o/r", "--pr", "1", "--post-status"])
+
+
+def _api_router(monkeypatch, files, reviews, permissions, prs):
+    """Fake ``_gh_lines`` answering the endpoints ``main`` calls; returns posted statuses."""
+    import json
+
+    posted = []
+
+    def gh_lines(*args):
+        path = args[0] if args[0] != "-X" else args[2]
+        if args[0] == "-X":
+            fields = dict(a.split("=", 1) for a in args[3:] if "=" in a)
+            posted.append((path.rsplit("/", 1)[1], fields["state"], fields["context"]))
+            return []
+        if path.startswith("repos/o/r/pulls?state=open"):
+            return [json.dumps(pr) for pr in prs]
+        if path.endswith("/files"):
+            return [json.dumps([f]) for f in files]
+        if path.endswith("/reviews"):
+            return [json.dumps({"login": login, "state": s}) for login, s in reviews]
+        if "/collaborators/" in path:
+            return [permissions.get(path.split("/")[4], "none")]
+        return [str(len(files))]  # changed_files
+
+    monkeypatch.setattr(caa, "_gh_lines", gh_lines)
+    return posted
+
+
+def test_main_posts_pending_for_an_unapproved_allowlist_pr(monkeypatch):
+    sha = "a" * 40
+    posted = _api_router(
+        monkeypatch,
+        files=["actions.yml"],
+        reviews=[("carol", "APPROVED")],
+        permissions={"carol": "read"},
+        prs=[{"number": 7, "sha": sha}, {"number": 8, "sha": "b" * 40}],
+    )
+    assert caa.main(["--repo", "o/r", "--head-sha", sha, "--post-status"]) == 0
+    assert posted == [(sha, "pending", "approval")]
+
+
+def test_main_posts_success_once_a_maintainer_approves(monkeypatch):
+    sha = "a" * 40
+    posted = _api_router(
+        monkeypatch,
+        files=["approved_patterns.yml"],
+        reviews=[("alice", "APPROVED")],
+        permissions={"alice": "write"},
+        prs=[{"number": 7, "sha": sha}],
+    )
+    assert caa.main(["--repo", "o/r", "--head-sha", sha, "--post-status"]) == 0
+    assert posted == [(sha, "success", "approval")]
+
+
+def test_main_all_open_posts_for_every_pr(monkeypatch):
+    posted = _api_router(
+        monkeypatch,
+        files=["README.md"],
+        reviews=[],
+        permissions={},
+        prs=[{"number": 2, "sha": "b" * 40}, {"number": 1, "sha": "a" * 40}],
+    )
+    assert caa.main(["--repo", "o/r", "--all-open", "--post-status"]) == 0
+    assert posted == [("a" * 40, "success", "approval"), ("b" * 40, "success", "approval")]
+
+
+def test_main_single_pr_exit_code_follows_the_verdict(monkeypatch, capsys):
+    _api_router(monkeypatch, ["actions.yml"], [], {}, [])
+    assert caa.main(["--repo", "o/r", "--pr", "7"]) == 1
+    assert capsys.readouterr().out.startswith("pending:")
+
+
+def test_strictest_prefers_error_then_pending():
+    assert caa.strictest([("success", "a"), ("pending", "b")])[0] == "pending"
+    assert caa.strictest([("pending", "b"), ("error", "c"), ("success", "a")])[0] == "error"
+
+
+def test_shared_head_commit_posts_the_strictest_verdict_once(monkeypatch):
+    """A second PR from the same commit must not overwrite a pending status."""
+    import json
+
+    sha = "a" * 40
+    files = {7: ["actions.yml"], 8: ["README.md"]}
+    posted = []
+
+    def gh_lines(*args):
+        if args[0] == "-X":
+            fields = dict(a.split("=", 1) for a in args[3:] if "=" in a)
+            posted.append((args[2].rsplit("/", 1)[1], fields["state"]))
+            return []
+        path = args[0]
+        if path.startswith("repos/o/r/pulls?state=open"):
+            return [json.dumps({"number": n, "sha": sha}) for n in (7, 8)]
+        number = int(path.split("/")[4])
+        if path.endswith("/files"):
+            return [json.dumps([f]) for f in files[number]]
+        if path.endswith("/reviews"):
+            return []
+        return [str(len(files[number]))]
+
+    monkeypatch.setattr(caa, "_gh_lines", gh_lines)
+    assert caa.main(["--repo", "o/r", "--head-sha", sha, "--post-status"]) == 0
+    assert posted == [(sha, "pending")]
