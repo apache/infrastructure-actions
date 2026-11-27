@@ -877,6 +877,9 @@ Kesin11/actions-timeline:
     expires_at: 2027-01-16
   460b1f8a750077029ad3589824d371b200e91dcf:
     tag: v3.2.1
+    expires_at: 2027-02-19
+  d547cc51bd6e8016ac50219eeb29a9eb385a2546:
+    tag: v4.0.0
 kiegroup/github-action-build-chain:
   '*':
     keep: true
