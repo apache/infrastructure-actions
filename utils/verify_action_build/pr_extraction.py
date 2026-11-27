@@ -45,8 +45,11 @@ PATTERNS_FILE = "approved_patterns.yml"
 
 # An ``approved_patterns.yml`` entry, ``- org/repo[/sub]@ref``, matched on the
 # added line without its ``+``: optional indentation, quotes, trailing comment.
+# YAML starts a comment only at a ``#`` preceded by whitespace; ``@sha#v1`` is
+# one scalar, so a ``#`` touching the ref leaves the line unparsed (fail closed)
+# rather than being read as a SHA followed by a comment.
 _PATTERN_ENTRY_RE = re.compile(
-    r"^\s*-\s+(['\"]?)([A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+)@([^\s'\"#]+)\1\s*(#.*)?$"
+    r"^\s*-\s+(['\"]?)([A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+)@([^\s'\"#]+)\1(?:\s+#.*)?\s*$"
 )
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
