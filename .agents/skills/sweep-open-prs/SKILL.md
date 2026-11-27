@@ -119,6 +119,12 @@ Two rules that decide most of the queue:
 - **`state=BLOCKED` with `review=REVIEW_REQUIRED` just means "needs an
   approval"** - it is not a failure. `BLOCKED` alongside a red check is the
   failure.
+- **`approval` is a commit status, and `PENDING` is its normal state** on an
+  unreviewed allow-list PR: it turns `SUCCESS` after a maintainer approves.
+  Only `ERROR` is a failure (re-post with
+  `gh workflow run allowlist_approval_status.yml`). A `FAILURE` named
+  `approval` is a check run left by the old gate on a pre-switch commit;
+  `gh pr update-branch <N> --rebase` replaces it.
 
 ## Step 3: act, per bucket
 
@@ -182,6 +188,7 @@ Merging a PR they just approved in the same turn is the mid-flow exception.
 | Reading `state=BLOCKED` as "broken" | Most of a healthy queue is `BLOCKED` pending one approval |
 | Classifying on a `mergeStateStatus: UNKNOWN` | Misses a PR that is actually ready; re-query first |
 | Reading an unfinished check as a failure | A running check has no conclusion yet; re-query rather than triaging it |
+| Reading a `PENDING` `approval` status as stuck CI | It is waiting for a maintainer's approval, by design; nothing to re-run |
 | Offering to approve the maintainer's own PR | Impossible on GitHub; wastes a round-trip |
 | Treating a carried-over warning as a regression | Blocks a bump that is no worse than the approved version |
 | Filing upstream before searching the target repo | Duplicate issues; search existing issues, including the maintainer's own |
