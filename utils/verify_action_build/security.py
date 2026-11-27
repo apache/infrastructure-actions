@@ -1566,8 +1566,13 @@ def _discover_shell_script_files(
     a script that neither file mentions -- uraimo/run-on-arch-action declares
     ``main: src/run-on-arch.js``, which then ``exec()``s ``src/run-on-arch.sh``
     -- so the script that actually invokes docker went unscanned.  Discover
-    them from the tree instead, using the same directory filters as the JS
-    discovery so vendored and test material stays out.
+    them from the tree instead.
+
+    Unlike JS discovery there is no allow-list of source directories: a
+    script in ``bin/`` or ``tools/`` runs just as well, and the download
+    check relies on this list to cover scripts action.yml reaches through a
+    path it can't resolve.  Only the build-output, vendored, test, example,
+    docs and ``.github/`` trees are left out.
     """
     paths: list[str] = []
     all_paths = _list_repo_files(org, repo, commit_hash)
@@ -1583,10 +1588,35 @@ def _discover_shell_script_files(
             continue
         if any(rel.startswith(d) for d in _JS_EXCLUDE_DIR_PREFIXES):
             continue
-        if "/" in rel and not any(rel.startswith(d) for d in _JS_SCAN_DIR_PREFIXES):
-            continue
         paths.append(rel)
     return paths
+
+
+# Marks a download warning from a script action.yml doesn't reference, so the
+# summary can say so instead of "verification present".
+UNREFERENCED_SCRIPT_DOWNLOAD = "unverified download in a script action.yml does not reference"
+
+
+def _fetch_action_file(
+    org: str, repo: str, commit_hash: str, sub_path: str, path: str,
+) -> str | None:
+    """Fetch ``path`` relative to the action directory, then the repo root."""
+    if sub_path:
+        content = fetch_file_from_github(org, repo, commit_hash, f"{sub_path}/{path}")
+        if content is not None:
+            return content
+    return fetch_file_from_github(org, repo, commit_hash, path)
+
+
+def _match_shipped_script(reference: str, shipped: list[str]) -> str | None:
+    """Return the shipped script that ``reference`` names, if any.
+
+    ``reference`` is a path from action.yml whose prefix didn't expand, such
+    as ``TOOLS/scripts/x.sh``.  It names the longest shipped path it ends
+    with on a segment boundary: ``scripts/x.sh`` over a root ``x.sh``.
+    """
+    matches = [s for s in shipped if reference.endswith("/" + s)]
+    return max(matches, key=len) if matches else None
 
 
 def _continued_commands(content: str) -> list[tuple[int, int, str]]:
@@ -1835,25 +1865,53 @@ def analyze_binary_downloads(
                     if clean and clean.count("/") <= 3:
                         script_files.add(clean)
 
+    # Every script the action ships, so one action.yml reaches only through an
+    # indirection we can't expand is still scanned.
+    shipped_scripts = _discover_shell_script_files(org, repo, commit_hash, sub_path)
+    not_in_repo: list[str] = []
     for script_path in sorted(script_files):
-        base_path = f"{sub_path}/{script_path}" if sub_path else script_path
-        content = fetch_file_from_github(org, repo, commit_hash, base_path)
+        content = _fetch_action_file(org, repo, commit_hash, sub_path, script_path)
         if content is None:
-            content = fetch_file_from_github(org, repo, commit_hash, script_path)
-        if content is not None:
+            # "$TOOLS/scripts/x.sh", "${{ env.DIR }}/x.sh": the prefix didn't
+            # expand, but the path still names a script the action ships.
+            shipped = _match_shipped_script(script_path, shipped_scripts)
+            if shipped is not None:
+                script_path = shipped
+                content = _fetch_action_file(org, repo, commit_hash, sub_path, shipped)
+        if content is None:
+            not_in_repo.append(script_path)
+        elif script_path not in action_yml_paths:
             files_to_scan.append((script_path, content))
             action_yml_paths.add(script_path)
+
+    # Shipped scripts action.yml doesn't name (called from another script, or
+    # through a path we can't resolve).  An unverified download in one is a
+    # warning, not a failure: dev and release tooling lives here too.
+    unreferenced_paths: set[str] = set()
+    for script_path in shipped_scripts:
+        if script_path in action_yml_paths:
+            continue
+        content = _fetch_action_file(org, repo, commit_hash, sub_path, script_path)
+        if content is not None:
+            files_to_scan.append((script_path, content))
+            unreferenced_paths.add(script_path)
 
     # JS/TS source files: shell-pattern downloads (curl/wget) are rare here
     # but JS actions commonly fetch binaries via @actions/tool-cache etc.,
     # so discover those separately and scan with JS-specific patterns.
     js_files_to_scan = _discover_js_source_files(org, repo, commit_hash, sub_path)
 
-    if not files_to_scan and not js_files_to_scan:
+    if not files_to_scan and not js_files_to_scan and not not_in_repo:
         return warnings, failures
 
     console.print()
     console.rule("[bold]Binary Download Verification[/bold]")
+
+    for script_path in not_in_repo:
+        console.print(
+            f"  [dim]⊘ {escape(script_path)}: referenced in action.yml but not "
+            f"found among the action's scripts; not scanned[/dim]"
+        )
 
     any_downloads = False
     for path, content in files_to_scan:
@@ -1882,6 +1940,20 @@ def analyze_binary_downloads(
             for line_num, snippet in downloads:
                 warnings.append(
                     f"{path} line {line_num}: download present (review coverage): {snippet[:80]}"
+                )
+        elif path in unreferenced_paths:
+            console.print(
+                f"  [yellow]![/yellow] {path}: {len(downloads)} unverified download(s) "
+                f"[yellow](script not referenced from action.yml; check whether "
+                f"the action runs it)[/yellow]"
+            )
+            for line_num, snippet in downloads[:5]:
+                console.print(f"    [dim]line {line_num}:[/dim] [yellow]{escape(snippet)}[/yellow]")
+            if len(downloads) > 5:
+                console.print(f"    [dim]... and {len(downloads) - 5} more[/dim]")
+            for line_num, snippet in downloads:
+                warnings.append(
+                    f"{path} line {line_num}: {UNREFERENCED_SCRIPT_DOWNLOAD}: {snippet[:80]}"
                 )
         else:
             console.print(
