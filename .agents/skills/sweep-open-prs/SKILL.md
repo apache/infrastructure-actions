@@ -203,6 +203,23 @@ error on its own, so one PR failing does not stop the rest.
    `mergePullRequest(input: {pullRequestId: "...", mergeMethod: MERGE}) { pullRequest { number state } }`
    per approved PR. Wait a minute or two after approving first: the
    `approval` status has to turn `SUCCESS` before a PR is `CLEAN`.
+   **Send at most three merges per request.** Each merge takes seconds, and
+   a larger request outlives GitHub's gateway: it returns `HTTP 502 Bad
+   Gateway` with an HTML page and no per-alias result, after the first few
+   merges have already gone through (seen 2026-11-27: three merged, the rest
+   not, on each of two nine- and six-PR requests).
+   **After any error that is not a GraphQL response, re-read the state
+   before retrying** - never resend the same batch blind, and never report
+   from the failed call:
+
+   ```
+   gh pr list --repo apache/infrastructure-actions --state all --limit 50 --json number,state,autoMergeRequest --jq '.[] | select([.number] | inside([<N>,<N>])) | "\(.number) \(.state) auto=\(.autoMergeRequest != null)"'
+   ```
+
+   Drop the `MERGED` ones and send the rest. A `Merge already in progress`
+   error on retry is the timed-out request's merge still running for that PR:
+   do not merge it again; set auto-merge on it (step 4), which lands it either
+   way.
 4. Every alias that errored (not yet `CLEAN`, or a conflict after an earlier
    merge in the batch touched the same file) goes into a third batch of
    `enablePullRequestAutoMerge(input: {pullRequestId: "...", mergeMethod: MERGE}) { pullRequest { number } }`.
@@ -211,7 +228,8 @@ error on its own, so one PR failing does not stop the rest.
    Dependabot rebases a conflicting PR on its own; auto-merge then lands it.
 
 Report per PR from the response: approved, merged, auto-merge set, or the
-alias's error.
+alias's error. When a request failed without a GraphQL response, report from
+the state you re-read instead.
 
 ## Reporting
 
@@ -236,4 +254,5 @@ Merging a PR they just approved in the same turn is the mid-flow exception.
 | Filing upstream before searching the target repo | Duplicate issues; search existing issues, including the maintainer's own |
 | Looping `gh` over PR numbers | Spurious `HTTP 401` on every call after the first |
 | Approving or merging one PR per call | One permission prompt per PR; use the batch above |
+| Resending a merge batch after a `502` | Some PRs already merged; re-read the state and send only the rest |
 | Piping or redirecting `gh` output | The command runs sandboxed and fails with a network deny or `x509` TLS error |
