@@ -61,12 +61,18 @@ anchore/sbom-action:
     expires_at: 2026-12-27
   66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c:
     tag: v0.24.3
+    expires_at: 2027-02-19
+  dfcb83b97731532d72be422cbc51ee64adb6fd56:
+    tag: v0.24.4
 anchore/scan-action:
   e1165082ffb1fe366ebaf02d8526e7c4989ea9d2:
     tag: v7.4.0
     expires_at: 2026-11-30
   27805bf3b4e84b4a5c980df22ed233c00390a439:
     tag: v7.4.2
+    expires_at: 2027-02-19
+  11983a512817154c80a9db660c1a184be7513ed6:
+    tag: v7.4.3
 arduino/setup-protoc:
   '*':
     keep: true
@@ -405,6 +411,9 @@ DavidAnson/markdownlint-cli2-action:
     expires_at: 2027-01-18
   696eb3f2509270d7b882d2aa68347bc676e7af34:
     tag: v25.0.0
+    expires_at: 2027-02-19
+  3ce8f712b5d8f31acd8e201be6d97e3d2bb23eb7:
+    tag: v25.1.0
 dawidd6/action-download-artifact:
   '*':
     keep: true
@@ -1146,6 +1155,9 @@ sbt/setup-sbt:
     expires_at: 2027-02-10
   7e114eae4f32ec3f93c851c2793376a77f384409:
     tag: v1.5.15
+    expires_at: 2027-02-19
+  20cf087132cf939c160f0e53f87ba33634003e3e:
+    tag: v1.5.16
 scalacenter/sbt-dependency-submission:
   d84eef4c09e633bcf5f113bcad7fd5e9af1baee9:
     tag: v3.2.3
