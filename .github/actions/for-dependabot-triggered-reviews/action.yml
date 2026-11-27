@@ -267,7 +267,7 @@ runs:
       if: false
     - uses: scalacenter/sbt-dependency-submission@d84eef4c09e633bcf5f113bcad7fd5e9af1baee9  # v3.2.3
       if: false
-    - uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532  # v4.1.3
+    - uses: sigstore/cosign-installer@881c63bd87e38389154debd8331404ce7ca8a3ab  # v4.1.4
       if: false
     - uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa  # v4.1.0
       if: false
