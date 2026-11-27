@@ -31,7 +31,10 @@ from verify_action_build.security import (
     analyze_lock_files,
     analyze_scripts,
     analyze_action_metadata,
+    analyze_dependency_pinning,
+    analyze_nested_actions,
     analyze_repo_metadata,
+    VisitedAction,
 )
 from verify_action_build.security import (
     _fetch_release_asset_bytes,
@@ -3091,3 +3094,57 @@ class _Patches:
     def __exit__(self, *args):
         for p in reversed(self._patches):
             p.__exit__(*args)
+
+
+class TestActionTextIsNotMarkup:
+    """Text read from an action must reach Rich as text, not markup."""
+
+    @staticmethod
+    def _visits(org, tag_comment):
+        sha = "b" * 40
+        parent = f"    - uses: {org}/tool@{sha} # {tag_comment}\n"
+        root = VisitedAction(
+            org="org", repo="repo", commit_hash="a" * 40, sub_path="", depth=0,
+            action_yml=parent, action_type="composite", incoming_ref=None,
+            parent_yml=None, approved=False, trusted=False,
+        )
+        nested = VisitedAction(
+            org=org, repo="tool", commit_hash=sha, sub_path="", depth=1,
+            action_yml=None, action_type="composite",
+            incoming_ref={"raw": f"{org}/tool@{sha}", "line_num": 1, "is_hash_pinned": True},
+            parent_yml=parent, approved=False, trusted=False,
+        )
+        return iter([root, nested])
+
+    def test_nested_tag_comment_printed_literally(self, capsys):
+        with mock.patch(
+            "verify_action_build.security.walk_actions",
+            return_value=self._visits("some-org", "v1 [/x][green]approved[/green]"),
+        ):
+            analyze_nested_actions("org", "repo", "a" * 40)
+        out = " ".join(capsys.readouterr().err.split())
+        assert "# v1 [/x][green]approved[/green]" in out
+
+    def test_unexpected_owner_chars_drop_the_link(self, capsys):
+        with mock.patch(
+            "verify_action_build.security.walk_actions",
+            return_value=self._visits("evil]org", "v1"),
+        ):
+            analyze_nested_actions("org", "repo", "a" * 40)
+        out = " ".join(capsys.readouterr().err.split())
+        assert "evil]org/tool@bbbbbbbbbbbb" in out
+
+    def test_dependency_pinning_keeps_brackets(self, capsys):
+        files = {
+            "requirements.txt": "requests[socks]>=2.31\n",
+            "package.json": '{"dependencies": {"left-pad": "^1.3.0"}}',
+        }
+        with mock.patch(
+            "verify_action_build.security.fetch_file_from_github",
+            side_effect=lambda org, repo, commit, path: files.get(path),
+        ):
+            analyze_dependency_pinning("org", "repo", "a" * 40)
+        out = " ".join(capsys.readouterr().err.split())
+        assert "requests[socks]>=2.31" in out
+        assert "package.json [dependencies]:" in out
+        assert "left-pad: ^1.3.0" in out

@@ -332,17 +332,23 @@ def analyze_nested_actions(
                 break
         entry["tag"] = tag_comment
 
+        # ref_str is 40 hex chars here; org/repo come straight from the
+        # uses: line, and a "]" in them would end the [link=] tag early.
+        pinned_ref = f"{escape(display_name)}@{ref_str[:12]}"
+        if _GITHUB_NAME.fullmatch(r_org) and _GITHUB_NAME.fullmatch(r_repo):
+            pinned_ref = (
+                f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]"
+                f"{pinned_ref}[/link]"
+            )
         if visit.approved:
             console.print(
-                f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
-                f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{escape(display_name)}@{ref_str[:12]}[/link] "
+                f"{indent}[dim]line {line}:[/dim] [green]✓[/green] {pinned_ref} "
                 f"[green](hash-pinned, in our approved list)[/green]"
             )
         else:
-            tag_display = f" [dim]# {tag_comment}[/dim]" if tag_comment else ""
+            tag_display = f" [dim]# {escape(tag_comment)}[/dim]" if tag_comment else ""
             console.print(
-                f"{indent}[dim]line {line}:[/dim] [green]✓[/green] "
-                f"[link=https://github.com/{r_org}/{r_repo}/commit/{ref_str}]{escape(display_name)}@{ref_str[:12]}[/link]"
+                f"{indent}[dim]line {line}:[/dim] [green]✓[/green] {pinned_ref}"
                 f"{tag_display} [yellow](hash-pinned, NOT in our approved list)[/yellow]"
             )
             warnings.append(
@@ -570,6 +576,9 @@ def analyze_dockerfile(
 
 
 _EXPRESSION = re.compile(r"\$\{\{.*?\}\}")
+
+# Characters GitHub allows in an owner or repository name.
+_GITHUB_NAME = re.compile(r"[A-Za-z0-9_.-]+")
 
 # A step-level ``env:`` entry whose whole value is the action path, e.g.
 # ``ACTION_PATH: ${{ github.action_path }}``.
@@ -981,7 +990,7 @@ def analyze_dependency_pinning(
 
             if unpinned_deps and is_compiled:
                 for pkg, spec in unpinned_deps[:5]:
-                    console.print(f"    [yellow]![/yellow] [dim]{spec}[/dim]")
+                    console.print(f"    [yellow]![/yellow] [dim]{escape(spec)}[/dim]")
                     warnings.append(f"{req_path}: {pkg} not strictly pinned")
                 if len(unpinned_deps) > 5:
                     console.print(f"    [dim]... and {len(unpinned_deps) - 5} more[/dim]")
@@ -1009,12 +1018,12 @@ def analyze_dependency_pinning(
                 pin_pct = (pinned / total) * 100 if total else 100
                 status = "[green]✓[/green]" if pin_pct >= 80 else "[yellow]![/yellow]"
                 console.print(
-                    f"  {status} {pkg_json_path} [{dep_type}]: "
+                    f"  {status} {pkg_json_path} {escape(f'[{dep_type}]')}: "
                     f"{pinned}/{total} deps exact-pinned ({pin_pct:.0f}%)"
                 )
                 if unpinned[:5]:
                     for name, ver in unpinned[:5]:
-                        console.print(f"    [dim]{name}: {ver}[/dim]")
+                        console.print(f"    [dim]{escape(f'{name}: {ver}')}[/dim]")
         except (json.JSONDecodeError, KeyError):
             pass
 
