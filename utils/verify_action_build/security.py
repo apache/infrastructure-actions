@@ -568,15 +568,36 @@ def analyze_dockerfile(
     return warnings
 
 
-_ACTION_PATH_PREFIX = re.compile(
-    r"(?:\$\{\{\s*github\.action_path\s*\}\}|\$\{?GITHUB_ACTION_PATH\}?)/"
+_EXPRESSION = re.compile(r"\$\{\{.*?\}\}")
+
+# A step-level ``env:`` entry whose whole value is the action path, e.g.
+# ``ACTION_PATH: ${{ github.action_path }}``.
+_ACTION_PATH_ENV_ALIAS = re.compile(
+    r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(['\"]?)"
+    r"\$\{\{\s*github\.action_path\s*\}\}\2\s*$",
+    re.MULTILINE,
 )
 
 
-_EXPRESSION = re.compile(r"\$\{\{.*?\}\}")
+def _action_path_prefix(action_yml: str) -> re.Pattern[str]:
+    """Build the regex matching an action-path prefix in ``action_yml``.
+
+    Besides ``${{ github.action_path }}/`` and ``$GITHUB_ACTION_PATH/``, any
+    variable the action aliases to the action path through ``env:`` counts:
+    DigitalPebble/aspen v1.4.1 (#1585) sets ``ACTION_PATH`` and runs
+    ``bash "$ACTION_PATH/scripts/install-binary.sh"``, which otherwise
+    resolves to a nonexistent ``ACTION_PATH/...`` path and the script that
+    downloads the binary is silently skipped.
+    """
+    names = {"GITHUB_ACTION_PATH"}
+    names.update(m.group(1) for m in _ACTION_PATH_ENV_ALIAS.finditer(action_yml))
+    alternation = "|".join(re.escape(n) for n in sorted(names))
+    return re.compile(
+        r"(?:\$\{\{\s*github\.action_path\s*\}\}|\$\{?(?:" + alternation + r")\}?)/"
+    )
 
 
-def _script_ref_text(line: str) -> str:
+def _script_ref_text(line: str, action_path_prefix: re.Pattern[str]) -> str:
     """Normalise an ``action.yml`` line for script-path discovery.
 
     Action-path prefixes are dropped so ``$GITHUB_ACTION_PATH/scripts/x.sh``
@@ -586,7 +607,7 @@ def _script_ref_text(line: str) -> str:
     blanked rather than causing the whole line to be skipped, so an input
     or token passed to a script cannot hide the script itself.
     """
-    return _EXPRESSION.sub(" ", _ACTION_PATH_PREFIX.sub("", line))
+    return _EXPRESSION.sub(" ", action_path_prefix.sub("", line))
 
 
 def analyze_scripts(
@@ -600,8 +621,9 @@ def analyze_scripts(
 
     script_files: set[str] = set()
 
+    action_path_prefix = _action_path_prefix(action_yml)
     for line in action_yml.splitlines():
-        stripped = _script_ref_text(line.strip())
+        stripped = _script_ref_text(line.strip(), action_path_prefix)
         for ext in (".py", ".sh", ".bash", ".rb", ".pl"):
             matches = re.findall(r"(?<![.\w])[\w][\w./-]*" + re.escape(ext) + r"\b", stripped)
             for m in matches:
@@ -1790,8 +1812,9 @@ def analyze_binary_downloads(
 
     script_files: set[str] = set()
     if action_yml:
+        action_path_prefix = _action_path_prefix(action_yml)
         for line in action_yml.splitlines():
-            stripped = _script_ref_text(line.strip())
+            stripped = _script_ref_text(line.strip(), action_path_prefix)
             for ext in (".sh", ".bash", ".py", ".ps1"):
                 for m in re.findall(r"(?<![.\w])[\w][\w./-]*" + re.escape(ext) + r"\b", stripped):
                     clean = m.lstrip("./").strip("'\"")

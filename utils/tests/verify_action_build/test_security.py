@@ -247,9 +247,14 @@ runs:
     @pytest.mark.parametrize("run", [
         'bash "$GITHUB_ACTION_PATH/scripts/bootstrap.sh"',
         "${{ github.action_path }}/scripts/bootstrap.sh",
+        'bash "$ACTION_PATH/scripts/bootstrap.sh"',
     ])
     def test_script_under_action_path_is_analyzed(self, run):
-        action_yml = f"runs:\n  using: composite\n  steps:\n    - run: {run}\n"
+        action_yml = (
+            "runs:\n  using: composite\n  steps:\n"
+            "    - env:\n        ACTION_PATH: ${{ github.action_path }}\n"
+            f"      run: {run}\n"
+        )
         fetched: list[str] = []
 
         def fetch(org, repo, commit, path):
@@ -261,7 +266,7 @@ runs:
                 mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=fetch):
             analyze_scripts("org", "repo", "a" * 40)
         assert "scripts/bootstrap.sh" in fetched
-        assert not any("GITHUB_ACTION_PATH" in p for p in fetched)
+        assert not any("ACTION_PATH" in p for p in fetched)
 
     def test_no_scripts_no_warnings(self):
         action_yml = """\
@@ -535,6 +540,83 @@ class TestAnalyzeBinaryDownloads:
                 warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
         assert len(failures) == 1
         assert "scripts/bootstrap.sh" in failures[0]
+
+    # DigitalPebble/aspen v1.4.1 (#1585) aliases the action path through a
+    # step env var.  The script resolved to "ACTION_PATH/scripts/...", the
+    # fetch 404'd and the scan reported "no binary downloads detected".
+    _ASPEN_ACTION_YML = (
+        "runs:\n"
+        "  using: 'composite'\n"
+        "  steps:\n"
+        "    - name: Install aspen\n"
+        "      id: install\n"
+        "      shell: bash\n"
+        "      env:\n"
+        "        ACTION_PATH: {alias}\n"
+        "        ACTION_REF: ${{{{ github.action_ref }}}}\n"
+        "        GH_TOKEN: ${{{{ github.token }}}}\n"
+        "      run: bash \"{ref}/scripts/install-binary.sh\"\n"
+    )
+    _ASPEN_DOWNLOAD = (
+        'curl -fsSL --retry 3 -o "$DEST/$ASSET" "$URL/$ASSET" \\\n'
+        '  || { echo "::error::Could not download $URL/$ASSET"; exit 1; }\n'
+        'curl -fsSL --retry 3 -o "$DEST/$ASSET.sha256" "$URL/aspen-$VERSION-$TARGET.sha256" \\\n'
+        '  || { echo "::error::Could not download the checksum for $ASSET"; exit 1; }\n'
+    )
+    _ASPEN_VERIFY = (
+        "EXPECTED=$(cut -d' ' -f1 \"$DEST/$ASSET.sha256\")\n"
+        "ACTUAL=$(sha256sum \"$DEST/$ASSET\" | cut -d' ' -f1)\n"
+        'if [ -z "$EXPECTED" ] || [ "$EXPECTED" != "$ACTUAL" ]; then exit 1; fi\n'
+        'gh attestation verify "$DEST/$ASSET" --repo "$REPO" >/dev/null \\\n'
+        '  || { echo "::error::Attestation verification failed for $ASSET"; exit 1; }\n'
+    )
+    _ASPEN_EXTRACT = 'tar -xzf "$DEST/$ASSET" -C "$DEST"\nchmod +x "$DEST/$EXE"\n'
+
+    @pytest.mark.parametrize("alias, ref", [
+        ("${{ github.action_path }}", "$ACTION_PATH"),
+        ("'${{ github.action_path }}'", "${ACTION_PATH}"),
+        ('"${{github.action_path}}"', "$ACTION_PATH"),
+    ])
+    def test_env_aliased_action_path_script_is_scanned(self, alias, ref):
+        action_yml = self._ASPEN_ACTION_YML.format(alias=alias, ref=ref)
+        files = {"scripts/install-binary.sh": self._ASPEN_DOWNLOAD + self._ASPEN_EXTRACT}
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures
+        assert all(f.startswith("scripts/install-binary.sh") for f in failures)
+
+    def test_env_aliased_action_path_script_with_verification_passes(self):
+        action_yml = self._ASPEN_ACTION_YML.format(
+            alias="${{ github.action_path }}", ref="$ACTION_PATH",
+        )
+        files = {
+            "scripts/install-binary.sh": (
+                self._ASPEN_DOWNLOAD + self._ASPEN_VERIFY + self._ASPEN_EXTRACT
+            ),
+        }
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        assert failures == []
+        assert any(w.startswith("scripts/install-binary.sh") for w in warnings)
+
+    def test_env_var_not_aliased_to_action_path_is_not_stripped(self):
+        action_yml = (
+            "runs:\n"
+            "  using: composite\n"
+            "  steps:\n"
+            "    - shell: bash\n"
+            "      env:\n"
+            "        TOOLS: ${{ github.workspace }}\n"
+            '      run: bash "$TOOLS/scripts/install-binary.sh"\n'
+        )
+        files = {"scripts/install-binary.sh": self._ASPEN_DOWNLOAD}
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+            with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+                warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
+        # $TOOLS points at the caller's workspace, not the action's tree.
+        assert failures == []
 
     def test_sha256sum_verification_passes(self):
         files = {
