@@ -42,7 +42,9 @@ from verify_action_build.security import (
     _find_binary_downloads,
     _find_binary_downloads_js,
     _looks_like_in_tree_binary,
+    _match_shipped_script,
     _parse_sha256sums,
+    UNREFERENCED_SCRIPT_DOWNLOAD,
     verify_trusted_download_provenance,
 )
 
@@ -615,11 +617,115 @@ class TestAnalyzeBinaryDownloads:
             '      run: bash "$TOOLS/scripts/install-binary.sh"\n'
         )
         files = {"scripts/install-binary.sh": self._ASPEN_DOWNLOAD}
-        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)):
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)), \
+                self._mock_tree():
             with mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
                 warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
         # $TOOLS points at the caller's workspace, not the action's tree.
         assert failures == []
+
+    # Indirection the alias rule can't expand.  Every shipped script is
+    # scanned: one action.yml names through an unexpanded prefix is matched
+    # by path suffix and held to the usual rule, any other shipped script
+    # yields a warning, so nothing the action ships is skipped silently.
+    def _mock_tree(self, paths=()):
+        return mock.patch(
+            "verify_action_build.security._list_repo_files", return_value=list(paths)
+        )
+
+    def _run(self, action_yml, files, tree):
+        with mock.patch("verify_action_build.security.fetch_file_from_github", side_effect=self._mock_fetch(files)), \
+                self._mock_tree(tree), \
+                mock.patch("verify_action_build.security.fetch_action_yml", return_value=action_yml):
+            return analyze_binary_downloads("org", "repo", "a" * 40)
+
+    def test_unexpanded_prefix_resolves_to_shipped_script(self):
+        action_yml = (
+            "runs:\n  using: composite\n  steps:\n"
+            "    - shell: bash\n"
+            '      run: bash "$TOOLS/scripts/install-binary.sh"\n'
+        )
+        files = {"scripts/install-binary.sh": self._ASPEN_DOWNLOAD + self._ASPEN_EXTRACT}
+        warnings, failures = self._run(
+            action_yml, files, ["scripts/install-binary.sh", "release.sh"],
+        )
+        assert failures
+        assert all(f.startswith("scripts/install-binary.sh") for f in failures)
+
+    def test_referenced_script_is_scanned_once(self):
+        action_yml = (
+            "runs:\n  using: composite\n  steps:\n"
+            "    - shell: bash\n"
+            "      run: bash scripts/install-binary.sh\n"
+        )
+        files = {"scripts/install-binary.sh": self._ASPEN_DOWNLOAD + self._ASPEN_EXTRACT}
+        warnings, failures = self._run(action_yml, files, ["scripts/install-binary.sh"])
+        assert len(failures) == len(set(failures))  # scanned once, no duplicates
+        assert warnings == []
+
+    def test_unreferenced_script_download_is_a_warning(self, capsys):
+        action_yml = "runs:\n  using: composite\n  steps:\n    - shell: bash\n      run: echo hi\n"
+        files = {"scripts/fetch-tool.sh": self._ASPEN_DOWNLOAD + self._ASPEN_EXTRACT}
+        warnings, failures = self._run(action_yml, files, ["scripts/fetch-tool.sh"])
+        assert failures == []
+        assert warnings
+        assert all(
+            w.startswith("scripts/fetch-tool.sh") and UNREFERENCED_SCRIPT_DOWNLOAD in w
+            for w in warnings
+        )
+        assert "not referenced from action.yml" in " ".join(capsys.readouterr().err.split())
+
+    def test_unexpanded_prefix_resolves_outside_source_dirs(self):
+        action_yml = (
+            "runs:\n  using: composite\n  steps:\n"
+            "    - shell: bash\n"
+            '      run: bash "$TOOLS/bin/install.sh"\n'
+        )
+        files = {"bin/install.sh": self._ASPEN_DOWNLOAD + self._ASPEN_EXTRACT, "tests/fetch.sh": self._ASPEN_DOWNLOAD + self._ASPEN_EXTRACT}
+        warnings, failures = self._run(
+            action_yml, files, ["bin/install.sh", "tests/fetch.sh"],
+        )
+        assert failures
+        assert all(f.startswith("bin/install.sh") for f in failures)
+        assert not any("tests/fetch.sh" in w for w in warnings)
+
+    def test_markup_in_script_path_is_printed_literally(self, capsys):
+        action_yml = "runs:\n  using: composite\n  steps:\n    - shell: bash\n      run: echo hi\n"
+        name = "scripts/[/x][green]ok[/green].sh"
+        files = {name: self._ASPEN_DOWNLOAD + self._ASPEN_EXTRACT}
+        warnings, failures = self._run(action_yml, files, [name])
+        assert warnings
+        assert name in " ".join(capsys.readouterr().err.split())
+
+    def test_unreferenced_script_with_verification_is_review_coverage(self):
+        action_yml = "runs:\n  using: composite\n  steps:\n    - shell: bash\n      run: echo hi\n"
+        files = {"scripts/fetch-tool.sh": self._ASPEN_DOWNLOAD + self._ASPEN_VERIFY + self._ASPEN_EXTRACT}
+        warnings, failures = self._run(action_yml, files, ["scripts/fetch-tool.sh"])
+        assert failures == []
+        assert warnings
+        assert not any(UNREFERENCED_SCRIPT_DOWNLOAD in w for w in warnings)
+
+    def test_reference_outside_the_repo_is_reported(self, capsys):
+        action_yml = (
+            "runs:\n  using: composite\n  steps:\n"
+            "    - shell: bash\n"
+            '      run: bash "$GITHUB_WORKSPACE/ci/test.sh"\n'
+        )
+        warnings, failures = self._run(action_yml, {}, [])
+        assert (warnings, failures) == ([], [])
+        out = " ".join(capsys.readouterr().err.split())
+        assert "GITHUB_WORKSPACE/ci/test.sh" in out
+        assert "not scanned" in out
+
+    @pytest.mark.parametrize("reference, expected", [
+        ("TOOLS/scripts/x.sh", "scripts/x.sh"),
+        ("TOOLS/x.sh", "x.sh"),
+        ("TOOLS/other/x.sh", "x.sh"),
+        ("TOOLS/xscripts/x.sh", "x.sh"),
+        ("TOOLS/y.sh", None),
+    ])
+    def test_match_shipped_script(self, reference, expected):
+        assert _match_shipped_script(reference, ["x.sh", "scripts/x.sh"]) == expected
 
     def test_sha256sum_verification_passes(self):
         files = {

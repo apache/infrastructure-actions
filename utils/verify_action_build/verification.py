@@ -53,6 +53,7 @@ from .security import (
     analyze_repo_metadata,
     analyze_scripts,
     find_rebuild_reproduced_binaries,
+    UNREFERENCED_SCRIPT_DOWNLOAD,
 )
 
 SECURITY_CHECKLIST_URL = "https://github.com/apache/infrastructure-actions#security-review-checklist"
@@ -296,9 +297,15 @@ def verify_single_action(
                     f"{len(bd_failures)} unverified download(s)",
                 ))
             elif bd_warnings:
+                unreferenced = [
+                    w for w in bd_warnings if UNREFERENCED_SCRIPT_DOWNLOAD in w
+                ]
                 checks_performed.append((
                     "Binary download verification", "warn",
-                    f"{len(bd_warnings)} download(s); verification present",
+                    f"{len(unreferenced)} unverified download(s) in scripts "
+                    "action.yml does not reference; review"
+                    if unreferenced
+                    else f"{len(bd_warnings)} download(s); verification present",
                 ))
             else:
                 checks_performed.append((
