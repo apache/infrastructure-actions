@@ -314,3 +314,11 @@ class TestExtractPatternEntriesFromDiff:
         found = extract_pattern_entries_from_diff(diff)
         assert found["unparsed"] == ["[DigitalPebble/aspen@v1]", "- 'mismatched/quote@v1\""]
         assert found["unpinned"] == []
+
+    def test_hash_touching_the_ref_is_not_a_comment(self):
+        """``@<sha>#v1`` is one YAML scalar, not a SHA plus a comment."""
+        sha = "933c530e9d91f5e6a43c893678d08abc248f399d"
+        diff = PR_1585_DIFF.replace("+- DigitalPebble/aspen@v1", f"+- DigitalPebble/aspen@{sha}#v1")
+        found = extract_pattern_entries_from_diff(diff)
+        assert found["sha"] == []
+        assert found["unparsed"] == [f"- DigitalPebble/aspen@{sha}#v1"]
