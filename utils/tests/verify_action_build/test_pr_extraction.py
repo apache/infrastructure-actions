@@ -261,7 +261,7 @@ index fe5631903..e473d8a57 100644
  - docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f
 """
 
-_EMPTY = {"sha": [], "wildcard": [], "unpinned": []}
+_EMPTY = {"sha": [], "wildcard": [], "unpinned": [], "unparsed": []}
 
 
 class TestExtractPatternEntriesFromDiff:
@@ -292,3 +292,25 @@ class TestExtractPatternEntriesFromDiff:
     def test_removed_entry_is_ignored(self):
         diff = PR_1585_DIFF.replace("+- DigitalPebble/aspen@v1", "-- DigitalPebble/aspen@v1")
         assert extract_pattern_entries_from_diff(diff) == _EMPTY
+
+    def test_trailing_comment_indent_and_quotes_still_classify(self):
+        """Shapes valid YAML allows must not slip a tag pin past the check."""
+        diff = PR_1585_DIFF.replace(
+            "+- DigitalPebble/aspen@v1",
+            "+- DigitalPebble/aspen@v1  # carbon estimates\n"
+            "+  - 'other-org/tool@main'\n"
+            '+- "third-org/tool@*"',
+        )
+        found = extract_pattern_entries_from_diff(diff)
+        assert found["unpinned"] == ["DigitalPebble/aspen@v1", "other-org/tool@main"]
+        assert found["wildcard"] == ["third-org/tool@*"]
+        assert found["unparsed"] == []
+
+    def test_unrecognised_added_line_fails_closed(self):
+        diff = PR_1585_DIFF.replace(
+            "+- DigitalPebble/aspen@v1",
+            "+[DigitalPebble/aspen@v1]\n+- 'mismatched/quote@v1\"\n+# a comment\n+",
+        )
+        found = extract_pattern_entries_from_diff(diff)
+        assert found["unparsed"] == ["[DigitalPebble/aspen@v1]", "- 'mismatched/quote@v1\""]
+        assert found["unpinned"] == []

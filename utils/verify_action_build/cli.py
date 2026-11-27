@@ -157,7 +157,12 @@ def main() -> None:
                 f"[bold]{entry}[/bold] to {PATTERNS_FILE}; there is no build to verify, "
                 "so it needs an explicit policy decision by the reviewer."
             )
-        if patterns["unpinned"]:
+        for content in patterns["unparsed"]:
+            console.print(
+                f"[red]Error:[/red] PR #{args.from_pr} adds a line to {PATTERNS_FILE} that is "
+                f"not a recognised `- org/repo@ref` entry: [bold]{content.strip()!r}[/bold]"
+            )
+        if patterns["unpinned"] or patterns["unparsed"]:
             for entry in patterns["unpinned"]:
                 console.print(
                     f"[red]Error:[/red] PR #{args.from_pr} adds [bold]{entry}[/bold] to "

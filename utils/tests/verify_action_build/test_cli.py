@@ -129,6 +129,11 @@ class TestMain:
         assert "actions.yml instead" in out
         assert "nothing to verify" not in out
 
+    def test_from_pr_unparsed_pattern_line_fails(self, capsys):
+        diff = PR_1585_DIFF.replace("+- DigitalPebble/aspen@v1", "+[DigitalPebble/aspen@v1]")
+        assert self._run_from_pr(diff) == 1
+        assert "not a recognised" in " ".join(capsys.readouterr().err.split())
+
     def test_from_pr_wildcard_pattern_entry_is_a_note(self, capsys):
         diff = PR_1585_DIFF.replace("+- DigitalPebble/aspen@v1", "+- some-org/tool@*")
         assert self._run_from_pr(diff) == 0

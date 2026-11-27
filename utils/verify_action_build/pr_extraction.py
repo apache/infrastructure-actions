@@ -43,21 +43,27 @@ def extract_action_refs_from_pr(pr_number: int, gh: GitHubClient | None = None) 
 
 PATTERNS_FILE = "approved_patterns.yml"
 
-# An ``approved_patterns.yml`` entry: ``- org/repo[/sub]@ref``.
-_PATTERN_ENTRY_RE = re.compile(r"^\+-\s+['\"]?([A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+)@([^\s'\"]+)['\"]?\s*$")
+# An ``approved_patterns.yml`` entry, ``- org/repo[/sub]@ref``, matched on the
+# added line without its ``+``: optional indentation, quotes, trailing comment.
+_PATTERN_ENTRY_RE = re.compile(
+    r"^\s*-\s+(['\"]?)([A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+)@([^\s'\"#]+)\1\s*(#.*)?$"
+)
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
 def extract_pattern_entries_from_diff(diff_text: str) -> dict[str, list[str]]:
     """Classify the entries a diff adds to ``approved_patterns.yml``.
 
-    Returns ``{"sha": [...], "wildcard": [...], "unpinned": [...]}`` of
-    ``org/repo@ref`` strings.  ``sha`` entries can be verified like any other
-    ref; ``wildcard`` (``@*``) entries are an explicit policy decision with
-    nothing to rebuild; ``unpinned`` entries name a tag or branch, which can
-    move after review, so they must never pass verification silently.
+    Returns ``{"sha": [...], "wildcard": [...], "unpinned": [...],
+    "unparsed": [...]}``.  The first three hold ``org/repo@ref`` strings:
+    ``sha`` entries can be verified like any other ref; ``wildcard`` (``@*``)
+    entries are an explicit policy decision with nothing to rebuild;
+    ``unpinned`` entries name a tag or branch, which can move after review.
+    ``unparsed`` holds every other added line that is neither blank nor a
+    comment, verbatim: the check fails closed, so an entry written in a shape
+    this parser does not know is reported rather than silently skipped.
     """
-    found: dict[str, list[str]] = {"sha": [], "wildcard": [], "unpinned": []}
+    found: dict[str, list[str]] = {"sha": [], "wildcard": [], "unpinned": [], "unparsed": []}
     current_file: str | None = None
     for line in diff_text.splitlines():
         if line.startswith("+++ "):
@@ -67,13 +73,18 @@ def extract_pattern_entries_from_diff(diff_text: str) -> dict[str, list[str]]:
         if line.startswith("diff "):
             current_file = None
             continue
-        if current_file != PATTERNS_FILE:
+        if current_file != PATTERNS_FILE or not line.startswith("+"):
             continue
-        match = _PATTERN_ENTRY_RE.match(line)
+        content = line[1:]
+        if not content.strip() or content.lstrip().startswith("#"):
+            continue
+        match = _PATTERN_ENTRY_RE.match(content)
         if not match:
+            if content not in found["unparsed"]:
+                found["unparsed"].append(content)
             continue
-        entry = f"{match.group(1)}@{match.group(2)}"
-        ref = match.group(2)
+        entry = f"{match.group(2)}@{match.group(3)}"
+        ref = match.group(3)
         kind = "sha" if _SHA_RE.match(ref) else "wildcard" if ref == "*" else "unpinned"
         if entry not in found[kind]:
             found[kind].append(entry)
