@@ -131,6 +131,7 @@
 - commit-check/commit-check-action@c535fd72e270c2eba22da6ef9860eebda7ec6ebe
 - commit-check/commit-check-action@82856b070249ac36d5a0f88c47cacf0c70f82fa8
 - commit-check/commit-check-action@3d46238970102271c989e85c58f22748a923384c
+- commit-check/commit-check-action@b42dca628bf1212c292cfb18a13dcf9bef2ce6e2
 - conda-incubator/setup-miniconda@*
 - container-tools/kind-action@*
 - coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d
@@ -185,6 +186,7 @@
 - endersonmenezes/free-disk-space@2a22f8c59cae9cddae7194b33e6b92d023b2b4b8
 - endersonmenezes/free-disk-space@8b8cd4e2277836962939a8f3b4ea0ee4bc006156
 - endersonmenezes/free-disk-space@8ffcdf1b35c974f0b10496711e9a22bcb0ff3790
+- endersonmenezes/free-disk-space@24d3e2af1fe79ccdde8844605337a8835e20d012
 - EnricoMi/publish-unit-test-result-action@*
 - eps1lon/actions-label-merge-conflict@*
 - erisu/apache-rat-action@30c94d10ed21e6f6fd5590dc5c158f58cae7a0dd
@@ -380,8 +382,10 @@
 - release-drafter/release-drafter@*
 - ruby/setup-ruby@*
 - rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a
+- rubygems/configure-rubygems-credentials@c6ca7f4bac0e29c9bde8eeae0a0a986b27efa05f
 - rubygems/release-gem@7f9650160c1a4e7989fdc9855807bdbd421d8b6b
 - rubygems/release-gem@5c53f5308233b7c0f47411f0471b3faae6fa57b2
+- rubygems/release-gem@2654a0fe0dc39725c07fe84d7fe863a084f2424e
 - runs-on/action@46910bf61b41721b0579f237e186afb35477007a
 - runs-on/action@efac073ea2507ec18797de3a81704201ade11d9d
 - runs-on/action@17b59092eb37ebfdbb034460892887c09100eaa3
@@ -419,6 +423,7 @@
 - SonarSource/sonarqube-scan-action@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304
 - SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65
 - SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4
+- SonarSource/sonarqube-scan-action@70bad232163b09d998ea0707ee80c0ec80798c16
 - SonarSource/sonarqube-scan-action/install-build-wrapper@22918119ff8e1ca75a623e15c8296b6ea4fbe28f
 - SonarSource/sonarqube-scan-action/install-build-wrapper@ba9859eae8dd6bd29e412f25ddbbef3d032000f4
 - SonarSource/sonarqube-scan-action/install-build-wrapper@d209202bc7d53ff1cc128f7f907dac145c9d6ae9
@@ -450,3 +455,4 @@
 - zizmorcore/zizmor-action@85b2b9fb8e3325e7a23d7d0a9d7ba5ae0f999e3e
 - zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b
 - zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd
+- zizmorcore/zizmor-action@1b4550e929643b8b26a62303c6bd64814271a4f1
