@@ -111,6 +111,8 @@ runs:
       if: false
     - uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98  # v3.1.0
       if: false
+    - uses: DigitalPebble/aspen@33136befd440058415d657702454a1c3b5d725bb  # v1.4.1
+      if: false
     - uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e  # v7.5.0
       if: false
     - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
