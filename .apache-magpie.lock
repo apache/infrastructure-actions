@@ -31,8 +31,8 @@ plugins:
   - magpie-vetted-ops
 
 reconciled:
-  version: 0.9.0.dev202611041445
-  at:      2026-11-04
+  version: 0.9.0.dev202611262347
+  at:      2026-11-27
   skills:
     activity-sweep:             sha256:a39919af92a37e2d
     announce-draft:             sha256:edffafcd9d9948ab
