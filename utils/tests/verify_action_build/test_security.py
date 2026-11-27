@@ -2009,6 +2009,34 @@ await validateChecksum(checksum, downloadPath, arch, platform, version);
 """
         assert self._has_verification(content) is True
 
+    def test_verify_digest_function_name_recognized(self):
+        for func_name in ("verifyDigest", "verifySHA256", "verifySha512"):
+            content = (
+                "const cliPath = await downloadTool(asset.url)\n"
+                f"await {func_name}(cliPath, asset.digest)\n"
+            )
+            assert self._has_verification(content) is True, func_name
+
+    def test_verify_digest_real_setup_biome_snippet_recognized(self):
+        # Faithful trim of biomejs/setup-biome's ``src/setup.ts`` after the
+        # #509 fix: the CLI is checked against the release asset's ``digest``
+        # by ``verifyDigest``, imported from the sibling ``./digest.ts`` where
+        # the ``createHash("sha256")`` body lives.  Before the fix the same
+        # file had no check at all, and #1571 needed a bypass merge.
+        content = """\
+import { downloadTool } from "@actions/tool-cache";
+import { verifyDigest } from "./digest.ts";
+
+const download = async (options: SetupOptions): Promise<string | undefined> => {
+	const releaseId = await findRelease(options);
+	const asset = await findAsset(releaseId, options);
+	const cliPath = await downloadTool(asset.url);
+	await verifyDigest(cliPath, asset.digest);
+	return cliPath;
+};
+"""
+        assert self._has_verification(content) is True
+
     def test_verify_hash_function_recognized(self):
         # Whether named ``verifyHash`` or referenced inline.
         for snippet in (
