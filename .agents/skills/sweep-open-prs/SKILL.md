@@ -171,6 +171,48 @@ dependabot opens a new PR at the newer version and closes the old one. Before
 digging back into a held PR, check whether a higher-numbered PR for the same
 action already exists.
 
+### Batch approve and merge
+
+Once the maintainer confirms a set of PRs and one approval text, act on the
+whole set in **two `gh` calls**, not one per PR: one call per PR means one
+permission prompt per PR, and a shell loop hits the `HTTP 401` trap. GraphQL
+runs the aliased mutations of one request in order and reports each alias's
+error on its own, so one PR failing does not stop the rest.
+
+1. Get the node ids (one call):
+
+   ```
+   gh pr list --repo apache/infrastructure-actions --limit 50 --json number,id --jq '.[] | "\(.number) \(.id)"'
+   ```
+
+2. Write the approve batch to a file with the file-writing tool, one aliased
+   `addPullRequestReview` per confirmed PR. The body is the confirmed text,
+   ASCII only (an em-dash in a `gh` body has produced a spurious `401`), with
+   newlines written as `\n`:
+
+   ```graphql
+   mutation {
+     pr1565: addPullRequestReview(input: {pullRequestId: "PR_kwDO...", event: APPROVE, body: "Verified: ...\n\n---\nDrafted-by: ..."}) { pullRequestReview { state } }
+     pr1566: addPullRequestReview(input: {pullRequestId: "PR_kwDO...", event: APPROVE, body: "..."}) { pullRequestReview { state } }
+   }
+   ```
+
+   Send it with one bare call: `gh api graphql -F query=@<file>`.
+
+3. Merge batch, same shape, one aliased
+   `mergePullRequest(input: {pullRequestId: "...", mergeMethod: MERGE}) { pullRequest { number state } }`
+   per approved PR. Wait a minute or two after approving first: the
+   `approval` status has to turn `SUCCESS` before a PR is `CLEAN`.
+4. Every alias that errored (not yet `CLEAN`, or a conflict after an earlier
+   merge in the batch touched the same file) goes into a third batch of
+   `enablePullRequestAutoMerge(input: {pullRequestId: "...", mergeMethod: MERGE}) { pullRequest { number } }`.
+   Auto-merge refuses a PR that is already `CLEAN` (`Pull request is in clean
+   status`), so it belongs only here, after the direct merge was tried.
+   Dependabot rebases a conflicting PR on its own; auto-merge then lands it.
+
+Report per PR from the response: approved, merged, auto-merge set, or the
+alias's error.
+
 ## Reporting
 
 Lead with what the maintainer can act on, not with the full queue. A table
@@ -193,4 +235,5 @@ Merging a PR they just approved in the same turn is the mid-flow exception.
 | Treating a carried-over warning as a regression | Blocks a bump that is no worse than the approved version |
 | Filing upstream before searching the target repo | Duplicate issues; search existing issues, including the maintainer's own |
 | Looping `gh` over PR numbers | Spurious `HTTP 401` on every call after the first |
+| Approving or merging one PR per call | One permission prompt per PR; use the batch above |
 | Piping or redirecting `gh` output | The command runs sandboxed and fails with a network deny or `x509` TLS error |
