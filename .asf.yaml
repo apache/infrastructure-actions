@@ -67,6 +67,17 @@ github:
               # verify_*_action.yml: rebuilds an allow-list PR's action and
               # compares it with the published one; other PRs pass it at once.
               - context: verify
+              # The rest gate code changes, which approval and verify wave
+              # through. Each runs on every PR to main with no path filter:
+              # a required check that never starts would block a PR forever.
+              # pytest.yml
+              - context: pytest
+              # pre-commit.yml
+              - context: pre-commit
+              # rat.yml
+              - context: rat
+              # zizmor.yml
+              - context: zizmor
 
 notifications:
   commits: commits@infra.apache.org
