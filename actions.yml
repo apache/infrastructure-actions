@@ -1258,6 +1258,9 @@ SonarSource/sonarqube-scan-action/install-build-wrapper:
     expires_at: 2027-02-06
   59202af334b4ba7b5db01b701b8e79f8b3bef0f4:
     tag: v8.5.0
+    expires_at: 2027-02-19
+  70bad232163b09d998ea0707ee80c0ec80798c16:
+    tag: v8.5.1
 stCarolas/setup-maven:
   '*':
     keep: true

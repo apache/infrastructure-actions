@@ -432,6 +432,7 @@
 - SonarSource/sonarqube-scan-action/install-build-wrapper@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304
 - SonarSource/sonarqube-scan-action/install-build-wrapper@e805d875275f728fac1885b413934be6d7c63f65
 - SonarSource/sonarqube-scan-action/install-build-wrapper@59202af334b4ba7b5db01b701b8e79f8b3bef0f4
+- SonarSource/sonarqube-scan-action/install-build-wrapper@70bad232163b09d998ea0707ee80c0ec80798c16
 - stCarolas/setup-maven@*
 - subosito/flutter-action@*
 - Swatinem/rust-cache@*
