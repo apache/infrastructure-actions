@@ -161,6 +161,9 @@ betahuhn/repo-file-sync-action:
 biomejs/setup-biome:
   4c91541eaada48f67d7dbd7833600ce162b68f51:
     tag: v2.7.1
+    expires_at: 2027-02-19
+  77af1e9ce0cc32955e83b0c3e30c28ae3b81cab7:
+    tag: v2.8.0
 BobAnkh/auto-generate-changelog:
   '*':
     keep: true

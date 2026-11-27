@@ -64,6 +64,7 @@
 - benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc
 - betahuhn/repo-file-sync-action@8b92be3375cf1d1b0cd579af488a9255572e4619
 - biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51
+- biomejs/setup-biome@77af1e9ce0cc32955e83b0c3e30c28ae3b81cab7
 - BobAnkh/auto-generate-changelog@*
 - bufbuild/buf-breaking-action@*
 - bufbuild/buf-lint-action@*
