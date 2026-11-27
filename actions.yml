@@ -441,6 +441,9 @@ dawidd6/action-send-mail:
 dependabot/fetch-metadata:
   25dd0e34f4fe68f24cc83900b1fe3fe149efef98:
     tag: v3.1.0
+DigitalPebble/aspen:
+  33136befd440058415d657702454a1c3b5d725bb:
+    tag: v1.4.1
 dlang-community/setup-dlang:
   '*':
     keep: true
