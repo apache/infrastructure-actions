@@ -41,6 +41,45 @@ def extract_action_refs_from_pr(pr_number: int, gh: GitHubClient | None = None) 
     return extract_action_refs_from_diff(diff_text)
 
 
+PATTERNS_FILE = "approved_patterns.yml"
+
+# An ``approved_patterns.yml`` entry: ``- org/repo[/sub]@ref``.
+_PATTERN_ENTRY_RE = re.compile(r"^\+-\s+['\"]?([A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+)@([^\s'\"]+)['\"]?\s*$")
+_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+
+
+def extract_pattern_entries_from_diff(diff_text: str) -> dict[str, list[str]]:
+    """Classify the entries a diff adds to ``approved_patterns.yml``.
+
+    Returns ``{"sha": [...], "wildcard": [...], "unpinned": [...]}`` of
+    ``org/repo@ref`` strings.  ``sha`` entries can be verified like any other
+    ref; ``wildcard`` (``@*``) entries are an explicit policy decision with
+    nothing to rebuild; ``unpinned`` entries name a tag or branch, which can
+    move after review, so they must never pass verification silently.
+    """
+    found: dict[str, list[str]] = {"sha": [], "wildcard": [], "unpinned": []}
+    current_file: str | None = None
+    for line in diff_text.splitlines():
+        if line.startswith("+++ "):
+            path = line[4:].strip()
+            current_file = path[2:] if path.startswith("b/") else path
+            continue
+        if line.startswith("diff "):
+            current_file = None
+            continue
+        if current_file != PATTERNS_FILE:
+            continue
+        match = _PATTERN_ENTRY_RE.match(line)
+        if not match:
+            continue
+        entry = f"{match.group(1)}@{match.group(2)}"
+        ref = match.group(2)
+        kind = "sha" if _SHA_RE.match(ref) else "wildcard" if ref == "*" else "unpinned"
+        if entry not in found[kind]:
+            found[kind].append(entry)
+    return found
+
+
 def extract_action_refs_from_diff(diff_text: str) -> list[str]:
     """Extract action refs from a unified diff string.
 
@@ -121,5 +160,12 @@ def extract_action_refs_from_diff(diff_text: str) -> list[str]:
 
             # Anything else means we've left the current key's block.
             actions_yml_key = None
+
+    # approved_patterns.yml is generated from actions.yml, but a hand edit to
+    # it still lands in the org allow list, so its SHA entries are verified too.
+    for ref in extract_pattern_entries_from_diff(diff_text)["sha"]:
+        if ref not in seen:
+            seen.add(ref)
+            refs.append(ref)
 
     return refs

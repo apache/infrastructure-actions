@@ -28,7 +28,11 @@ from rich_argparse import RichHelpFormatter
 from .console import console
 from .dependabot import check_dependabot_prs
 from .github_client import GitHubClient, gh_auth_token
-from .pr_extraction import extract_action_refs_from_diff
+from .pr_extraction import (
+    PATTERNS_FILE,
+    extract_action_refs_from_diff,
+    extract_pattern_entries_from_diff,
+)
 from .verification import SECURITY_CHECKLIST_URL, verify_single_action
 
 
@@ -146,6 +150,26 @@ def main() -> None:
             console.print(f"[red]Error:[/red] could not fetch diff for PR #{args.from_pr}")
             _exit(1)
         action_refs = extract_action_refs_from_diff(diff_text)
+        patterns = extract_pattern_entries_from_diff(diff_text)
+        for entry in patterns["wildcard"]:
+            console.print(
+                f"  [yellow]Note:[/yellow] PR #{args.from_pr} adds the wildcard entry "
+                f"[bold]{entry}[/bold] to {PATTERNS_FILE}; there is no build to verify, "
+                "so it needs an explicit policy decision by the reviewer."
+            )
+        if patterns["unpinned"]:
+            for entry in patterns["unpinned"]:
+                console.print(
+                    f"[red]Error:[/red] PR #{args.from_pr} adds [bold]{entry}[/bold] to "
+                    f"{PATTERNS_FILE}, pinned to a tag or branch that can move after review. "
+                    "Pin it to a full 40-character commit SHA."
+                )
+            console.print(
+                f"  {PATTERNS_FILE} is generated from actions.yml by the update job: "
+                "add the action to actions.yml instead (`org/repo:` key with the commit SHA "
+                "and its `tag:`), and leave the generated file to the sync."
+            )
+            _exit(1)
         if not action_refs:
             console.print(
                 f"No added action references in PR #{args.from_pr} — nothing to verify "
