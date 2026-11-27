@@ -29,7 +29,9 @@ permissions: {}
 
 jobs:
   zizmor:
-    name: Run zizmor 🌈
+    # Required on main by the "Required checks" ruleset in .asf.yaml, which
+    # matches this name exactly; keep it plain ASCII.
+    name: zizmor
     runs-on: ubuntu-26.04
     permissions: {}
     steps:
