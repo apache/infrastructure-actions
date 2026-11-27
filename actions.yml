@@ -116,6 +116,9 @@ aws-actions/configure-aws-credentials:
     expires_at: 2026-12-09
   e1253824e5c10ff9df46874f81ed3ec929e19cfd:
     tag: v6.3.0
+    expires_at: 2027-02-19
+  45666896f5d8e0f10ae255413f3a4cdd03bdc8f5:
+    tag: v6.3.1
 azure/login:
   532459ea530d8321f2fb9bb10d1e0bcf23869a43:
     keep: true
@@ -1197,6 +1200,9 @@ sigstore/cosign-installer:
     expires_at: 2027-01-30
   756fe2d284c7292c4e9b62c8a28f1e5629c59532:
     tag: v4.1.3
+    expires_at: 2027-02-19
+  881c63bd87e38389154debd8331404ce7ca8a3ab:
+    tag: v4.1.4
 slackapi/slack-github-action:
   dcb1066f776dd043e64d0e8ba94ca15cc7e1875d:
     tag: v4.0.0
