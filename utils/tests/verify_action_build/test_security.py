@@ -48,6 +48,15 @@ from verify_action_build.security import (
     verify_trusted_download_provenance,
 )
 
+# CI sets FORCE_COLOR, so Rich's highlighter splits printed text with SGR
+# codes and wraps links in OSC 8 sequences; match against plain text.
+_TERMINAL_ESCAPES = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]|\x1b\]8;[^\x1b]*\x1b\\")
+
+
+def _stderr_text(capsys) -> str:
+    """Captured stderr with terminal escapes removed and whitespace collapsed."""
+    return " ".join(_TERMINAL_ESCAPES.sub("", capsys.readouterr().err).split())
+
 
 class TestAnalyzeDockerfile:
     def _patched(self, files: dict, action_yml: str | None = None):
@@ -673,7 +682,7 @@ class TestAnalyzeBinaryDownloads:
             w.startswith("scripts/fetch-tool.sh") and UNREFERENCED_SCRIPT_DOWNLOAD in w
             for w in warnings
         )
-        assert "not referenced from action.yml" in " ".join(capsys.readouterr().err.split())
+        assert "not referenced from action.yml" in _stderr_text(capsys)
 
     def test_unexpanded_prefix_resolves_outside_source_dirs(self):
         action_yml = (
@@ -695,7 +704,7 @@ class TestAnalyzeBinaryDownloads:
         files = {name: self._ASPEN_DOWNLOAD + self._ASPEN_EXTRACT}
         warnings, failures = self._run(action_yml, files, [name])
         assert warnings
-        assert name in " ".join(capsys.readouterr().err.split())
+        assert name in _stderr_text(capsys)
 
     def test_unreferenced_script_with_verification_is_review_coverage(self):
         action_yml = "runs:\n  using: composite\n  steps:\n    - shell: bash\n      run: echo hi\n"
@@ -713,7 +722,7 @@ class TestAnalyzeBinaryDownloads:
         )
         warnings, failures = self._run(action_yml, {}, [])
         assert (warnings, failures) == ([], [])
-        out = " ".join(capsys.readouterr().err.split())
+        out = _stderr_text(capsys)
         assert "GITHUB_WORKSPACE/ci/test.sh" in out
         assert "not scanned" in out
 
@@ -812,7 +821,7 @@ runs:
             with mock.patch("verify_action_build.security.fetch_action_yml", return_value=None):
                 warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
         assert failures
-        out = " ".join(capsys.readouterr().err.split())
+        out = _stderr_text(capsys)
         assert '"$URL/tool" \\' in out
         assert "[/red]" not in out
         assert "[/dim]" not in out
@@ -830,7 +839,7 @@ runs:
                 # An unbalanced "[/x]" used to raise rich.errors.MarkupError.
                 warnings, failures = analyze_binary_downloads("org", "repo", "a" * 40)
         assert failures
-        out = " ".join(capsys.readouterr().err.split())
+        out = _stderr_text(capsys)
         assert "[/red][green]verified[/green] [/x]" in out
 
     def test_apk_add_not_flagged(self):
@@ -3228,7 +3237,7 @@ class TestActionTextIsNotMarkup:
             return_value=self._visits("some-org", "v1 [/x][green]approved[/green]"),
         ):
             analyze_nested_actions("org", "repo", "a" * 40)
-        out = " ".join(capsys.readouterr().err.split())
+        out = _stderr_text(capsys)
         assert "# v1 [/x][green]approved[/green]" in out
 
     def test_unexpected_owner_chars_drop_the_link(self, capsys):
@@ -3237,7 +3246,7 @@ class TestActionTextIsNotMarkup:
             return_value=self._visits("evil]org", "v1"),
         ):
             analyze_nested_actions("org", "repo", "a" * 40)
-        out = " ".join(capsys.readouterr().err.split())
+        out = _stderr_text(capsys)
         assert "evil]org/tool@bbbbbbbbbbbb" in out
 
     def test_dependency_pinning_keeps_brackets(self, capsys):
@@ -3250,7 +3259,7 @@ class TestActionTextIsNotMarkup:
             side_effect=lambda org, repo, commit, path: files.get(path),
         ):
             analyze_dependency_pinning("org", "repo", "a" * 40)
-        out = " ".join(capsys.readouterr().err.split())
+        out = _stderr_text(capsys)
         assert "requests[socks]>=2.31" in out
         assert "package.json [dependencies]:" in out
         assert "left-pad: ^1.3.0" in out
